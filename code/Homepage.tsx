@@ -75,23 +75,55 @@ function Homepage(props: Props) {
         >
             {showNavigation && (
                 <Navigation
-                    {...sharedProps}
-                    bgColor="rgba(7, 7, 28, 0.9)"
-                    textColor="#ffffff"
-                    logoText="BEAMR"
-                    logoFontSize={24}
+                    fontFamily={fontFamily}
+                    bgColor="#ffffff"
+                    textColor="#1a1a2e"
+                    textHoverColor="#6C5CE7"
+                    accentColor="#6C5CE7"
+                    logoText="beamr"
+                    logoFontSize={22}
+                    showLogoIcon={true}
+                    logoIconColor="#6C5CE7"
                     ctaText="Let's Talk"
                     ctaUrl="#contact"
+                    ctaBgColor="#111111"
+                    ctaTextColor="#ffffff"
                     sticky={true}
                     useLogoImage={false}
                     logoImage=""
+                    borderColor="#f0f0f0"
+                    dropdownBgColor="#ffffff"
+                    dropdownCardBgColor="#111827"
+                    dropdownTextColor="#1a1a2e"
+                    dropdownSecondaryTextColor="#6b7280"
+                    industriesLabel="INDUSTRIES"
+                    useCasesLabel="USE CASES"
                     navLinks={[
-                        { label: "Solutions", url: "#solutions" },
-                        { label: "Products", url: "#products" },
-                        { label: "Technology", url: "#technology" },
-                        { label: "Blog", url: "#blog" },
-                        { label: "Company", url: "#company" },
+                        { label: "Solutions", url: "#solutions", hasDropdown: true },
+                        { label: "Products", url: "#products", hasDropdown: true },
+                        { label: "Technology", url: "#technology", hasDropdown: false },
+                        { label: "Blog", url: "#blog", hasDropdown: false },
+                        { label: "Company", url: "#company", hasDropdown: false },
                     ]}
+                    industries={[
+                        { icon: "🎬", title: "Media & Entertainment", description: "Cut CDN & storage costs 30-50% while keeping broadcast quality.", url: "#media" },
+                        { icon: "🧠", title: "AI / Machine Learning", description: "Smarter vision AI pipelines with guaranteed compression.", url: "#ai" },
+                        { icon: "🚗", title: "Autonomous Vehicles", description: "50% storage reduction with ML-safe compression for training data.", url: "#automotive" },
+                        { icon: "🏟️", title: "Sports Streaming", description: "720p→4K Super Resolution without doubling file size.", url: "#sports" },
+                    ]}
+                    useCases={[
+                        { icon: "📡", title: "Reduce CDN Costs", description: "Deliver same visual quality at significantly lower bitrates.", url: "#cdn" },
+                        { icon: "✨", title: "Improve Quality", description: "Enhance visual quality while maintaining or reducing file size.", url: "#quality" },
+                        { icon: "💾", title: "Optimize Storage", description: "Reduce storage requirements by up to 50% without quality loss.", url: "#storage" },
+                        { icon: "📺", title: "4K Upscaling", description: "Upscale legacy content to 4K resolution efficiently.", url: "#upscaling" },
+                    ]}
+                    featured={{
+                        badge: "CASE STUDY",
+                        title: "Netflix Achieves 40% CDN Savings with CABR Technology",
+                        linkText: "Read Case Study",
+                        linkUrl: "#case-study",
+                        image: "",
+                    }}
                 />
             )}
 
