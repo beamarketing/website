@@ -37,6 +37,9 @@ interface Props {
     logos: LogoItem[]
     showLogos: boolean
 
+    // Navigation overlap (pulls hero behind sticky nav)
+    navOverlap: number
+
     // Scroll behavior
     scrollDistance: number
     transitionStart: number
@@ -79,6 +82,8 @@ function HeroScroll(props: Props) {
             { name: "TAG", image: "" },
         ],
         showLogos = true,
+
+        navOverlap = 58,
 
         scrollDistance = 800,
         transitionStart = 0.0,
@@ -169,6 +174,7 @@ function HeroScroll(props: Props) {
                 height: scrollDistance,
                 position: "relative",
                 width: "100%",
+                marginTop: -navOverlap,
             }}
         >
             {/* Sticky viewport — exactly 100vh */}
@@ -616,6 +622,17 @@ addPropertyControls(HeroScroll, {
             { name: "JioHotstar", image: "" },
             { name: "TAG", image: "" },
         ],
+    },
+
+    // --- Nav Overlap ---
+    navOverlap: {
+        type: ControlType.Number,
+        title: "Nav Overlap",
+        defaultValue: 58,
+        min: 0,
+        max: 120,
+        step: 2,
+        description: "Pulls hero up behind the sticky Navigation (px)",
     },
 
     // --- Scroll Behavior ---

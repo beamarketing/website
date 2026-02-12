@@ -234,14 +234,11 @@ function Navigation(props: Props) {
             style={{
                 ...style,
                 width: "100%",
-                position: overlayMode ? "fixed" : sticky ? "sticky" : "relative",
+                position: "sticky",
                 top: 0,
-                left: 0,
-                right: 0,
                 zIndex: 1100,
                 fontFamily,
                 boxSizing: "border-box",
-                transition: "background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease",
             }}
             onMouseLeave={() => setActiveDropdown(null)}
         >
