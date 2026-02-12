@@ -3,7 +3,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 // --- Sub-types ---
 
@@ -198,20 +198,57 @@ function Navigation(props: Props) {
         style,
     } = props
 
+    const navRef = useRef<HTMLElement>(null)
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
 
+    // Force overflow:visible on all Framer ancestor wrappers so sticky works
+    useEffect(() => {
+        const el = navRef.current
+        if (!el) return
+        let parent = el.parentElement
+        while (parent && parent !== document.body) {
+            const computed = getComputedStyle(parent)
+            if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
+                parent.style.overflow = "visible"
+            }
+            parent = parent.parentElement
+        }
+    }, [])
+
+    // Scroll-based overlay transition
     useEffect(() => {
         if (!overlayMode) {
             setPastThreshold(true)
             return
         }
+        const findScrollParent = (el: HTMLElement | null): HTMLElement | Window => {
+            let node = el?.parentElement
+            while (node && node !== document.body) {
+                const style = getComputedStyle(node)
+                if (
+                    style.overflowY === "scroll" ||
+                    style.overflowY === "auto" ||
+                    node.scrollHeight > node.clientHeight
+                ) {
+                    return node
+                }
+                node = node.parentElement
+            }
+            return window
+        }
+        const scrollTarget = findScrollParent(navRef.current)
         const onScroll = () => {
-            setPastThreshold(window.scrollY >= scrollThreshold)
+            const scrollY =
+                scrollTarget === window
+                    ? window.scrollY
+                    : (scrollTarget as HTMLElement).scrollTop
+            setPastThreshold(scrollY >= scrollThreshold)
         }
         onScroll()
-        window.addEventListener("scroll", onScroll, { passive: true })
-        return () => window.removeEventListener("scroll", onScroll)
+        const target = scrollTarget === window ? window : scrollTarget
+        target.addEventListener("scroll", onScroll, { passive: true })
+        return () => target.removeEventListener("scroll", onScroll)
     }, [overlayMode, scrollThreshold])
 
     // --- Determine current visual state ---
@@ -231,6 +268,7 @@ function Navigation(props: Props) {
 
     return (
         <nav
+            ref={navRef}
             style={{
                 ...style,
                 width: "100%",

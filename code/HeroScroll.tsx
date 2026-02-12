@@ -6,7 +6,7 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { useRef } from "react"
+import { useRef, useEffect } from "react"
 
 // --- Types ---
 
@@ -103,9 +103,24 @@ function HeroScroll(props: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)
 
+    // Force overflow:visible on Framer ancestor wrappers so sticky works
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+        let parent = el.parentElement
+        while (parent && parent !== document.body) {
+            const computed = getComputedStyle(parent)
+            if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
+                parent.style.overflow = "visible"
+            }
+            parent = parent.parentElement
+        }
+    }, [])
+
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end end"],
+        layoutEffect: false,
     })
 
     const smooth = useSpring(scrollYProgress, {
