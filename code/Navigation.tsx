@@ -190,8 +190,8 @@ function Navigation(props: Props) {
         fontFamily = "'Inter', sans-serif",
         sticky = true,
 
-        overlayMode = false,
-        overlayBgColor = "rgba(0,0,0,0.05)",
+        overlayMode = true,
+        overlayBgColor = "transparent",
         overlayTextColor = "#ffffff",
         scrollThreshold = 400,
 
@@ -294,7 +294,7 @@ function Navigation(props: Props) {
                     position: "relative",
                     zIndex: 1101,
                     transition: "background-color 0.4s ease, border-color 0.4s ease",
-                    backdropFilter: isOverlay ? "blur(8px)" : "none",
+                    backdropFilter: "none",
                     boxShadow: !isOverlay && overlayMode ? "0 2px 16px rgba(0,0,0,0.08)" : "none",
                 }}
             >
@@ -484,7 +484,6 @@ function Navigation(props: Props) {
                         whiteSpace: "nowrap",
                         flexShrink: 0,
                         border: isOverlay ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
-                        backdropFilter: isOverlay ? "blur(8px)" : "none",
                     }}
                 >
                     {ctaText}
@@ -1063,13 +1062,13 @@ addPropertyControls(Navigation, {
     overlayMode: {
         type: ControlType.Boolean,
         title: "Overlay Mode",
-        defaultValue: false,
+        defaultValue: true,
         description: "Transparent on hero, solid after scroll. Use with HeroScroll.",
     },
     overlayBgColor: {
         type: ControlType.Color,
         title: "Overlay BG",
-        defaultValue: "rgba(0,0,0,0.05)",
+        defaultValue: "transparent",
         hidden: (props) => !props.overlayMode,
     },
     overlayTextColor: {
