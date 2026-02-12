@@ -1,6 +1,6 @@
 // Beamr Homepage - Hero with Scroll-Driven Video Transition
-// Full-screen video on load with transparent nav overlay →
-// contracts to rounded container on scroll, regular sticky nav takes over
+// Full-screen video on load → contracts to rounded container on scroll
+// Pair with Navigation (overlayMode: true) for transparent-to-solid nav
 //
 // Framer Code Component with full property controls
 
@@ -9,12 +9,6 @@ import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { useRef } from "react"
 
 // --- Types ---
-
-interface NavLink {
-    label: string
-    url: string
-    hasDropdown: boolean
-}
 
 interface FloatingCard {
     label: string
@@ -34,16 +28,6 @@ interface Props {
     videoSrc: string
     posterImage: string
     useVideo: boolean
-
-    // Overlay Navigation
-    showOverlayNav: boolean
-    navLogoText: string
-    navLogoImage: string
-    navUseLogoImage: boolean
-    navLogoIconColor: string
-    navLinks: NavLink[]
-    navCtaText: string
-    navCtaUrl: string
 
     // Floating cards
     cards: FloatingCard[]
@@ -78,22 +62,6 @@ function HeroScroll(props: Props) {
         videoSrc = "",
         posterImage = "",
         useVideo = true,
-
-        // Overlay Nav
-        showOverlayNav = true,
-        navLogoText = "beamr",
-        navLogoImage = "",
-        navUseLogoImage = false,
-        navLogoIconColor = "#6C5CE7",
-        navLinks = [
-            { label: "Solutions", url: "#solutions", hasDropdown: true },
-            { label: "Products", url: "#products", hasDropdown: true },
-            { label: "Technology", url: "#technology", hasDropdown: false },
-            { label: "Blog", url: "#blog", hasDropdown: false },
-            { label: "Company", url: "#company", hasDropdown: false },
-        ],
-        navCtaText = "Let's Talk",
-        navCtaUrl = "#contact",
 
         cards = [
             { label: "M&E", image: "", position: "top-left" },
@@ -158,9 +126,6 @@ function HeroScroll(props: Props) {
         ["#0f1117", "#0f1117", pageBgLight]
     )
 
-    // --- Overlay nav ---
-    const navOpacity = useTransform(smooth, [t0, t0 + (t1 - t0) * 0.35], [1, 0])
-
     // --- Heading: bottom-left → center (cross-fade) ---
     const headingBottomOpacity = useTransform(smooth, [t0, t0 + (t1 - t0) * 0.5], [1, 0])
     const headingCenterOpacity = useTransform(smooth, [t0 + (t1 - t0) * 0.4, t1], [0, 1])
@@ -216,188 +181,8 @@ function HeroScroll(props: Props) {
                     overflow: "hidden",
                     backgroundColor: pageBg,
                     fontFamily,
-                    zIndex: showOverlayNav ? 1001 : "auto",
                 }}
             >
-                {/* ================================
-                    TRANSPARENT OVERLAY NAVIGATION
-                    ================================ */}
-                {showOverlayNav && (
-                    <motion.nav
-                        style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            zIndex: 1001,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "14px 48px",
-                            opacity: navOpacity,
-                            boxSizing: "border-box",
-                        }}
-                    >
-                        {/* Logo */}
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                                flexShrink: 0,
-                            }}
-                        >
-                            {navUseLogoImage && navLogoImage ? (
-                                <img
-                                    src={navLogoImage}
-                                    alt={navLogoText}
-                                    style={{
-                                        height: 30,
-                                        objectFit: "contain",
-                                    }}
-                                />
-                            ) : (
-                                <>
-                                    <div
-                                        style={{
-                                            width: 26,
-                                            height: 26,
-                                            borderRadius: 6,
-                                            backgroundColor: navLogoIconColor,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                        }}
-                                    >
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                        >
-                                            <rect
-                                                x="2"
-                                                y="2"
-                                                width="5"
-                                                height="5"
-                                                rx="1"
-                                                fill="white"
-                                                opacity="0.9"
-                                            />
-                                            <rect
-                                                x="9"
-                                                y="2"
-                                                width="5"
-                                                height="5"
-                                                rx="1"
-                                                fill="white"
-                                                opacity="0.6"
-                                            />
-                                            <rect
-                                                x="2"
-                                                y="9"
-                                                width="5"
-                                                height="5"
-                                                rx="1"
-                                                fill="white"
-                                                opacity="0.6"
-                                            />
-                                            <rect
-                                                x="9"
-                                                y="9"
-                                                width="5"
-                                                height="5"
-                                                rx="1"
-                                                fill="white"
-                                                opacity="0.35"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <span
-                                        style={{
-                                            fontSize: 20,
-                                            fontWeight: 700,
-                                            color: "#ffffff",
-                                            letterSpacing: "-0.01em",
-                                            fontFamily,
-                                        }}
-                                    >
-                                        {navLogoText}
-                                    </span>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Nav Links */}
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 32,
-                            }}
-                        >
-                            {navLinks.map((link, i) => (
-                                <a
-                                    key={i}
-                                    href={link.hasDropdown ? undefined : link.url}
-                                    style={{
-                                        color: "rgba(255,255,255,0.9)",
-                                        textDecoration: "none",
-                                        fontSize: 15,
-                                        fontWeight: 500,
-                                        fontFamily,
-                                        cursor: "pointer",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 4,
-                                        transition: "color 0.2s",
-                                    }}
-                                >
-                                    {link.label}
-                                    {link.hasDropdown && (
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 12 12"
-                                            fill="none"
-                                        >
-                                            <path
-                                                d="M3 4.5L6 7.5L9 4.5"
-                                                stroke="rgba(255,255,255,0.7)"
-                                                strokeWidth="1.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
-                                    )}
-                                </a>
-                            ))}
-                        </div>
-
-                        {/* CTA */}
-                        <a
-                            href={navCtaUrl}
-                            style={{
-                                backgroundColor: "rgba(255,255,255,0.15)",
-                                backdropFilter: "blur(8px)",
-                                color: "#ffffff",
-                                padding: "10px 24px",
-                                borderRadius: 8,
-                                fontSize: 14,
-                                fontWeight: 600,
-                                textDecoration: "none",
-                                fontFamily,
-                                whiteSpace: "nowrap",
-                                border: "1px solid rgba(255,255,255,0.2)",
-                                transition: "background 0.2s",
-                                flexShrink: 0,
-                            }}
-                        >
-                            {navCtaText}
-                        </a>
-                    </motion.nav>
-                )}
-
                 {/* ================================
                     VIDEO CONTAINER
                     ================================ */}
@@ -745,80 +530,6 @@ addPropertyControls(HeroScroll, {
         step: 0.05,
     },
 
-    // --- Overlay Navigation ---
-    showOverlayNav: {
-        type: ControlType.Boolean,
-        title: "Overlay Nav",
-        defaultValue: true,
-    },
-    navLogoText: {
-        type: ControlType.String,
-        title: "Nav Logo Text",
-        defaultValue: "beamr",
-        hidden: (props) => !props.showOverlayNav,
-    },
-    navUseLogoImage: {
-        type: ControlType.Boolean,
-        title: "Nav Logo Image",
-        defaultValue: false,
-        hidden: (props) => !props.showOverlayNav,
-    },
-    navLogoImage: {
-        type: ControlType.Image,
-        title: "Nav Logo File",
-        hidden: (props) => !props.showOverlayNav || !props.navUseLogoImage,
-    },
-    navLogoIconColor: {
-        type: ControlType.Color,
-        title: "Nav Icon Color",
-        defaultValue: "#6C5CE7",
-        hidden: (props) => !props.showOverlayNav || props.navUseLogoImage,
-    },
-    navLinks: {
-        type: ControlType.Array,
-        title: "Nav Links",
-        maxCount: 8,
-        hidden: (props) => !props.showOverlayNav,
-        control: {
-            type: ControlType.Object,
-            controls: {
-                label: {
-                    type: ControlType.String,
-                    title: "Label",
-                    defaultValue: "Link",
-                },
-                url: {
-                    type: ControlType.String,
-                    title: "URL",
-                    defaultValue: "#",
-                },
-                hasDropdown: {
-                    type: ControlType.Boolean,
-                    title: "Dropdown",
-                    defaultValue: false,
-                },
-            },
-        },
-        defaultValue: [
-            { label: "Solutions", url: "#solutions", hasDropdown: true },
-            { label: "Products", url: "#products", hasDropdown: true },
-            { label: "Technology", url: "#technology", hasDropdown: false },
-            { label: "Blog", url: "#blog", hasDropdown: false },
-            { label: "Company", url: "#company", hasDropdown: false },
-        ],
-    },
-    navCtaText: {
-        type: ControlType.String,
-        title: "Nav CTA Text",
-        defaultValue: "Let's Talk",
-        hidden: (props) => !props.showOverlayNav,
-    },
-    navCtaUrl: {
-        type: ControlType.String,
-        title: "Nav CTA URL",
-        defaultValue: "#contact",
-        hidden: (props) => !props.showOverlayNav,
-    },
     // --- Floating Cards ---
     cards: {
         type: ControlType.Array,

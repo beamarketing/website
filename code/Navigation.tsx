@@ -1,4 +1,5 @@
 // Beamr Homepage - Navigation Bar with Mega Menu
+// Supports overlay mode: transparent on hero, transitions to solid on scroll
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
@@ -74,9 +75,11 @@ interface Props {
     fontFamily: string
     sticky: boolean
 
-    // Scroll-reveal mode: nav starts hidden, slides in after threshold
-    hideUntilScroll: boolean
-    scrollRevealThreshold: number
+    // Overlay mode: transparent nav on hero, solid after scroll
+    overlayMode: boolean
+    overlayBgColor: string
+    overlayTextColor: string
+    scrollThreshold: number
 
     style?: React.CSSProperties
 }
@@ -187,44 +190,58 @@ function Navigation(props: Props) {
         fontFamily = "'Inter', sans-serif",
         sticky = true,
 
-        hideUntilScroll = false,
-        scrollRevealThreshold = 400,
+        overlayMode = false,
+        overlayBgColor = "rgba(0,0,0,0.05)",
+        overlayTextColor = "#ffffff",
+        scrollThreshold = 400,
 
         style,
     } = props
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-    const [scrollRevealed, setScrollRevealed] = useState(!hideUntilScroll)
+    const [pastThreshold, setPastThreshold] = useState(false)
 
     useEffect(() => {
-        if (!hideUntilScroll) {
-            setScrollRevealed(true)
+        if (!overlayMode) {
+            setPastThreshold(true)
             return
         }
         const onScroll = () => {
-            setScrollRevealed(window.scrollY >= scrollRevealThreshold)
+            setPastThreshold(window.scrollY >= scrollThreshold)
         }
         onScroll()
         window.addEventListener("scroll", onScroll, { passive: true })
         return () => window.removeEventListener("scroll", onScroll)
-    }, [hideUntilScroll, scrollRevealThreshold])
+    }, [overlayMode, scrollThreshold])
+
+    // --- Determine current visual state ---
+    const isOverlay = overlayMode && !pastThreshold
+
+    const currentBg = isOverlay ? overlayBgColor : bgColor
+    const currentText = isOverlay ? overlayTextColor : textColor
+    const currentHover = isOverlay ? "rgba(255,255,255,0.7)" : textHoverColor
+    const currentBorder = isOverlay ? "transparent" : borderColor
+    const currentCtaBg = isOverlay ? "rgba(255,255,255,0.15)" : ctaBgColor
+    const currentCtaText = isOverlay ? overlayTextColor : ctaTextColor
+    const currentLogoText = isOverlay ? overlayTextColor : textColor
+
+    // Chevron colors
+    const chevronDefault = isOverlay ? "rgba(255,255,255,0.7)" : textColor
+    const chevronActive = isOverlay ? "#ffffff" : textHoverColor
 
     return (
         <nav
             style={{
                 ...style,
                 width: "100%",
-                position: hideUntilScroll ? "fixed" : sticky ? "sticky" : "relative",
+                position: overlayMode ? "fixed" : sticky ? "sticky" : "relative",
                 top: 0,
                 left: 0,
                 right: 0,
-                zIndex: 1000,
+                zIndex: 1100,
                 fontFamily,
                 boxSizing: "border-box",
-                transform: hideUntilScroll && !scrollRevealed ? "translateY(-100%)" : "translateY(0)",
-                opacity: hideUntilScroll && !scrollRevealed ? 0 : 1,
-                pointerEvents: hideUntilScroll && !scrollRevealed ? "none" : "auto",
-                transition: "transform 0.35s ease, opacity 0.35s ease",
+                transition: "background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease",
             }}
             onMouseLeave={() => setActiveDropdown(null)}
         >
@@ -236,11 +253,14 @@ function Navigation(props: Props) {
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "14px 48px",
-                    backgroundColor: bgColor,
-                    borderBottom: `1px solid ${borderColor}`,
+                    backgroundColor: currentBg,
+                    borderBottom: `1px solid ${currentBorder}`,
                     boxSizing: "border-box",
                     position: "relative",
-                    zIndex: 1001,
+                    zIndex: 1101,
+                    transition: "background-color 0.4s ease, border-color 0.4s ease",
+                    backdropFilter: isOverlay ? "blur(8px)" : "none",
+                    boxShadow: !isOverlay && overlayMode ? "0 2px 16px rgba(0,0,0,0.08)" : "none",
                 }}
             >
                 {/* Logo */}
@@ -259,6 +279,8 @@ function Navigation(props: Props) {
                             style={{
                                 height: logoFontSize + 8,
                                 objectFit: "contain",
+                                transition: "filter 0.4s ease",
+                                filter: isOverlay ? "brightness(0) invert(1)" : "none",
                             }}
                         />
                     ) : (
@@ -324,9 +346,10 @@ function Navigation(props: Props) {
                                 style={{
                                     fontSize: logoFontSize,
                                     fontWeight: 700,
-                                    color: textColor,
+                                    color: currentLogoText,
                                     letterSpacing: "-0.01em",
                                     fontFamily,
+                                    transition: "color 0.4s ease",
                                 }}
                             >
                                 {logoText}
@@ -362,12 +385,12 @@ function Navigation(props: Props) {
                                 style={{
                                     color:
                                         activeDropdown === link.label
-                                            ? textHoverColor
-                                            : textColor,
+                                            ? currentHover
+                                            : currentText,
                                     textDecoration: "none",
                                     fontSize: 15,
                                     fontWeight: 500,
-                                    transition: "color 0.2s",
+                                    transition: "color 0.3s ease",
                                     fontFamily,
                                     cursor: "pointer",
                                     display: "flex",
@@ -395,12 +418,13 @@ function Navigation(props: Props) {
                                             d="M3 4.5L6 7.5L9 4.5"
                                             stroke={
                                                 activeDropdown === link.label
-                                                    ? textHoverColor
-                                                    : textColor
+                                                    ? chevronActive
+                                                    : chevronDefault
                                             }
                                             strokeWidth="1.5"
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
+                                            style={{ transition: "stroke 0.3s ease" }}
                                         />
                                     </svg>
                                 )}
@@ -413,17 +437,19 @@ function Navigation(props: Props) {
                 <a
                     href={ctaUrl}
                     style={{
-                        backgroundColor: ctaBgColor,
-                        color: ctaTextColor,
+                        backgroundColor: currentCtaBg,
+                        color: currentCtaText,
                         padding: "10px 24px",
                         borderRadius: 8,
                         fontSize: 15,
                         fontWeight: 600,
                         textDecoration: "none",
-                        transition: "opacity 0.2s",
+                        transition: "background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease",
                         fontFamily,
                         whiteSpace: "nowrap",
                         flexShrink: 0,
+                        border: isOverlay ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
+                        backdropFilter: isOverlay ? "blur(8px)" : "none",
                     }}
                 >
                     {ctaText}
@@ -441,7 +467,7 @@ function Navigation(props: Props) {
                         backgroundColor: dropdownBgColor,
                         borderBottom: `1px solid ${borderColor}`,
                         boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-                        zIndex: 1000,
+                        zIndex: 1100,
                         animation: "fadeIn 0.15s ease-out",
                     }}
                     onMouseEnter={() => setActiveDropdown("Solutions")}
@@ -998,26 +1024,42 @@ addPropertyControls(Navigation, {
         },
     },
 
+    // --- Overlay Mode ---
+    overlayMode: {
+        type: ControlType.Boolean,
+        title: "Overlay Mode",
+        defaultValue: false,
+        description: "Transparent on hero, solid after scroll. Use with HeroScroll.",
+    },
+    overlayBgColor: {
+        type: ControlType.Color,
+        title: "Overlay BG",
+        defaultValue: "rgba(0,0,0,0.05)",
+        hidden: (props) => !props.overlayMode,
+    },
+    overlayTextColor: {
+        type: ControlType.Color,
+        title: "Overlay Text",
+        defaultValue: "#ffffff",
+        hidden: (props) => !props.overlayMode,
+    },
+    scrollThreshold: {
+        type: ControlType.Number,
+        title: "Scroll Threshold",
+        defaultValue: 400,
+        min: 100,
+        max: 1500,
+        step: 50,
+        hidden: (props) => !props.overlayMode,
+        description: "Pixels scrolled before nav transitions to solid",
+    },
+
     // --- Styling ---
     sticky: {
         type: ControlType.Boolean,
         title: "Sticky Nav",
         defaultValue: true,
-    },
-    hideUntilScroll: {
-        type: ControlType.Boolean,
-        title: "Hide Until Scroll",
-        defaultValue: false,
-        description: "Nav starts hidden and slides in after scroll threshold",
-    },
-    scrollRevealThreshold: {
-        type: ControlType.Number,
-        title: "Reveal After (px)",
-        defaultValue: 400,
-        min: 100,
-        max: 1500,
-        step: 50,
-        hidden: (props) => !props.hideUntilScroll,
+        hidden: (props) => props.overlayMode,
     },
     bgColor: {
         type: ControlType.Color,
