@@ -89,6 +89,8 @@ function Homepage(props: Props) {
                     ctaBgColor="#111111"
                     ctaTextColor="#ffffff"
                     sticky={true}
+                    hideUntilScroll={true}
+                    scrollRevealThreshold={400}
                     useLogoImage={false}
                     logoImage=""
                     borderColor="#f0f0f0"

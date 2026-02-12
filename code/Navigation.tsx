@@ -2,7 +2,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 // --- Sub-types ---
 
@@ -73,6 +73,11 @@ interface Props {
     borderColor: string
     fontFamily: string
     sticky: boolean
+
+    // Scroll-reveal mode: nav starts hidden, slides in after threshold
+    hideUntilScroll: boolean
+    scrollRevealThreshold: number
+
     style?: React.CSSProperties
 }
 
@@ -181,21 +186,45 @@ function Navigation(props: Props) {
         borderColor = "#f0f0f0",
         fontFamily = "'Inter', sans-serif",
         sticky = true,
+
+        hideUntilScroll = false,
+        scrollRevealThreshold = 400,
+
         style,
     } = props
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+    const [scrollRevealed, setScrollRevealed] = useState(!hideUntilScroll)
+
+    useEffect(() => {
+        if (!hideUntilScroll) {
+            setScrollRevealed(true)
+            return
+        }
+        const onScroll = () => {
+            setScrollRevealed(window.scrollY >= scrollRevealThreshold)
+        }
+        onScroll()
+        window.addEventListener("scroll", onScroll, { passive: true })
+        return () => window.removeEventListener("scroll", onScroll)
+    }, [hideUntilScroll, scrollRevealThreshold])
 
     return (
         <nav
             style={{
                 ...style,
                 width: "100%",
-                position: sticky ? "sticky" : "relative",
+                position: hideUntilScroll ? "fixed" : sticky ? "sticky" : "relative",
                 top: 0,
+                left: 0,
+                right: 0,
                 zIndex: 1000,
                 fontFamily,
                 boxSizing: "border-box",
+                transform: hideUntilScroll && !scrollRevealed ? "translateY(-100%)" : "translateY(0)",
+                opacity: hideUntilScroll && !scrollRevealed ? 0 : 1,
+                pointerEvents: hideUntilScroll && !scrollRevealed ? "none" : "auto",
+                transition: "transform 0.35s ease, opacity 0.35s ease",
             }}
             onMouseLeave={() => setActiveDropdown(null)}
         >
@@ -974,6 +1003,21 @@ addPropertyControls(Navigation, {
         type: ControlType.Boolean,
         title: "Sticky Nav",
         defaultValue: true,
+    },
+    hideUntilScroll: {
+        type: ControlType.Boolean,
+        title: "Hide Until Scroll",
+        defaultValue: false,
+        description: "Nav starts hidden and slides in after scroll threshold",
+    },
+    scrollRevealThreshold: {
+        type: ControlType.Number,
+        title: "Reveal After (px)",
+        defaultValue: 400,
+        min: 100,
+        max: 1500,
+        step: 50,
+        hidden: (props) => !props.hideUntilScroll,
     },
     bgColor: {
         type: ControlType.Color,

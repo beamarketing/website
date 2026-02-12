@@ -44,7 +44,6 @@ interface Props {
     navLinks: NavLink[]
     navCtaText: string
     navCtaUrl: string
-    navHeight: number
 
     // Floating cards
     cards: FloatingCard[]
@@ -95,7 +94,6 @@ function HeroScroll(props: Props) {
         ],
         navCtaText = "Let's Talk",
         navCtaUrl = "#contact",
-        navHeight = 58,
 
         cards = [
             { label: "M&E", image: "", position: "top-left" },
@@ -206,7 +204,6 @@ function HeroScroll(props: Props) {
                 height: scrollDistance,
                 position: "relative",
                 width: "100%",
-                marginTop: showOverlayNav ? -navHeight : 0,
             }}
         >
             {/* Sticky viewport — exactly 100vh */}
@@ -219,6 +216,7 @@ function HeroScroll(props: Props) {
                     overflow: "hidden",
                     backgroundColor: pageBg,
                     fontFamily,
+                    zIndex: showOverlayNav ? 1001 : "auto",
                 }}
             >
                 {/* ================================
@@ -821,17 +819,6 @@ addPropertyControls(HeroScroll, {
         defaultValue: "#contact",
         hidden: (props) => !props.showOverlayNav,
     },
-    navHeight: {
-        type: ControlType.Number,
-        title: "Nav Overlap",
-        defaultValue: 58,
-        min: 0,
-        max: 120,
-        step: 2,
-        description: "Height of the regular sticky nav to overlap (px)",
-        hidden: (props) => !props.showOverlayNav,
-    },
-
     // --- Floating Cards ---
     cards: {
         type: ControlType.Array,
