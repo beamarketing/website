@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beamr - Video Optimization for Media & Entertainment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           CSS CUSTOM PROPERTIES (Framer: Design Tokens)
+           Change these to retheme the entire page
+           ============================================ */
+        :root {
+            --color-bg: #ffffff;
+            --color-bg-dark: #0f1117;
+            --color-bg-card: #f9fafb;
+            --color-bg-card-dark: #1a1b2e;
+            --color-primary: #4F46E5;
+            --color-primary-hover: #4338CA;
+            --color-text: #111827;
+            --color-text-secondary: #6b7280;
+            --color-text-light: #9ca3af;
+            --color-text-white: #ffffff;
+            --color-border: #e5e7eb;
+            --color-border-light: #f3f4f6;
+            --color-accent-green: #10b981;
+            --color-accent-purple: #6C5CE7;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --max-width: 1200px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-family);
+            color: var(--color-text);
+            background: var(--color-bg);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        a { text-decoration: none; color: inherit; }
+        img { max-width: 100%; display: block; }
+        button { font-family: inherit; cursor: pointer; }
+
+        /* ============================================
+           SCROLL REVEAL ANIMATIONS
+           ============================================ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+        .reveal-delay-5 { transition-delay: 0.5s; }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-left.visible { opacity: 1; transform: translateX(0); }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+        /* ============================================
+           NAVIGATION
+           ============================================ */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--color-bg);
+            border-bottom: 1px solid var(--color-border-light);
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.95);
+        }
+        .nav-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--color-accent-purple);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-text);
+            letter-spacing: -0.01em;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+        .nav-link {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 0;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .nav-link:hover { color: var(--color-primary); }
+        .nav-link svg { transition: transform 0.2s; }
+        .nav-link:hover svg { transform: rotate(180deg); }
+        .nav-cta {
+            background: var(--color-text);
+            color: var(--color-text-white);
+            padding: 10px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            transition: opacity 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+        /* ============================================
+           HERO
+           ============================================ */
+        .hero {
+            padding: 80px 32px 60px;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+            min-height: 600px;
+        }
+        .hero-content { display: flex; flex-direction: column; gap: 24px; }
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .hero-label-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-primary);
+        }
+        .hero-title {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            color: var(--color-text);
+        }
+        .hero-subtitle {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+            line-height: 1.65;
+            max-width: 480px;
+        }
+        .hero-buttons { display: flex; gap: 12px; margin-top: 8px; }
+        .btn-primary {
+            background: var(--color-text);
+            color: var(--color-text-white);
+            padding: 14px 28px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            opacity: 0.88;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-text);
+            padding: 14px 28px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            border: 1.5px solid var(--color-border);
+            transition: border-color 0.2s, transform 0.2s, background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-secondary:hover {
+            border-color: var(--color-text);
+            transform: translateY(-2px);
+            background: var(--color-bg-card);
+        }
+        .hero-logos {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            margin-top: 16px;
+            opacity: 0.45;
+        }
+        .hero-logos span {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--color-text);
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+        .hero-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 28px 72px rgba(0,0,0,0.1);
+        }
+        .hero-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .hero-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+        .hero-card-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-accent-green);
+            background: rgba(16,185,129,0.08);
+            padding: 4px 10px;
+            border-radius: 100px;
+        }
+        .hero-card-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-light);
+            font-size: 14px;
+        }
+        .hero-card-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .hero-stat {
+            text-align: center;
+            padding: 12px 8px;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border-light);
+        }
+        .hero-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: block;
+        }
+        .hero-stat-label {
+            font-size: 11px;
+            color: var(--color-text-light);
+            font-weight: 500;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* Floating card animation */
+        .hero-float {
+            position: absolute;
+            background: white;
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            animation: float 6s ease-in-out infinite;
+        }
+        .hero-float-1 { top: -20px; right: -30px; animation-delay: 0s; }
+        .hero-float-2 { bottom: 40px; left: -40px; animation-delay: 2s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+        .hero-float-label { font-size: 11px; color: var(--color-text-light); font-weight: 500; }
+        .hero-float-value { font-size: 18px; font-weight: 700; color: var(--color-accent-green); margin-top: 2px; }
+
+        /* ============================================
+           SECTION: HOW COMPANIES USE BEAMR
+           ============================================ */
+        .section { padding: 100px 32px; }
+        .section-inner { max-width: var(--max-width); margin: 0 auto; }
+        .section-header { margin-bottom: 48px; }
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--color-text);
+            letter-spacing: -0.025em;
+            line-height: 1.15;
+        }
+        .section-subtitle {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+            margin-top: 12px;
+            max-width: 520px;
+            line-height: 1.6;
+        }
+
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+        .use-case-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.35s;
+        }
+        .use-case-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 48px rgba(0,0,0,0.08);
+            border-color: var(--color-primary);
+        }
+        .use-case-img {
+            width: 100%;
+            height: 130px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .use-case-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .use-case-card:hover .use-case-img img { transform: scale(1.05); }
+        .use-case-body { padding: 16px; }
+        .use-case-meta {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .use-case-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-top: 6px;
+            line-height: 1.35;
+        }
+
+        /* ============================================
+           SECTION: CABR SCIENCE (DARK)
+           ============================================ */
+        .section-dark {
+            background: var(--color-bg-dark);
+            padding: 100px 32px;
+        }
+        .cabr-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 64px;
+            align-items: center;
+        }
+        .cabr-content { display: flex; flex-direction: column; gap: 20px; }
+        .cabr-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .cabr-title {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--color-text-white);
+            letter-spacing: -0.025em;
+            line-height: 1.15;
+        }
+        .cabr-desc {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.7;
+        }
+        .cabr-link {
+            color: var(--color-primary);
+            font-size: 15px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.3s;
+        }
+        .cabr-link:hover { gap: 12px; }
+        .cabr-video {
+            width: 100%;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, #1a1b35 0%, #252650 100%);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .cabr-video:hover { transform: scale(1.02); }
+        .cabr-play {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 32px rgba(79,70,229,0.3);
+        }
+        .cabr-video:hover .cabr-play {
+            transform: scale(1.1);
+            box-shadow: 0 12px 48px rgba(79,70,229,0.5);
+        }
+        .cabr-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-top: 56px;
+            padding-top: 48px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .cabr-stat { text-align: center; }
+        .cabr-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-text-white);
+            display: block;
+        }
+        .cabr-stat-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            margin-top: 4px;
+            display: block;
+        }
+        .cabr-stat-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+            display: block;
+            line-height: 1.4;
+        }
+
+        /* ============================================
+           SECTION: TRUST / AWARDS
+           ============================================ */
+        .trust-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+        .trust-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            text-align: center;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.35s;
+        }
+        .trust-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+        }
+        .trust-card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: rgba(79,70,229,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+        .trust-card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+        .trust-card-label {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+        .testimonial-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-xl);
+            padding: 48px;
+            max-width: 800px;
+            margin: 0 auto;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .testimonial-card:hover { transform: translateY(-3px); }
+        .testimonial-quote-mark {
+            font-size: 48px;
+            color: var(--color-primary);
+            line-height: 1;
+            opacity: 0.4;
+            margin-bottom: 12px;
+        }
+        .testimonial-text {
+            font-size: 18px;
+            color: var(--color-text);
+            line-height: 1.7;
+            font-style: italic;
+            margin-bottom: 24px;
+        }
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .testimonial-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary) 0%, #818CF8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .testimonial-name { font-size: 15px; font-weight: 600; color: var(--color-text); }
+        .testimonial-role { font-size: 13px; color: var(--color-text-secondary); }
+
+        /* ============================================
+           SECTION: VIDEO EFFICIENCY PARTNER
+           ============================================ */
+        .partner-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 64px;
+            align-items: center;
+        }
+        .partner-content { display: flex; flex-direction: column; gap: 20px; }
+        .partner-desc {
+            font-size: 16px;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+        }
+        .partner-visual {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .partner-visual:hover { transform: scale(1.02); }
+        .partner-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .partner-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 56px;
+        }
+        .partner-feature {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+        .partner-feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(79,70,229,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+        .partner-feature-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+        .partner-feature-desc {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-top: 2px;
+            line-height: 1.5;
+        }
+
+        /* ============================================
+           SECTION: NEWS
+           ============================================ */
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+        }
+        .news-link {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.3s;
+        }
+        .news-link:hover { gap: 12px; }
+        .news-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+        .news-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.35s,
+                        border-color 0.35s;
+        }
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+            border-color: var(--color-primary);
+        }
+        .news-card-featured { grid-row: span 2; }
+        .news-card-img {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            overflow: hidden;
+        }
+        .news-card-featured .news-card-img { height: 280px; }
+        .news-card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .news-card:hover .news-card-img img { transform: scale(1.05); }
+        .news-card-body { padding: 20px; }
+        .news-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .news-card-category {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .news-card-date {
+            font-size: 12px;
+            color: var(--color-text-light);
+        }
+        .news-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            line-height: 1.4;
+        }
+        .news-card-featured .news-card-title { font-size: 20px; }
+        .news-card-excerpt {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .news-card-read {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 12px;
+            transition: gap 0.3s;
+        }
+        .news-card:hover .news-card-read { gap: 8px; }
+
+        /* ============================================
+           SECTION: FAQ
+           ============================================ */
+        .faq-list {
+            max-width: 780px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .faq-item {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .faq-item.active { border-color: var(--color-primary); }
+        .faq-question {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-text);
+            text-align: left;
+            gap: 16px;
+        }
+        .faq-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--color-bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            color: var(--color-primary);
+            transition: transform 0.3s, background 0.3s;
+        }
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+            background: rgba(79,70,229,0.08);
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .faq-item.active .faq-answer { max-height: 300px; }
+        .faq-answer-inner {
+            padding: 0 24px 20px;
+            font-size: 15px;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ============================================
+           SECTION: CTA
+           ============================================ */
+        .cta-section {
+            padding: 80px 32px;
+        }
+        .cta-card {
+            max-width: 860px;
+            margin: 0 auto;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-xl);
+            padding: 72px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(79,70,229,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .cta-title {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--color-text);
+            letter-spacing: -0.025em;
+            position: relative;
+            z-index: 1;
+        }
+        .cta-subtitle {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+            margin-top: 16px;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            background: var(--color-bg-dark);
+            padding: 72px 32px 32px;
+        }
+        .footer-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+        .footer-top {
+            display: grid;
+            grid-template-columns: 1.5fr repeat(4, 1fr);
+            gap: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .footer-logo-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--color-accent-purple);
+            border-radius: 5px;
+        }
+        .footer-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-white);
+        }
+        .footer-tagline {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.5;
+            max-width: 260px;
+        }
+        .footer-social {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .footer-social-link {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+        }
+        .footer-social-link:hover { background: rgba(255,255,255,0.12); color: white; }
+        .footer-col-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-white);
+            margin-bottom: 16px;
+        }
+        .footer-col-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            list-style: none;
+        }
+        .footer-col-links a {
+            font-size: 14px;
+            color: rgba(255,255,255,0.45);
+            transition: color 0.2s;
+        }
+        .footer-col-links a:hover { color: rgba(255,255,255,0.8); }
+
+        .footer-newsletter {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 32px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: -40px;
+            padding-bottom: 40px;
+        }
+        .footer-newsletter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-white);
+        }
+        .footer-newsletter-form {
+            display: flex;
+            gap: 8px;
+        }
+        .footer-newsletter-input {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: white;
+            font-size: 14px;
+            font-family: var(--font-family);
+            width: 280px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .footer-newsletter-input:focus { border-color: var(--color-primary); }
+        .footer-newsletter-input::placeholder { color: rgba(255,255,255,0.3); }
+        .footer-newsletter-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            background: var(--color-primary);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .footer-newsletter-btn:hover { opacity: 0.85; }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 24px;
+            margin-top: 32px;
+        }
+        .footer-copy {
+            font-size: 13px;
+            color: rgba(255,255,255,0.35);
+        }
+        .footer-legal {
+            display: flex;
+            gap: 24px;
+        }
+        .footer-legal a {
+            font-size: 13px;
+            color: rgba(255,255,255,0.35);
+            transition: color 0.2s;
+        }
+        .footer-legal a:hover { color: rgba(255,255,255,0.7); }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; gap: 48px; }
+            .hero-title { font-size: 42px; }
+            .use-cases-grid { grid-template-columns: repeat(3, 1fr); }
+            .cabr-grid { grid-template-columns: 1fr; }
+            .cabr-stats { grid-template-columns: repeat(2, 1fr); }
+            .partner-grid { grid-template-columns: 1fr; }
+            .partner-features { grid-template-columns: 1fr; }
+            .news-grid { grid-template-columns: 1fr 1fr; }
+            .news-card-featured { grid-row: span 1; }
+            .trust-cards { grid-template-columns: 1fr; }
+            .footer-top { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 640px) {
+            .nav-links { display: none; }
+            .hero-title { font-size: 34px; }
+            .section-title { font-size: 30px; }
+            .cabr-title { font-size: 30px; }
+            .use-cases-grid { grid-template-columns: 1fr; }
+            .news-grid { grid-template-columns: 1fr; }
+            .hero-buttons { flex-direction: column; }
+            .footer-top { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+         NAVIGATION
+         ========================================== -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <rect x="2" y="2" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
+                        <rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.6"/>
+                        <rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.6"/>
+                        <rect x="9" y="9" width="5" height="5" rx="1" fill="white" opacity="0.35"/>
+                    </svg>
+                </div>
+                <span class="nav-logo-text">beamr</span>
+            </a>
+            <ul class="nav-links">
+                <li><a class="nav-link" href="#solutions">Solutions <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+                <li><a class="nav-link" href="#products">Products <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+                <li><a class="nav-link" href="#technology">Technology</a></li>
+                <li><a class="nav-link" href="#blog">Blog</a></li>
+                <li><a class="nav-link" href="#company">Company</a></li>
+            </ul>
+            <a href="#contact" class="nav-cta">Let's Talk</a>
+        </div>
+    </nav>
+
+    <!-- ==========================================
+         HERO
+         ========================================== -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-label reveal">
+                <span class="hero-label-dot"></span>
+                MEDIA & ENTERTAINMENT
+            </div>
+            <h1 class="hero-title reveal reveal-delay-1">Video optimization for media &amp; entertainment</h1>
+            <p class="hero-subtitle reveal reveal-delay-2">Reduce CDN and storage costs by 30-50% while maintaining broadcast quality. Trusted by Netflix, Paramount, and Tier 1 platforms.</p>
+            <div class="hero-buttons reveal reveal-delay-3">
+                <a href="#demo" class="btn-primary">Try it in Action <span>&rarr;</span></a>
+                <a href="#request" class="btn-secondary">Request a Demo <span>&rarr;</span></a>
+            </div>
+            <div class="hero-logos reveal reveal-delay-4">
+                <span>NVIDIA</span>
+                <span>Meta</span>
+                <span>Netflix</span>
+                <span>Paramount</span>
+            </div>
+        </div>
+        <div class="hero-visual reveal-right">
+            <div class="hero-card">
+                <div class="hero-card-header">
+                    <span class="hero-card-title">US Market Overview</span>
+                    <span class="hero-card-badge">Live</span>
+                </div>
+                <div class="hero-card-placeholder">
+                    <!-- Replace with your image/video -->
+                    Dashboard Preview
+                </div>
+                <div class="hero-card-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">47%</span>
+                        <span class="hero-stat-label">CDN Savings</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">4K</span>
+                        <span class="hero-stat-label">Resolution</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">100%</span>
+                        <span class="hero-stat-label">Quality</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Floating cards -->
+            <div class="hero-float hero-float-1">
+                <div class="hero-float-label">CDN Cost Reduction</div>
+                <div class="hero-float-value">-47%</div>
+            </div>
+            <div class="hero-float hero-float-2">
+                <div class="hero-float-label">Quality Score</div>
+                <div class="hero-float-value">99.8%</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         HOW COMPANIES USE BEAMR
+         ========================================== -->
+    <section class="section" id="solutions" style="background: var(--color-bg-card);">
+        <div class="section-inner">
+            <div class="section-header reveal">
+                <span class="section-label">Use Cases</span>
+                <h2 class="section-title">How Companies Use Beamr</h2>
+            </div>
+            <div class="use-cases-grid">
+                <div class="use-case-card reveal reveal-delay-1">
+                    <div class="use-case-img"><!-- Upload image here --></div>
+                    <div class="use-case-body">
+                        <span class="use-case-meta">CDN &middot; Cost Savings</span>
+                        <h3 class="use-case-title">Cut CDN Costs by 30-50%</h3>
+                    </div>
+                </div>
+                <div class="use-case-card reveal reveal-delay-2">
+                    <div class="use-case-img"></div>
+                    <div class="use-case-body">
+                        <span class="use-case-meta">Storage &middot; Infrastructure</span>
+                        <h3 class="use-case-title">Reduce Storage Requirements by 50%</h3>
+                    </div>
+                </div>
+                <div class="use-case-card reveal reveal-delay-3">
+                    <div class="use-case-img"></div>
+                    <div class="use-case-body">
+                        <span class="use-case-meta">Quality &middot; Compression</span>
+                        <h3 class="use-case-title">Improve Visual Quality at Same Bitrate</h3>
+                    </div>
+                </div>
+                <div class="use-case-card reveal reveal-delay-4">
+                    <div class="use-case-img"></div>
+                    <div class="use-case-body">
+                        <span class="use-case-meta">Quality &middot; Encoding</span>
+                        <h3 class="use-case-title">Maintain Quality With Smaller Files</h3>
+                    </div>
+                </div>
+                <div class="use-case-card reveal reveal-delay-5">
+                    <div class="use-case-img"></div>
+                    <div class="use-case-body">
+                        <span class="use-case-meta">Resolution &middot; Upscaling</span>
+                        <h3 class="use-case-title">720p to 4K Without Doubling File Size</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         THE SCIENCE BEHIND CABR (DARK)
+         ========================================== -->
+    <section class="section-dark" id="technology">
+        <div class="section-inner">
+            <div class="cabr-grid">
+                <div class="cabr-content reveal-left">
+                    <span class="cabr-label">Technology</span>
+                    <h2 class="cabr-title">The Science Behind CABR</h2>
+                    <p class="cabr-desc">Content-Adaptive Bitrate (CABR) analyzes each frame of your video and intelligently adjusts encoding parameters. The result: dramatically smaller files with mathematically proven quality preservation.</p>
+                    <a href="#cabr" class="cabr-link">Explore Technology <span>&rarr;</span></a>
+                </div>
+                <div class="cabr-video reveal-right">
+                    <!-- Replace with your video -->
+                    <div class="cabr-play">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M6 4L16 10L6 16V4Z" fill="white"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="cabr-stats">
+                <div class="cabr-stat reveal reveal-delay-1">
+                    <span class="cabr-stat-value">30-50%</span>
+                    <span class="cabr-stat-label">Smaller Files</span>
+                    <span class="cabr-stat-desc">Reduce file size without quality loss</span>
+                </div>
+                <div class="cabr-stat reveal reveal-delay-2">
+                    <span class="cabr-stat-value">2x</span>
+                    <span class="cabr-stat-label">Faster Delivery</span>
+                    <span class="cabr-stat-desc">Accelerated content distribution</span>
+                </div>
+                <div class="cabr-stat reveal reveal-delay-3">
+                    <span class="cabr-stat-value">100%</span>
+                    <span class="cabr-stat-label">Quality Assured</span>
+                    <span class="cabr-stat-desc">Mathematically proven preservation</span>
+                </div>
+                <div class="cabr-stat reveal reveal-delay-4">
+                    <span class="cabr-stat-value">H&amp;M</span>
+                    <span class="cabr-stat-label">Human &amp; Machine</span>
+                    <span class="cabr-stat-desc">Optimized for both viewers and AI</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         WHY INDUSTRY LEADERS TRUST US
+         ========================================== -->
+    <section class="section">
+        <div class="section-inner">
+            <div class="section-header reveal" style="text-align: center; margin-bottom: 48px;">
+                <span class="section-label" style="display: block; text-align: center;">Recognition</span>
+                <h2 class="section-title" style="text-align: center;">Why Industry Leaders Trust Us</h2>
+                <p class="section-subtitle" style="text-align: center; margin: 12px auto 0;">Award-winning technology trusted by the world's leading media companies.</p>
+            </div>
+            <div class="trust-cards">
+                <div class="trust-card reveal reveal-delay-1">
+                    <div class="trust-card-icon">&#127942;</div>
+                    <div class="trust-card-value">Emmy Award</div>
+                    <div class="trust-card-label">Technology & Engineering Emmy</div>
+                </div>
+                <div class="trust-card reveal reveal-delay-2">
+                    <div class="trust-card-icon">&#128220;</div>
+                    <div class="trust-card-value">53 Patents</div>
+                    <div class="trust-card-label">Industry-leading IP portfolio</div>
+                </div>
+                <div class="trust-card reveal reveal-delay-3">
+                    <div class="trust-card-icon">&#127775;</div>
+                    <div class="trust-card-value">Tier 1 Clients</div>
+                    <div class="trust-card-label">Netflix, Paramount, and more</div>
+                </div>
+            </div>
+            <div class="testimonial-card reveal-scale">
+                <div class="testimonial-quote-mark">&ldquo;</div>
+                <p class="testimonial-text">Beamr's CABR technology has reduced our CDN costs by 42% while maintaining the visual quality our viewers expect. It's been a game-changer for our streaming infrastructure.</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">SC</div>
+                    <div>
+                        <div class="testimonial-name">Sarah Chen</div>
+                        <div class="testimonial-role">VP of Engineering, Major Streaming Platform</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         YOUR VIDEO EFFICIENCY PARTNER
+         ========================================== -->
+    <section class="section" style="background: var(--color-bg-card);">
+        <div class="section-inner">
+            <div class="partner-grid">
+                <div class="partner-content reveal-left">
+                    <span class="section-label">Partnership</span>
+                    <h2 class="section-title">Your Video Efficiency Partner</h2>
+                    <p class="partner-desc">Whether you're a streaming giant or an AI startup, Beamr delivers measurable results with seamless integration into your existing workflow.</p>
+                </div>
+                <div class="partner-visual reveal-right">
+                    <!-- Upload your image/video here -->
+                </div>
+            </div>
+            <div class="partner-features">
+                <div class="partner-feature reveal reveal-delay-1">
+                    <div class="partner-feature-icon">&#9889;</div>
+                    <div>
+                        <div class="partner-feature-title">Led by Video Experts</div>
+                        <div class="partner-feature-desc">Our team includes Emmy-winning video engineers and compression scientists.</div>
+                    </div>
+                </div>
+                <div class="partner-feature reveal reveal-delay-2">
+                    <div class="partner-feature-icon">&#9881;</div>
+                    <div>
+                        <div class="partner-feature-title">Customize Your Stack</div>
+                        <div class="partner-feature-desc">Flexible API and SDK integrations for any encoding pipeline.</div>
+                    </div>
+                </div>
+                <div class="partner-feature reveal reveal-delay-3">
+                    <div class="partner-feature-icon">&#128200;</div>
+                    <div>
+                        <div class="partner-feature-title">Scales With Your Growth</div>
+                        <div class="partner-feature-desc">From thousands to billions of minutes processed monthly.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         NEWS AND STORIES
+         ========================================== -->
+    <section class="section" id="blog">
+        <div class="section-inner">
+            <div class="news-header reveal">
+                <div>
+                    <span class="section-label">Insights</span>
+                    <h2 class="section-title">News and Stories</h2>
+                </div>
+                <a href="#all-articles" class="news-link">Read more <span>&rarr;</span></a>
+            </div>
+            <div class="news-grid">
+                <div class="news-card news-card-featured reveal reveal-delay-1">
+                    <div class="news-card-img"><!-- Upload image --></div>
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span class="news-card-category">Technology</span>
+                            <span class="news-card-date">Feb 5, 2026</span>
+                        </div>
+                        <h3 class="news-card-title">How CABR Reduces Streaming Costs by 50% Without Quality Loss</h3>
+                        <p class="news-card-excerpt">Discover the science behind content-adaptive bitrate encoding and how it's transforming video delivery infrastructure.</p>
+                        <span class="news-card-read">Read More <span>&rarr;</span></span>
+                    </div>
+                </div>
+                <div class="news-card reveal reveal-delay-2">
+                    <div class="news-card-img"></div>
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span class="news-card-category">Case Study</span>
+                            <span class="news-card-date">Jan 28, 2026</span>
+                        </div>
+                        <h3 class="news-card-title">Netflix Saves $2M in Annual Bandwidth</h3>
+                        <span class="news-card-read">Read More <span>&rarr;</span></span>
+                    </div>
+                </div>
+                <div class="news-card reveal reveal-delay-3">
+                    <div class="news-card-img"></div>
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span class="news-card-category">Industry</span>
+                            <span class="news-card-date">Jan 15, 2026</span>
+                        </div>
+                        <h3 class="news-card-title">The Future of Video Compression in AI</h3>
+                        <span class="news-card-read">Read More <span>&rarr;</span></span>
+                    </div>
+                </div>
+                <div class="news-card reveal reveal-delay-4">
+                    <div class="news-card-img"></div>
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span class="news-card-category">Product</span>
+                            <span class="news-card-date">Jan 8, 2026</span>
+                        </div>
+                        <h3 class="news-card-title">Introducing Beamr Cloud for Enterprise</h3>
+                        <span class="news-card-read">Read More <span>&rarr;</span></span>
+                    </div>
+                </div>
+                <div class="news-card reveal reveal-delay-5">
+                    <div class="news-card-img"></div>
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span class="news-card-category">Awards</span>
+                            <span class="news-card-date">Dec 20, 2025</span>
+                        </div>
+                        <h3 class="news-card-title">Beamr Wins NAB Show Best of Show 2025</h3>
+                        <span class="news-card-read">Read More <span>&rarr;</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         FAQ
+         ========================================== -->
+    <section class="section" style="background: var(--color-bg-card);">
+        <div class="section-inner">
+            <div class="section-header reveal" style="text-align: center; margin-bottom: 48px;">
+                <span class="section-label" style="display: block; text-align: center;">FAQ</span>
+                <h2 class="section-title" style="text-align: center;">Frequently Asked Questions</h2>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item reveal reveal-delay-1">
+                    <button class="faq-question">
+                        What is Content-Adaptive Bitrate (CABR)?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">CABR is Beamr's patented technology that analyzes video content frame-by-frame and optimizes encoding parameters in real-time. It achieves up to 50% file size reduction while maintaining mathematically proven visual quality.</div>
+                    </div>
+                </div>
+                <div class="faq-item reveal reveal-delay-2">
+                    <button class="faq-question">
+                        How does Beamr maintain video quality?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">Beamr uses perceptual quality metrics and a unique quality-assured encoding approach. Every encoded frame is verified against the original to ensure no perceptible quality loss, guaranteed by mathematical proof.</div>
+                    </div>
+                </div>
+                <div class="faq-item reveal reveal-delay-3">
+                    <button class="faq-question">
+                        What video formats and codecs are supported?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">Beamr supports all major codecs including H.264/AVC, H.265/HEVC, AV1, and VP9. It works with standard container formats like MP4, MKV, and TS, at resolutions up to 8K.</div>
+                    </div>
+                </div>
+                <div class="faq-item reveal reveal-delay-4">
+                    <button class="faq-question">
+                        How long does integration take?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">Most customers are up and running within days. Beamr provides drop-in compatibility with major encoding pipelines, CDNs, and cloud platforms. Our team provides dedicated integration support.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         CTA
+         ========================================== -->
+    <section class="cta-section">
+        <div class="cta-card reveal-scale">
+            <div class="cta-glow"></div>
+            <h2 class="cta-title">Ready to Optimize Your Video?</h2>
+            <p class="cta-subtitle">Join 1,000+ companies already saving millions on video delivery with Beamr's content-adaptive encoding.</p>
+            <div class="cta-buttons">
+                <a href="#contact" class="btn-primary">Let's Talk <span>&rarr;</span></a>
+                <a href="#demo" class="btn-secondary">Watch Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         FOOTER
+         ========================================== -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <!-- Newsletter Row -->
+            <div class="footer-newsletter">
+                <span class="footer-newsletter-title">Stay Updated</span>
+                <form class="footer-newsletter-form" onsubmit="return false">
+                    <input type="email" class="footer-newsletter-input" placeholder="Enter your email">
+                    <button class="footer-newsletter-btn">Subscribe</button>
+                </form>
+            </div>
+
+            <div class="footer-top" style="margin-top: 40px;">
+                <!-- Brand -->
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <div class="footer-logo-icon"></div>
+                        <span class="footer-logo-text">beamr</span>
+                    </div>
+                    <p class="footer-tagline">AI-powered video optimization for the modern enterprise.</p>
+                    <div class="footer-social">
+                        <a href="#" class="footer-social-link">in</a>
+                        <a href="#" class="footer-social-link">X</a>
+                        <a href="#" class="footer-social-link">YT</a>
+                    </div>
+                </div>
+                <!-- Solutions -->
+                <div>
+                    <div class="footer-col-title">Solutions</div>
+                    <ul class="footer-col-links">
+                        <li><a href="#">Media & Entertainment</a></li>
+                        <li><a href="#">Autonomous Vehicles</a></li>
+                        <li><a href="#">AI / Machine Learning</a></li>
+                        <li><a href="#">Sports Streaming</a></li>
+                    </ul>
+                </div>
+                <!-- Products -->
+                <div>
+                    <div class="footer-col-title">Products</div>
+                    <ul class="footer-col-links">
+                        <li><a href="#">Beamr CABR</a></li>
+                        <li><a href="#">Beamr Cloud</a></li>
+                        <li><a href="#">Super Resolution</a></li>
+                        <li><a href="#">Beamr SDK</a></li>
+                    </ul>
+                </div>
+                <!-- Resources -->
+                <div>
+                    <div class="footer-col-title">Resources</div>
+                    <ul class="footer-col-links">
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                        <li><a href="#">Webinars</a></li>
+                    </ul>
+                </div>
+                <!-- Company -->
+                <div>
+                    <div class="footer-col-title">Company</div>
+                    <ul class="footer-col-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span class="footer-copy">&copy; 2026 Beamr Imaging Ltd. All rights reserved.</span>
+                <div class="footer-legal">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==========================================
+         ANIMATIONS & INTERACTIONS (Minimal JS)
+         ========================================== -->
+    <script>
+        // Scroll Reveal with Intersection Observer
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        revealElements.forEach(el => observer.observe(el));
+
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const isActive = item.classList.contains('active');
+
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+
+                // Toggle current
+                if (!isActive) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
