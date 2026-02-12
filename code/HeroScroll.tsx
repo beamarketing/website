@@ -1,6 +1,6 @@
 // Beamr Homepage - Hero with Scroll-Driven Video Transition
-// Full-screen video on load → contracts to rounded container on scroll
-// Floating industry cards animate in, logos fade out
+// Full-screen video on load with transparent nav overlay →
+// contracts to rounded container on scroll, regular sticky nav takes over
 //
 // Framer Code Component with full property controls
 
@@ -10,10 +10,16 @@ import { useRef } from "react"
 
 // --- Types ---
 
+interface NavLink {
+    label: string
+    url: string
+    hasDropdown: boolean
+}
+
 interface FloatingCard {
     label: string
     image: string
-    position: string // "top-left" | "right" | "bottom-left"
+    position: string
 }
 
 interface LogoItem {
@@ -28,6 +34,17 @@ interface Props {
     videoSrc: string
     posterImage: string
     useVideo: boolean
+
+    // Overlay Navigation
+    showOverlayNav: boolean
+    navLogoText: string
+    navLogoImage: string
+    navUseLogoImage: boolean
+    navLogoIconColor: string
+    navLinks: NavLink[]
+    navCtaText: string
+    navCtaUrl: string
+    navHeight: number
 
     // Floating cards
     cards: FloatingCard[]
@@ -50,17 +67,35 @@ interface Props {
     fontFamily: string
     videoContainedInset: number
     videoContainedRadius: number
+    videoContainedBottom: number
 
     style?: React.CSSProperties
 }
 
 function HeroScroll(props: Props) {
     const {
-        heading = "Break the Video Quality-\nCost-Time Trade-Off",
-        headingFontSize = 56,
+        heading = "Break the Video\nQuality-Cost-Time\nTrade-Off",
+        headingFontSize = 52,
         videoSrc = "",
         posterImage = "",
         useVideo = true,
+
+        // Overlay Nav
+        showOverlayNav = true,
+        navLogoText = "beamr",
+        navLogoImage = "",
+        navUseLogoImage = false,
+        navLogoIconColor = "#6C5CE7",
+        navLinks = [
+            { label: "Solutions", url: "#solutions", hasDropdown: true },
+            { label: "Products", url: "#products", hasDropdown: true },
+            { label: "Technology", url: "#technology", hasDropdown: false },
+            { label: "Blog", url: "#blog", hasDropdown: false },
+            { label: "Company", url: "#company", hasDropdown: false },
+        ],
+        navCtaText = "Let's Talk",
+        navCtaUrl = "#contact",
+        navHeight = 58,
 
         cards = [
             { label: "M&E", image: "", position: "top-left" },
@@ -90,6 +125,7 @@ function HeroScroll(props: Props) {
         fontFamily = "'Inter', sans-serif",
         videoContainedInset = 64,
         videoContainedRadius = 20,
+        videoContainedBottom = 48,
 
         style,
     } = props
@@ -113,7 +149,8 @@ function HeroScroll(props: Props) {
     // --- Video container ---
     const videoInsetLeft = useTransform(smooth, [t0, t1], [0, videoContainedInset])
     const videoInsetRight = useTransform(smooth, [t0, t1], [0, videoContainedInset])
-    const videoInsetTop = useTransform(smooth, [t0, t1], [0, 32])
+    const videoInsetTop = useTransform(smooth, [t0, t1], [0, 40])
+    const videoInsetBottom = useTransform(smooth, [t0, t1], [0, videoContainedBottom])
     const videoBorderRadius = useTransform(smooth, [t0, t1], [0, videoContainedRadius])
 
     // --- Page background ---
@@ -122,6 +159,9 @@ function HeroScroll(props: Props) {
         [t0, t0 + (t1 - t0) * 0.6, t1],
         ["#0f1117", "#0f1117", pageBgLight]
     )
+
+    // --- Overlay nav ---
+    const navOpacity = useTransform(smooth, [t0, t0 + (t1 - t0) * 0.35], [1, 0])
 
     // --- Heading: bottom-left → center (cross-fade) ---
     const headingBottomOpacity = useTransform(smooth, [t0, t0 + (t1 - t0) * 0.5], [1, 0])
@@ -136,7 +176,6 @@ function HeroScroll(props: Props) {
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
 
-    // Card positions based on their config
     const getCardStyle = (position: string, index: number): React.CSSProperties => {
         const base: React.CSSProperties = {
             position: "absolute",
@@ -145,17 +184,17 @@ function HeroScroll(props: Props) {
         }
         switch (position) {
             case "top-left":
-                return { ...base, top: "12%", left: "2%" }
+                return { ...base, top: "10%", left: "2%" }
             case "right":
-                return { ...base, top: "28%", right: "1%" }
+                return { ...base, top: "30%", right: "1%" }
             case "bottom-left":
-                return { ...base, bottom: "4%", left: "0%" }
+                return { ...base, bottom: "8%", left: "0%" }
             case "top-right":
-                return { ...base, top: "12%", right: "2%" }
+                return { ...base, top: "10%", right: "2%" }
             case "bottom-right":
-                return { ...base, bottom: "4%", right: "2%" }
+                return { ...base, bottom: "8%", right: "2%" }
             default:
-                return { ...base, top: `${20 + index * 25}%`, left: "2%" }
+                return { ...base, top: `${15 + index * 25}%`, left: "2%" }
         }
     }
 
@@ -167,9 +206,10 @@ function HeroScroll(props: Props) {
                 height: scrollDistance,
                 position: "relative",
                 width: "100%",
+                marginTop: showOverlayNav ? -navHeight : 0,
             }}
         >
-            {/* Sticky viewport */}
+            {/* Sticky viewport — exactly 100vh */}
             <motion.div
                 style={{
                     position: "sticky",
@@ -181,14 +221,195 @@ function HeroScroll(props: Props) {
                     fontFamily,
                 }}
             >
-                {/* Video container */}
+                {/* ================================
+                    TRANSPARENT OVERLAY NAVIGATION
+                    ================================ */}
+                {showOverlayNav && (
+                    <motion.nav
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            zIndex: 1001,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "14px 48px",
+                            opacity: navOpacity,
+                            boxSizing: "border-box",
+                        }}
+                    >
+                        {/* Logo */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {navUseLogoImage && navLogoImage ? (
+                                <img
+                                    src={navLogoImage}
+                                    alt={navLogoText}
+                                    style={{
+                                        height: 30,
+                                        objectFit: "contain",
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    <div
+                                        style={{
+                                            width: 26,
+                                            height: 26,
+                                            borderRadius: 6,
+                                            backgroundColor: navLogoIconColor,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <svg
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 16 16"
+                                            fill="none"
+                                        >
+                                            <rect
+                                                x="2"
+                                                y="2"
+                                                width="5"
+                                                height="5"
+                                                rx="1"
+                                                fill="white"
+                                                opacity="0.9"
+                                            />
+                                            <rect
+                                                x="9"
+                                                y="2"
+                                                width="5"
+                                                height="5"
+                                                rx="1"
+                                                fill="white"
+                                                opacity="0.6"
+                                            />
+                                            <rect
+                                                x="2"
+                                                y="9"
+                                                width="5"
+                                                height="5"
+                                                rx="1"
+                                                fill="white"
+                                                opacity="0.6"
+                                            />
+                                            <rect
+                                                x="9"
+                                                y="9"
+                                                width="5"
+                                                height="5"
+                                                rx="1"
+                                                fill="white"
+                                                opacity="0.35"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <span
+                                        style={{
+                                            fontSize: 20,
+                                            fontWeight: 700,
+                                            color: "#ffffff",
+                                            letterSpacing: "-0.01em",
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {navLogoText}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Nav Links */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 32,
+                            }}
+                        >
+                            {navLinks.map((link, i) => (
+                                <a
+                                    key={i}
+                                    href={link.hasDropdown ? undefined : link.url}
+                                    style={{
+                                        color: "rgba(255,255,255,0.9)",
+                                        textDecoration: "none",
+                                        fontSize: 15,
+                                        fontWeight: 500,
+                                        fontFamily,
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                        transition: "color 0.2s",
+                                    }}
+                                >
+                                    {link.label}
+                                    {link.hasDropdown && (
+                                        <svg
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 12 12"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M3 4.5L6 7.5L9 4.5"
+                                                stroke="rgba(255,255,255,0.7)"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </svg>
+                                    )}
+                                </a>
+                            ))}
+                        </div>
+
+                        {/* CTA */}
+                        <a
+                            href={navCtaUrl}
+                            style={{
+                                backgroundColor: "rgba(255,255,255,0.15)",
+                                backdropFilter: "blur(8px)",
+                                color: "#ffffff",
+                                padding: "10px 24px",
+                                borderRadius: 8,
+                                fontSize: 14,
+                                fontWeight: 600,
+                                textDecoration: "none",
+                                fontFamily,
+                                whiteSpace: "nowrap",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                transition: "background 0.2s",
+                                flexShrink: 0,
+                            }}
+                        >
+                            {navCtaText}
+                        </a>
+                    </motion.nav>
+                )}
+
+                {/* ================================
+                    VIDEO CONTAINER
+                    ================================ */}
                 <motion.div
                     style={{
                         position: "absolute",
                         top: videoInsetTop,
                         left: videoInsetLeft,
                         right: videoInsetRight,
-                        bottom: 0,
+                        bottom: videoInsetBottom,
                         borderRadius: videoBorderRadius,
                         overflow: "hidden",
                         zIndex: 1,
@@ -239,12 +460,12 @@ function HeroScroll(props: Props) {
                         />
                     )}
 
-                    {/* Dark overlay */}
+                    {/* Dark overlay gradient */}
                     <div
                         style={{
                             position: "absolute",
                             inset: 0,
-                            background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity + 0.25}) 0%, rgba(0,0,0,${overlayOpacity * 0.3}) 50%, rgba(0,0,0,${overlayOpacity * 0.15}) 100%)`,
+                            background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity + 0.3}) 0%, rgba(0,0,0,${overlayOpacity * 0.2}) 50%, rgba(0,0,0,${overlayOpacity * 0.15}) 100%)`,
                             zIndex: 2,
                         }}
                     />
@@ -253,11 +474,11 @@ function HeroScroll(props: Props) {
                     <motion.div
                         style={{
                             position: "absolute",
-                            bottom: "10%",
+                            bottom: "12%",
                             left: "5%",
                             zIndex: 3,
                             opacity: headingBottomOpacity,
-                            maxWidth: "60%",
+                            maxWidth: "55%",
                         }}
                     >
                         <h1
@@ -293,7 +514,7 @@ function HeroScroll(props: Props) {
                     >
                         <h1
                             style={{
-                                fontSize: headingFontSize * 0.95,
+                                fontSize: headingFontSize * 0.9,
                                 fontWeight: 700,
                                 color: "#ffffff",
                                 lineHeight: 1.05,
@@ -301,7 +522,7 @@ function HeroScroll(props: Props) {
                                 fontFamily,
                                 letterSpacing: "-0.03em",
                                 whiteSpace: "pre-line",
-                                textShadow: "0 2px 40px rgba(0,0,0,0.3)",
+                                textShadow: "0 4px 40px rgba(0,0,0,0.4)",
                             }}
                         >
                             {heading}
@@ -313,7 +534,7 @@ function HeroScroll(props: Props) {
                         <motion.div
                             style={{
                                 position: "absolute",
-                                bottom: 24,
+                                bottom: 28,
                                 left: 0,
                                 right: 0,
                                 zIndex: 3,
@@ -332,19 +553,19 @@ function HeroScroll(props: Props) {
                                         src={logo.image}
                                         alt={logo.name}
                                         style={{
-                                            height: 22,
+                                            height: 20,
                                             objectFit: "contain",
                                             filter: "brightness(0) invert(1)",
-                                            opacity: 0.85,
+                                            opacity: 0.8,
                                         }}
                                     />
                                 ) : (
                                     <span
                                         key={i}
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: 13,
                                             fontWeight: 700,
-                                            color: "rgba(255,255,255,0.75)",
+                                            color: "rgba(255,255,255,0.7)",
                                             letterSpacing: "0.04em",
                                             fontFamily,
                                         }}
@@ -357,7 +578,9 @@ function HeroScroll(props: Props) {
                     )}
                 </motion.div>
 
-                {/* Floating cards — State 2 only */}
+                {/* ================================
+                    FLOATING CARDS — State 2
+                    ================================ */}
                 <motion.div
                     style={{
                         position: "absolute",
@@ -383,7 +606,7 @@ function HeroScroll(props: Props) {
                             }}
                             initial={false}
                         >
-                            {/* Card image area */}
+                            {/* Card image */}
                             <div
                                 style={{
                                     width: "100%",
@@ -437,8 +660,6 @@ function HeroScroll(props: Props) {
                                 >
                                     {card.label}
                                 </span>
-
-                                {/* Blue play icon */}
                                 <div
                                     style={{
                                         width: 32,
@@ -465,7 +686,7 @@ function HeroScroll(props: Props) {
                                 </div>
                             </div>
 
-                            {/* Pill button placeholder */}
+                            {/* Pill placeholder */}
                             <div style={{ padding: "0 16px 14px" }}>
                                 <div
                                     style={{
@@ -489,14 +710,14 @@ addPropertyControls(HeroScroll, {
     heading: {
         type: ControlType.String,
         title: "Heading",
-        defaultValue: "Break the Video Quality-\nCost-Time Trade-Off",
+        defaultValue: "Break the Video\nQuality-Cost-Time\nTrade-Off",
         displayTextArea: true,
     },
     headingFontSize: {
         type: ControlType.Number,
         title: "Heading Size",
-        defaultValue: 56,
-        min: 32,
+        defaultValue: 52,
+        min: 28,
         max: 80,
         step: 2,
     },
@@ -524,6 +745,91 @@ addPropertyControls(HeroScroll, {
         min: 0,
         max: 0.8,
         step: 0.05,
+    },
+
+    // --- Overlay Navigation ---
+    showOverlayNav: {
+        type: ControlType.Boolean,
+        title: "Overlay Nav",
+        defaultValue: true,
+    },
+    navLogoText: {
+        type: ControlType.String,
+        title: "Nav Logo Text",
+        defaultValue: "beamr",
+        hidden: (props) => !props.showOverlayNav,
+    },
+    navUseLogoImage: {
+        type: ControlType.Boolean,
+        title: "Nav Logo Image",
+        defaultValue: false,
+        hidden: (props) => !props.showOverlayNav,
+    },
+    navLogoImage: {
+        type: ControlType.Image,
+        title: "Nav Logo File",
+        hidden: (props) => !props.showOverlayNav || !props.navUseLogoImage,
+    },
+    navLogoIconColor: {
+        type: ControlType.Color,
+        title: "Nav Icon Color",
+        defaultValue: "#6C5CE7",
+        hidden: (props) => !props.showOverlayNav || props.navUseLogoImage,
+    },
+    navLinks: {
+        type: ControlType.Array,
+        title: "Nav Links",
+        maxCount: 8,
+        hidden: (props) => !props.showOverlayNav,
+        control: {
+            type: ControlType.Object,
+            controls: {
+                label: {
+                    type: ControlType.String,
+                    title: "Label",
+                    defaultValue: "Link",
+                },
+                url: {
+                    type: ControlType.String,
+                    title: "URL",
+                    defaultValue: "#",
+                },
+                hasDropdown: {
+                    type: ControlType.Boolean,
+                    title: "Dropdown",
+                    defaultValue: false,
+                },
+            },
+        },
+        defaultValue: [
+            { label: "Solutions", url: "#solutions", hasDropdown: true },
+            { label: "Products", url: "#products", hasDropdown: true },
+            { label: "Technology", url: "#technology", hasDropdown: false },
+            { label: "Blog", url: "#blog", hasDropdown: false },
+            { label: "Company", url: "#company", hasDropdown: false },
+        ],
+    },
+    navCtaText: {
+        type: ControlType.String,
+        title: "Nav CTA Text",
+        defaultValue: "Let's Talk",
+        hidden: (props) => !props.showOverlayNav,
+    },
+    navCtaUrl: {
+        type: ControlType.String,
+        title: "Nav CTA URL",
+        defaultValue: "#contact",
+        hidden: (props) => !props.showOverlayNav,
+    },
+    navHeight: {
+        type: ControlType.Number,
+        title: "Nav Overlap",
+        defaultValue: 58,
+        min: 0,
+        max: 120,
+        step: 2,
+        description: "Height of the regular sticky nav to overlap (px)",
+        hidden: (props) => !props.showOverlayNav,
     },
 
     // --- Floating Cards ---
@@ -622,7 +928,6 @@ addPropertyControls(HeroScroll, {
         min: 400,
         max: 2000,
         step: 50,
-        description: "Total scrollable height (controls transition speed)",
     },
     transitionStart: {
         type: ControlType.Number,
@@ -664,7 +969,14 @@ addPropertyControls(HeroScroll, {
         min: 0,
         max: 200,
         step: 4,
-        description: "Horizontal inset when scrolled (px)",
+    },
+    videoContainedBottom: {
+        type: ControlType.Number,
+        title: "Video Bottom",
+        defaultValue: 48,
+        min: 0,
+        max: 200,
+        step: 4,
     },
     videoContainedRadius: {
         type: ControlType.Number,
