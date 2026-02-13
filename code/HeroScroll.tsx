@@ -87,9 +87,9 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 1400,
+        scrollDistance = 2400,
         transitionStart = 0.0,
-        transitionEnd = 0.35,
+        transitionEnd = 0.25,
 
         accentColor = "#4F6BED",
         cardBgColor = "#ffffff",
@@ -119,39 +119,67 @@ function HeroScroll(props: Props) {
             }
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div,
+            body > div > div > div > div > div > div,
+            body > div > div > div > div > div > div > div,
             [data-framer-page-optimized], [data-framer-page-optimized] > *,
-            [data-framer-name], [data-framer-component-type] {
+            [data-framer-name], [data-framer-component-type],
+            [data-framer-component-type] > div,
+            [data-framer-component-type] > div > div,
+            [data-framer-component-type] > div > div > div {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
                 gap: 0 !important;
+                row-gap: 0 !important;
             }
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
             }
-            /* Target HeroScroll's own Framer wrapper parents */
-            [data-framer-component-type] > div,
-            [data-framer-component-type] > div > div {
-                padding: 0 !important;
-                margin: 0 !important;
-            }
         `
         document.head.appendChild(s)
     }, [])
 
-    // Also walk up from this component and force-zero any Framer parent padding
+    // Persistently zero-out any padding/margin Framer adds to parent wrappers
     useEffect(() => {
         if (!containerRef.current) return
-        let el = containerRef.current.parentElement
-        while (el && el !== document.body) {
-            const cs = getComputedStyle(el)
-            if (parseFloat(cs.paddingTop) > 0 || parseFloat(cs.marginTop) > 0) {
+
+        const zeroParents = () => {
+            let el = containerRef.current?.parentElement
+            while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
+                el.style.setProperty("gap", "0px", "important")
+                el.style.setProperty("row-gap", "0px", "important")
+                el = el.parentElement
             }
+        }
+
+        // Run immediately
+        zeroParents()
+
+        // Run again on next frames to beat Framer's deferred layout
+        const raf1 = requestAnimationFrame(zeroParents)
+        const raf2 = requestAnimationFrame(() =>
+            requestAnimationFrame(zeroParents)
+        )
+
+        // Watch for Framer re-applying styles via MutationObserver
+        const observer = new MutationObserver(zeroParents)
+        let el = containerRef.current.parentElement
+        while (el && el !== document.body) {
+            observer.observe(el, {
+                attributes: true,
+                attributeFilter: ["style"],
+            })
             el = el.parentElement
         }
-    })
+
+        return () => {
+            cancelAnimationFrame(raf1)
+            cancelAnimationFrame(raf2)
+            observer.disconnect()
+        }
+    }, [])
 
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -700,9 +728,9 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 1400,
+        defaultValue: 2400,
         min: 400,
-        max: 3000,
+        max: 5000,
         step: 50,
         description: "Total scroll length — increase for more hold time after transition",
     },
@@ -717,8 +745,8 @@ addPropertyControls(HeroScroll, {
     transitionEnd: {
         type: ControlType.Number,
         title: "Transition End",
-        defaultValue: 0.35,
-        min: 0.1,
+        defaultValue: 0.25,
+        min: 0.05,
         max: 1.0,
         step: 0.05,
         description: "Lower = transition finishes sooner, more hold time after",
