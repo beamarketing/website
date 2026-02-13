@@ -6,6 +6,7 @@ import { addPropertyControls, ControlType } from "framer"
 interface LogoItem {
     image: string
     name: string
+    height: number
 }
 
 interface Props {
@@ -110,7 +111,7 @@ function LogoBar(props: Props) {
                                           src={logo.image}
                                           alt={logo.name}
                                           style={{
-                                              height: logoHeight,
+                                              height: logo.height || logoHeight,
                                               objectFit: "contain",
                                               filter: "brightness(0) invert(1)",
                                           }}
@@ -118,7 +119,7 @@ function LogoBar(props: Props) {
                                   ) : (
                                       <span
                                           style={{
-                                              fontSize: 18,
+                                              fontSize: (logo.height || logoHeight) * 0.55,
                                               fontWeight: 600,
                                               color: "#ffffff",
                                               opacity: logoOpacity,
@@ -180,15 +181,24 @@ addPropertyControls(LogoBar, {
                     type: ControlType.Image,
                     title: "Logo Image",
                 },
+                height: {
+                    type: ControlType.Number,
+                    title: "Height (px)",
+                    defaultValue: 32,
+                    min: 8,
+                    max: 80,
+                    step: 1,
+                    description: "Per-logo height override (0 = use global)",
+                },
             },
         },
         defaultValue: [
-            { name: "NVIDIA", image: "" },
-            { name: "Netflix", image: "" },
-            { name: "Meta", image: "" },
-            { name: "Samsung", image: "" },
-            { name: "Microsoft", image: "" },
-            { name: "Comcast", image: "" },
+            { name: "NVIDIA", image: "", height: 32 },
+            { name: "Netflix", image: "", height: 32 },
+            { name: "Meta", image: "", height: 32 },
+            { name: "Samsung", image: "", height: 32 },
+            { name: "Microsoft", image: "", height: 32 },
+            { name: "Comcast", image: "", height: 32 },
         ],
     },
     logoHeight: {
