@@ -42,6 +42,7 @@ interface Props {
     logoText: string
     logoFontSize: number
     logoImage: string
+    overlayLogoImage: string
     useLogoImage: boolean
     logoIconColor: string
     showLogoIcon: boolean
@@ -89,6 +90,7 @@ function Navigation(props: Props) {
         logoText = "beamr",
         logoFontSize = 22,
         logoImage = "",
+        overlayLogoImage = "",
         useLogoImage = false,
         logoIconColor = "#6C5CE7",
         showLogoIcon = true,
@@ -221,6 +223,9 @@ function Navigation(props: Props) {
             if (parseFloat(computed.marginTop) > 0) {
                 parent.style.marginTop = "0"
             }
+            if (parseFloat(computed.gap) > 0) {
+                parent.style.gap = "0"
+            }
             parent = parent.parentElement
         }
     }, [])
@@ -317,16 +322,34 @@ function Navigation(props: Props) {
                     }}
                 >
                     {useLogoImage && logoImage ? (
-                        <img
-                            src={logoImage}
-                            alt={logoText}
-                            style={{
-                                height: logoFontSize + 8,
-                                objectFit: "contain",
-                                transition: "filter 0.4s ease",
-                                filter: isOverlay ? "brightness(0) invert(1)" : "none",
-                            }}
-                        />
+                        <div style={{ position: "relative", height: logoFontSize + 8 }}>
+                            {/* Solid-state logo (shown when scrolled) */}
+                            <img
+                                src={logoImage}
+                                alt={logoText}
+                                style={{
+                                    height: logoFontSize + 8,
+                                    objectFit: "contain",
+                                    transition: "opacity 0.4s ease",
+                                    opacity: isOverlay ? 0 : 1,
+                                }}
+                            />
+                            {/* Overlay-state logo (shown on hero) */}
+                            <img
+                                src={overlayLogoImage || logoImage}
+                                alt={logoText}
+                                style={{
+                                    height: logoFontSize + 8,
+                                    objectFit: "contain",
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    transition: "opacity 0.4s ease",
+                                    opacity: isOverlay ? 1 : 0,
+                                    filter: !overlayLogoImage ? "brightness(0) invert(1)" : "none",
+                                }}
+                            />
+                        </div>
                     ) : (
                         <>
                             {showLogoIcon && (
@@ -814,6 +837,12 @@ addPropertyControls(Navigation, {
         type: ControlType.Image,
         title: "Logo Image",
         hidden: (props) => !props.useLogoImage,
+    },
+    overlayLogoImage: {
+        type: ControlType.Image,
+        title: "Logo (Transparent)",
+        hidden: (props) => !props.useLogoImage || !props.overlayMode,
+        description: "Logo shown when nav is transparent over hero. Falls back to inverted main logo.",
     },
     logoText: {
         type: ControlType.String,
