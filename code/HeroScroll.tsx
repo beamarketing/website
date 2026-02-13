@@ -87,9 +87,9 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 800,
+        scrollDistance = 1400,
         transitionStart = 0.0,
-        transitionEnd = 0.5,
+        transitionEnd = 0.35,
 
         accentColor = "#4F6BED",
         cardBgColor = "#ffffff",
@@ -110,9 +110,9 @@ function HeroScroll(props: Props) {
     useEffect(() => {
         const id = "__hero-reset-css"
         if (document.getElementById(id)) return
-        const style = document.createElement("style")
-        style.id = id
-        style.textContent = `
+        const s = document.createElement("style")
+        s.id = id
+        s.textContent = `
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
@@ -129,9 +129,29 @@ function HeroScroll(props: Props) {
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
             }
+            /* Target HeroScroll's own Framer wrapper parents */
+            [data-framer-component-type] > div,
+            [data-framer-component-type] > div > div {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
         `
-        document.head.appendChild(style)
+        document.head.appendChild(s)
     }, [])
+
+    // Also walk up from this component and force-zero any Framer parent padding
+    useEffect(() => {
+        if (!containerRef.current) return
+        let el = containerRef.current.parentElement
+        while (el && el !== document.body) {
+            const cs = getComputedStyle(el)
+            if (parseFloat(cs.paddingTop) > 0 || parseFloat(cs.marginTop) > 0) {
+                el.style.setProperty("padding-top", "0px", "important")
+                el.style.setProperty("margin-top", "0px", "important")
+            }
+            el = el.parentElement
+        }
+    })
 
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -206,6 +226,8 @@ function HeroScroll(props: Props) {
                 position: "relative",
                 width: "100%",
                 marginTop: -navOverlap,
+                paddingTop: 0,
+                paddingBottom: 0,
             }}
         >
             {/* Sticky viewport — exactly 100vh */}
@@ -678,10 +700,11 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 800,
+        defaultValue: 1400,
         min: 400,
-        max: 2000,
+        max: 3000,
         step: 50,
+        description: "Total scroll length — increase for more hold time after transition",
     },
     transitionStart: {
         type: ControlType.Number,
@@ -694,10 +717,11 @@ addPropertyControls(HeroScroll, {
     transitionEnd: {
         type: ControlType.Number,
         title: "Transition End",
-        defaultValue: 0.5,
-        min: 0.2,
+        defaultValue: 0.35,
+        min: 0.1,
         max: 1.0,
         step: 0.05,
+        description: "Lower = transition finishes sooner, more hold time after",
     },
 
     // --- Styling ---
