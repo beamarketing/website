@@ -19,6 +19,7 @@ interface FloatingCard {
 interface LogoItem {
     name: string
     image: string
+    height: number
 }
 
 interface Props {
@@ -52,6 +53,7 @@ interface Props {
     overlayOpacity: number
     fontFamily: string
     videoContainedInset: number
+    videoContainedTop: number
     videoContainedRadius: number
     videoContainedBottom: number
 
@@ -74,12 +76,12 @@ function HeroScroll(props: Props) {
         cardWidth = 220,
 
         logos = [
-            { name: "NVIDIA", image: "" },
-            { name: "deluxe", image: "" },
-            { name: "NETFLIX", image: "" },
-            { name: "Paramount", image: "" },
-            { name: "JioHotstar", image: "" },
-            { name: "TAG", image: "" },
+            { name: "NVIDIA", image: "", height: 20 },
+            { name: "deluxe", image: "", height: 20 },
+            { name: "NETFLIX", image: "", height: 20 },
+            { name: "Paramount", image: "", height: 20 },
+            { name: "JioHotstar", image: "", height: 20 },
+            { name: "TAG", image: "", height: 20 },
         ],
         showLogos = true,
 
@@ -95,8 +97,9 @@ function HeroScroll(props: Props) {
         overlayOpacity = 0.35,
         fontFamily = "'Inter', sans-serif",
         videoContainedInset = 64,
+        videoContainedTop = 80,
         videoContainedRadius = 20,
-        videoContainedBottom = 48,
+        videoContainedBottom = 80,
 
         style,
     } = props
@@ -148,7 +151,7 @@ function HeroScroll(props: Props) {
     // --- Video container ---
     const videoInsetLeft = useTransform(smooth, [t0, t1], [0, videoContainedInset])
     const videoInsetRight = useTransform(smooth, [t0, t1], [0, videoContainedInset])
-    const videoInsetTop = useTransform(smooth, [t0, t1], [0, 40])
+    const videoInsetTop = useTransform(smooth, [t0, t1], [0, videoContainedTop])
     const videoInsetBottom = useTransform(smooth, [t0, t1], [0, videoContainedBottom])
     const videoBorderRadius = useTransform(smooth, [t0, t1], [0, videoContainedRadius])
 
@@ -370,7 +373,7 @@ function HeroScroll(props: Props) {
                                         src={logo.image}
                                         alt={logo.name}
                                         style={{
-                                            height: 20,
+                                            height: logo.height || 20,
                                             objectFit: "contain",
                                             filter: "brightness(0) invert(1)",
                                             opacity: 0.8,
@@ -380,7 +383,7 @@ function HeroScroll(props: Props) {
                                     <span
                                         key={i}
                                         style={{
-                                            fontSize: 13,
+                                            fontSize: logo.height ? logo.height * 0.65 : 13,
                                             fontWeight: 700,
                                             color: "rgba(255,255,255,0.7)",
                                             letterSpacing: "0.04em",
@@ -640,15 +643,23 @@ addPropertyControls(HeroScroll, {
                     type: ControlType.Image,
                     title: "Logo Image",
                 },
+                height: {
+                    type: ControlType.Number,
+                    title: "Height (px)",
+                    defaultValue: 20,
+                    min: 8,
+                    max: 60,
+                    step: 1,
+                },
             },
         },
         defaultValue: [
-            { name: "NVIDIA", image: "" },
-            { name: "deluxe", image: "" },
-            { name: "NETFLIX", image: "" },
-            { name: "Paramount", image: "" },
-            { name: "JioHotstar", image: "" },
-            { name: "TAG", image: "" },
+            { name: "NVIDIA", image: "", height: 20 },
+            { name: "deluxe", image: "", height: 20 },
+            { name: "NETFLIX", image: "", height: 20 },
+            { name: "Paramount", image: "", height: 20 },
+            { name: "JioHotstar", image: "", height: 20 },
+            { name: "TAG", image: "", height: 20 },
         ],
     },
 
@@ -707,16 +718,25 @@ addPropertyControls(HeroScroll, {
     },
     videoContainedInset: {
         type: ControlType.Number,
-        title: "Video Inset",
+        title: "Video Inset L/R",
         defaultValue: 64,
         min: 0,
         max: 200,
         step: 4,
     },
+    videoContainedTop: {
+        type: ControlType.Number,
+        title: "Video Top",
+        defaultValue: 80,
+        min: 0,
+        max: 200,
+        step: 4,
+        description: "Top padding when video contracts (clear the nav)",
+    },
     videoContainedBottom: {
         type: ControlType.Number,
         title: "Video Bottom",
-        defaultValue: 48,
+        defaultValue: 80,
         min: 0,
         max: 200,
         step: 4,
