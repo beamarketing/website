@@ -202,15 +202,24 @@ function Navigation(props: Props) {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
 
-    // Force overflow:visible on all Framer ancestor wrappers so sticky works
+    // Force overflow:visible and remove padding/margin on Framer ancestor wrappers
     useEffect(() => {
         const el = navRef.current
         if (!el) return
+        // Zero out body margin
+        document.body.style.margin = "0"
+        document.body.style.padding = "0"
         let parent = el.parentElement
         while (parent && parent !== document.body) {
             const computed = getComputedStyle(parent)
             if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
                 parent.style.overflow = "visible"
+            }
+            if (parseFloat(computed.paddingTop) > 0) {
+                parent.style.paddingTop = "0"
+            }
+            if (parseFloat(computed.marginTop) > 0) {
+                parent.style.marginTop = "0"
             }
             parent = parent.parentElement
         }
