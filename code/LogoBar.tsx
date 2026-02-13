@@ -178,6 +178,17 @@ function LogoBar(props: Props) {
 }
 
 addPropertyControls(LogoBar, {
+    useColorOverlay: {
+        type: ControlType.Boolean,
+        title: "Color Overlay",
+        defaultValue: false,
+    },
+    logoColor: {
+        type: ControlType.Color,
+        title: "Logo Color",
+        defaultValue: "#ffffff",
+        hidden: (props) => !props.useColorOverlay,
+    },
     showTitle: {
         type: ControlType.Boolean,
         title: "Show Title",
@@ -232,18 +243,6 @@ addPropertyControls(LogoBar, {
         min: 16,
         max: 80,
         step: 2,
-    },
-    useColorOverlay: {
-        type: ControlType.Boolean,
-        title: "Color Overlay",
-        defaultValue: false,
-        description: "Tint logo images with a custom color",
-    },
-    logoColor: {
-        type: ControlType.Color,
-        title: "Logo Color",
-        defaultValue: "#ffffff",
-        hidden: (props) => !props.useColorOverlay,
     },
     logoOpacity: {
         type: ControlType.Number,
