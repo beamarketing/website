@@ -195,7 +195,7 @@ function Navigation(props: Props) {
         overlayMode = true,
         overlayBgColor = "transparent",
         overlayTextColor = "#ffffff",
-        scrollThreshold = 400,
+        scrollThreshold = 200,
 
         style,
     } = props
@@ -204,25 +204,22 @@ function Navigation(props: Props) {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
 
-    // Force overflow:visible and remove padding/margin on Framer ancestor wrappers
+    // Force overflow:visible and strip all spacing from html/body/ancestors
     useEffect(() => {
         const el = navRef.current
         if (!el) return
-        // Zero out body margin
+        document.documentElement.style.margin = "0"
+        document.documentElement.style.padding = "0"
         document.body.style.margin = "0"
         document.body.style.padding = "0"
         let parent = el.parentElement
-        while (parent && parent !== document.body) {
+        while (parent) {
             const computed = getComputedStyle(parent)
             if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
                 parent.style.overflow = "visible"
             }
-            if (parseFloat(computed.paddingTop) > 0) {
-                parent.style.paddingTop = "0"
-            }
-            if (parseFloat(computed.marginTop) > 0) {
-                parent.style.marginTop = "0"
-            }
+            parent.style.paddingTop = "0"
+            parent.style.marginTop = "0"
             if (parseFloat(computed.gap) > 0) {
                 parent.style.gap = "0"
             }
@@ -1118,8 +1115,8 @@ addPropertyControls(Navigation, {
     scrollThreshold: {
         type: ControlType.Number,
         title: "Scroll Threshold",
-        defaultValue: 400,
-        min: 100,
+        defaultValue: 200,
+        min: 50,
         max: 1500,
         step: 50,
         hidden: (props) => !props.overlayMode,

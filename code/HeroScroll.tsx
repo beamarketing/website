@@ -103,22 +103,22 @@ function HeroScroll(props: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)
 
-    // Force overflow:visible and strip padding/margin/gap on Framer ancestor wrappers
+    // Force overflow:visible and strip all spacing from html/body/ancestors
     useEffect(() => {
         const el = containerRef.current
         if (!el) return
+        document.documentElement.style.margin = "0"
+        document.documentElement.style.padding = "0"
+        document.body.style.margin = "0"
+        document.body.style.padding = "0"
         let parent = el.parentElement
-        while (parent && parent !== document.body) {
+        while (parent) {
             const computed = getComputedStyle(parent)
             if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
                 parent.style.overflow = "visible"
             }
-            if (parseFloat(computed.paddingTop) > 0) {
-                parent.style.paddingTop = "0"
-            }
-            if (parseFloat(computed.marginTop) > 0) {
-                parent.style.marginTop = "0"
-            }
+            parent.style.paddingTop = "0"
+            parent.style.marginTop = "0"
             if (parseFloat(computed.gap) > 0) {
                 parent.style.gap = "0"
             }
