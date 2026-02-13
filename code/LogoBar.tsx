@@ -111,14 +111,34 @@ function LogoBar(props: Props) {
                                   }}
                               >
                                   {logo.image ? (
-                                      <div
-                                          style={{
-                                              position: "relative",
-                                              height: logo.height || logoHeight,
-                                              display: "flex",
-                                              alignItems: "center",
-                                          }}
-                                      >
+                                      useColorOverlay ? (
+                                          <div
+                                              style={{
+                                                  height: logo.height || logoHeight,
+                                                  aspectRatio: "auto",
+                                                  backgroundColor: logoColor,
+                                                  WebkitMaskImage: `url(${logo.image})`,
+                                                  maskImage: `url(${logo.image})`,
+                                                  WebkitMaskSize: "contain",
+                                                  maskSize: "contain",
+                                                  WebkitMaskRepeat: "no-repeat",
+                                                  maskRepeat: "no-repeat",
+                                                  WebkitMaskPosition: "center",
+                                                  maskPosition: "center",
+                                              }}
+                                          >
+                                              {/* Hidden img to size the mask div */}
+                                              <img
+                                                  src={logo.image}
+                                                  alt={logo.name}
+                                                  style={{
+                                                      height: logo.height || logoHeight,
+                                                      objectFit: "contain",
+                                                      visibility: "hidden",
+                                                  }}
+                                              />
+                                          </div>
+                                      ) : (
                                           <img
                                               src={logo.image}
                                               alt={logo.name}
@@ -128,18 +148,7 @@ function LogoBar(props: Props) {
                                                   filter: "brightness(0) invert(1)",
                                               }}
                                           />
-                                          {useColorOverlay && (
-                                              <div
-                                                  style={{
-                                                      position: "absolute",
-                                                      inset: 0,
-                                                      backgroundColor: logoColor,
-                                                      mixBlendMode: "multiply",
-                                                      pointerEvents: "none",
-                                                  }}
-                                              />
-                                          )}
-                                      </div>
+                                      )
                                   ) : (
                                       <span
                                           style={{
