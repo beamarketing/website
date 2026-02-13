@@ -103,7 +103,7 @@ function HeroScroll(props: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)
 
-    // Force overflow:visible on Framer ancestor wrappers so sticky works
+    // Force overflow:visible and strip padding/margin/gap on Framer ancestor wrappers
     useEffect(() => {
         const el = containerRef.current
         if (!el) return
@@ -112,6 +112,15 @@ function HeroScroll(props: Props) {
             const computed = getComputedStyle(parent)
             if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
                 parent.style.overflow = "visible"
+            }
+            if (parseFloat(computed.paddingTop) > 0) {
+                parent.style.paddingTop = "0"
+            }
+            if (parseFloat(computed.marginTop) > 0) {
+                parent.style.marginTop = "0"
+            }
+            if (parseFloat(computed.gap) > 0) {
+                parent.style.gap = "0"
             }
             parent = parent.parentElement
         }
