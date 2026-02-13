@@ -195,7 +195,7 @@ function Navigation(props: Props) {
         overlayMode = true,
         overlayBgColor = "transparent",
         overlayTextColor = "#ffffff",
-        scrollThreshold = 200,
+        scrollThreshold = 100,
 
         style,
     } = props
@@ -204,27 +204,33 @@ function Navigation(props: Props) {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
 
-    // Force overflow:visible and strip all spacing from html/body/ancestors
+    // Inject !important CSS to nuke all Framer wrapper spacing above the nav
     useEffect(() => {
-        const el = navRef.current
-        if (!el) return
-        document.documentElement.style.margin = "0"
-        document.documentElement.style.padding = "0"
-        document.body.style.margin = "0"
-        document.body.style.padding = "0"
-        let parent = el.parentElement
-        while (parent) {
-            const computed = getComputedStyle(parent)
-            if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
-                parent.style.overflow = "visible"
+        const id = "__nav-reset-css"
+        if (document.getElementById(id)) return
+        const style = document.createElement("style")
+        style.id = id
+        style.textContent = `
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            parent.style.paddingTop = "0"
-            parent.style.marginTop = "0"
-            if (parseFloat(computed.gap) > 0) {
-                parent.style.gap = "0"
+            /* Framer page wrapper chain – kill all top spacing & gaps */
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div,
+            [data-framer-page-optimized], [data-framer-page-optimized] > *,
+            [data-framer-name], [data-framer-component-type] {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+                gap: 0 !important;
             }
-            parent = parent.parentElement
-        }
+            /* Allow sticky + mega menu to escape Framer overflow:hidden */
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div {
+                overflow: visible !important;
+            }
+        `
+        document.head.appendChild(style)
     }, [])
 
     // Scroll-based overlay transition
@@ -1115,10 +1121,10 @@ addPropertyControls(Navigation, {
     scrollThreshold: {
         type: ControlType.Number,
         title: "Scroll Threshold",
-        defaultValue: 200,
-        min: 50,
+        defaultValue: 100,
+        min: 10,
         max: 1500,
-        step: 50,
+        step: 10,
         hidden: (props) => !props.overlayMode,
         description: "Pixels scrolled before nav transitions to solid",
     },

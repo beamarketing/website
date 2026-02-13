@@ -103,27 +103,31 @@ function HeroScroll(props: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null)
 
-    // Force overflow:visible and strip all spacing from html/body/ancestors
+    // Inject !important CSS to nuke all Framer wrapper spacing
     useEffect(() => {
-        const el = containerRef.current
-        if (!el) return
-        document.documentElement.style.margin = "0"
-        document.documentElement.style.padding = "0"
-        document.body.style.margin = "0"
-        document.body.style.padding = "0"
-        let parent = el.parentElement
-        while (parent) {
-            const computed = getComputedStyle(parent)
-            if (computed.overflow === "hidden" || computed.overflowY === "hidden") {
-                parent.style.overflow = "visible"
+        const id = "__hero-reset-css"
+        if (document.getElementById(id)) return
+        const style = document.createElement("style")
+        style.id = id
+        style.textContent = `
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            parent.style.paddingTop = "0"
-            parent.style.marginTop = "0"
-            if (parseFloat(computed.gap) > 0) {
-                parent.style.gap = "0"
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div,
+            [data-framer-page-optimized], [data-framer-page-optimized] > *,
+            [data-framer-name], [data-framer-component-type] {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+                gap: 0 !important;
             }
-            parent = parent.parentElement
-        }
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div {
+                overflow: visible !important;
+            }
+        `
+        document.head.appendChild(style)
     }, [])
 
     const { scrollYProgress } = useScroll({
