@@ -87,9 +87,9 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 2400,
+        scrollDistance = 4000,
         transitionStart = 0.0,
-        transitionEnd = 0.25,
+        transitionEnd = 0.15,
 
         accentColor = "#4F6BED",
         cardBgColor = "#ffffff",
@@ -728,9 +728,9 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 2400,
+        defaultValue: 4000,
         min: 400,
-        max: 5000,
+        max: 8000,
         step: 50,
         description: "Total scroll length — increase for more hold time after transition",
     },
@@ -745,7 +745,7 @@ addPropertyControls(HeroScroll, {
     transitionEnd: {
         type: ControlType.Number,
         title: "Transition End",
-        defaultValue: 0.25,
+        defaultValue: 0.15,
         min: 0.05,
         max: 1.0,
         step: 0.05,
