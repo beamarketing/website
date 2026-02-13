@@ -14,6 +14,8 @@ interface Props {
     showTitle: boolean
     logos: LogoItem[]
     logoHeight: number
+    logoColor: string
+    useColorOverlay: boolean
     bgColor: string
     textColor: string
     fontFamily: string
@@ -28,6 +30,8 @@ function LogoBar(props: Props) {
         showTitle = true,
         logos = [],
         logoHeight = 32,
+        logoColor = "#ffffff",
+        useColorOverlay = false,
         bgColor = "#07071c",
         textColor = "#8b8ba3",
         fontFamily = "'Inter', sans-serif",
@@ -107,15 +111,35 @@ function LogoBar(props: Props) {
                                   }}
                               >
                                   {logo.image ? (
-                                      <img
-                                          src={logo.image}
-                                          alt={logo.name}
+                                      <div
                                           style={{
+                                              position: "relative",
                                               height: logo.height || logoHeight,
-                                              objectFit: "contain",
-                                              filter: "brightness(0) invert(1)",
+                                              display: "flex",
+                                              alignItems: "center",
                                           }}
-                                      />
+                                      >
+                                          <img
+                                              src={logo.image}
+                                              alt={logo.name}
+                                              style={{
+                                                  height: logo.height || logoHeight,
+                                                  objectFit: "contain",
+                                                  filter: "brightness(0) invert(1)",
+                                              }}
+                                          />
+                                          {useColorOverlay && (
+                                              <div
+                                                  style={{
+                                                      position: "absolute",
+                                                      inset: 0,
+                                                      backgroundColor: logoColor,
+                                                      mixBlendMode: "multiply",
+                                                      pointerEvents: "none",
+                                                  }}
+                                              />
+                                          )}
+                                      </div>
                                   ) : (
                                       <span
                                           style={{
@@ -208,6 +232,18 @@ addPropertyControls(LogoBar, {
         min: 16,
         max: 80,
         step: 2,
+    },
+    useColorOverlay: {
+        type: ControlType.Boolean,
+        title: "Color Overlay",
+        defaultValue: false,
+        description: "Tint logo images with a custom color",
+    },
+    logoColor: {
+        type: ControlType.Color,
+        title: "Logo Color",
+        defaultValue: "#ffffff",
+        hidden: (props) => !props.useColorOverlay,
     },
     logoOpacity: {
         type: ControlType.Number,
