@@ -203,6 +203,7 @@ function Navigation(props: Props) {
     const navRef = useRef<HTMLElement>(null)
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
+    const [forceSolid, setForceSolid] = useState(false)
 
     // Inject !important CSS to nuke all Framer wrapper spacing above the nav
     useEffect(() => {
@@ -268,8 +269,63 @@ function Navigation(props: Props) {
         return () => target.removeEventListener("scroll", onScroll)
     }, [overlayMode, scrollThreshold])
 
+    // Auto-detect background luminance behind the nav.
+    // When overlayMode is on but the page behind the nav is light,
+    // force solid mode so the nav text stays visible.
+    useEffect(() => {
+        if (!overlayMode) {
+            setForceSolid(false)
+            return
+        }
+        const checkBackground = () => {
+            if (!navRef.current) return
+            const rect = navRef.current.getBoundingClientRect()
+            const x = rect.left + rect.width / 2
+            const y = rect.bottom + 10
+            const elements = document.elementsFromPoint(x, y)
+            const behind = elements.find(
+                (el) => !navRef.current!.contains(el)
+            )
+            if (!behind) {
+                setForceSolid(true)
+                return
+            }
+            // Walk up ancestry to find an opaque background color
+            let node: Element | null = behind
+            while (node && node !== document.documentElement) {
+                const bg = getComputedStyle(node).backgroundColor
+                const m = bg.match(
+                    /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/
+                )
+                if (m) {
+                    const a =
+                        m[4] !== undefined ? parseFloat(m[4]) : 1
+                    if (a > 0.5) {
+                        const lum =
+                            (0.299 * +m[1] +
+                                0.587 * +m[2] +
+                                0.114 * +m[3]) /
+                            255
+                        setForceSolid(lum > 0.45)
+                        return
+                    }
+                }
+                node = node.parentElement
+            }
+            // No opaque background found → assume light page
+            setForceSolid(true)
+        }
+        // Check after render settles, then periodically
+        const raf = requestAnimationFrame(checkBackground)
+        const interval = setInterval(checkBackground, 1500)
+        return () => {
+            cancelAnimationFrame(raf)
+            clearInterval(interval)
+        }
+    }, [overlayMode])
+
     // --- Determine current visual state ---
-    const isOverlay = overlayMode && !pastThreshold
+    const isOverlay = overlayMode && !pastThreshold && !forceSolid
 
     const currentBg = isOverlay ? overlayBgColor : bgColor
     const currentText = isOverlay ? overlayTextColor : textColor

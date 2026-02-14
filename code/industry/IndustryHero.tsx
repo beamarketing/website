@@ -31,7 +31,6 @@ interface Props {
     useColorOverlay: boolean
     logoColor: string
     floatingCards: FloatingCard[]
-    enableFloating: boolean
     floatIntensity: number
     floatSpeed: number
     bgColor: string
@@ -65,7 +64,6 @@ function IndustryHero(props: Props) {
             { label: "VOD", image: "" },
             { label: "4K CONTENT", image: "" },
         ],
-        enableFloating = true,
         floatIntensity = 12,
         floatSpeed = 6,
         bgColor = "#07071c",
@@ -103,23 +101,21 @@ function IndustryHero(props: Props) {
                 overflow: "hidden",
             }}
         >
-            {/* Keyframe animations — only injected when floating is on */}
-            {enableFloating && (
-                <style>{`
-                    @keyframes ${animId}-0 {
-                        0%, 100% { transform: translateY(0px) rotate(${cardConfigs[0].rotate}deg); }
-                        50% { transform: translateY(-${floatIntensity}px) rotate(${cardConfigs[0].rotate + 0.5}deg); }
-                    }
-                    @keyframes ${animId}-1 {
-                        0%, 100% { transform: translateY(0px) rotate(${cardConfigs[1].rotate}deg); }
-                        50% { transform: translateY(${floatIntensity}px) rotate(${cardConfigs[1].rotate - 0.5}deg); }
-                    }
-                    @keyframes ${animId}-2 {
-                        0%, 100% { transform: translateY(0px) rotate(${cardConfigs[2].rotate}deg); }
-                        50% { transform: translateY(-${floatIntensity * 0.8}px) rotate(${cardConfigs[2].rotate + 0.4}deg); }
-                    }
-                `}</style>
-            )}
+            {/* Keyframe animations */}
+            <style>{`
+                @keyframes ${animId}-0 {
+                    0%, 100% { transform: translateY(0px) rotate(${cardConfigs[0].rotate}deg); }
+                    50% { transform: translateY(-${floatIntensity}px) rotate(${cardConfigs[0].rotate + 0.5}deg); }
+                }
+                @keyframes ${animId}-1 {
+                    0%, 100% { transform: translateY(0px) rotate(${cardConfigs[1].rotate}deg); }
+                    50% { transform: translateY(${floatIntensity}px) rotate(${cardConfigs[1].rotate - 0.5}deg); }
+                }
+                @keyframes ${animId}-2 {
+                    0%, 100% { transform: translateY(0px) rotate(${cardConfigs[2].rotate}deg); }
+                    50% { transform: translateY(-${floatIntensity * 0.8}px) rotate(${cardConfigs[2].rotate + 0.4}deg); }
+                }
+            `}</style>
 
             {/* Subtle gradient glow */}
             <div
@@ -339,11 +335,8 @@ function IndustryHero(props: Props) {
                                     top: config.top,
                                     left: config.left,
                                     width: config.width,
-                                    transform: enableFloating ? undefined : `rotate(${config.rotate}deg)`,
-                                    animation: enableFloating
-                                        ? `${animId}-${i % 3} ${floatSpeed + i * 0.8}s ease-in-out infinite`
-                                        : "none",
-                                    animationDelay: enableFloating ? `${config.delay}s` : undefined,
+                                    animation: `${animId}-${i % 3} ${floatSpeed + i * 0.8}s ease-in-out infinite`,
+                                    animationDelay: `${config.delay}s`,
                                     zIndex: floatingCards.length - i,
                                 }}
                             >
@@ -474,11 +467,6 @@ addPropertyControls(IndustryHero, {
             { label: "4K CONTENT", image: "" },
         ],
     },
-    enableFloating: {
-        type: ControlType.Boolean,
-        title: "Enable Floating",
-        defaultValue: true,
-    },
     floatIntensity: {
         type: ControlType.Number,
         title: "Float Intensity",
@@ -486,7 +474,6 @@ addPropertyControls(IndustryHero, {
         min: 0,
         max: 40,
         step: 2,
-        hidden: (props) => !props.enableFloating,
     },
     floatSpeed: {
         type: ControlType.Number,
@@ -495,7 +482,6 @@ addPropertyControls(IndustryHero, {
         min: 2,
         max: 16,
         step: 0.5,
-        hidden: (props) => !props.enableFloating,
     },
     showLogos: {
         type: ControlType.Boolean,
