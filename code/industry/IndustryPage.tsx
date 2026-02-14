@@ -3,6 +3,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
+import Navigation from "../Navigation"
 import IndustryHero from "./IndustryHero"
 import IndustryUseCases from "./IndustryUseCases"
 import IndustryTechnology from "./IndustryTechnology"
@@ -19,6 +20,7 @@ interface Props {
     secondaryTextColor: string
     accentColor: string
     fontFamily: string
+    showNavigation: boolean
     showHero: boolean
     showUseCases: boolean
     showTechnology: boolean
@@ -38,6 +40,7 @@ function IndustryPage(props: Props) {
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
         fontFamily = "'Inter', sans-serif",
+        showNavigation = true,
         showHero = true,
         showUseCases = true,
         showTechnology = true,
@@ -67,6 +70,7 @@ function IndustryPage(props: Props) {
                 fontFamily,
             }}
         >
+            {showNavigation && <Navigation overlayMode={true} />}
             {showHero && <IndustryHero {...shared} />}
             {showUseCases && <IndustryUseCases {...shared} />}
             {showTechnology && (
@@ -87,6 +91,11 @@ function IndustryPage(props: Props) {
 }
 
 addPropertyControls(IndustryPage, {
+    showNavigation: {
+        type: ControlType.Boolean,
+        title: "Show Navigation",
+        defaultValue: true,
+    },
     showHero: {
         type: ControlType.Boolean,
         title: "Show Hero",
