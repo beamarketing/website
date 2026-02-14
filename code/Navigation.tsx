@@ -1,15 +1,33 @@
 // Beamr Homepage - Navigation Bar with Mega Menu
 // Supports overlay mode, responsive design with mobile menu
-// Framer Code Component — menu data imported from shared navigationData.ts
+// Framer Code Component — all menu items controlled from the editor panel
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect, useRef, useCallback } from "react"
-import {
-    defaultNavLinks,
-    defaultCtaText,
-    defaultCtaUrl,
-    type NavLinkData,
-} from "./navigationData"
+
+// --- Sub-types ---
+
+interface DropdownItem {
+    title: string
+    description: string
+    url: string
+}
+
+interface NavLink {
+    label: string
+    url: string
+    hasDropdown: boolean
+    col1Label: string
+    col1Items: DropdownItem[]
+    col2Label: string
+    col2Items: DropdownItem[]
+    showFeatured: boolean
+    featuredBadge: string
+    featuredTitle: string
+    featuredLinkText: string
+    featuredLinkUrl: string
+    featuredImage: string
+}
 
 // --- Props ---
 
@@ -23,8 +41,8 @@ interface Props {
     logoIconColor: string
     showLogoIcon: boolean
 
-    // Nav links — defaults pulled from shared navigationData.ts
-    navLinks: NavLinkData[]
+    // Nav links — fully controlled from the Framer property panel
+    navLinks: NavLink[]
 
     // CTA
     ctaText: string
@@ -67,10 +85,10 @@ function Navigation(props: Props) {
         logoIconColor = "#6C5CE7",
         showLogoIcon = true,
 
-        navLinks = defaultNavLinks,
+        navLinks = [],
 
-        ctaText = defaultCtaText,
-        ctaUrl = defaultCtaUrl,
+        ctaText = "Let's Talk",
+        ctaUrl = "#contact",
         ctaBgColor = "#111111",
         ctaTextColor = "#ffffff",
 
@@ -1457,8 +1475,9 @@ addPropertyControls(Navigation, {
     },
 
     // --- Nav Links ---
-    // Menu data defaults to shared navigationData.ts.
-    // Overriding here only affects THIS component instance.
+    // All menu items controlled from this panel.
+    // To sync across pages: configure once, right-click → Create Component,
+    // then place instances of that component on every page.
     navLinks: {
         type: ControlType.Array,
         title: "Nav Links",
@@ -1589,18 +1608,49 @@ addPropertyControls(Navigation, {
                 },
             },
         },
+        defaultValue: [
+            {
+                label: "Solutions",
+                url: "#solutions",
+                hasDropdown: true,
+                col1Label: "INDUSTRIES",
+                col1Items: [
+                    { title: "Media & Entertainment", description: "Cut CDN & storage costs 30-50% while keeping broadcast quality.", url: "#media" },
+                    { title: "AI / Machine Learning", description: "Smarter vision AI pipelines with guaranteed compression.", url: "#ai" },
+                    { title: "Autonomous Vehicles", description: "50% storage reduction with ML-safe compression for training data.", url: "#automotive" },
+                    { title: "Sports Streaming", description: "720p to 4K Super Resolution without doubling file size.", url: "#sports" },
+                ],
+                col2Label: "USE CASES",
+                col2Items: [
+                    { title: "Reduce CDN Costs", description: "Deliver same visual quality at significantly lower bitrates.", url: "#cdn" },
+                    { title: "Improve Quality", description: "Enhance visual quality while maintaining or reducing file size.", url: "#quality" },
+                    { title: "Optimize Storage", description: "Reduce storage requirements by up to 50% without quality loss.", url: "#storage" },
+                    { title: "4K Upscaling", description: "Upscale legacy content to 4K resolution efficiently.", url: "#upscaling" },
+                ],
+                showFeatured: true,
+                featuredBadge: "CASE STUDY",
+                featuredTitle: "Netflix Achieves 40% CDN Savings with CABR Technology",
+                featuredLinkText: "Read Case Study",
+                featuredLinkUrl: "#case-study",
+                featuredImage: "",
+            },
+            { label: "Products", url: "#products", hasDropdown: true, col1Label: "PRODUCTS", col1Items: [], col2Label: "", col2Items: [], showFeatured: false },
+            { label: "Technology", url: "#technology", hasDropdown: false },
+            { label: "Blog", url: "#blog", hasDropdown: false },
+            { label: "Company", url: "#company", hasDropdown: false },
+        ],
     },
 
     // --- CTA ---
     ctaText: {
         type: ControlType.String,
         title: "CTA Text",
-        defaultValue: defaultCtaText,
+        defaultValue: "Let's Talk",
     },
     ctaUrl: {
         type: ControlType.String,
         title: "CTA URL",
-        defaultValue: defaultCtaUrl,
+        defaultValue: "#contact",
     },
     ctaBgColor: {
         type: ControlType.Color,
