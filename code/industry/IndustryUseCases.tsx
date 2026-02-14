@@ -1,27 +1,27 @@
-// Industry Page - Use Cases Section
+// Industry Page - Use Cases Carousel
+// Horizontal scrollable carousel with arrow navigation
 // Framer Code Component with full property controls
 
+import { useRef } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
 interface UseCaseCard {
-    icon: string
+    image: string
+    tags: string
     title: string
-    description: string
-    linkText: string
     linkUrl: string
 }
 
 interface Props {
     sectionLabel: string
     heading: string
+    cardWidth: number
     cards: UseCaseCard[]
-    columns: number
     bgColor: string
     cardBgColor: string
     textColor: string
     secondaryTextColor: string
     accentColor: string
-    borderColor: string
     fontFamily: string
     style?: React.CSSProperties
 }
@@ -29,43 +29,59 @@ interface Props {
 function IndustryUseCases(props: Props) {
     const {
         sectionLabel = "USE CASES",
-        heading = "How companies use Beamr",
+        heading = "How Companies Use Beamr",
+        cardWidth = 300,
         cards = [
             {
-                icon: "📡",
-                title: "Streaming Optimization",
-                description:
-                    "Reduce bandwidth costs by up to 50% while maintaining broadcast-quality video for millions of concurrent viewers.",
-                linkText: "Learn more",
+                image: "",
+                tags: "CDN, Cost Savings",
+                title: "Cut CDN Costs by 30-50%",
                 linkUrl: "#",
             },
             {
-                icon: "🚀",
-                title: "Content Delivery",
-                description:
-                    "Accelerate content delivery with smaller file sizes, enabling faster start times and reduced buffering across global CDNs.",
-                linkText: "Learn more",
+                image: "",
+                tags: "Storage, Optimization",
+                title: "Reduce Storage Requirements by 50%",
                 linkUrl: "#",
             },
             {
-                icon: "☁️",
-                title: "Cloud Storage",
-                description:
-                    "Cut cloud storage costs dramatically while preserving your entire content library in pristine, visually lossless quality.",
-                linkText: "Learn more",
+                image: "",
+                tags: "Quality, Enhancement",
+                title: "Improve Visual Quality at Same Bitrate",
+                linkUrl: "#",
+            },
+            {
+                image: "",
+                tags: "4K, Upscaling",
+                title: "Enable 4K Streaming at HD Bitrates",
+                linkUrl: "#",
+            },
+            {
+                image: "",
+                tags: "Encoding, Efficiency",
+                title: "Accelerate Encoding Workflows by 3x",
                 linkUrl: "#",
             },
         ],
-        columns = 3,
         bgColor = "#07071c",
         cardBgColor = "#0f1029",
         textColor = "#ffffff",
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
-        borderColor = "rgba(255,255,255,0.06)",
         fontFamily = "'Inter', sans-serif",
         style,
     } = props
+
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    const scroll = (direction: "left" | "right") => {
+        if (!scrollRef.current) return
+        const amount = cardWidth + 20
+        scrollRef.current.scrollBy({
+            left: direction === "left" ? -amount : amount,
+            behavior: "smooth",
+        })
+    }
 
     return (
         <section
@@ -73,124 +89,204 @@ function IndustryUseCases(props: Props) {
                 ...style,
                 width: "100%",
                 backgroundColor: bgColor,
-                padding: "100px 48px",
+                padding: "100px 0 100px 48px",
                 boxSizing: "border-box",
                 fontFamily,
             }}
         >
-            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-                {/* Section Header */}
-                <div style={{ textAlign: "center", marginBottom: 56 }}>
-                    <span
-                        style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: accentColor,
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            fontFamily,
-                        }}
-                    >
-                        {sectionLabel}
-                    </span>
-                    <h2
-                        style={{
-                            fontSize: 44,
-                            fontWeight: 700,
-                            color: textColor,
-                            margin: "16px 0 0",
-                            lineHeight: 1.15,
-                            letterSpacing: "-0.02em",
-                            fontFamily,
-                        }}
-                    >
-                        {heading}
-                    </h2>
-                </div>
+            {/* Scrollbar-hiding styles */}
+            <style>{`
+                .ind-carousel-track::-webkit-scrollbar { display: none; }
+                .ind-carousel-track { -ms-overflow-style: none; scrollbar-width: none; }
+            `}</style>
 
-                {/* Cards Grid */}
+            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+                {/* Header row */}
                 <div
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                        gap: 24,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-end",
+                        marginBottom: 40,
+                        paddingRight: 48,
                     }}
                 >
-                    {cards.map((card, i) => (
-                        <div
-                            key={i}
+                    <div>
+                        <span
                             style={{
-                                backgroundColor: cardBgColor,
-                                borderRadius: 16,
-                                padding: 32,
-                                border: `1px solid ${borderColor}`,
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 20,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: accentColor,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                display: "block",
+                                marginBottom: 16,
+                                fontFamily,
                             }}
                         >
-                            {/* Icon */}
-                            <div
-                                style={{
-                                    width: 48,
-                                    height: 48,
-                                    borderRadius: 12,
-                                    backgroundColor: `${accentColor}15`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: 22,
-                                }}
-                            >
-                                {card.icon}
-                            </div>
+                            {sectionLabel}
+                        </span>
+                        <h2
+                            style={{
+                                fontSize: 44,
+                                fontWeight: 700,
+                                color: textColor,
+                                margin: 0,
+                                lineHeight: 1.15,
+                                letterSpacing: "-0.02em",
+                                fontFamily,
+                            }}
+                        >
+                            {heading}
+                        </h2>
+                    </div>
 
-                            {/* Title */}
-                            <h3
-                                style={{
-                                    fontSize: 20,
-                                    fontWeight: 600,
-                                    color: textColor,
-                                    margin: 0,
-                                    fontFamily,
-                                }}
-                            >
-                                {card.title}
-                            </h3>
+                    {/* Arrow navigation */}
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                            onClick={() => scroll("left")}
+                            style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 10,
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                backgroundColor: "rgba(255,255,255,0.04)",
+                                color: textColor,
+                                fontSize: 18,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "background-color 0.2s",
+                            }}
+                        >
+                            &#8592;
+                        </button>
+                        <button
+                            onClick={() => scroll("right")}
+                            style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 10,
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                backgroundColor: "rgba(255,255,255,0.04)",
+                                color: textColor,
+                                fontSize: 18,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "background-color 0.2s",
+                            }}
+                        >
+                            &#8594;
+                        </button>
+                    </div>
+                </div>
 
-                            {/* Description */}
-                            <p
-                                style={{
-                                    fontSize: 15,
-                                    color: secondaryTextColor,
-                                    margin: 0,
-                                    lineHeight: 1.6,
-                                    fontFamily,
-                                    flex: 1,
-                                }}
-                            >
-                                {card.description}
-                            </p>
+                {/* Carousel track */}
+                <div
+                    ref={scrollRef}
+                    className="ind-carousel-track"
+                    style={{
+                        display: "flex",
+                        gap: 20,
+                        overflowX: "auto",
+                        paddingRight: 48,
+                        paddingBottom: 8,
+                    }}
+                >
+                    {cards.map((card, i) => {
+                        const tagList = card.tags
+                            .split(",")
+                            .map((t) => t.trim())
+                            .filter(Boolean)
 
-                            {/* Link */}
+                        return (
                             <a
+                                key={i}
                                 href={card.linkUrl}
                                 style={{
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    color: accentColor,
+                                    flex: `0 0 ${cardWidth}px`,
                                     textDecoration: "none",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    fontFamily,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 16,
                                 }}
                             >
-                                {card.linkText}
-                                <span style={{ fontSize: 16 }}>&#8594;</span>
+                                {/* Tall image */}
+                                <div
+                                    style={{
+                                        width: "100%",
+                                        aspectRatio: "3/4",
+                                        borderRadius: 16,
+                                        overflow: "hidden",
+                                        background: card.image
+                                            ? `url(${card.image}) center/cover no-repeat`
+                                            : "linear-gradient(160deg, #0f1029 0%, #1a1b4a 50%, #0f1029 100%)",
+                                        border: "1px solid rgba(255,255,255,0.06)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    {!card.image && (
+                                        <span
+                                            style={{
+                                                fontSize: 13,
+                                                color: "rgba(255,255,255,0.15)",
+                                                fontFamily,
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            Visual / Demo
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Tags */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: 8,
+                                        flexWrap: "wrap",
+                                    }}
+                                >
+                                    {tagList.map((tag, j) => (
+                                        <span
+                                            key={j}
+                                            style={{
+                                                fontSize: 12,
+                                                fontWeight: 600,
+                                                color: accentColor,
+                                                backgroundColor: `${accentColor}10`,
+                                                padding: "4px 12px",
+                                                borderRadius: 100,
+                                                fontFamily,
+                                                letterSpacing: "0.02em",
+                                            }}
+                                        >
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+
+                                {/* Title */}
+                                <h3
+                                    style={{
+                                        fontSize: 18,
+                                        fontWeight: 600,
+                                        color: textColor,
+                                        margin: 0,
+                                        lineHeight: 1.3,
+                                        fontFamily,
+                                    }}
+                                >
+                                    {card.title}
+                                </h3>
                             </a>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             </div>
         </section>
@@ -206,35 +302,36 @@ addPropertyControls(IndustryUseCases, {
     heading: {
         type: ControlType.String,
         title: "Heading",
-        defaultValue: "How companies use Beamr",
+        defaultValue: "How Companies Use Beamr",
+    },
+    cardWidth: {
+        type: ControlType.Number,
+        title: "Card Width",
+        defaultValue: 300,
+        min: 200,
+        max: 500,
+        step: 10,
     },
     cards: {
         type: ControlType.Array,
-        title: "Use Case Cards",
-        maxCount: 6,
+        title: "Cards",
+        maxCount: 10,
         control: {
             type: ControlType.Object,
             controls: {
-                icon: {
+                image: {
+                    type: ControlType.Image,
+                    title: "Image",
+                },
+                tags: {
                     type: ControlType.String,
-                    title: "Icon",
-                    defaultValue: "📡",
+                    title: "Tags (comma-sep)",
+                    defaultValue: "Tag1, Tag2",
                 },
                 title: {
                     type: ControlType.String,
                     title: "Title",
-                    defaultValue: "Use Case",
-                },
-                description: {
-                    type: ControlType.String,
-                    title: "Description",
-                    defaultValue: "Description of this use case.",
-                    displayTextArea: true,
-                },
-                linkText: {
-                    type: ControlType.String,
-                    title: "Link Text",
-                    defaultValue: "Learn more",
+                    defaultValue: "Use Case Title",
                 },
                 linkUrl: {
                     type: ControlType.String,
@@ -245,38 +342,36 @@ addPropertyControls(IndustryUseCases, {
         },
         defaultValue: [
             {
-                icon: "📡",
-                title: "Streaming Optimization",
-                description:
-                    "Reduce bandwidth costs by up to 50% while maintaining broadcast-quality video for millions of concurrent viewers.",
-                linkText: "Learn more",
+                image: "",
+                tags: "CDN, Cost Savings",
+                title: "Cut CDN Costs by 30-50%",
                 linkUrl: "#",
             },
             {
-                icon: "🚀",
-                title: "Content Delivery",
-                description:
-                    "Accelerate content delivery with smaller file sizes, enabling faster start times and reduced buffering across global CDNs.",
-                linkText: "Learn more",
+                image: "",
+                tags: "Storage, Optimization",
+                title: "Reduce Storage Requirements by 50%",
                 linkUrl: "#",
             },
             {
-                icon: "☁️",
-                title: "Cloud Storage",
-                description:
-                    "Cut cloud storage costs dramatically while preserving your entire content library in pristine, visually lossless quality.",
-                linkText: "Learn more",
+                image: "",
+                tags: "Quality, Enhancement",
+                title: "Improve Visual Quality at Same Bitrate",
+                linkUrl: "#",
+            },
+            {
+                image: "",
+                tags: "4K, Upscaling",
+                title: "Enable 4K Streaming at HD Bitrates",
+                linkUrl: "#",
+            },
+            {
+                image: "",
+                tags: "Encoding, Efficiency",
+                title: "Accelerate Encoding Workflows by 3x",
                 linkUrl: "#",
             },
         ],
-    },
-    columns: {
-        type: ControlType.Number,
-        title: "Columns",
-        defaultValue: 3,
-        min: 1,
-        max: 4,
-        step: 1,
     },
     bgColor: {
         type: ControlType.Color,
@@ -302,11 +397,6 @@ addPropertyControls(IndustryUseCases, {
         type: ControlType.Color,
         title: "Accent Color",
         defaultValue: "#00d46a",
-    },
-    borderColor: {
-        type: ControlType.Color,
-        title: "Border Color",
-        defaultValue: "rgba(255,255,255,0.06)",
     },
     fontFamily: {
         type: ControlType.String,

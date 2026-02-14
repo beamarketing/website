@@ -1,4 +1,5 @@
 // Industry Page - Hero Section
+// Two-column layout with floating animated cards
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
@@ -9,10 +10,12 @@ interface LogoItem {
     height: number
 }
 
+interface FloatingCard {
+    label: string
+    image: string
+}
+
 interface Props {
-    badge: string
-    badgeIcon: string
-    showBadge: boolean
     heading: string
     headingFontSize: number
     subheading: string
@@ -22,18 +25,19 @@ interface Props {
     ctaSecondaryUrl: string
     showSecondaryButton: boolean
     showLogos: boolean
-    logoTitle: string
     logos: LogoItem[]
     logoHeight: number
     logoOpacity: number
     useColorOverlay: boolean
     logoColor: string
-    heroImage1: string
-    heroImage2: string
+    floatingCards: FloatingCard[]
+    floatIntensity: number
+    floatSpeed: number
     bgColor: string
     textColor: string
     secondaryTextColor: string
     accentColor: string
+    cardBgColor: string
     fontFamily: string
     minHeight: number
     style?: React.CSSProperties
@@ -41,36 +45,47 @@ interface Props {
 
 function IndustryHero(props: Props) {
     const {
-        badge = "MEDIA & ENTERTAINMENT",
-        badgeIcon = "🎬",
-        showBadge = true,
         heading = "Video optimization for\nmedia & entertainment",
-        headingFontSize = 64,
-        subheading = "Reduce video bitrate by up to 50% while maintaining pristine quality. Purpose-built for the world's most demanding media workflows.",
-        ctaPrimaryText = "Start Free Trial",
+        headingFontSize = 56,
+        subheading = "Reduce CDN and storage costs by 30-50% while maintaining broadcast quality. Trusted by Netflix, Paramount, and tier-1 platforms.",
+        ctaPrimaryText = "See it in Action",
         ctaPrimaryUrl = "#",
-        ctaSecondaryText = "Schedule Demo",
+        ctaSecondaryText = "Request a Demo",
         ctaSecondaryUrl = "#",
         showSecondaryButton = true,
         showLogos = true,
-        logoTitle = "Trusted by leading media companies",
         logos = [],
-        logoHeight = 28,
+        logoHeight = 24,
         logoOpacity = 0.5,
         useColorOverlay = false,
         logoColor = "#ffffff",
-        heroImage1 = "",
-        heroImage2 = "",
+        floatingCards = [
+            { label: "LIVE STREAM", image: "" },
+            { label: "VOD", image: "" },
+            { label: "4K CONTENT", image: "" },
+        ],
+        floatIntensity = 12,
+        floatSpeed = 6,
         bgColor = "#07071c",
         textColor = "#ffffff",
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
+        cardBgColor = "#0f1029",
         fontFamily = "'Inter', sans-serif",
-        minHeight = 900,
+        minHeight = 700,
         style,
     } = props
 
-    const placeholderLogos = ["NVIDIA", "Netflix", "Meta", "Samsung", "Microsoft", "Comcast"]
+    const placeholderLogos = ["NVIDIA", "Dolby", "Netflix", "Paramount"]
+
+    // Each floating card gets its own animation timing
+    const cardConfigs = [
+        { top: "0%", left: "50%", rotate: 3, delay: 0, width: "60%" },
+        { top: "20%", left: "5%", rotate: -2, delay: 1.2, width: "62%" },
+        { top: "48%", left: "35%", rotate: 1.5, delay: 2.4, width: "58%" },
+    ]
+
+    const animId = "ind-hero-float"
 
     return (
         <section
@@ -79,23 +94,38 @@ function IndustryHero(props: Props) {
                 width: "100%",
                 minHeight,
                 backgroundColor: bgColor,
-                padding: "80px 48px 60px",
+                padding: "100px 48px 80px",
                 boxSizing: "border-box",
                 fontFamily,
                 position: "relative",
                 overflow: "hidden",
             }}
         >
-            {/* Gradient glow */}
+            {/* Keyframe animations */}
+            <style>{`
+                @keyframes ${animId}-0 {
+                    0%, 100% { transform: translateY(0px) rotate(${cardConfigs[0].rotate}deg); }
+                    50% { transform: translateY(-${floatIntensity}px) rotate(${cardConfigs[0].rotate + 0.5}deg); }
+                }
+                @keyframes ${animId}-1 {
+                    0%, 100% { transform: translateY(0px) rotate(${cardConfigs[1].rotate}deg); }
+                    50% { transform: translateY(${floatIntensity}px) rotate(${cardConfigs[1].rotate - 0.5}deg); }
+                }
+                @keyframes ${animId}-2 {
+                    0%, 100% { transform: translateY(0px) rotate(${cardConfigs[2].rotate}deg); }
+                    50% { transform: translateY(-${floatIntensity * 0.8}px) rotate(${cardConfigs[2].rotate + 0.4}deg); }
+                }
+            `}</style>
+
+            {/* Subtle gradient glow */}
             <div
                 style={{
                     position: "absolute",
-                    top: "-40%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "120%",
-                    height: "80%",
-                    background: `radial-gradient(ellipse at center, ${accentColor}08 0%, transparent 70%)`,
+                    top: "-20%",
+                    right: "-10%",
+                    width: "70%",
+                    height: "100%",
+                    background: `radial-gradient(ellipse at center, ${accentColor}06 0%, transparent 70%)`,
                     pointerEvents: "none",
                 }}
             />
@@ -104,157 +134,105 @@ function IndustryHero(props: Props) {
                 style={{
                     maxWidth: 1280,
                     margin: "0 auto",
-                    display: "flex",
-                    flexDirection: "column",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 64,
                     alignItems: "center",
                     position: "relative",
                     zIndex: 1,
+                    minHeight: minHeight - 180,
                 }}
             >
-                {/* Badge */}
-                {showBadge && (
-                    <div
+                {/* Left: Text content */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    <h1
                         style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
-                            backgroundColor: "rgba(255,255,255,0.06)",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 100,
-                            padding: "8px 20px",
-                            marginBottom: 32,
+                            fontSize: headingFontSize,
+                            fontWeight: 700,
+                            color: textColor,
+                            margin: "0 0 24px",
+                            lineHeight: 1.1,
+                            letterSpacing: "-0.02em",
+                            fontFamily,
+                            whiteSpace: "pre-line",
                         }}
                     >
-                        <span style={{ fontSize: 14 }}>{badgeIcon}</span>
-                        <span
-                            style={{
-                                fontSize: 13,
-                                fontWeight: 600,
-                                color: accentColor,
-                                letterSpacing: "0.08em",
-                                textTransform: "uppercase",
-                                fontFamily,
-                            }}
-                        >
-                            {badge}
-                        </span>
-                    </div>
-                )}
+                        {heading}
+                    </h1>
 
-                {/* Heading */}
-                <h1
-                    style={{
-                        fontSize: headingFontSize,
-                        fontWeight: 700,
-                        color: textColor,
-                        textAlign: "center",
-                        margin: "0 0 24px",
-                        lineHeight: 1.1,
-                        letterSpacing: "-0.02em",
-                        maxWidth: 900,
-                        fontFamily,
-                        whiteSpace: "pre-line",
-                    }}
-                >
-                    {heading}
-                </h1>
-
-                {/* Subheading */}
-                <p
-                    style={{
-                        fontSize: 18,
-                        color: secondaryTextColor,
-                        textAlign: "center",
-                        margin: "0 0 40px",
-                        maxWidth: 640,
-                        lineHeight: 1.6,
-                        fontFamily,
-                    }}
-                >
-                    {subheading}
-                </p>
-
-                {/* CTA Buttons */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 16,
-                        marginBottom: 56,
-                        flexWrap: "wrap",
-                        justifyContent: "center",
-                    }}
-                >
-                    <a
-                        href={ctaPrimaryUrl}
+                    <p
                         style={{
-                            backgroundColor: accentColor,
-                            color: bgColor,
-                            padding: "14px 32px",
-                            borderRadius: 10,
-                            fontSize: 16,
-                            fontWeight: 600,
-                            textDecoration: "none",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
+                            fontSize: 17,
+                            color: secondaryTextColor,
+                            margin: "0 0 36px",
+                            maxWidth: 480,
+                            lineHeight: 1.65,
                             fontFamily,
                         }}
                     >
-                        {ctaPrimaryText}
-                        <span style={{ fontSize: 18 }}>&#8594;</span>
-                    </a>
-                    {showSecondaryButton && (
-                        <a
-                            href={ctaSecondaryUrl}
-                            style={{
-                                backgroundColor: "rgba(255,255,255,0.06)",
-                                color: textColor,
-                                padding: "14px 32px",
-                                borderRadius: 10,
-                                fontSize: 16,
-                                fontWeight: 500,
-                                textDecoration: "none",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                fontFamily,
-                            }}
-                        >
-                            {ctaSecondaryText}
-                        </a>
-                    )}
-                </div>
+                        {subheading}
+                    </p>
 
-                {/* Logo Bar */}
-                {showLogos && (
+                    {/* CTA Buttons */}
                     <div
                         style={{
                             display: "flex",
-                            flexDirection: "column",
                             alignItems: "center",
-                            gap: 24,
-                            marginBottom: 56,
-                            width: "100%",
+                            gap: 14,
+                            marginBottom: 48,
+                            flexWrap: "wrap",
                         }}
                     >
-                        <p
+                        <a
+                            href={ctaPrimaryUrl}
                             style={{
-                                fontSize: 13,
-                                color: secondaryTextColor,
-                                margin: 0,
-                                letterSpacing: "0.05em",
-                                textTransform: "uppercase",
-                                fontWeight: 500,
+                                backgroundColor: accentColor,
+                                color: bgColor,
+                                padding: "13px 28px",
+                                borderRadius: 10,
+                                fontSize: 15,
+                                fontWeight: 600,
+                                textDecoration: "none",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
                                 fontFamily,
                             }}
                         >
-                            {logoTitle}
-                        </p>
+                            {ctaPrimaryText}
+                            <span style={{ fontSize: 17 }}>&#8594;</span>
+                        </a>
+                        {showSecondaryButton && (
+                            <a
+                                href={ctaSecondaryUrl}
+                                style={{
+                                    backgroundColor: "rgba(255,255,255,0.06)",
+                                    color: textColor,
+                                    padding: "13px 28px",
+                                    borderRadius: 10,
+                                    fontSize: 15,
+                                    fontWeight: 500,
+                                    textDecoration: "none",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    fontFamily,
+                                }}
+                            >
+                                {ctaSecondaryText}
+                                <span style={{ fontSize: 17 }}>&#8594;</span>
+                            </a>
+                        )}
+                    </div>
+
+                    {/* Logo bar */}
+                    {showLogos && (
                         <div
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "center",
-                                gap: 48,
+                                gap: 32,
                                 flexWrap: "wrap",
                             }}
                         >
@@ -308,7 +286,7 @@ function IndustryHero(props: Props) {
                                           ) : (
                                               <span
                                                   style={{
-                                                      fontSize: (logo.height || logoHeight) * 0.6,
+                                                      fontSize: (logo.height || logoHeight) * 0.65,
                                                       fontWeight: 600,
                                                       color: textColor,
                                                       fontFamily,
@@ -324,7 +302,7 @@ function IndustryHero(props: Props) {
                                       <span
                                           key={i}
                                           style={{
-                                              fontSize: 16,
+                                              fontSize: 15,
                                               fontWeight: 600,
                                               color: textColor,
                                               opacity: logoOpacity,
@@ -336,40 +314,80 @@ function IndustryHero(props: Props) {
                                       </span>
                                   ))}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
-                {/* Hero Images */}
+                {/* Right: Floating cards */}
                 <div
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 24,
-                        width: "100%",
+                        position: "relative",
+                        height: "100%",
+                        minHeight: 480,
                     }}
                 >
-                    <div
-                        style={{
-                            aspectRatio: "4/3",
-                            borderRadius: 16,
-                            overflow: "hidden",
-                            background: heroImage1
-                                ? `url(${heroImage1}) center/cover no-repeat`
-                                : "linear-gradient(135deg, #0f1029 0%, #1a1b45 100%)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                    />
-                    <div
-                        style={{
-                            aspectRatio: "4/3",
-                            borderRadius: 16,
-                            overflow: "hidden",
-                            background: heroImage2
-                                ? `url(${heroImage2}) center/cover no-repeat`
-                                : "linear-gradient(135deg, #0f1029 0%, #1a1b45 100%)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                    />
+                    {floatingCards.map((card, i) => {
+                        const config = cardConfigs[i % cardConfigs.length]
+                        return (
+                            <div
+                                key={i}
+                                style={{
+                                    position: "absolute",
+                                    top: config.top,
+                                    left: config.left,
+                                    width: config.width,
+                                    animation: `${animId}-${i % 3} ${floatSpeed + i * 0.8}s ease-in-out infinite`,
+                                    animationDelay: `${config.delay}s`,
+                                    zIndex: floatingCards.length - i,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        backgroundColor: cardBgColor,
+                                        borderRadius: 16,
+                                        overflow: "hidden",
+                                        border: "1px solid rgba(255,255,255,0.08)",
+                                        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+                                    }}
+                                >
+                                    {/* Label tag */}
+                                    <div
+                                        style={{
+                                            padding: "12px 16px 0",
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                display: "inline-block",
+                                                fontSize: 10,
+                                                fontWeight: 700,
+                                                color: accentColor,
+                                                letterSpacing: "0.1em",
+                                                textTransform: "uppercase",
+                                                backgroundColor: `${accentColor}12`,
+                                                padding: "5px 10px",
+                                                borderRadius: 6,
+                                                fontFamily,
+                                            }}
+                                        >
+                                            {card.label}
+                                        </span>
+                                    </div>
+
+                                    {/* Image area */}
+                                    <div
+                                        style={{
+                                            margin: "10px 12px 12px",
+                                            aspectRatio: "16/10",
+                                            borderRadius: 10,
+                                            background: card.image
+                                                ? `url(${card.image}) center/cover no-repeat`
+                                                : "linear-gradient(135deg, #161638 0%, #1e1e50 100%)",
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </section>
@@ -377,23 +395,6 @@ function IndustryHero(props: Props) {
 }
 
 addPropertyControls(IndustryHero, {
-    showBadge: {
-        type: ControlType.Boolean,
-        title: "Show Badge",
-        defaultValue: true,
-    },
-    badgeIcon: {
-        type: ControlType.String,
-        title: "Badge Icon",
-        defaultValue: "🎬",
-        hidden: (props) => !props.showBadge,
-    },
-    badge: {
-        type: ControlType.String,
-        title: "Badge Text",
-        defaultValue: "MEDIA & ENTERTAINMENT",
-        hidden: (props) => !props.showBadge,
-    },
     heading: {
         type: ControlType.String,
         title: "Heading",
@@ -403,7 +404,7 @@ addPropertyControls(IndustryHero, {
     headingFontSize: {
         type: ControlType.Number,
         title: "Heading Size",
-        defaultValue: 64,
+        defaultValue: 56,
         min: 32,
         max: 96,
         step: 2,
@@ -412,13 +413,13 @@ addPropertyControls(IndustryHero, {
         type: ControlType.String,
         title: "Subheading",
         defaultValue:
-            "Reduce video bitrate by up to 50% while maintaining pristine quality. Purpose-built for the world's most demanding media workflows.",
+            "Reduce CDN and storage costs by 30-50% while maintaining broadcast quality. Trusted by Netflix, Paramount, and tier-1 platforms.",
         displayTextArea: true,
     },
     ctaPrimaryText: {
         type: ControlType.String,
         title: "Primary CTA",
-        defaultValue: "Start Free Trial",
+        defaultValue: "See it in Action",
     },
     ctaPrimaryUrl: {
         type: ControlType.String,
@@ -433,7 +434,7 @@ addPropertyControls(IndustryHero, {
     ctaSecondaryText: {
         type: ControlType.String,
         title: "Secondary CTA",
-        defaultValue: "Schedule Demo",
+        defaultValue: "Request a Demo",
         hidden: (props) => !props.showSecondaryButton,
     },
     ctaSecondaryUrl: {
@@ -442,29 +443,55 @@ addPropertyControls(IndustryHero, {
         defaultValue: "#",
         hidden: (props) => !props.showSecondaryButton,
     },
-    heroImage1: {
-        type: ControlType.Image,
-        title: "Hero Image 1",
+    floatingCards: {
+        type: ControlType.Array,
+        title: "Floating Cards",
+        maxCount: 5,
+        control: {
+            type: ControlType.Object,
+            controls: {
+                label: {
+                    type: ControlType.String,
+                    title: "Label",
+                    defaultValue: "LABEL",
+                },
+                image: {
+                    type: ControlType.Image,
+                    title: "Image",
+                },
+            },
+        },
+        defaultValue: [
+            { label: "LIVE STREAM", image: "" },
+            { label: "VOD", image: "" },
+            { label: "4K CONTENT", image: "" },
+        ],
     },
-    heroImage2: {
-        type: ControlType.Image,
-        title: "Hero Image 2",
+    floatIntensity: {
+        type: ControlType.Number,
+        title: "Float Intensity",
+        defaultValue: 12,
+        min: 0,
+        max: 40,
+        step: 2,
+    },
+    floatSpeed: {
+        type: ControlType.Number,
+        title: "Float Speed (s)",
+        defaultValue: 6,
+        min: 2,
+        max: 16,
+        step: 0.5,
     },
     showLogos: {
         type: ControlType.Boolean,
         title: "Show Logos",
         defaultValue: true,
     },
-    logoTitle: {
-        type: ControlType.String,
-        title: "Logo Title",
-        defaultValue: "Trusted by leading media companies",
-        hidden: (props) => !props.showLogos,
-    },
     logos: {
         type: ControlType.Array,
         title: "Logos",
-        maxCount: 10,
+        maxCount: 8,
         hidden: (props) => !props.showLogos,
         control: {
             type: ControlType.Object,
@@ -481,25 +508,23 @@ addPropertyControls(IndustryHero, {
                 height: {
                     type: ControlType.Number,
                     title: "Height",
-                    defaultValue: 28,
+                    defaultValue: 24,
                     min: 8,
                     max: 60,
                 },
             },
         },
         defaultValue: [
-            { name: "NVIDIA", image: "", height: 28 },
-            { name: "Netflix", image: "", height: 28 },
-            { name: "Meta", image: "", height: 28 },
-            { name: "Samsung", image: "", height: 28 },
-            { name: "Microsoft", image: "", height: 28 },
-            { name: "Comcast", image: "", height: 28 },
+            { name: "NVIDIA", image: "", height: 24 },
+            { name: "Dolby", image: "", height: 24 },
+            { name: "Netflix", image: "", height: 24 },
+            { name: "Paramount", image: "", height: 24 },
         ],
     },
     logoHeight: {
         type: ControlType.Number,
         title: "Logo Height",
-        defaultValue: 28,
+        defaultValue: 24,
         min: 12,
         max: 60,
         step: 2,
@@ -529,15 +554,20 @@ addPropertyControls(IndustryHero, {
     minHeight: {
         type: ControlType.Number,
         title: "Min Height",
-        defaultValue: 900,
+        defaultValue: 700,
         min: 400,
-        max: 1400,
+        max: 1200,
         step: 20,
     },
     bgColor: {
         type: ControlType.Color,
         title: "Background",
         defaultValue: "#07071c",
+    },
+    cardBgColor: {
+        type: ControlType.Color,
+        title: "Card Background",
+        defaultValue: "#0f1029",
     },
     textColor: {
         type: ControlType.Color,
