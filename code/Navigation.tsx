@@ -7,32 +7,26 @@ import { useState, useEffect, useRef } from "react"
 
 // --- Sub-types ---
 
+interface DropdownItem {
+    title: string
+    description: string
+    url: string
+}
+
 interface NavLink {
     label: string
     url: string
     hasDropdown: boolean
-}
-
-interface IndustryItem {
-    icon: string
-    title: string
-    description: string
-    url: string
-}
-
-interface UseCaseItem {
-    icon: string
-    title: string
-    description: string
-    url: string
-}
-
-interface FeaturedCard {
-    badge: string
-    title: string
-    linkText: string
-    linkUrl: string
-    image: string
+    col1Label: string
+    col1Items: DropdownItem[]
+    col2Label: string
+    col2Items: DropdownItem[]
+    showFeatured: boolean
+    featuredBadge: string
+    featuredTitle: string
+    featuredLinkText: string
+    featuredLinkUrl: string
+    featuredImage: string
 }
 
 // --- Props ---
@@ -47,7 +41,7 @@ interface Props {
     logoIconColor: string
     showLogoIcon: boolean
 
-    // Nav links
+    // Nav links (includes dropdown configuration per item)
     navLinks: NavLink[]
 
     // CTA
@@ -55,13 +49,6 @@ interface Props {
     ctaUrl: string
     ctaBgColor: string
     ctaTextColor: string
-
-    // Mega menu content
-    industriesLabel: string
-    industries: IndustryItem[]
-    useCasesLabel: string
-    useCases: UseCaseItem[]
-    featured: FeaturedCard
 
     // Styling
     bgColor: string
@@ -96,89 +83,138 @@ function Navigation(props: Props) {
         showLogoIcon = true,
 
         navLinks = [
-            { label: "Solutions", url: "#solutions", hasDropdown: true },
-            { label: "Products", url: "#products", hasDropdown: true },
-            { label: "Technology", url: "#technology", hasDropdown: false },
-            { label: "Blog", url: "#blog", hasDropdown: false },
-            { label: "Company", url: "#company", hasDropdown: false },
+            {
+                label: "Solutions",
+                url: "#solutions",
+                hasDropdown: true,
+                col1Label: "INDUSTRIES",
+                col1Items: [
+                    {
+                        title: "Media & Entertainment",
+                        description:
+                            "Cut CDN & storage costs 30-50% while keeping broadcast quality.",
+                        url: "#media",
+                    },
+                    {
+                        title: "AI / Machine Learning",
+                        description:
+                            "Smarter vision AI pipelines with guaranteed compression.",
+                        url: "#ai",
+                    },
+                    {
+                        title: "Autonomous Vehicles",
+                        description:
+                            "50% storage reduction with ML-safe compression for training data.",
+                        url: "#automotive",
+                    },
+                    {
+                        title: "Sports Streaming",
+                        description:
+                            "720p to 4K Super Resolution without doubling file size.",
+                        url: "#sports",
+                    },
+                ],
+                col2Label: "USE CASES",
+                col2Items: [
+                    {
+                        title: "Reduce CDN Costs",
+                        description:
+                            "Deliver same visual quality at significantly lower bitrates.",
+                        url: "#cdn",
+                    },
+                    {
+                        title: "Improve Quality",
+                        description:
+                            "Enhance visual quality while maintaining or reducing file size.",
+                        url: "#quality",
+                    },
+                    {
+                        title: "Optimize Storage",
+                        description:
+                            "Reduce storage requirements by up to 50% without quality loss.",
+                        url: "#storage",
+                    },
+                    {
+                        title: "4K Upscaling",
+                        description:
+                            "Upscale legacy content to 4K resolution efficiently.",
+                        url: "#upscaling",
+                    },
+                ],
+                showFeatured: true,
+                featuredBadge: "CASE STUDY",
+                featuredTitle:
+                    "Netflix Achieves 40% CDN Savings with CABR Technology",
+                featuredLinkText: "Read Case Study",
+                featuredLinkUrl: "#case-study",
+                featuredImage: "",
+            },
+            {
+                label: "Products",
+                url: "#products",
+                hasDropdown: true,
+                col1Label: "PRODUCTS",
+                col1Items: [],
+                col2Label: "",
+                col2Items: [],
+                showFeatured: false,
+                featuredBadge: "",
+                featuredTitle: "",
+                featuredLinkText: "",
+                featuredLinkUrl: "",
+                featuredImage: "",
+            },
+            {
+                label: "Technology",
+                url: "#technology",
+                hasDropdown: false,
+                col1Label: "",
+                col1Items: [],
+                col2Label: "",
+                col2Items: [],
+                showFeatured: false,
+                featuredBadge: "",
+                featuredTitle: "",
+                featuredLinkText: "",
+                featuredLinkUrl: "",
+                featuredImage: "",
+            },
+            {
+                label: "Blog",
+                url: "#blog",
+                hasDropdown: false,
+                col1Label: "",
+                col1Items: [],
+                col2Label: "",
+                col2Items: [],
+                showFeatured: false,
+                featuredBadge: "",
+                featuredTitle: "",
+                featuredLinkText: "",
+                featuredLinkUrl: "",
+                featuredImage: "",
+            },
+            {
+                label: "Company",
+                url: "#company",
+                hasDropdown: false,
+                col1Label: "",
+                col1Items: [],
+                col2Label: "",
+                col2Items: [],
+                showFeatured: false,
+                featuredBadge: "",
+                featuredTitle: "",
+                featuredLinkText: "",
+                featuredLinkUrl: "",
+                featuredImage: "",
+            },
         ],
 
         ctaText = "Let's Talk",
         ctaUrl = "#contact",
         ctaBgColor = "#111111",
         ctaTextColor = "#ffffff",
-
-        industriesLabel = "INDUSTRIES",
-        industries = [
-            {
-                icon: "🎬",
-                title: "Media & Entertainment",
-                description:
-                    "Cut CDN & storage costs 30-50% while keeping broadcast quality.",
-                url: "#media",
-            },
-            {
-                icon: "🧠",
-                title: "AI / Machine Learning",
-                description:
-                    "Smarter vision AI pipelines with guaranteed compression.",
-                url: "#ai",
-            },
-            {
-                icon: "🚗",
-                title: "Autonomous Vehicles",
-                description:
-                    "50% storage reduction with ML-safe compression for training data.",
-                url: "#automotive",
-            },
-            {
-                icon: "🏟️",
-                title: "Sports Streaming",
-                description:
-                    "720p→4K Super Resolution without doubling file size.",
-                url: "#sports",
-            },
-        ],
-
-        useCasesLabel = "USE CASES",
-        useCases = [
-            {
-                icon: "📡",
-                title: "Reduce CDN Costs",
-                description:
-                    "Deliver same visual quality at significantly lower bitrates.",
-                url: "#cdn",
-            },
-            {
-                icon: "✨",
-                title: "Improve Quality",
-                description:
-                    "Enhance visual quality while maintaining or reducing file size.",
-                url: "#quality",
-            },
-            {
-                icon: "💾",
-                title: "Optimize Storage",
-                description:
-                    "Reduce storage requirements by up to 50% without quality loss.",
-                url: "#storage",
-            },
-            {
-                icon: "📺",
-                title: "4K Upscaling",
-                description:
-                    "Upscale legacy content to 4K resolution efficiently.",
-                url: "#upscaling",
-            },
-        ],
-
-        featured = {
-            badge: "CASE STUDY",
-            title: "Netflix Achieves 40% CDN Savings with CABR Technology",
-            linkText: "Read Case Study",
-            linkUrl: "#case-study",
-            image: "",
-        },
 
         bgColor = "#ffffff",
         textColor = "#1a1a2e",
@@ -240,7 +276,9 @@ function Navigation(props: Props) {
             setPastThreshold(true)
             return
         }
-        const findScrollParent = (el: HTMLElement | null): HTMLElement | Window => {
+        const findScrollParent = (
+            el: HTMLElement | null
+        ): HTMLElement | Window => {
             let node = el?.parentElement
             while (node && node !== document.body) {
                 const style = getComputedStyle(node)
@@ -312,7 +350,7 @@ function Navigation(props: Props) {
                 }
                 node = node.parentElement
             }
-            // No opaque background found → assume light page
+            // No opaque background found - assume light page
             setForceSolid(true)
         }
         // Check after render settles, then periodically
@@ -338,6 +376,13 @@ function Navigation(props: Props) {
     // Chevron colors
     const chevronDefault = isOverlay ? "rgba(255,255,255,0.7)" : textColor
     const chevronActive = isOverlay ? "#ffffff" : textHoverColor
+
+    // Find the active dropdown navLink
+    const activeLink = activeDropdown
+        ? navLinks.find(
+              (l) => l.hasDropdown && l.label === activeDropdown
+          )
+        : null
 
     return (
         <nav
@@ -366,9 +411,13 @@ function Navigation(props: Props) {
                     boxSizing: "border-box",
                     position: "relative",
                     zIndex: 1101,
-                    transition: "background-color 0.4s ease, border-color 0.4s ease",
+                    transition:
+                        "background-color 0.4s ease, border-color 0.4s ease",
                     backdropFilter: "none",
-                    boxShadow: !isOverlay && overlayMode ? "0 2px 16px rgba(0,0,0,0.08)" : "none",
+                    boxShadow:
+                        !isOverlay && overlayMode
+                            ? "0 2px 16px rgba(0,0,0,0.08)"
+                            : "none",
                 }}
             >
                 {/* Logo */}
@@ -381,7 +430,12 @@ function Navigation(props: Props) {
                     }}
                 >
                     {useLogoImage && logoImage ? (
-                        <div style={{ position: "relative", height: logoFontSize + 8 }}>
+                        <div
+                            style={{
+                                position: "relative",
+                                height: logoFontSize + 8,
+                            }}
+                        >
                             {/* Solid-state logo (shown when scrolled) */}
                             <img
                                 src={logoImage}
@@ -405,7 +459,9 @@ function Navigation(props: Props) {
                                     left: 0,
                                     transition: "opacity 0.4s ease",
                                     opacity: isOverlay ? 1 : 0,
-                                    filter: !overlayLogoImage ? "brightness(0) invert(1)" : "none",
+                                    filter: !overlayLogoImage
+                                        ? "brightness(0) invert(1)"
+                                        : "none",
                                 }}
                             />
                         </div>
@@ -507,7 +563,9 @@ function Navigation(props: Props) {
                             }
                         >
                             <a
-                                href={link.hasDropdown ? undefined : link.url}
+                                href={
+                                    link.hasDropdown ? undefined : link.url
+                                }
                                 style={{
                                     color:
                                         activeDropdown === link.label
@@ -550,7 +608,9 @@ function Navigation(props: Props) {
                                             strokeWidth="1.5"
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
-                                            style={{ transition: "stroke 0.3s ease" }}
+                                            style={{
+                                                transition: "stroke 0.3s ease",
+                                            }}
                                         />
                                     </svg>
                                 )}
@@ -570,317 +630,328 @@ function Navigation(props: Props) {
                         fontSize: 15,
                         fontWeight: 600,
                         textDecoration: "none",
-                        transition: "background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease",
+                        transition:
+                            "background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease",
                         fontFamily,
                         whiteSpace: "nowrap",
                         flexShrink: 0,
-                        border: isOverlay ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
+                        border: isOverlay
+                            ? "1px solid rgba(255,255,255,0.2)"
+                            : "1px solid transparent",
                     }}
                 >
                     {ctaText}
                 </a>
             </div>
 
-            {/* Mega Menu Dropdown */}
-            {activeDropdown === "Solutions" && (
-                <div
-                    style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        width: "100%",
-                        backgroundColor: dropdownBgColor,
-                        borderBottom: `1px solid ${borderColor}`,
-                        boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-                        zIndex: 1100,
-                        animation: "fadeIn 0.15s ease-out",
-                    }}
-                    onMouseEnter={() => setActiveDropdown("Solutions")}
-                    onMouseLeave={() => setActiveDropdown(null)}
-                >
+            {/* Mega Menu Dropdown - renders for whichever navLink is active */}
+            {activeLink && (() => {
+                const hasCol1 =
+                    activeLink.col1Items && activeLink.col1Items.length > 0
+                const hasCol2 =
+                    activeLink.col2Items && activeLink.col2Items.length > 0
+                const hasFeatured = activeLink.showFeatured
+
+                if (!hasCol1 && !hasCol2 && !hasFeatured) return null
+
+                const cols: string[] = []
+                if (hasCol1) cols.push("1fr")
+                if (hasCol2) cols.push("1fr")
+                if (hasFeatured) cols.push("1.1fr")
+
+                return (
                     <div
                         style={{
-                            maxWidth: 1280,
-                            margin: "0 auto",
-                            padding: "36px 48px",
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr 1.1fr",
-                            gap: 40,
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            width: "100%",
+                            backgroundColor: dropdownBgColor,
+                            borderBottom: `1px solid ${borderColor}`,
+                            boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+                            zIndex: 1100,
+                            animation: "fadeIn 0.15s ease-out",
                         }}
+                        onMouseEnter={() =>
+                            setActiveDropdown(activeLink.label)
+                        }
+                        onMouseLeave={() => setActiveDropdown(null)}
                     >
-                        {/* Industries Column */}
-                        <div>
-                            <span
-                                style={{
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    color: dropdownSecondaryTextColor,
-                                    letterSpacing: "0.1em",
-                                    textTransform: "uppercase",
-                                    fontFamily,
-                                    display: "block",
-                                    marginBottom: 20,
-                                }}
-                            >
-                                {industriesLabel}
-                            </span>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 4,
-                                }}
-                            >
-                                {industries.map((item, i) => (
-                                    <a
-                                        key={i}
-                                        href={item.url}
-                                        style={{
-                                            textDecoration: "none",
-                                            display: "flex",
-                                            alignItems: "flex-start",
-                                            gap: 12,
-                                            padding: "10px 12px",
-                                            borderRadius: 10,
-                                            transition: "background-color 0.15s",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            ;(
-                                                e.currentTarget as HTMLElement
-                                            ).style.backgroundColor =
-                                                "#f8f8fb"
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            ;(
-                                                e.currentTarget as HTMLElement
-                                            ).style.backgroundColor =
-                                                "transparent"
-                                        }}
-                                    >
-                                        <span
-                                            style={{
-                                                fontSize: 20,
-                                                lineHeight: 1,
-                                                flexShrink: 0,
-                                                marginTop: 2,
-                                            }}
-                                        >
-                                            {item.icon}
-                                        </span>
-                                        <div>
-                                            <div
-                                                style={{
-                                                    fontSize: 14,
-                                                    fontWeight: 600,
-                                                    color: dropdownTextColor,
-                                                    fontFamily,
-                                                    marginBottom: 2,
-                                                }}
-                                            >
-                                                {item.title}
-                                            </div>
-                                            <div
-                                                style={{
-                                                    fontSize: 13,
-                                                    color: dropdownSecondaryTextColor,
-                                                    lineHeight: 1.4,
-                                                    fontFamily,
-                                                }}
-                                            >
-                                                {item.description}
-                                            </div>
-                                        </div>
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Use Cases Column */}
-                        <div>
-                            <span
-                                style={{
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    color: dropdownSecondaryTextColor,
-                                    letterSpacing: "0.1em",
-                                    textTransform: "uppercase",
-                                    fontFamily,
-                                    display: "block",
-                                    marginBottom: 20,
-                                }}
-                            >
-                                {useCasesLabel}
-                            </span>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 4,
-                                }}
-                            >
-                                {useCases.map((item, i) => (
-                                    <a
-                                        key={i}
-                                        href={item.url}
-                                        style={{
-                                            textDecoration: "none",
-                                            display: "flex",
-                                            alignItems: "flex-start",
-                                            gap: 12,
-                                            padding: "10px 12px",
-                                            borderRadius: 10,
-                                            transition: "background-color 0.15s",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            ;(
-                                                e.currentTarget as HTMLElement
-                                            ).style.backgroundColor =
-                                                "#f8f8fb"
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            ;(
-                                                e.currentTarget as HTMLElement
-                                            ).style.backgroundColor =
-                                                "transparent"
-                                        }}
-                                    >
-                                        <span
-                                            style={{
-                                                fontSize: 20,
-                                                lineHeight: 1,
-                                                flexShrink: 0,
-                                                marginTop: 2,
-                                            }}
-                                        >
-                                            {item.icon}
-                                        </span>
-                                        <div>
-                                            <div
-                                                style={{
-                                                    fontSize: 14,
-                                                    fontWeight: 600,
-                                                    color: dropdownTextColor,
-                                                    fontFamily,
-                                                    marginBottom: 2,
-                                                }}
-                                            >
-                                                {item.title}
-                                            </div>
-                                            <div
-                                                style={{
-                                                    fontSize: 13,
-                                                    color: dropdownSecondaryTextColor,
-                                                    lineHeight: 1.4,
-                                                    fontFamily,
-                                                }}
-                                            >
-                                                {item.description}
-                                            </div>
-                                        </div>
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Featured Card */}
                         <div
                             style={{
-                                backgroundColor: dropdownCardBgColor,
-                                borderRadius: 16,
-                                overflow: "hidden",
-                                display: "flex",
-                                flexDirection: "column",
+                                maxWidth: 1280,
+                                margin: "0 auto",
+                                padding: "36px 48px",
+                                display: "grid",
+                                gridTemplateColumns: cols.join(" "),
+                                gap: 40,
                             }}
                         >
-                            {/* Card Image */}
-                            <div
-                                style={{
-                                    width: "100%",
-                                    height: 140,
-                                    overflow: "hidden",
-                                    backgroundColor: "rgba(255,255,255,0.05)",
-                                }}
-                            >
-                                {featured.image ? (
-                                    <img
-                                        src={featured.image}
-                                        alt={featured.title}
+                            {/* Column 1 */}
+                            {hasCol1 && (
+                                <div>
+                                    {activeLink.col1Label && (
+                                        <span
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                color: dropdownSecondaryTextColor,
+                                                letterSpacing: "0.1em",
+                                                textTransform: "uppercase",
+                                                fontFamily,
+                                                display: "block",
+                                                marginBottom: 20,
+                                            }}
+                                        >
+                                            {activeLink.col1Label}
+                                        </span>
+                                    )}
+                                    <div
                                         style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 4,
                                         }}
-                                    />
-                                ) : (
+                                    >
+                                        {activeLink.col1Items.map(
+                                            (item, j) => (
+                                                <a
+                                                    key={j}
+                                                    href={item.url}
+                                                    style={{
+                                                        textDecoration: "none",
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        padding: "10px 12px",
+                                                        borderRadius: 10,
+                                                        transition:
+                                                            "background-color 0.15s",
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        ;(
+                                                            e.currentTarget as HTMLElement
+                                                        ).style.backgroundColor =
+                                                            "#f8f8fb"
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        ;(
+                                                            e.currentTarget as HTMLElement
+                                                        ).style.backgroundColor =
+                                                            "transparent"
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            fontSize: 14,
+                                                            fontWeight: 600,
+                                                            color: dropdownTextColor,
+                                                            fontFamily,
+                                                            marginBottom: 2,
+                                                        }}
+                                                    >
+                                                        {item.title}
+                                                    </div>
+                                                    <div
+                                                        style={{
+                                                            fontSize: 13,
+                                                            color: dropdownSecondaryTextColor,
+                                                            lineHeight: 1.4,
+                                                            fontFamily,
+                                                        }}
+                                                    >
+                                                        {item.description}
+                                                    </div>
+                                                </a>
+                                            )
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Column 2 */}
+                            {hasCol2 && (
+                                <div>
+                                    {activeLink.col2Label && (
+                                        <span
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                color: dropdownSecondaryTextColor,
+                                                letterSpacing: "0.1em",
+                                                textTransform: "uppercase",
+                                                fontFamily,
+                                                display: "block",
+                                                marginBottom: 20,
+                                            }}
+                                        >
+                                            {activeLink.col2Label}
+                                        </span>
+                                    )}
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 4,
+                                        }}
+                                    >
+                                        {activeLink.col2Items.map(
+                                            (item, j) => (
+                                                <a
+                                                    key={j}
+                                                    href={item.url}
+                                                    style={{
+                                                        textDecoration: "none",
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        padding: "10px 12px",
+                                                        borderRadius: 10,
+                                                        transition:
+                                                            "background-color 0.15s",
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        ;(
+                                                            e.currentTarget as HTMLElement
+                                                        ).style.backgroundColor =
+                                                            "#f8f8fb"
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        ;(
+                                                            e.currentTarget as HTMLElement
+                                                        ).style.backgroundColor =
+                                                            "transparent"
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            fontSize: 14,
+                                                            fontWeight: 600,
+                                                            color: dropdownTextColor,
+                                                            fontFamily,
+                                                            marginBottom: 2,
+                                                        }}
+                                                    >
+                                                        {item.title}
+                                                    </div>
+                                                    <div
+                                                        style={{
+                                                            fontSize: 13,
+                                                            color: dropdownSecondaryTextColor,
+                                                            lineHeight: 1.4,
+                                                            fontFamily,
+                                                        }}
+                                                    >
+                                                        {item.description}
+                                                    </div>
+                                                </a>
+                                            )
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Featured Card */}
+                            {hasFeatured && (
+                                <div
+                                    style={{
+                                        backgroundColor: dropdownCardBgColor,
+                                        borderRadius: 16,
+                                        overflow: "hidden",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                    }}
+                                >
+                                    {/* Card Image */}
                                     <div
                                         style={{
                                             width: "100%",
-                                            height: "100%",
-                                            background:
-                                                "linear-gradient(135deg, #1a1a3e 0%, #2d2d6a 100%)",
+                                            height: 140,
+                                            overflow: "hidden",
+                                            backgroundColor:
+                                                "rgba(255,255,255,0.05)",
                                         }}
-                                    />
-                                )}
-                            </div>
+                                    >
+                                        {activeLink.featuredImage ? (
+                                            <img
+                                                src={activeLink.featuredImage}
+                                                alt={activeLink.featuredTitle}
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    objectFit: "cover",
+                                                }}
+                                            />
+                                        ) : (
+                                            <div
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    background:
+                                                        "linear-gradient(135deg, #1a1a3e 0%, #2d2d6a 100%)",
+                                                }}
+                                            />
+                                        )}
+                                    </div>
 
-                            {/* Card Content */}
-                            <div
-                                style={{
-                                    padding: "20px 24px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 10,
-                                    flex: 1,
-                                }}
-                            >
-                                <span
-                                    style={{
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                        color: accentColor,
-                                        letterSpacing: "0.08em",
-                                        textTransform: "uppercase",
-                                        fontFamily,
-                                    }}
-                                >
-                                    {featured.badge}
-                                </span>
-                                <h4
-                                    style={{
-                                        fontSize: 15,
-                                        fontWeight: 600,
-                                        color: "#ffffff",
-                                        margin: 0,
-                                        lineHeight: 1.4,
-                                        fontFamily,
-                                    }}
-                                >
-                                    {featured.title}
-                                </h4>
-                                <a
-                                    href={featured.linkUrl}
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: 500,
-                                        color: accentColor,
-                                        textDecoration: "none",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 4,
-                                        fontFamily,
-                                        marginTop: "auto",
-                                    }}
-                                >
-                                    {featured.linkText}{" "}
-                                    <span style={{ fontSize: 14 }}>
-                                        &#8594;
-                                    </span>
-                                </a>
-                            </div>
+                                    {/* Card Content */}
+                                    <div
+                                        style={{
+                                            padding: "20px 24px",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 10,
+                                            flex: 1,
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                fontSize: 10,
+                                                fontWeight: 700,
+                                                color: accentColor,
+                                                letterSpacing: "0.08em",
+                                                textTransform: "uppercase",
+                                                fontFamily,
+                                            }}
+                                        >
+                                            {activeLink.featuredBadge}
+                                        </span>
+                                        <h4
+                                            style={{
+                                                fontSize: 15,
+                                                fontWeight: 600,
+                                                color: "#ffffff",
+                                                margin: 0,
+                                                lineHeight: 1.4,
+                                                fontFamily,
+                                            }}
+                                        >
+                                            {activeLink.featuredTitle}
+                                        </h4>
+                                        <a
+                                            href={activeLink.featuredLinkUrl}
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: 500,
+                                                color: accentColor,
+                                                textDecoration: "none",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: 4,
+                                                fontFamily,
+                                                marginTop: "auto",
+                                            }}
+                                        >
+                                            {activeLink.featuredLinkText}{" "}
+                                            <span style={{ fontSize: 14 }}>
+                                                &#8594;
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            })()}
         </nav>
     )
 }
@@ -901,7 +972,8 @@ addPropertyControls(Navigation, {
         type: ControlType.Image,
         title: "Logo (Transparent)",
         hidden: (props) => !props.useLogoImage || !props.overlayMode,
-        description: "Logo shown when nav is transparent over hero. Falls back to inverted main logo.",
+        description:
+            "Logo shown when nav is transparent over hero. Falls back to inverted main logo.",
     },
     logoText: {
         type: ControlType.String,
@@ -930,7 +1002,7 @@ addPropertyControls(Navigation, {
         hidden: (props) => props.useLogoImage || !props.showLogoIcon,
     },
 
-    // --- Nav Links ---
+    // --- Nav Links (with inline dropdown configuration) ---
     navLinks: {
         type: ControlType.Array,
         title: "Nav Links",
@@ -953,12 +1025,204 @@ addPropertyControls(Navigation, {
                     title: "Has Dropdown",
                     defaultValue: false,
                 },
+                // --- Column 1 ---
+                col1Label: {
+                    type: ControlType.String,
+                    title: "Col 1 Label",
+                    defaultValue: "COLUMN 1",
+                    hidden: (props: any) => !props.hasDropdown,
+                },
+                col1Items: {
+                    type: ControlType.Array,
+                    title: "Col 1 Items",
+                    maxCount: 8,
+                    hidden: (props: any) => !props.hasDropdown,
+                    control: {
+                        type: ControlType.Object,
+                        controls: {
+                            title: {
+                                type: ControlType.String,
+                                title: "Title",
+                                defaultValue: "Item",
+                            },
+                            description: {
+                                type: ControlType.String,
+                                title: "Description",
+                                defaultValue: "Item description.",
+                                displayTextArea: true,
+                            },
+                            url: {
+                                type: ControlType.String,
+                                title: "URL",
+                                defaultValue: "#",
+                            },
+                        },
+                    },
+                },
+                // --- Column 2 ---
+                col2Label: {
+                    type: ControlType.String,
+                    title: "Col 2 Label",
+                    defaultValue: "",
+                    hidden: (props: any) => !props.hasDropdown,
+                },
+                col2Items: {
+                    type: ControlType.Array,
+                    title: "Col 2 Items",
+                    maxCount: 8,
+                    hidden: (props: any) => !props.hasDropdown,
+                    control: {
+                        type: ControlType.Object,
+                        controls: {
+                            title: {
+                                type: ControlType.String,
+                                title: "Title",
+                                defaultValue: "Item",
+                            },
+                            description: {
+                                type: ControlType.String,
+                                title: "Description",
+                                defaultValue: "Item description.",
+                                displayTextArea: true,
+                            },
+                            url: {
+                                type: ControlType.String,
+                                title: "URL",
+                                defaultValue: "#",
+                            },
+                        },
+                    },
+                },
+                // --- Featured Card ---
+                showFeatured: {
+                    type: ControlType.Boolean,
+                    title: "Show Featured",
+                    defaultValue: false,
+                    hidden: (props: any) => !props.hasDropdown,
+                },
+                featuredBadge: {
+                    type: ControlType.String,
+                    title: "Featured Badge",
+                    defaultValue: "FEATURED",
+                    hidden: (props: any) =>
+                        !props.hasDropdown || !props.showFeatured,
+                },
+                featuredTitle: {
+                    type: ControlType.String,
+                    title: "Featured Title",
+                    defaultValue: "Featured item title",
+                    hidden: (props: any) =>
+                        !props.hasDropdown || !props.showFeatured,
+                },
+                featuredLinkText: {
+                    type: ControlType.String,
+                    title: "Featured Link",
+                    defaultValue: "Learn More",
+                    hidden: (props: any) =>
+                        !props.hasDropdown || !props.showFeatured,
+                },
+                featuredLinkUrl: {
+                    type: ControlType.String,
+                    title: "Featured URL",
+                    defaultValue: "#",
+                    hidden: (props: any) =>
+                        !props.hasDropdown || !props.showFeatured,
+                },
+                featuredImage: {
+                    type: ControlType.Image,
+                    title: "Featured Image",
+                    hidden: (props: any) =>
+                        !props.hasDropdown || !props.showFeatured,
+                },
             },
         },
         defaultValue: [
-            { label: "Solutions", url: "#solutions", hasDropdown: true },
-            { label: "Products", url: "#products", hasDropdown: true },
-            { label: "Technology", url: "#technology", hasDropdown: false },
+            {
+                label: "Solutions",
+                url: "#solutions",
+                hasDropdown: true,
+                col1Label: "INDUSTRIES",
+                col1Items: [
+                    {
+                        title: "Media & Entertainment",
+                        description:
+                            "Cut CDN & storage costs 30-50% while keeping broadcast quality.",
+                        url: "#media",
+                    },
+                    {
+                        title: "AI / Machine Learning",
+                        description:
+                            "Smarter vision AI pipelines with guaranteed compression.",
+                        url: "#ai",
+                    },
+                    {
+                        title: "Autonomous Vehicles",
+                        description:
+                            "50% storage reduction with ML-safe compression for training data.",
+                        url: "#automotive",
+                    },
+                    {
+                        title: "Sports Streaming",
+                        description:
+                            "720p to 4K Super Resolution without doubling file size.",
+                        url: "#sports",
+                    },
+                ],
+                col2Label: "USE CASES",
+                col2Items: [
+                    {
+                        title: "Reduce CDN Costs",
+                        description:
+                            "Deliver same visual quality at significantly lower bitrates.",
+                        url: "#cdn",
+                    },
+                    {
+                        title: "Improve Quality",
+                        description:
+                            "Enhance visual quality while maintaining or reducing file size.",
+                        url: "#quality",
+                    },
+                    {
+                        title: "Optimize Storage",
+                        description:
+                            "Reduce storage requirements by up to 50% without quality loss.",
+                        url: "#storage",
+                    },
+                    {
+                        title: "4K Upscaling",
+                        description:
+                            "Upscale legacy content to 4K resolution efficiently.",
+                        url: "#upscaling",
+                    },
+                ],
+                showFeatured: true,
+                featuredBadge: "CASE STUDY",
+                featuredTitle:
+                    "Netflix Achieves 40% CDN Savings with CABR Technology",
+                featuredLinkText: "Read Case Study",
+                featuredLinkUrl: "#case-study",
+                featuredImage: "",
+            },
+            {
+                label: "Products",
+                url: "#products",
+                hasDropdown: true,
+                col1Label: "PRODUCTS",
+                col1Items: [],
+                col2Label: "",
+                col2Items: [],
+                showFeatured: false,
+                featuredBadge: "",
+                featuredTitle: "",
+                featuredLinkText: "",
+                featuredLinkUrl: "",
+                featuredImage: "",
+            },
+            {
+                label: "Technology",
+                url: "#technology",
+                hasDropdown: false,
+            },
             { label: "Blog", url: "#blog", hasDropdown: false },
             { label: "Company", url: "#company", hasDropdown: false },
         ],
@@ -986,181 +1250,13 @@ addPropertyControls(Navigation, {
         defaultValue: "#ffffff",
     },
 
-    // --- Mega Menu: Industries ---
-    industriesLabel: {
-        type: ControlType.String,
-        title: "Industries Label",
-        defaultValue: "INDUSTRIES",
-    },
-    industries: {
-        type: ControlType.Array,
-        title: "Industries",
-        maxCount: 6,
-        control: {
-            type: ControlType.Object,
-            controls: {
-                icon: {
-                    type: ControlType.String,
-                    title: "Icon/Emoji",
-                    defaultValue: "🎬",
-                },
-                title: {
-                    type: ControlType.String,
-                    title: "Title",
-                    defaultValue: "Industry",
-                },
-                description: {
-                    type: ControlType.String,
-                    title: "Description",
-                    defaultValue: "Industry description.",
-                    displayTextArea: true,
-                },
-                url: {
-                    type: ControlType.String,
-                    title: "URL",
-                    defaultValue: "#",
-                },
-            },
-        },
-        defaultValue: [
-            {
-                icon: "🎬",
-                title: "Media & Entertainment",
-                description:
-                    "Cut CDN & storage costs 30-50% while keeping broadcast quality.",
-                url: "#media",
-            },
-            {
-                icon: "🧠",
-                title: "AI / Machine Learning",
-                description:
-                    "Smarter vision AI pipelines with guaranteed compression.",
-                url: "#ai",
-            },
-            {
-                icon: "🚗",
-                title: "Autonomous Vehicles",
-                description:
-                    "50% storage reduction with ML-safe compression for training data.",
-                url: "#automotive",
-            },
-            {
-                icon: "🏟️",
-                title: "Sports Streaming",
-                description:
-                    "720p→4K Super Resolution without doubling file size.",
-                url: "#sports",
-            },
-        ],
-    },
-
-    // --- Mega Menu: Use Cases ---
-    useCasesLabel: {
-        type: ControlType.String,
-        title: "Use Cases Label",
-        defaultValue: "USE CASES",
-    },
-    useCases: {
-        type: ControlType.Array,
-        title: "Use Cases",
-        maxCount: 6,
-        control: {
-            type: ControlType.Object,
-            controls: {
-                icon: {
-                    type: ControlType.String,
-                    title: "Icon/Emoji",
-                    defaultValue: "📡",
-                },
-                title: {
-                    type: ControlType.String,
-                    title: "Title",
-                    defaultValue: "Use Case",
-                },
-                description: {
-                    type: ControlType.String,
-                    title: "Description",
-                    defaultValue: "Use case description.",
-                    displayTextArea: true,
-                },
-                url: {
-                    type: ControlType.String,
-                    title: "URL",
-                    defaultValue: "#",
-                },
-            },
-        },
-        defaultValue: [
-            {
-                icon: "📡",
-                title: "Reduce CDN Costs",
-                description:
-                    "Deliver same visual quality at significantly lower bitrates.",
-                url: "#cdn",
-            },
-            {
-                icon: "✨",
-                title: "Improve Quality",
-                description:
-                    "Enhance visual quality while maintaining or reducing file size.",
-                url: "#quality",
-            },
-            {
-                icon: "💾",
-                title: "Optimize Storage",
-                description:
-                    "Reduce storage requirements by up to 50% without quality loss.",
-                url: "#storage",
-            },
-            {
-                icon: "📺",
-                title: "4K Upscaling",
-                description:
-                    "Upscale legacy content to 4K resolution efficiently.",
-                url: "#upscaling",
-            },
-        ],
-    },
-
-    // --- Featured Card ---
-    featured: {
-        type: ControlType.Object,
-        title: "Featured Card",
-        controls: {
-            badge: {
-                type: ControlType.String,
-                title: "Badge",
-                defaultValue: "CASE STUDY",
-            },
-            title: {
-                type: ControlType.String,
-                title: "Title",
-                defaultValue:
-                    "Netflix Achieves 40% CDN Savings with CABR Technology",
-            },
-            linkText: {
-                type: ControlType.String,
-                title: "Link Text",
-                defaultValue: "Read Case Study",
-            },
-            linkUrl: {
-                type: ControlType.String,
-                title: "Link URL",
-                defaultValue: "#case-study",
-            },
-            image: {
-                type: ControlType.Image,
-                title: "Image",
-            },
-        },
-    },
-
     // --- Overlay Mode ---
     overlayMode: {
         type: ControlType.Boolean,
         title: "Overlay Mode",
         defaultValue: true,
-        description: "Transparent on hero, solid after scroll. Use with HeroScroll.",
+        description:
+            "Transparent on hero, solid after scroll. Use with HeroScroll.",
     },
     overlayBgColor: {
         type: ControlType.Color,
