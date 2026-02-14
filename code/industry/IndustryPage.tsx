@@ -70,7 +70,7 @@ function IndustryPage(props: Props) {
                 fontFamily,
             }}
         >
-            {showNavigation && <Navigation overlayMode={true} />}
+            {showNavigation && <Navigation overlayMode={false} />}
             {showHero && <IndustryHero {...shared} />}
             {showUseCases && <IndustryUseCases {...shared} />}
             {showTechnology && (
