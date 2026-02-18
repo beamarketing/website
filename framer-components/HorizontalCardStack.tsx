@@ -46,10 +46,13 @@ function ProductCard({
     glowColor,
     cardTitleFont,
     cardTitleSize,
+    cardTitleWeight,
     cardDescriptionFont,
     cardDescriptionSize,
+    cardDescriptionWeight,
     buttonFont,
     buttonSize,
+    buttonWeight,
 }) {
     const [hovered, setHovered] = useState(false)
 
@@ -92,7 +95,7 @@ function ProductCard({
                         style={{
                             color: textColor,
                             fontSize: cardTitleSize,
-                            fontWeight: 500,
+                            fontWeight: cardTitleWeight,
                             fontFamily: cardTitleFont,
                             margin: 0,
                             lineHeight: 1.4,
@@ -104,7 +107,7 @@ function ProductCard({
                         style={{
                             color: textColor,
                             fontSize: cardDescriptionSize,
-                            fontWeight: 400,
+                            fontWeight: cardDescriptionWeight,
                             fontFamily: cardDescriptionFont,
                             margin: 0,
                             lineHeight: 1.6,
@@ -127,7 +130,7 @@ function ProductCard({
                         textDecoration: "none",
                         color: buttonTextColor,
                         fontSize: buttonSize,
-                        fontWeight: 500,
+                        fontWeight: buttonWeight,
                         fontFamily: buttonFont,
                     }}
                 >
@@ -211,10 +214,13 @@ export default function HorizontalCardStack(props) {
         glowColor,
         cardTitleFont,
         cardTitleSize,
+        cardTitleWeight,
         cardDescriptionFont,
         cardDescriptionSize,
+        cardDescriptionWeight,
         buttonFont,
         buttonSize,
+        buttonWeight,
         cardWidth,
         cardGap,
         scrollScreens,
@@ -326,10 +332,13 @@ export default function HorizontalCardStack(props) {
                             glowColor={glowColor}
                             cardTitleFont={cardTitleFont}
                             cardTitleSize={cardTitleSize}
+                            cardTitleWeight={cardTitleWeight}
                             cardDescriptionFont={cardDescriptionFont}
                             cardDescriptionSize={cardDescriptionSize}
+                            cardDescriptionWeight={cardDescriptionWeight}
                             buttonFont={buttonFont}
                             buttonSize={buttonSize}
+                            buttonWeight={buttonWeight}
                         />
                     ))}
                 </motion.div>
@@ -389,10 +398,13 @@ HorizontalCardStack.defaultProps = {
     glowColor: "rgba(253, 192, 25, 0.4)",
     cardTitleFont: "Inter, system-ui, sans-serif",
     cardTitleSize: 16,
+    cardTitleWeight: 500,
     cardDescriptionFont: "Inter, system-ui, sans-serif",
     cardDescriptionSize: 14,
+    cardDescriptionWeight: 400,
     buttonFont: "Inter, system-ui, sans-serif",
     buttonSize: 15,
+    buttonWeight: 500,
     cardWidth: 550,
     cardGap: 16,
     scrollScreens: 3,
@@ -564,6 +576,14 @@ addPropertyControls(HorizontalCardStack, {
         defaultValue: 16,
         unit: "px",
     },
+    cardTitleWeight: {
+        type: ControlType.Number,
+        title: "Card Title Weight",
+        min: 100,
+        max: 900,
+        step: 100,
+        defaultValue: 500,
+    },
     cardDescriptionFont: {
         type: ControlType.String,
         title: "Card Desc Font",
@@ -578,6 +598,14 @@ addPropertyControls(HorizontalCardStack, {
         defaultValue: 14,
         unit: "px",
     },
+    cardDescriptionWeight: {
+        type: ControlType.Number,
+        title: "Card Desc Weight",
+        min: 100,
+        max: 900,
+        step: 100,
+        defaultValue: 400,
+    },
     buttonFont: {
         type: ControlType.String,
         title: "Button Font",
@@ -591,5 +619,13 @@ addPropertyControls(HorizontalCardStack, {
         step: 1,
         defaultValue: 15,
         unit: "px",
+    },
+    buttonWeight: {
+        type: ControlType.Number,
+        title: "Button Weight",
+        min: 100,
+        max: 900,
+        step: 100,
+        defaultValue: 500,
     },
 })
