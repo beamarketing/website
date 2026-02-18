@@ -1,46 +1,33 @@
 // Value Proposition Strip — Scroll-Linked Word Reveal
-// Each word lights up as the user scrolls. Text stays pinned in the viewport center.
+// Words go from 30% → 100% opacity as the section scrolls into view.
+// Matches the VSN "About" section: left-aligned, CSS color transition, no sticky.
 // Paste this into Framer: Assets panel → Code → New Component
 
 import { addPropertyControls, ControlType } from "framer"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { useRef, useMemo } from "react"
+import { useScroll, useMotionValueEvent } from "framer-motion"
+import { useRef, useMemo, useState } from "react"
 
-// ─── Individual word with scroll-driven opacity + lift ───────────────────────
+// ─── Hex → rgba helper ──────────────────────────────────────────────────────
 
-function ScrollWord({
-    word,
-    scrollProgress,
-    inputRange,
-    dimOpacity,
-    textColor,
-    accentColor,
-    isHighlight,
-}) {
-    const opacity = useTransform(scrollProgress, inputRange, [dimOpacity, 1])
-    const y = useTransform(scrollProgress, inputRange, [4, 0])
-
-    return (
-        <motion.span
-            style={{
-                opacity,
-                y,
-                display: "inline-block",
-                marginRight: "0.32em",
-                color: isHighlight ? accentColor : textColor,
-                fontStyle: isHighlight ? "italic" : "normal",
-                fontFamily: isHighlight
-                    ? "'Instrument Serif', Georgia, serif"
-                    : "inherit",
-                willChange: "transform, opacity",
-            }}
-        >
-            {word}
-        </motion.span>
-    )
+function colorWithAlpha(color, alpha) {
+    if (!color) return `rgba(255,255,255,${alpha})`
+    if (color.startsWith("#")) {
+        const hex = color.replace("#", "")
+        const r = parseInt(hex.slice(0, 2), 16)
+        const g = parseInt(hex.slice(2, 4), 16)
+        const b = parseInt(hex.slice(4, 6), 16)
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`
+    }
+    if (color.startsWith("rgb(")) {
+        return color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`)
+    }
+    if (color.startsWith("rgba")) {
+        return color.replace(/,\s*[\d.]+\)$/, `, ${alpha})`)
+    }
+    return color
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
+// ─── Main component ─────────────────────────────────────────────────────────
 
 /**
  * @framerSupportedLayoutWidth any
@@ -49,222 +36,107 @@ function ScrollWord({
 export default function ValuePropositionStrip(props) {
     const {
         heading,
-        highlightText,
-        description,
-        showDescription,
-        showScrollHint,
-        scrollHintText,
         backgroundColor,
         textColor,
-        accentColor,
         dimOpacity,
-        scrollScreens,
+        fontSize,
+        fontWeight,
+        lineHeight,
+        letterSpacing,
+        textAlign,
+        paddingY,
+        paddingX,
         maxWidth,
         style,
     } = props
 
     const sectionRef = useRef(null)
+    const [revealedCount, setRevealedCount] = useState(0)
 
-    // Track scroll progress through this section
+    // Scroll tracking: reveal happens as the section scrolls into view
     const { scrollYProgress } = useScroll({
         target: sectionRef,
-        offset: ["start start", "end end"],
+        offset: ["start 0.85", "start 0.2"],
     })
 
-    // ── Split heading into words ──
+    // Split text into words
     const words = useMemo(
         () => heading.split(/\s+/).filter(Boolean),
         [heading]
     )
 
-    // ── Find which word indices belong to the highlight phrase ──
-    const highlightIndices = useMemo(() => {
-        if (!highlightText) return new Set()
-        const hlWords = highlightText.split(/\s+/).filter(Boolean)
-        const indices = new Set()
-        const clean = (s) => s.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
-        for (let i = 0; i <= words.length - hlWords.length; i++) {
-            const match = hlWords.every(
-                (hw, j) => clean(words[i + j]) === clean(hw)
-            )
-            if (match) {
-                for (let j = 0; j < hlWords.length; j++) indices.add(i + j)
-                break
-            }
-        }
-        return indices
-    }, [words, highlightText])
+    // Update revealed word count on scroll — only fires when count changes
+    useMotionValueEvent(scrollYProgress, "change", (latest) => {
+        const clamped = Math.max(0, Math.min(1, latest))
+        setRevealedCount(Math.round(clamped * words.length))
+    })
 
-    // ── Scroll ranges ──
-    // Words snap quickly: each word's transition is only 35% of its slot width
-    // so 2–3 words are in motion simultaneously, creating a fast cascade feel
-    const headingEnd = showDescription ? 0.65 : 0.88
-    const getWordRange = (index) => {
-        const slotSize = headingEnd / words.length
-        const snapWidth = slotSize * 0.35 // sharp snap — not a slow fade
-        const start = index * slotSize
-        return [start, start + snapWidth]
-    }
-
-    // Description fades in right after the last word
-    const descOpacity = useTransform(
-        scrollYProgress,
-        [0.68, 0.82],
-        [0, 0.65]
-    )
-    const descY = useTransform(scrollYProgress, [0.68, 0.82], [12, 0])
-
-    // Scroll hint fades out quickly
-    const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [0.45, 0])
+    // Pre-compute colors
+    const litColor = textColor
+    const dimColor = colorWithAlpha(textColor, dimOpacity)
 
     return (
         <section
             ref={sectionRef}
             style={{
-                width: style?.width || "100%",
-                height: `${scrollScreens * 100}vh`,
-                position: "relative",
+                ...style,
                 backgroundColor,
+                padding: `${paddingY}px ${paddingX}px`,
             }}
         >
-            {/* Sticky container — stays centred in viewport while scrolling */}
-            <div
+            <p
                 style={{
-                    position: "sticky",
-                    top: 0,
-                    height: "100vh",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                    padding: "0 40px",
-                    gap: 28,
-                    overflow: "hidden",
+                    fontFamily:
+                        "'Inter Display', Inter, system-ui, sans-serif",
+                    fontWeight,
+                    fontSize,
+                    lineHeight,
+                    letterSpacing: `${letterSpacing}em`,
+                    textAlign,
+                    textWrap: "balance",
+                    margin: 0,
+                    padding: 0,
+                    whiteSpace: "pre-wrap",
+                    overflow: "visible",
+                    display: "block",
+                    maxWidth,
+                    userSelect: "text",
                 }}
             >
-                {/* Heading — each word individually animated */}
-                <h2
-                    style={{
-                        fontSize: "clamp(28px, 4.2vw, 56px)",
-                        fontWeight: 600,
-                        lineHeight: 1.25,
-                        fontFamily:
-                            "'Inter Display', Inter, system-ui, sans-serif",
-                        margin: 0,
-                        maxWidth,
-                        letterSpacing: "-0.03em",
-                        display: "flex",
-                        flexWrap: "wrap",
-                        justifyContent: "center",
-                        color: textColor,
-                    }}
-                >
-                    {words.map((word, i) => (
-                        <ScrollWord
-                            key={`${word}-${i}`}
-                            word={word}
-                            scrollProgress={scrollYProgress}
-                            inputRange={getWordRange(i)}
-                            dimOpacity={dimOpacity}
-                            textColor={textColor}
-                            accentColor={accentColor}
-                            isHighlight={highlightIndices.has(i)}
-                        />
-                    ))}
-                </h2>
-
-                {/* Description — fades in after the heading is fully revealed */}
-                {showDescription && (
-                    <motion.p
+                {words.map((word, i) => (
+                    <span
+                        key={`${word}-${i}`}
                         style={{
-                            opacity: descOpacity,
-                            y: descY,
-                            color: textColor,
-                            fontSize: "clamp(15px, 1.4vw, 19px)",
-                            lineHeight: 1.65,
-                            fontFamily: "Inter, system-ui, sans-serif",
-                            fontWeight: 400,
-                            margin: 0,
-                            maxWidth: maxWidth * 0.78,
+                            color:
+                                i < revealedCount ? litColor : dimColor,
+                            transition: "color 0.3s ease-out",
+                            display: "inline",
                         }}
                     >
-                        {description}
-                    </motion.p>
-                )}
-
-                {/* Scroll hint — fades away on first scroll */}
-                {showScrollHint && (
-                    <motion.div
-                        style={{
-                            opacity: hintOpacity,
-                            position: "absolute",
-                            bottom: 48,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 8,
-                            color: textColor,
-                        }}
-                    >
-                        <span
-                            style={{
-                                fontSize: 12,
-                                fontFamily: "Inter, system-ui, sans-serif",
-                                fontWeight: 500,
-                                letterSpacing: "0.1em",
-                                textTransform: "uppercase",
-                            }}
-                        >
-                            {scrollHintText}
-                        </span>
-
-                        {/* Animated chevron */}
-                        <motion.svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            style={{ display: "block" }}
-                            animate={{ y: [0, 5, 0] }}
-                            transition={{
-                                duration: 1.6,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            <path
-                                d="M4 7l6 6 6-6"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                        </motion.svg>
-                    </motion.div>
-                )}
-            </div>
+                        {word}{" "}
+                    </span>
+                ))}
+            </p>
         </section>
     )
 }
 
-// ─── Defaults ────────────────────────────────────────────────────────────────
+// ─── Defaults (matching the original VSN "About" section) ───────────────────
 
 ValuePropositionStrip.defaultProps = {
     heading:
-        "An open, flexible, and scalable platform that empowers your team to do more",
-    highlightText: "flexible",
-    description:
-        "Collaborate effortlessly, automate repetitive tasks, and gain complete control over the entire media lifecycle — from ingest to archive, playout, and distribution.",
-    showDescription: true,
-    showScrollHint: true,
-    scrollHintText: "Scroll",
+        "From ingest to archive, VSN provides broadcasters, media companies, sports organizations, and educational institutions with innovative, scalable software solutions designed to streamline complex workflows, enhance collaboration, and drive growth in a rapidly evolving digital landscape. Experience the difference of a truly unified, seamless, and reliable media ecosystem.",
     backgroundColor: "#0c0e15",
     textColor: "#ffffff",
-    accentColor: "#c5e33d",
-    dimOpacity: 0.12,
-    scrollScreens: 1.5,
-    maxWidth: 900,
+    dimOpacity: 0.3,
+    fontSize: 56,
+    fontWeight: 400,
+    lineHeight: 1.03,
+    letterSpacing: -0.02,
+    textAlign: "left",
+    paddingY: 80,
+    paddingX: 80,
+    maxWidth: 1280,
 }
 
 // ─── Property controls ──────────────────────────────────────────────────────
@@ -272,65 +144,85 @@ ValuePropositionStrip.defaultProps = {
 addPropertyControls(ValuePropositionStrip, {
     heading: {
         type: ControlType.String,
-        title: "Heading",
+        title: "Text",
         displayTextArea: true,
-        description: "Each word reveals one-by-one as the user scrolls",
-    },
-    highlightText: {
-        type: ControlType.String,
-        title: "Highlight Word",
         description:
-            "This word (or phrase) renders in the accent color with italic serif styling",
+            "Words light up one-by-one as the section scrolls into view",
     },
-    description: {
-        type: ControlType.String,
-        title: "Description",
-        displayTextArea: true,
-        hidden: (props) => !props.showDescription,
+    textAlign: {
+        type: ControlType.Enum,
+        title: "Alignment",
+        options: ["left", "center"],
+        optionTitles: ["Left", "Center"],
+        defaultValue: "left",
     },
-    showDescription: {
-        type: ControlType.Boolean,
-        title: "Show Description",
-        defaultValue: true,
-    },
-    showScrollHint: {
-        type: ControlType.Boolean,
-        title: "Scroll Hint",
-        defaultValue: true,
-        description: "Small 'Scroll' indicator at the bottom, fades on scroll",
-    },
-    scrollHintText: {
-        type: ControlType.String,
-        title: "Hint Text",
-        defaultValue: "Scroll",
-        hidden: (props) => !props.showScrollHint,
-    },
-    scrollScreens: {
+    fontSize: {
         type: ControlType.Number,
-        title: "Scroll Length",
-        min: 1.2,
-        max: 4,
-        step: 0.1,
-        defaultValue: 1.5,
-        description:
-            "How many screen-heights tall the section is. Higher = slower reveal. 1.5 = quick cascade, 3 = dramatic slow reveal.",
+        title: "Font Size",
+        min: 20,
+        max: 80,
+        step: 1,
+        defaultValue: 56,
+        unit: "px",
+    },
+    fontWeight: {
+        type: ControlType.Enum,
+        title: "Font Weight",
+        options: [300, 400, 500, 600, 700],
+        optionTitles: ["Light", "Regular", "Medium", "Semi Bold", "Bold"],
+        defaultValue: 400,
+    },
+    lineHeight: {
+        type: ControlType.Number,
+        title: "Line Height",
+        min: 0.8,
+        max: 2,
+        step: 0.01,
+        defaultValue: 1.03,
+    },
+    letterSpacing: {
+        type: ControlType.Number,
+        title: "Letter Spacing",
+        min: -0.1,
+        max: 0.1,
+        step: 0.005,
+        defaultValue: -0.02,
+        unit: "em",
     },
     dimOpacity: {
         type: ControlType.Number,
         title: "Dim Opacity",
-        min: 0,
-        max: 0.4,
-        step: 0.02,
-        defaultValue: 0.12,
-        description: "How visible unrevealed words are (0 = invisible)",
+        min: 0.05,
+        max: 0.6,
+        step: 0.05,
+        defaultValue: 0.3,
+        description: "Opacity of words before they are revealed",
     },
     maxWidth: {
         type: ControlType.Number,
         title: "Max Width",
         min: 400,
-        max: 1400,
-        step: 10,
-        defaultValue: 900,
+        max: 1600,
+        step: 20,
+        defaultValue: 1280,
+        unit: "px",
+    },
+    paddingY: {
+        type: ControlType.Number,
+        title: "Vertical Padding",
+        min: 0,
+        max: 200,
+        step: 8,
+        defaultValue: 80,
+        unit: "px",
+    },
+    paddingX: {
+        type: ControlType.Number,
+        title: "Horizontal Padding",
+        min: 0,
+        max: 200,
+        step: 8,
+        defaultValue: 80,
         unit: "px",
     },
     backgroundColor: {
@@ -342,10 +234,5 @@ addPropertyControls(ValuePropositionStrip, {
         type: ControlType.Color,
         title: "Text Color",
         defaultValue: "#ffffff",
-    },
-    accentColor: {
-        type: ControlType.Color,
-        title: "Accent Color",
-        defaultValue: "#c5e33d",
     },
 })
