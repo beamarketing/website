@@ -271,6 +271,14 @@ addPropertyControls(Solutions, {
             "Tailored video optimization across industries — from streaming to autonomous vehicles.",
         displayTextArea: true,
     },
+    imageHeight: {
+        type: ControlType.Number,
+        title: "Image Height",
+        defaultValue: 200,
+        min: 80,
+        max: 500,
+        step: 10,
+    },
     cards: {
         type: ControlType.Array,
         title: "Solution Cards",
@@ -339,14 +347,6 @@ addPropertyControls(Solutions, {
                 image: "",
             },
         ],
-    },
-    imageHeight: {
-        type: ControlType.Number,
-        title: "Image Height",
-        defaultValue: 200,
-        min: 80,
-        max: 500,
-        step: 10,
     },
     cardBorderRadius: {
         type: ControlType.Number,
