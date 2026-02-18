@@ -53,6 +53,7 @@ function ProductCard({
     buttonFont,
     buttonSize,
     buttonWeight,
+    showButton,
 }) {
     const [hovered, setHovered] = useState(false)
 
@@ -118,25 +119,27 @@ function ProductCard({
                 </div>
 
                 {/* CTA button — full width, lime bg, arrow right */}
-                <a
-                    href={link || "#"}
-                    style={{
-                        backgroundColor: buttonBg,
-                        borderRadius: 12,
-                        padding: "16px 22px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        textDecoration: "none",
-                        color: buttonTextColor,
-                        fontSize: buttonSize,
-                        fontWeight: buttonWeight,
-                        fontFamily: buttonFont,
-                    }}
-                >
-                    {buttonLabel}
-                    <ArrowIcon />
-                </a>
+                {showButton && (
+                    <a
+                        href={link || "#"}
+                        style={{
+                            backgroundColor: buttonBg,
+                            borderRadius: 12,
+                            padding: "16px 22px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            textDecoration: "none",
+                            color: buttonTextColor,
+                            fontSize: buttonSize,
+                            fontWeight: buttonWeight,
+                            fontFamily: buttonFont,
+                        }}
+                    >
+                        {buttonLabel}
+                        <ArrowIcon />
+                    </a>
+                )}
             </div>
 
             {/* Image area */}
@@ -144,7 +147,7 @@ function ProductCard({
                 style={{
                     flex: 1,
                     margin: "0 8px 8px",
-                    borderRadius: 9,
+                    borderRadius: 12,
                     overflow: "hidden",
                     position: "relative",
                     minHeight: 0,
@@ -162,9 +165,9 @@ function ProductCard({
                             display: "block",
                             width: "100%",
                             height: "100%",
-                            objectFit: "cover",
+                            objectFit: "contain",
                             objectPosition: "center",
-                            borderRadius: "inherit",
+                            borderRadius: 12,
                         }}
                     />
                 )}
@@ -221,6 +224,7 @@ export default function HorizontalCardStack(props) {
         buttonFont,
         buttonSize,
         buttonWeight,
+        showButton,
         cardWidth,
         cardGap,
         scrollScreens,
@@ -339,6 +343,7 @@ export default function HorizontalCardStack(props) {
                             buttonFont={buttonFont}
                             buttonSize={buttonSize}
                             buttonWeight={buttonWeight}
+                            showButton={showButton}
                         />
                     ))}
                 </motion.div>
@@ -405,6 +410,7 @@ HorizontalCardStack.defaultProps = {
     buttonFont: "Inter, system-ui, sans-serif",
     buttonSize: 15,
     buttonWeight: 500,
+    showButton: true,
     cardWidth: 550,
     cardGap: 16,
     scrollScreens: 3,
@@ -627,5 +633,10 @@ addPropertyControls(HorizontalCardStack, {
         max: 900,
         step: 100,
         defaultValue: 500,
+    },
+    showButton: {
+        type: ControlType.Boolean,
+        title: "Show Button",
+        defaultValue: true,
     },
 })
