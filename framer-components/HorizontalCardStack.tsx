@@ -38,6 +38,7 @@ function ProductCard({
     link,
     buttonLabel,
     cardWidth,
+    cardHeight,
     cardBg,
     borderColor,
     textColor,
@@ -73,7 +74,7 @@ function ProductCard({
                 flexShrink: 0,
                 position: "relative",
                 overflow: "hidden",
-                height: "100%",
+                height: cardHeight > 0 ? cardHeight : "100%",
             }}
         >
             {/* Content stack: title + description + CTA */}
@@ -226,6 +227,7 @@ export default function HorizontalCardStack(props) {
         buttonWeight,
         showButton,
         cardWidth,
+        cardHeight,
         cardGap,
         scrollScreens,
         paddingX,
@@ -328,6 +330,7 @@ export default function HorizontalCardStack(props) {
                             link={card.link}
                             buttonLabel={card.buttonText || "Learn more"}
                             cardWidth={cardWidth}
+                            cardHeight={cardHeight}
                             cardBg={cardBackground}
                             borderColor={borderColor}
                             textColor={textColor}
@@ -412,6 +415,7 @@ HorizontalCardStack.defaultProps = {
     buttonWeight: 500,
     showButton: true,
     cardWidth: 550,
+    cardHeight: 0,
     cardGap: 16,
     scrollScreens: 3,
     paddingX: 40,
@@ -505,6 +509,16 @@ addPropertyControls(HorizontalCardStack, {
         step: 10,
         defaultValue: 550,
         unit: "px",
+    },
+    cardHeight: {
+        type: ControlType.Number,
+        title: "Card Height",
+        min: 0,
+        max: 1200,
+        step: 10,
+        defaultValue: 0,
+        unit: "px",
+        description: "Set to 0 to fill available height.",
     },
     cardGap: {
         type: ControlType.Number,
