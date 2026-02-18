@@ -1,6 +1,6 @@
 // Value Proposition Strip — Scroll-Linked Word Reveal
-// Words go from 30% → 100% opacity as the section scrolls into view.
-// Matches the VSN "About" section: left-aligned, CSS color transition, no sticky.
+// Words go from 30% → 100% opacity via CSS color transition as you scroll.
+// Section is taller than one viewport; text stays pinned with position: sticky.
 // Paste this into Framer: Assets panel → Code → New Component
 
 import { addPropertyControls, ControlType } from "framer"
@@ -44,19 +44,19 @@ export default function ValuePropositionStrip(props) {
         lineHeight,
         letterSpacing,
         textAlign,
-        paddingY,
         paddingX,
         maxWidth,
+        scrollScreens,
         style,
     } = props
 
     const sectionRef = useRef(null)
     const [revealedCount, setRevealedCount] = useState(0)
 
-    // Scroll tracking: reveal happens as the section scrolls into view
+    // Scroll progress spans the full section height
     const { scrollYProgress } = useScroll({
         target: sectionRef,
-        offset: ["start 0.85", "start 0.2"],
+        offset: ["start start", "end end"],
     })
 
     // Split text into words
@@ -65,7 +65,7 @@ export default function ValuePropositionStrip(props) {
         [heading]
     )
 
-    // Update revealed word count on scroll — only fires when count changes
+    // Update revealed word count on scroll
     useMotionValueEvent(scrollYProgress, "change", (latest) => {
         const clamped = Math.max(0, Math.min(1, latest))
         setRevealedCount(Math.round(clamped * words.length))
@@ -79,49 +79,64 @@ export default function ValuePropositionStrip(props) {
         <section
             ref={sectionRef}
             style={{
-                ...style,
+                width: style?.width || "100%",
+                height: `${scrollScreens * 100}vh`,
+                position: "relative",
                 backgroundColor,
-                padding: `${paddingY}px ${paddingX}px`,
             }}
         >
-            <p
+            {/* Sticky container — text stays visible while scrolling through */}
+            <div
                 style={{
-                    fontFamily:
-                        "'Inter Display', Inter, system-ui, sans-serif",
-                    fontWeight,
-                    fontSize,
-                    lineHeight,
-                    letterSpacing: `${letterSpacing}em`,
-                    textAlign,
-                    textWrap: "balance",
-                    margin: 0,
-                    padding: 0,
-                    whiteSpace: "pre-wrap",
-                    overflow: "visible",
-                    display: "block",
-                    maxWidth,
-                    userSelect: "text",
+                    position: "sticky",
+                    top: 0,
+                    height: "100vh",
+                    display: "flex",
+                    alignItems: textAlign === "center" ? "center" : "flex-start",
+                    justifyContent: textAlign === "center" ? "center" : "flex-start",
+                    padding: `0 ${paddingX}px`,
+                    paddingTop: textAlign === "center" ? 0 : "15vh",
                 }}
             >
-                {words.map((word, i) => (
-                    <span
-                        key={`${word}-${i}`}
-                        style={{
-                            color:
-                                i < revealedCount ? litColor : dimColor,
-                            transition: "color 0.3s ease-out",
-                            display: "inline",
-                        }}
-                    >
-                        {word}{" "}
-                    </span>
-                ))}
-            </p>
+                <p
+                    style={{
+                        fontFamily:
+                            "'Inter Display', Inter, system-ui, sans-serif",
+                        fontWeight,
+                        fontSize,
+                        lineHeight,
+                        letterSpacing: `${letterSpacing}em`,
+                        textAlign,
+                        textWrap: "balance",
+                        margin: 0,
+                        padding: 0,
+                        whiteSpace: "pre-wrap",
+                        overflow: "visible",
+                        display: "block",
+                        maxWidth,
+                        userSelect: "text",
+                    }}
+                >
+                    {words.map((word, i) => (
+                        <span
+                            key={`${word}-${i}`}
+                            style={{
+                                color:
+                                    i < revealedCount ? litColor : dimColor,
+                                transition: "color 0.3s ease-out",
+                                display: "inline",
+                            }}
+                        >
+                            {word}{" "}
+                        </span>
+                    ))}
+                </p>
+            </div>
         </section>
     )
 }
 
-// ─── Defaults (matching the original VSN "About" section) ───────────────────
+// ─── Defaults ───────────────────────────────────────────────────────────────
 
 ValuePropositionStrip.defaultProps = {
     heading:
@@ -134,9 +149,9 @@ ValuePropositionStrip.defaultProps = {
     lineHeight: 1.03,
     letterSpacing: -0.02,
     textAlign: "left",
-    paddingY: 80,
     paddingX: 80,
     maxWidth: 1280,
+    scrollScreens: 2.5,
 }
 
 // ─── Property controls ──────────────────────────────────────────────────────
@@ -147,7 +162,7 @@ addPropertyControls(ValuePropositionStrip, {
         title: "Text",
         displayTextArea: true,
         description:
-            "Words light up one-by-one as the section scrolls into view",
+            "Words light up one-by-one as you scroll through the section",
     },
     textAlign: {
         type: ControlType.Enum,
@@ -196,7 +211,17 @@ addPropertyControls(ValuePropositionStrip, {
         max: 0.6,
         step: 0.05,
         defaultValue: 0.3,
-        description: "Opacity of words before they are revealed",
+        description: "Opacity of unrevealed words (0.3 = original)",
+    },
+    scrollScreens: {
+        type: ControlType.Number,
+        title: "Scroll Length",
+        min: 1.5,
+        max: 5,
+        step: 0.5,
+        defaultValue: 2.5,
+        description:
+            "Section height in viewports. Higher = slower reveal. 2.5 = natural pace, 4 = dramatic.",
     },
     maxWidth: {
         type: ControlType.Number,
@@ -207,18 +232,9 @@ addPropertyControls(ValuePropositionStrip, {
         defaultValue: 1280,
         unit: "px",
     },
-    paddingY: {
-        type: ControlType.Number,
-        title: "Vertical Padding",
-        min: 0,
-        max: 200,
-        step: 8,
-        defaultValue: 80,
-        unit: "px",
-    },
     paddingX: {
         type: ControlType.Number,
-        title: "Horizontal Padding",
+        title: "Side Padding",
         min: 0,
         max: 200,
         step: 8,
