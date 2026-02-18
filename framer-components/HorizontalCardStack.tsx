@@ -220,10 +220,12 @@ export default function HorizontalCardStack(props) {
         const measure = () => {
             if (!containerRef.current) return
             const viewportW = containerRef.current.offsetWidth
+            const leftPad = viewportW * 0.33
             const contentW =
                 cards.length * cardWidth +
                 (cards.length - 1) * cardGap +
-                paddingX * 2
+                leftPad +
+                paddingX
             setMaxScroll(Math.max(0, contentW - viewportW))
         }
         measure()
@@ -265,7 +267,8 @@ export default function HorizontalCardStack(props) {
                         x,
                         display: "flex",
                         gap: cardGap,
-                        padding: `0 ${paddingX}px`,
+                        paddingLeft: "33vw",
+                        paddingRight: `${paddingX}px`,
                         alignItems: "stretch",
                     }}
                 >
