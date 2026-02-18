@@ -336,7 +336,7 @@ HorizontalCardStack.defaultProps = {
     buttonColor: "#c5e33d",
     buttonTextColor: "#000000",
     glowColor: "rgba(253, 192, 25, 0.4)",
-    cardWidth: 400,
+    cardWidth: 550,
     cardGap: 16,
     scrollScreens: 3,
     paddingX: 40,
@@ -396,7 +396,7 @@ addPropertyControls(HorizontalCardStack, {
         min: 280,
         max: 600,
         step: 10,
-        defaultValue: 400,
+        defaultValue: 550,
         unit: "px",
     },
     cardGap: {
