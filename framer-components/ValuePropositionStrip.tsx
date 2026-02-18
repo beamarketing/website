@@ -18,7 +18,7 @@ function ScrollWord({
     isHighlight,
 }) {
     const opacity = useTransform(scrollProgress, inputRange, [dimOpacity, 1])
-    const y = useTransform(scrollProgress, inputRange, [8, 0])
+    const y = useTransform(scrollProgress, inputRange, [4, 0])
 
     return (
         <motion.span
@@ -96,23 +96,26 @@ export default function ValuePropositionStrip(props) {
     }, [words, highlightText])
 
     // ── Scroll ranges ──
-    // Words fill 0 → 0.75 of progress, description fills 0.78 → 0.95
-    const headingEnd = showDescription ? 0.72 : 0.92
+    // Words snap quickly: each word's transition is only 35% of its slot width
+    // so 2–3 words are in motion simultaneously, creating a fast cascade feel
+    const headingEnd = showDescription ? 0.65 : 0.88
     const getWordRange = (index) => {
-        const size = headingEnd / words.length
-        return [index * size, (index + 1) * size]
+        const slotSize = headingEnd / words.length
+        const snapWidth = slotSize * 0.35 // sharp snap — not a slow fade
+        const start = index * slotSize
+        return [start, start + snapWidth]
     }
 
-    // Description fades in after all words are revealed
+    // Description fades in right after the last word
     const descOpacity = useTransform(
         scrollYProgress,
-        [0.76, 0.92],
+        [0.68, 0.82],
         [0, 0.65]
     )
-    const descY = useTransform(scrollYProgress, [0.76, 0.92], [16, 0])
+    const descY = useTransform(scrollYProgress, [0.68, 0.82], [12, 0])
 
-    // Scroll hint fades out as soon as scrolling begins
-    const hintOpacity = useTransform(scrollYProgress, [0, 0.08], [0.45, 0])
+    // Scroll hint fades out quickly
+    const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [0.45, 0])
 
     return (
         <section
@@ -260,7 +263,7 @@ ValuePropositionStrip.defaultProps = {
     textColor: "#ffffff",
     accentColor: "#c5e33d",
     dimOpacity: 0.12,
-    scrollScreens: 2.5,
+    scrollScreens: 1.5,
     maxWidth: 900,
 }
 
@@ -305,12 +308,12 @@ addPropertyControls(ValuePropositionStrip, {
     scrollScreens: {
         type: ControlType.Number,
         title: "Scroll Length",
-        min: 1.5,
-        max: 5,
-        step: 0.5,
-        defaultValue: 2.5,
+        min: 1.2,
+        max: 4,
+        step: 0.1,
+        defaultValue: 1.5,
         description:
-            "How many screen-heights tall the section is. Higher = slower reveal. 2.5 = the user scrolls 2.5 viewport heights to reveal all words.",
+            "How many screen-heights tall the section is. Higher = slower reveal. 1.5 = quick cascade, 3 = dramatic slow reveal.",
     },
     dimOpacity: {
         type: ControlType.Number,
