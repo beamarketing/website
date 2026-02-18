@@ -44,6 +44,12 @@ function ProductCard({
     buttonBg,
     buttonTextColor,
     glowColor,
+    cardTitleFont,
+    cardTitleSize,
+    cardDescriptionFont,
+    cardDescriptionSize,
+    buttonFont,
+    buttonSize,
 }) {
     const [hovered, setHovered] = useState(false)
 
@@ -85,9 +91,9 @@ function ProductCard({
                     <p
                         style={{
                             color: textColor,
-                            fontSize: 16,
+                            fontSize: cardTitleSize,
                             fontWeight: 500,
-                            fontFamily: "Inter, system-ui, sans-serif",
+                            fontFamily: cardTitleFont,
                             margin: 0,
                             lineHeight: 1.4,
                         }}
@@ -97,9 +103,9 @@ function ProductCard({
                     <p
                         style={{
                             color: textColor,
-                            fontSize: 14,
+                            fontSize: cardDescriptionSize,
                             fontWeight: 400,
-                            fontFamily: "Inter, system-ui, sans-serif",
+                            fontFamily: cardDescriptionFont,
                             margin: 0,
                             lineHeight: 1.6,
                         }}
@@ -120,9 +126,9 @@ function ProductCard({
                         justifyContent: "space-between",
                         textDecoration: "none",
                         color: buttonTextColor,
-                        fontSize: 15,
+                        fontSize: buttonSize,
                         fontWeight: 500,
-                        fontFamily: "Inter, system-ui, sans-serif",
+                        fontFamily: buttonFont,
                     }}
                 >
                     {buttonLabel}
@@ -191,6 +197,10 @@ function ProductCard({
 export default function HorizontalCardStack(props) {
     const {
         cards,
+        sectionTitle,
+        sectionTitleColor,
+        sectionTitleFont,
+        sectionTitleSize,
         backgroundColor,
         cardBackground,
         borderColor,
@@ -198,6 +208,12 @@ export default function HorizontalCardStack(props) {
         buttonColor,
         buttonTextColor,
         glowColor,
+        cardTitleFont,
+        cardTitleSize,
+        cardDescriptionFont,
+        cardDescriptionSize,
+        buttonFont,
+        buttonSize,
         cardWidth,
         cardGap,
         scrollScreens,
@@ -256,16 +272,36 @@ export default function HorizontalCardStack(props) {
                     height: "100vh",
                     overflow: "hidden",
                     display: "flex",
-                    alignItems: "stretch",
+                    flexDirection: "column",
                     padding: `${paddingY}px 0`,
                     boxSizing: "border-box",
                 }}
             >
+                {/* Section title */}
+                {sectionTitle && (
+                    <h2
+                        style={{
+                            color: sectionTitleColor,
+                            fontSize: sectionTitleSize,
+                            fontWeight: 600,
+                            fontFamily: sectionTitleFont,
+                            margin: 0,
+                            paddingLeft: "33vw",
+                            paddingRight: `${paddingX}px`,
+                            paddingBottom: 32,
+                            lineHeight: 1.2,
+                        }}
+                    >
+                        {sectionTitle}
+                    </h2>
+                )}
+
                 {/* Sliding card track */}
                 <motion.div
                     style={{
                         x,
                         display: "flex",
+                        flex: 1,
                         gap: cardGap,
                         paddingLeft: "33vw",
                         paddingRight: `${paddingX}px`,
@@ -287,6 +323,12 @@ export default function HorizontalCardStack(props) {
                             buttonBg={buttonColor}
                             buttonTextColor={buttonTextColor}
                             glowColor={glowColor}
+                            cardTitleFont={cardTitleFont}
+                            cardTitleSize={cardTitleSize}
+                            cardDescriptionFont={cardDescriptionFont}
+                            cardDescriptionSize={cardDescriptionSize}
+                            buttonFont={buttonFont}
+                            buttonSize={buttonSize}
                         />
                     ))}
                 </motion.div>
@@ -332,6 +374,10 @@ HorizontalCardStack.defaultProps = {
             buttonText: "Learn more",
         },
     ],
+    sectionTitle: "Our Products",
+    sectionTitleColor: "#ffffff",
+    sectionTitleFont: "Inter, system-ui, sans-serif",
+    sectionTitleSize: 48,
     backgroundColor: "#0c0e15",
     cardBackground: "#101010",
     borderColor: "#424242",
@@ -339,6 +385,12 @@ HorizontalCardStack.defaultProps = {
     buttonColor: "#c5e33d",
     buttonTextColor: "#000000",
     glowColor: "rgba(253, 192, 25, 0.4)",
+    cardTitleFont: "Inter, system-ui, sans-serif",
+    cardTitleSize: 16,
+    cardDescriptionFont: "Inter, system-ui, sans-serif",
+    cardDescriptionSize: 14,
+    buttonFont: "Inter, system-ui, sans-serif",
+    buttonSize: 15,
     cardWidth: 550,
     cardGap: 16,
     scrollScreens: 3,
@@ -382,6 +434,30 @@ addPropertyControls(HorizontalCardStack, {
                 },
             },
         },
+    },
+    sectionTitle: {
+        type: ControlType.String,
+        title: "Section Title",
+        defaultValue: "Our Products",
+    },
+    sectionTitleColor: {
+        type: ControlType.Color,
+        title: "Title Color",
+        defaultValue: "#ffffff",
+    },
+    sectionTitleFont: {
+        type: ControlType.String,
+        title: "Title Font",
+        defaultValue: "Inter, system-ui, sans-serif",
+    },
+    sectionTitleSize: {
+        type: ControlType.Number,
+        title: "Title Size",
+        min: 16,
+        max: 96,
+        step: 1,
+        defaultValue: 48,
+        unit: "px",
     },
     scrollScreens: {
         type: ControlType.Number,
@@ -463,5 +539,47 @@ addPropertyControls(HorizontalCardStack, {
         type: ControlType.Color,
         title: "Glow Color",
         defaultValue: "rgba(253, 192, 25, 0.4)",
+    },
+    cardTitleFont: {
+        type: ControlType.String,
+        title: "Card Title Font",
+        defaultValue: "Inter, system-ui, sans-serif",
+    },
+    cardTitleSize: {
+        type: ControlType.Number,
+        title: "Card Title Size",
+        min: 10,
+        max: 48,
+        step: 1,
+        defaultValue: 16,
+        unit: "px",
+    },
+    cardDescriptionFont: {
+        type: ControlType.String,
+        title: "Card Desc Font",
+        defaultValue: "Inter, system-ui, sans-serif",
+    },
+    cardDescriptionSize: {
+        type: ControlType.Number,
+        title: "Card Desc Size",
+        min: 10,
+        max: 36,
+        step: 1,
+        defaultValue: 14,
+        unit: "px",
+    },
+    buttonFont: {
+        type: ControlType.String,
+        title: "Button Font",
+        defaultValue: "Inter, system-ui, sans-serif",
+    },
+    buttonSize: {
+        type: ControlType.Number,
+        title: "Button Font Size",
+        min: 10,
+        max: 36,
+        step: 1,
+        defaultValue: 15,
+        unit: "px",
     },
 })
