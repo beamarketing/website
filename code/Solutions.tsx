@@ -23,6 +23,7 @@ interface Props {
     secondaryTextColor: string
     accentColor: string
     fontFamily: string
+    imageHeight: number
     cardBorderRadius: number
     style?: React.CSSProperties
 }
@@ -67,6 +68,7 @@ function Solutions(props: Props) {
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
         fontFamily = "'Inter', sans-serif",
+        imageHeight = 200,
         cardBorderRadius = 16,
         style,
     } = props
@@ -159,7 +161,7 @@ function Solutions(props: Props) {
                             <div
                                 style={{
                                     width: "100%",
-                                    height: 200,
+                                    height: imageHeight,
                                     backgroundColor: "rgba(255,255,255,0.03)",
                                     overflow: "hidden",
                                 }}
@@ -337,6 +339,14 @@ addPropertyControls(Solutions, {
                 image: "",
             },
         ],
+    },
+    imageHeight: {
+        type: ControlType.Number,
+        title: "Image Height",
+        defaultValue: 200,
+        min: 80,
+        max: 500,
+        step: 10,
     },
     cardBorderRadius: {
         type: ControlType.Number,
