@@ -1,0 +1,717 @@
+# Revenue Intelligence Copilot -- Full Build Spec
+
+## 1. Product intent
+
+Turn scattered go-to-market data into an AI chat plus a proactive insight engine that:
+- Answers questions with citations grounded in real source material
+- Surfaces high-signal insights automatically when new data arrives
+- Helps sales instantly find the latest approved documentation
+- Helps marketing discover what to write, who to target, what is resonating, and what is changing
+
+**Audience:** Beamr sales and marketing (5-15 users). Design for future expansion to customer success and leadership.
+
+**Non-goals for v1:** External-facing features, CRM write-back, real-time collaboration, mobile-native UI.
+
+---
+
+## 2. Data sources
+
+### 2a. Google Drive
+
+**Auth:** OAuth2 with offline access and refresh token. Scopes: `drive.readonly`, `drive.metadata.readonly`. Store refresh token encrypted in DB.
+
+**Sync strategy:**
+- Use Drive API `changes.list` with a stored `startPageToken` for incremental sync
+- Full resync on first run or manual trigger
+- Poll interval: configurable, default every 15 minutes
+- Idempotency: upsert by `sourceType + sourceId`, skip if `modifiedTime` has not changed
+
+**Supported file types:** Google Docs (export as text), PDF (parse with pdf-parse), PPTX (parse with officegen or mammoth), DOCX (parse with mammoth), TXT, Markdown.
+
+**Folder conventions to detect:**
+- `/approved` -- flag documents as approved
+- `/drafts` -- flag as draft
+- `/by-industry/<name>` -- tag with industry entity
+- `/battlecards` -- tag as battlecard asset type
+- `/one-pagers` -- tag as one-pager asset type
+
+**Metadata to capture:** fileId, title, mimeType, modifiedTime, lastModifyingUser, webViewLink, folderPath, parentFolderId, detectedVersion (parse from filename: v1, v2, final, approved, date patterns like 2024-01-15).
+
+### 2b. Fireflies.ai
+
+**Auth:** API key stored encrypted. Use Fireflies GraphQL API.
+
+**Sync strategy:**
+- Poll `transcripts` endpoint, ordered by date descending
+- Store a `syncCursor` (timestamp of last synced transcript)
+- Idempotency: upsert by Fireflies transcript ID
+
+**Data to capture:** transcript ID, title, date, duration, attendees (name, email), full transcript text, speaker segments if available (speaker label, start time, end time, text), summary if provided by Fireflies.
+
+**Entity linking:** Attempt to link transcripts to accounts by matching attendee email domains against known account domains. Fall back to manual tagging.
+
+---
+
+## 3. Ingestion pipeline
+
+### 3a. Parsing
+
+Each source type needs a parser that returns a `ParsedDocument`:
+
+```typescript
+interface ParsedDocument {
+  sourceType: 'drive' | 'fireflies';
+  sourceId: string;
+  title: string;
+  url: string;
+  rawText: string;
+  modifiedTime: Date;
+  metadata: Record<string, unknown>;
+  speakers?: SpeakerSegment[];
+}
+```
+
+### 3b. Chunking
+
+Strategy varies by document type:
+- **Prose documents (Docs, DOCX, PDF, TXT):** Recursive character splitter. Chunk size: 800 tokens. Overlap: 100 tokens. Split on paragraph boundaries first, then sentence boundaries.
+- **Slide decks (PPTX):** One chunk per slide. Include slide number in metadata.
+- **Transcripts:** Chunk by speaker turns, merging short turns. Target 600-1000 tokens per chunk. Preserve speaker label and timestamp range in metadata.
+
+Each chunk stores: documentId, chunkIndex, text, token count, embedding vector (1536 dimensions, configurable).
+
+### 3c. Embedding
+
+- Use an LLM provider abstraction so embedding model is swappable
+- Default: OpenAI `text-embedding-3-small` (1536 dims)
+- Batch embed: up to 100 chunks per API call
+- Retry with exponential backoff on rate limits
+- Cost guard: log token usage per job, set a configurable daily ceiling
+
+### 3d. Deduplication and updates
+
+When a document is re-ingested (modified):
+1. Soft-delete old chunks (set `deletedAt` timestamp, do not hard delete)
+2. Re-parse, re-chunk, re-embed
+3. Mark document `lastIndexedAt`
+4. If content changed materially (cosine similarity of doc-level embedding < 0.95), flag for proactive analysis
+
+---
+
+## 4. Retrieval
+
+### 4a. Hybrid search
+
+For every query:
+1. Generate query embedding
+2. Run pgvector cosine similarity search (top 40 candidates)
+3. Run PostgreSQL full-text search with `ts_vector` (top 40 candidates)
+4. Merge and deduplicate by chunkId
+5. Score: `0.7 * vector_score + 0.3 * text_score` (tunable weights)
+6. Apply metadata filters (account, industry, source type, date range, folder path, asset type)
+7. Return top K results (default K=10, configurable per endpoint)
+
+### 4b. Optional reranking
+
+If enabled, pass top 20 merged results through a cross-encoder reranker (or LLM-based rerank prompt). P1 optimization -- skip for P0, use flag to enable.
+
+### 4c. Citation format
+
+Every chunk returned to the LLM context must include:
+```
+[Source: {title} | {sourceType} | {modifiedTime} | {url}]
+{chunk text}
+```
+
+The LLM must reference sources by title and date in its answer. The UI must render these as clickable deep links.
+
+---
+
+## 5. Core experiences -- API specs
+
+### 5a. Chat API
+
+**Endpoint:** `POST /api/chat`
+
+**Request:**
+```json
+{
+  "message": "string",
+  "conversationId": "string | null",
+  "filters": {
+    "accounts": ["string"],
+    "industries": ["string"],
+    "sourceTypes": ["drive", "fireflies"],
+    "dateRange": { "from": "ISO date", "to": "ISO date" },
+    "assetTypes": ["battlecard", "one-pager", "transcript"],
+    "folderPaths": ["string"]
+  }
+}
+```
+
+**Response (streamed via SSE):**
+```json
+{
+  "answer": "string (streamed)",
+  "citations": [
+    {
+      "sourceTitle": "string",
+      "sourceType": "string",
+      "url": "string",
+      "modifiedTime": "ISO date",
+      "snippet": "string",
+      "chunkId": "string"
+    }
+  ],
+  "confidence": "high | medium | low",
+  "suggestedFollowUps": ["string"],
+  "missingDataHints": ["string"]
+}
+```
+
+**Behavior rules:**
+- If fewer than 3 relevant chunks found, set confidence to "low" and include a `missingDataHints` entry suggesting what to upload
+- Always cite. Never fabricate a source
+- If the user asks about an account with no data, say so explicitly
+- Freshness: warn if best source is older than 90 days
+
+**System prompt pattern:** You are a Revenue Intelligence assistant for Beamr. Answer using ONLY the provided sources. Cite every claim with [Source: title, date]. If you are unsure or evidence is thin, say so. Never invent facts.
+
+### 5b. Doc Finder API
+
+**Endpoint:** `POST /api/docs/search`
+
+**Request:**
+```json
+{
+  "query": "string",
+  "assetType": "string | null",
+  "industry": "string | null",
+  "onlyApproved": "boolean (default true)",
+  "limit": 5
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "documentId": "string",
+      "title": "string",
+      "url": "string",
+      "modifiedTime": "ISO date",
+      "owner": "string",
+      "folderPath": "string",
+      "isApproved": "boolean",
+      "detectedVersion": "string | null",
+      "isLatest": "boolean",
+      "summary": "string (LLM-generated, cached)",
+      "relatedDocuments": [{ "id": "string", "title": "string", "url": "string" }]
+    }
+  ]
+}
+```
+
+**Version detection logic:**
+1. Parse filename for version indicators: v1, v2, v3, "final", "approved", date stamps (YYYY-MM-DD)
+2. Group documents by fuzzy title match (strip version suffixes, compare)
+3. Within a group, rank by: explicit version number > "final"/"approved" label > modifiedTime
+4. Mark the top-ranked as `isLatest: true`
+5. Unit test this logic with at least 15 filename patterns
+
+### 5c. Insights API
+
+**Endpoints:**
+- `GET /api/insights` -- list with filters (type, entity, status, date range, confidence threshold)
+- `GET /api/insights/:id` -- detail with full evidence
+- `PATCH /api/insights/:id` -- update status (new, reviewed, dismissed, converted-to-task)
+- `POST /api/insights` -- create (used by proactive analyzer)
+
+**Insight object:**
+```typescript
+interface Insight {
+  id: string;
+  type: InsightType;
+  title: string;
+  entityType: 'account' | 'opportunity' | 'industry' | 'product' | 'competitor' | 'persona';
+  entityId: string | null;
+  summary: string;
+  whatChanged: string | null;
+  evidence: EvidenceSnippet[];
+  confidence: number; // 0.0 to 1.0
+  confidenceRationale: string;
+  recommendedActions: RecommendedAction[];
+  status: 'new' | 'reviewed' | 'dismissed' | 'converted_to_task';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+enum InsightType {
+  BUYING_SIGNAL = 'buying_signal',
+  RISK_FLAG = 'risk_flag',
+  COMPETITIVE_MENTION = 'competitive_mention',
+  OBJECTION_PATTERN = 'objection_pattern',
+  CONTENT_GAP = 'content_gap',
+  ASSUMPTION_CHANGE = 'assumption_change',
+  MEETING_OUTCOME = 'meeting_outcome',
+  MARKET_SHIFT = 'market_shift',
+  ENABLEMENT_GAP = 'enablement_gap',
+  PERSONA_INSIGHT = 'persona_insight',
+}
+
+interface EvidenceSnippet {
+  text: string;
+  sourceTitle: string;
+  sourceType: string;
+  sourceUrl: string;
+  sourceDate: string;
+  chunkId: string;
+}
+
+interface RecommendedAction {
+  action: string;
+  priority: 'high' | 'medium' | 'low';
+  owner: string | null;
+}
+```
+
+### 5d. Assumption Ledger API
+
+**Endpoints:**
+- `GET /api/assumptions` -- list with filters
+- `POST /api/assumptions` -- create (manual or system-generated)
+- `PATCH /api/assumptions/:id` -- update confidence, statement
+- `GET /api/assumptions/:id/events` -- list change events
+
+**Assumption object:**
+```typescript
+interface Assumption {
+  id: string;
+  entityType: 'account' | 'industry' | 'competitor' | 'product' | 'persona';
+  entityId: string | null;
+  statement: string;
+  confidence: number; // 0.0 to 1.0
+  createdAt: Date;
+  lastEvaluatedAt: Date;
+}
+
+interface AssumptionEvent {
+  id: string;
+  assumptionId: string;
+  changeType: 'strengthen' | 'weaken' | 'overturn';
+  previousConfidence: number;
+  newConfidence: number;
+  evidence: EvidenceSnippet[];
+  rationale: string;
+  triggeredByDocumentId: string | null;
+  createdAt: Date;
+}
+```
+
+---
+
+## 6. Proactive Mode
+
+### 6a. Architecture
+
+A background worker (BullMQ job queue on Redis) that:
+1. Listens for ingestion-complete events (new or updated document indexed)
+2. Runs a configurable analysis pipeline on the new content
+3. Produces Insight objects and Assumption Events
+4. Scores each output for alerting
+
+### 6b. Analysis pipeline (per new document)
+
+Step 1 -- **Extract signals.** Send the new document chunks to the LLM with a structured extraction prompt. Extract: buying signals, objections, risk flags, competitor mentions, technical requirements, stakeholder roles, pain points, decisions, action items.
+
+Prompt pattern: return JSON array of signal objects, each with type, text, entity references, and confidence.
+
+Step 2 -- **Match against assumptions.** For each extracted signal:
+- Retrieve relevant assumptions (by entity match and semantic similarity)
+- Ask the LLM: "Does this new evidence strengthen, weaken, or overturn this assumption? Explain."
+- If change detected, create an AssumptionEvent and update assumption confidence
+
+Step 3 -- **Generate insights.** For material findings, create an Insight object with title, summary, recommended actions, confidence score.
+
+Step 4 -- **Score for alerting.**
+```typescript
+interface AlertScore {
+  relevance: number;   // 0-1
+  materiality: number; // 0-1
+  novelty: number;     // 0-1
+  composite: number;   // 0.3 * relevance + 0.5 * materiality + 0.2 * novelty
+}
+```
+- Instant alert threshold: composite >= 0.7
+- Daily digest threshold: composite >= 0.3
+- Below 0.3: store silently in Insight Library
+
+### 6c. Toggle and delivery
+
+- `POST /api/proactive/toggle` -- start or stop (admin only)
+- `GET /api/proactive/status` -- current state, last run, queue depth
+- In-app notification bell with unread count (P0)
+- Email digest and Slack webhook (P1)
+
+### 6d. LLM cost controls
+
+- Max LLM calls per document: 10
+- Max LLM calls per day: 500 (configurable)
+- Log every call with token counts to `llm_usage` table
+- If ceiling hit, queue remaining work for next day and alert admin
+
+---
+
+## 7. P2 deliverables -- Marketing and sales outputs
+
+Generated on demand using retrieval over indexed data. Cache results, invalidate when underlying sources change.
+
+### 7a. Account Brief
+**Endpoint:** `POST /api/briefs/account`
+**Input:** accountId or account name
+**Sections:** business context, stakeholders, pain points, buying signals, objections, competitive mentions, next best actions, suggested talk track, email opener, citations, freshness timestamp.
+
+### 7b. Opportunity Brief
+**Endpoint:** `POST /api/briefs/opportunity`
+**Sections:** stage cues, timeline, procurement signals, blockers, technical requirements, risk flags, mutual action plan suggestions, citations.
+
+### 7c. Meeting Outcome Extraction
+**Trigger:** Automatically after Fireflies transcript ingestion.
+**Output:** Insight of type `meeting_outcome` with summary, decisions, action items, open questions, buying signals, risks, follow-up email draft with citations.
+
+### 7d. Content Engine
+**Endpoint:** `POST /api/content/backlog`
+**Input:** industry or segment name
+**Output:** themes with citations, content ideas (working title, funnel stage, target persona, key points, proof points, suggested asset type, CTA suggestions), content gaps.
+**Grounding rule:** Every theme and content idea must trace to at least one source. Discard any without citations.
+
+### 7e. Competitive intelligence, persona insights, industry synthesis, enablement gaps
+Same retrieve-then-generate pattern. Dedicated endpoint per type, structured output, grounding rule: no claim without a citation.
+
+---
+
+## 8. Data model
+
+PostgreSQL with pgvector extension. Drizzle ORM for schema and migrations.
+
+```sql
+CREATE TABLE documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_type TEXT NOT NULL,
+  source_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  url TEXT,
+  mime_type TEXT,
+  folder_path TEXT,
+  is_approved BOOLEAN DEFAULT FALSE,
+  detected_version TEXT,
+  owner_email TEXT,
+  raw_text_hash TEXT,
+  modified_time TIMESTAMPTZ,
+  last_indexed_at TIMESTAMPTZ,
+  metadata JSONB DEFAULT '{}',
+  deleted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(source_type, source_id)
+);
+
+CREATE TABLE chunks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id UUID NOT NULL REFERENCES documents(id),
+  chunk_index INTEGER NOT NULL,
+  text TEXT NOT NULL,
+  token_count INTEGER,
+  embedding VECTOR(1536),
+  speaker_label TEXT,
+  timestamp_start FLOAT,
+  timestamp_end FLOAT,
+  metadata JSONB DEFAULT '{}',
+  deleted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_chunks_embedding ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX idx_chunks_document_id ON chunks(document_id);
+CREATE INDEX idx_chunks_text_search ON chunks USING gin(to_tsvector('english', text));
+
+CREATE TABLE entities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT NOT NULL,
+  name TEXT NOT NULL,
+  domain TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE UNIQUE INDEX idx_entities_type_name ON entities(type, name);
+
+CREATE TABLE entity_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_id UUID NOT NULL REFERENCES entities(id),
+  document_id UUID REFERENCES documents(id),
+  chunk_id UUID REFERENCES chunks(id),
+  link_type TEXT DEFAULT 'mention',
+  confidence FLOAT DEFAULT 1.0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_entity_links_entity ON entity_links(entity_id);
+CREATE INDEX idx_entity_links_document ON entity_links(document_id);
+
+CREATE TABLE insights (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  entity_type TEXT,
+  entity_id UUID REFERENCES entities(id),
+  summary TEXT NOT NULL,
+  what_changed TEXT,
+  evidence JSONB NOT NULL DEFAULT '[]',
+  confidence FLOAT NOT NULL DEFAULT 0.5,
+  confidence_rationale TEXT,
+  recommended_actions JSONB NOT NULL DEFAULT '[]',
+  alert_score JSONB,
+  status TEXT NOT NULL DEFAULT 'new',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_insights_type ON insights(type);
+CREATE INDEX idx_insights_entity ON insights(entity_type, entity_id);
+CREATE INDEX idx_insights_status ON insights(status);
+
+CREATE TABLE assumptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_type TEXT NOT NULL,
+  entity_id UUID REFERENCES entities(id),
+  statement TEXT NOT NULL,
+  confidence FLOAT NOT NULL DEFAULT 0.5,
+  last_evaluated_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE assumption_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  assumption_id UUID NOT NULL REFERENCES assumptions(id),
+  change_type TEXT NOT NULL,
+  previous_confidence FLOAT NOT NULL,
+  new_confidence FLOAT NOT NULL,
+  evidence JSONB NOT NULL DEFAULT '[]',
+  rationale TEXT,
+  triggered_by_document_id UUID REFERENCES documents(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT,
+  channel TEXT NOT NULL,
+  insight_id UUID REFERENCES insights(id),
+  payload JSONB NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE sync_cursors (
+  id TEXT PRIMARY KEY,
+  cursor_value TEXT NOT NULL,
+  last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE llm_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider TEXT NOT NULL,
+  model TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  cost_usd FLOAT,
+  document_id UUID REFERENCES documents(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE generated_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cache_key TEXT NOT NULL UNIQUE,
+  content JSONB NOT NULL,
+  source_document_ids UUID[] NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ
+);
+
+CREATE TABLE conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  title TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id),
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  citations JSONB DEFAULT '[]',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## 9. Repo structure
+
+```
+/
+  apps/
+    web/                          # Next.js 14 App Router
+      src/
+        app/
+          layout.tsx
+          page.tsx                 # Dashboard
+          chat/page.tsx
+          docs/page.tsx
+          insights/page.tsx
+          insights/[id]/page.tsx
+          assumptions/page.tsx
+          admin/page.tsx
+        components/
+          chat/                    # ChatWindow, MessageBubble, CitationCard, FilterBar
+          docs/                    # DocSearchBar, DocResultCard, VersionBadge
+          insights/                # InsightCard, InsightList, InsightDetail, StatusBadge
+          assumptions/             # AssumptionCard, AssumptionTimeline, EventBadge
+          shared/                  # Layout, Sidebar, NotificationBell, LoadingStates
+        lib/
+          api.ts                   # Typed fetch wrappers
+          hooks.ts                 # React Query hooks
+    worker/                        # Background job processor
+      src/
+        index.ts
+        queues/
+          ingestion.queue.ts
+          analysis.queue.ts
+          notification.queue.ts
+          digest.queue.ts
+        jobs/
+          sync-drive.ts
+          sync-fireflies.ts
+          parse-document.ts
+          chunk-and-embed.ts
+          extract-signals.ts
+          evaluate-assumptions.ts
+          generate-insight.ts
+          score-alert.ts
+          send-notification.ts
+  packages/
+    shared/
+      src/
+        types/
+        db/
+          schema.ts
+          migrations/
+          client.ts
+        connectors/
+          drive.ts
+          fireflies.ts
+        retrieval/
+          embeddings.ts
+          search.ts
+          reranker.ts
+        llm/
+          provider.ts
+          prompts/
+          usage-tracker.ts
+        parsers/
+        chunking/
+        version-detection/
+        utils/
+  docker-compose.yml
+  .env.example
+  README.md
+```
+
+---
+
+## 10. Auth and security
+
+- Google OAuth (team uses Google Workspace) or magic link for v1
+- Middleware checks session on all API routes
+- No RBAC for v1; all authenticated users have full access
+- No LLM training on ingested data
+- Hash attendee emails where possible
+- Configurable data retention
+- All secrets in env vars, never in code
+
+---
+
+## 11. Testing requirements
+
+### Unit tests (P0)
+- Version detection: at least 15 filename patterns
+- Latest selection: given document metadata, correctly pick latest
+- Alert scoring: verify composite score calculation
+- Chunking: verify sizes, overlap, metadata preservation per doc type
+- Entity linking: verify domain-to-account matching
+
+### Integration tests (P0)
+- Ingestion: mock API through parse, chunk, embed, store. Verify chunks in DB.
+- Retrieval: seed DB, run query, verify relevant chunks with citation format.
+- Chat: seed DB, send message, verify citations in response.
+
+### Fixtures (create in /fixtures)
+- 3 sample Google Docs (approved battlecard, draft one-pager, industry brief)
+- 2 sample Fireflies transcripts (one with buying signals, one with competitor mentions)
+- Expected extraction outputs for validation
+- SQL seed script
+
+---
+
+## 12. Milestones with acceptance criteria
+
+**Milestone 1: Scaffold**
+- Repo structure matches spec
+- Docker Compose starts Postgres+pgvector and Redis
+- DB migrations run and create all tables
+- Next.js app boots with placeholder page
+- Worker process boots and connects to Redis
+
+**Milestone 2: Ingestion**
+- Drive connector fetches files from configured folder
+- Fireflies connector fetches transcripts
+- Documents parsed, chunked, embedded, stored
+- Re-ingestion updates without duplication
+- Sync cursors persist across restarts
+
+**Milestone 3: Retrieval + Chat**
+- Hybrid search returns relevant chunks
+- Chat API streams answers with citations
+- UI shows chat with clickable citations
+- Filters work (source type, date range)
+
+**Milestone 4: Doc Finder**
+- Doc search returns relevance-ranked results
+- Version detection identifies latest across fixtures
+- UI shows results with version badge, approval status, link, summary
+
+**Milestone 5: Insights + Assumptions**
+- Insight CRUD API works
+- Assumption Ledger CRUD works
+- Insight Library UI with list, filters, detail
+- Assumption timeline shows events
+
+**Milestone 6: Proactive Mode**
+- Toggle start/stop works
+- New document triggers analysis pipeline
+- Signals extracted, assumptions evaluated, insights created
+- Alert scores computed correctly
+
+**Milestone 7: Alerts + Digest**
+- In-app notifications for high-score insights
+- Daily digest compiled and viewable
+- Notification bell with unread count
+
+**Milestone 8: P2 Features**
+- Account Brief generation works
+- Meeting outcome extraction on transcript ingestion
+- Content Engine produces grounded backlog

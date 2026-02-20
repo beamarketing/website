@@ -1,0 +1,32 @@
+# Revenue Intelligence Copilot
+
+See SPEC.md for the full build specification. Always read SPEC.md before starting any milestone.
+
+## Stack
+- TypeScript 5+, Node.js 20+
+- Next.js 14 (App Router), React 18, Tailwind CSS, shadcn/ui
+- Drizzle ORM, PostgreSQL 16 + pgvector
+- BullMQ + Redis for background jobs
+- TanStack Query (React Query) for frontend data fetching
+- Vitest for testing
+- OpenAI API (gpt-4o for generation, text-embedding-3-small for embeddings)
+
+## Monorepo layout
+- /apps/web -- Next.js frontend
+- /apps/worker -- BullMQ background job processor
+- /packages/shared -- types, DB schema, connectors, retrieval, LLM, parsers, utils
+
+## Priority tiers (build in order, do not skip ahead)
+- P0: Scaffold, ingestion, retrieval, chat, doc finder (Milestones 1-4)
+- P1: Insights, assumptions, proactive mode, alerts (Milestones 5-7)
+- P2: Account briefs, content engine, competitive intel (Milestone 8)
+- P3: Multi-channel alerts, admin dashboard, deploy automation
+
+## Coding rules
+- No em dash characters anywhere (UI text, comments, strings). Use commas, "and", or double hyphens.
+- All LLM prompts go in /packages/shared/src/llm/prompts/ as named exports. Never inline prompts.
+- Every API endpoint must have zod input validation.
+- Structured JSON logging with correlation IDs per request and job.
+- All async operations wrapped in try/catch with contextual error logging.
+- No placeholder comments. Either implement the feature or add a TODO with the milestone number.
+- When a design decision is not covered in SPEC.md, state your choice and rationale briefly, then proceed. Do not stop to ask.
