@@ -323,7 +323,7 @@ function CABRScience(props: Props) {
                             <div
                                 style={{
                                     width: "100%",
-                                    aspectRatio: "4/3",
+                                    aspectRatio: "16/9",
                                     borderRadius: 14,
                                     overflow: "hidden",
                                     backgroundColor: "#0d1025",
