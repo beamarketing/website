@@ -26,6 +26,8 @@ interface Props {
     // Content
     heading: string
     headingFontSize: number
+    headingBottomPadding: number
+    headingHighlightColor: string
     videoSrc: string
     posterImage: string
     useVideo: boolean
@@ -64,6 +66,8 @@ function HeroScroll(props: Props) {
     const {
         heading = "Break the Video\nQuality-Cost-Time\nTrade-Off",
         headingFontSize = 52,
+        headingBottomPadding = 12,
+        headingHighlightColor = "#4F6BED",
         videoSrc = "",
         posterImage = "",
         useVideo = true,
@@ -223,6 +227,28 @@ function HeroScroll(props: Props) {
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
 
+    // Render heading with last two words in highlight color
+    const renderHeading = () => {
+        const words = heading.split(/(\s+)/)
+        // Find the last two actual words (skip whitespace tokens)
+        const wordIndices: number[] = []
+        words.forEach((w, i) => {
+            if (w.trim()) wordIndices.push(i)
+        })
+        if (wordIndices.length <= 2) {
+            return <span style={{ color: headingHighlightColor }}>{heading}</span>
+        }
+        const splitAt = wordIndices[wordIndices.length - 2]
+        const before = words.slice(0, splitAt).join("")
+        const after = words.slice(splitAt).join("")
+        return (
+            <>
+                {before}
+                <span style={{ color: headingHighlightColor }}>{after}</span>
+            </>
+        )
+    }
+
     const getCardStyle = (position: string, index: number): React.CSSProperties => {
         const base: React.CSSProperties = {
             position: "absolute",
@@ -344,7 +370,7 @@ function HeroScroll(props: Props) {
                     <motion.div
                         style={{
                             position: "absolute",
-                            bottom: "12%",
+                            bottom: `${headingBottomPadding}%`,
                             left: "5%",
                             zIndex: 3,
                             opacity: headingBottomOpacity,
@@ -364,7 +390,7 @@ function HeroScroll(props: Props) {
                                 textShadow: "0 2px 40px rgba(0,0,0,0.3)",
                             }}
                         >
-                            {heading}
+                            {renderHeading()}
                         </h1>
                     </motion.div>
 
@@ -395,7 +421,7 @@ function HeroScroll(props: Props) {
                                 textShadow: "0 4px 40px rgba(0,0,0,0.4)",
                             }}
                         >
-                            {heading}
+                            {renderHeading()}
                         </h1>
                     </motion.div>
 
@@ -590,6 +616,21 @@ addPropertyControls(HeroScroll, {
         min: 28,
         max: 80,
         step: 2,
+    },
+    headingBottomPadding: {
+        type: ControlType.Number,
+        title: "Title Bottom %",
+        defaultValue: 12,
+        min: 0,
+        max: 40,
+        step: 1,
+        description: "Title distance from bottom as percentage",
+    },
+    headingHighlightColor: {
+        type: ControlType.Color,
+        title: "Title Highlight",
+        defaultValue: "#4F6BED",
+        description: "Color for the last two words of the heading",
     },
 
     // --- Media ---
