@@ -453,6 +453,7 @@ function CABRScience(props: Props) {
                             })}
                         </div>
                     </div>
+                </div>
             </div>
         </section>
     )
