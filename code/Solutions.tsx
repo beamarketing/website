@@ -2,7 +2,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { useEffect } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 
 interface SolutionCard {
     icon: string
@@ -22,6 +22,7 @@ interface Props {
     cardTitleSize: number
     cardDescSize: number
     buttonScale: number
+    cardAspectRatio: number
     cards: SolutionCard[]
     bgColor: string
     cardBgColor: string
@@ -29,9 +30,19 @@ interface Props {
     secondaryTextColor: string
     accentColor: string
     fontFamily: string
-    cardHeight: number
     cardBorderRadius: number
+    pixelCount: number
+    pixelColor: string
     style?: React.CSSProperties
+}
+
+// Deterministic pseudo-random from seed
+function seededRandom(seed: number) {
+    let s = seed
+    return () => {
+        s = (s * 16807 + 0) % 2147483647
+        return (s - 1) / 2147483646
+    }
 }
 
 function Solutions(props: Props) {
@@ -44,6 +55,7 @@ function Solutions(props: Props) {
         cardTitleSize = 20,
         cardDescSize = 15,
         buttonScale = 1,
+        cardAspectRatio = 0.72,
         cards = [
             {
                 icon: "🎬",
@@ -79,12 +91,63 @@ function Solutions(props: Props) {
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
         fontFamily = "'Inter', sans-serif",
-        cardHeight = 420,
         cardBorderRadius = 16,
+        pixelCount = 50,
+        pixelColor = "#4a5abb",
         style,
     } = props
 
-    // Inject hover CSS for cards
+    const sectionRef = useRef<HTMLElement>(null)
+    const [visible, setVisible] = useState(false)
+    const [scrollY, setScrollY] = useState(0)
+    const sectionTopRef = useRef(0)
+
+    // Generate deterministic pixel particles
+    const particles = useMemo(() => {
+        const rand = seededRandom(42)
+        return Array.from({ length: pixelCount }, (_, i) => ({
+            id: i,
+            x: rand() * 100,
+            y: rand() * 100,
+            size: 2 + rand() * 4,
+            opacity: 0.12 + rand() * 0.28,
+            speed: 0.3 + rand() * 0.7,
+            delay: rand() * 20,
+        }))
+    }, [pixelCount])
+
+    // Intersection observer for entrance animation
+    useEffect(() => {
+        const el = sectionRef.current
+        if (!el) return
+        const obs = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setVisible(true)
+                    obs.disconnect()
+                }
+            },
+            { threshold: 0.12 }
+        )
+        obs.observe(el)
+        return () => obs.disconnect()
+    }, [])
+
+    // Scroll listener for parallax pixels
+    useEffect(() => {
+        const onScroll = () => {
+            const el = sectionRef.current
+            if (!el) return
+            const rect = el.getBoundingClientRect()
+            sectionTopRef.current = rect.top
+            setScrollY(window.scrollY)
+        }
+        window.addEventListener("scroll", onScroll, { passive: true })
+        onScroll()
+        return () => window.removeEventListener("scroll", onScroll)
+    }, [])
+
+    // Inject hover + animation CSS
     useEffect(() => {
         const id = "__solutions-hover-css"
         if (document.getElementById(id)) return
@@ -100,6 +163,10 @@ function Solutions(props: Props) {
                 40% { transform: translateX(3px); }
                 60% { transform: translateX(1px); }
                 80% { transform: translateX(2px); }
+            }
+            @keyframes sol-pixel-float {
+                0% { transform: translateY(0); }
+                100% { transform: translateY(-120vh); }
             }
             .sol-card {
                 transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -145,8 +212,14 @@ function Solutions(props: Props) {
         document.head.appendChild(s)
     }, [])
 
+    // Parallax offset for pixels based on scroll
+    const parallaxOffset = sectionRef.current
+        ? (scrollY - (scrollY + sectionTopRef.current)) * 0.15
+        : 0
+
     return (
         <section
+            ref={sectionRef}
             style={{
                 ...style,
                 width: "100%",
@@ -154,12 +227,45 @@ function Solutions(props: Props) {
                 padding: "100px 48px",
                 boxSizing: "border-box",
                 fontFamily,
+                position: "relative",
+                overflow: "hidden",
             }}
         >
+            {/* Floating pixel particle background */}
+            <div
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    overflow: "hidden",
+                    pointerEvents: "none",
+                    zIndex: 0,
+                }}
+            >
+                {particles.map((p) => (
+                    <div
+                        key={p.id}
+                        style={{
+                            position: "absolute",
+                            left: `${p.x}%`,
+                            top: `${p.y}%`,
+                            width: p.size,
+                            height: p.size,
+                            backgroundColor: pixelColor,
+                            opacity: p.opacity,
+                            borderRadius: 1,
+                            animation: `sol-pixel-float ${20 / p.speed}s linear ${p.delay}s infinite`,
+                            transform: `translateY(${-parallaxOffset * p.speed}px)`,
+                        }}
+                    />
+                ))}
+            </div>
+
             <div
                 style={{
                     maxWidth: 1280,
                     margin: "0 auto",
+                    position: "relative",
+                    zIndex: 1,
                 }}
             >
                 {/* Section Header */}
@@ -167,6 +273,9 @@ function Solutions(props: Props) {
                     style={{
                         textAlign: "center",
                         marginBottom: 56,
+                        opacity: visible ? 1 : 0,
+                        transform: visible ? "translateY(0)" : "translateY(40px)",
+                        transition: "opacity 0.7s ease, transform 0.7s ease",
                     }}
                 >
                     <span
@@ -211,9 +320,10 @@ function Solutions(props: Props) {
                 {/* Cards Grid */}
                 <div
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${Math.min(cards.length, 3)}, 1fr)`,
+                        display: "flex",
+                        justifyContent: "center",
                         gap: 24,
+                        flexWrap: "wrap",
                     }}
                 >
                     {cards.map((card, i) => (
@@ -228,7 +338,15 @@ function Solutions(props: Props) {
                                 display: "flex",
                                 flexDirection: "column",
                                 cursor: "pointer",
-                                height: cardHeight,
+                                aspectRatio: `${cardAspectRatio}`,
+                                width: "auto",
+                                flex: `0 0 auto`,
+                                maxWidth: `calc((100% - ${(Math.min(cards.length, 3) - 1) * 24}px) / ${Math.min(cards.length, 3)})`,
+                                opacity: visible ? 1 : 0,
+                                transform: visible
+                                    ? "translateY(0)"
+                                    : "translateY(60px)",
+                                transition: `opacity 0.6s ease ${0.15 + i * 0.15}s, transform 0.6s ease ${0.15 + i * 0.15}s, border-color 0.3s ease, box-shadow 0.3s ease`,
                             }}
                         >
                             {/* Card Image */}
@@ -239,6 +357,9 @@ function Solutions(props: Props) {
                                     minHeight: 0,
                                     backgroundColor: "rgba(255,255,255,0.03)",
                                     overflow: "hidden",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                 }}
                             >
                                 {card.image ? (
@@ -248,7 +369,9 @@ function Solutions(props: Props) {
                                         style={{
                                             width: "100%",
                                             height: "100%",
-                                            objectFit: "cover",
+                                            objectFit: "contain",
+                                            padding: 12,
+                                            boxSizing: "border-box",
                                         }}
                                     />
                                 ) : (
@@ -297,7 +420,6 @@ function Solutions(props: Props) {
                                         margin: 0,
                                         lineHeight: 1.6,
                                         fontFamily,
-                                        flex: 1,
                                     }}
                                 >
                                     {card.description}
@@ -425,13 +547,13 @@ addPropertyControls(Solutions, {
         max: 2,
         step: 0.05,
     },
-    cardHeight: {
+    cardAspectRatio: {
         type: ControlType.Number,
-        title: "Card Height",
-        defaultValue: 420,
-        min: 280,
-        max: 700,
-        step: 10,
+        title: "Card Ratio (W/H)",
+        defaultValue: 0.72,
+        min: 0.4,
+        max: 1.5,
+        step: 0.02,
     },
     cards: {
         type: ControlType.Array,
@@ -509,6 +631,19 @@ addPropertyControls(Solutions, {
         min: 0,
         max: 32,
         step: 2,
+    },
+    pixelCount: {
+        type: ControlType.Number,
+        title: "Pixel Count",
+        defaultValue: 50,
+        min: 0,
+        max: 150,
+        step: 5,
+    },
+    pixelColor: {
+        type: ControlType.Color,
+        title: "Pixel Color",
+        defaultValue: "#4a5abb",
     },
     bgColor: {
         type: ControlType.Color,
