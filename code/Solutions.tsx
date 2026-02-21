@@ -16,7 +16,11 @@ interface SolutionCard {
 interface Props {
     sectionLabel: string
     heading: string
+    headingSize: number
     subheading: string
+    subheadingSize: number
+    cardTitleSize: number
+    cardDescSize: number
     cards: SolutionCard[]
     bgColor: string
     cardBgColor: string
@@ -33,7 +37,11 @@ function Solutions(props: Props) {
     const {
         sectionLabel = "SOLUTIONS",
         heading = "Solutions for Your Industry",
+        headingSize = 44,
         subheading = "Tailored video optimization across industries — from streaming to autonomous vehicles.",
+        subheadingSize = 17,
+        cardTitleSize = 20,
+        cardDescSize = 15,
         cards = [
             {
                 icon: "🎬",
@@ -91,16 +99,16 @@ function Solutions(props: Props) {
             }
             .sol-card .sol-arrow {
                 transition: transform 0.25s ease;
-                display: inline-block;
             }
             .sol-card:hover .sol-arrow {
-                transform: translateX(4px);
+                transform: translateX(2px);
             }
             .sol-card .sol-link {
-                transition: gap 0.25s ease;
+                transition: border-color 0.25s ease, background 0.25s ease;
             }
             .sol-card:hover .sol-link {
-                gap: 10px;
+                border-color: currentColor;
+                background: rgba(255,255,255,0.06);
             }
         `
         document.head.appendChild(s)
@@ -144,7 +152,7 @@ function Solutions(props: Props) {
                     </span>
                     <h2
                         style={{
-                            fontSize: 44,
+                            fontSize: headingSize,
                             fontWeight: 700,
                             color: textColor,
                             margin: "16px 0 0",
@@ -157,7 +165,7 @@ function Solutions(props: Props) {
                     </h2>
                     <p
                         style={{
-                            fontSize: 17,
+                            fontSize: subheadingSize,
                             color: secondaryTextColor,
                             margin: "16px auto 0",
                             maxWidth: 560,
@@ -240,7 +248,7 @@ function Solutions(props: Props) {
                             >
                                 <h3
                                     style={{
-                                        fontSize: 20,
+                                        fontSize: cardTitleSize,
                                         fontWeight: 600,
                                         color: textColor,
                                         margin: 0,
@@ -251,7 +259,7 @@ function Solutions(props: Props) {
                                 </h3>
                                 <p
                                     style={{
-                                        fontSize: 15,
+                                        fontSize: cardDescSize,
                                         color: secondaryTextColor,
                                         margin: 0,
                                         lineHeight: 1.6,
@@ -265,19 +273,41 @@ function Solutions(props: Props) {
                                     href={card.linkUrl}
                                     className="sol-link"
                                     style={{
-                                        fontSize: 15,
-                                        fontWeight: 500,
+                                        fontSize: 14,
+                                        fontWeight: 600,
                                         color: accentColor,
                                         textDecoration: "none",
                                         display: "inline-flex",
                                         alignItems: "center",
-                                        gap: 6,
+                                        gap: 10,
                                         fontFamily,
-                                        marginTop: 4,
+                                        marginTop: 8,
+                                        padding: "8px 6px 8px 16px",
+                                        borderRadius: 100,
+                                        border: `1px solid ${accentColor}30`,
+                                        background: `${accentColor}08`,
+                                        letterSpacing: "0.02em",
+                                        width: "fit-content",
                                     }}
                                 >
                                     {card.linkText}
-                                    <span className="sol-arrow" style={{ fontSize: 16 }}>&#8594;</span>
+                                    <span
+                                        className="sol-arrow"
+                                        style={{
+                                            width: 28,
+                                            height: 28,
+                                            borderRadius: "50%",
+                                            backgroundColor: accentColor,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M2.5 6H9.5M9.5 6L6.5 3M9.5 6L6.5 9" stroke={cardBgColor === "#0f1029" ? "#0f1029" : "#ffffff"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    </span>
                                 </a>
                             </div>
                         </div>
@@ -299,12 +329,44 @@ addPropertyControls(Solutions, {
         title: "Heading",
         defaultValue: "Solutions for Your Industry",
     },
+    headingSize: {
+        type: ControlType.Number,
+        title: "Heading Size",
+        defaultValue: 44,
+        min: 24,
+        max: 72,
+        step: 2,
+    },
     subheading: {
         type: ControlType.String,
         title: "Subheading",
         defaultValue:
             "Tailored video optimization across industries — from streaming to autonomous vehicles.",
         displayTextArea: true,
+    },
+    subheadingSize: {
+        type: ControlType.Number,
+        title: "Subheading Size",
+        defaultValue: 17,
+        min: 12,
+        max: 28,
+        step: 1,
+    },
+    cardTitleSize: {
+        type: ControlType.Number,
+        title: "Card Title Size",
+        defaultValue: 20,
+        min: 14,
+        max: 32,
+        step: 1,
+    },
+    cardDescSize: {
+        type: ControlType.Number,
+        title: "Card Desc Size",
+        defaultValue: 15,
+        min: 12,
+        max: 22,
+        step: 1,
     },
     imageHeight: {
         type: ControlType.Number,
