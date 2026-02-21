@@ -2,6 +2,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
+import { useEffect } from "react"
 
 interface SolutionCard {
     icon: string
@@ -72,6 +73,38 @@ function Solutions(props: Props) {
         cardBorderRadius = 16,
         style,
     } = props
+
+    // Inject hover CSS for cards
+    useEffect(() => {
+        const id = "__solutions-hover-css"
+        if (document.getElementById(id)) return
+        const s = document.createElement("style")
+        s.id = id
+        s.textContent = `
+            .sol-card {
+                transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            }
+            .sol-card:hover {
+                transform: translateY(-4px) scale(1.015);
+                border-color: rgba(255,255,255,0.14) !important;
+                box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+            }
+            .sol-card .sol-arrow {
+                transition: transform 0.25s ease;
+                display: inline-block;
+            }
+            .sol-card:hover .sol-arrow {
+                transform: translateX(4px);
+            }
+            .sol-card .sol-link {
+                transition: gap 0.25s ease;
+            }
+            .sol-card:hover .sol-link {
+                gap: 10px;
+            }
+        `
+        document.head.appendChild(s)
+    }, [])
 
     return (
         <section
@@ -147,6 +180,7 @@ function Solutions(props: Props) {
                     {cards.map((card, i) => (
                         <div
                             key={i}
+                            className="sol-card"
                             style={{
                                 backgroundColor: cardBgColor,
                                 borderRadius: cardBorderRadius,
@@ -154,7 +188,7 @@ function Solutions(props: Props) {
                                 overflow: "hidden",
                                 display: "flex",
                                 flexDirection: "column",
-                                transition: "border-color 0.3s, transform 0.3s",
+                                cursor: "pointer",
                             }}
                         >
                             {/* Card Image */}
@@ -229,6 +263,7 @@ function Solutions(props: Props) {
                                 </p>
                                 <a
                                     href={card.linkUrl}
+                                    className="sol-link"
                                     style={{
                                         fontSize: 15,
                                         fontWeight: 500,
@@ -241,8 +276,8 @@ function Solutions(props: Props) {
                                         marginTop: 4,
                                     }}
                                 >
-                                    {card.linkText}{" "}
-                                    <span style={{ fontSize: 16 }}>&#8594;</span>
+                                    {card.linkText}
+                                    <span className="sol-arrow" style={{ fontSize: 16 }}>&#8594;</span>
                                 </a>
                             </div>
                         </div>
