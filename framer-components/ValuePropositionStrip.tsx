@@ -38,6 +38,9 @@ export default function ValuePropositionStrip(props) {
         heading,
         backgroundColor,
         textColor,
+        highlightColor,
+        highlightStart,
+        highlightEnd,
         dimOpacity,
         fontSize,
         fontWeight,
@@ -74,6 +77,11 @@ export default function ValuePropositionStrip(props) {
     // Pre-compute colors
     const litColor = textColor
     const dimColor = colorWithAlpha(textColor, dimOpacity)
+    const hlLitColor = highlightColor || textColor
+    const hlDimColor = colorWithAlpha(highlightColor || textColor, dimOpacity)
+    // Convert 1-based panel values to 0-based indices
+    const hlStart = (highlightStart || 0) - 1
+    const hlEnd = (highlightEnd || 0) - 1
 
     return (
         <section
@@ -117,19 +125,29 @@ export default function ValuePropositionStrip(props) {
                         userSelect: "text",
                     }}
                 >
-                    {words.map((word, i) => (
-                        <span
-                            key={`${word}-${i}`}
-                            style={{
-                                color:
-                                    i < revealedCount ? litColor : dimColor,
-                                transition: "color 0.3s ease-out",
-                                display: "inline",
-                            }}
-                        >
-                            {word}{" "}
-                        </span>
-                    ))}
+                    {words.map((word, i) => {
+                        const inHighlight =
+                            highlightColor &&
+                            hlStart >= 0 &&
+                            hlEnd >= hlStart &&
+                            i >= hlStart &&
+                            i <= hlEnd
+                        const lit = inHighlight ? hlLitColor : litColor
+                        const dim = inHighlight ? hlDimColor : dimColor
+                        return (
+                            <span
+                                key={`${word}-${i}`}
+                                style={{
+                                    color:
+                                        i < revealedCount ? lit : dim,
+                                    transition: "color 0.3s ease-out",
+                                    display: "inline",
+                                }}
+                            >
+                                {word}{" "}
+                            </span>
+                        )
+                    })}
                 </p>
             </div>
         </section>
@@ -143,6 +161,9 @@ ValuePropositionStrip.defaultProps = {
         "From ingest to archive, VSN provides broadcasters, media companies, sports organizations, and educational institutions with innovative, scalable software solutions designed to streamline complex workflows, enhance collaboration, and drive growth in a rapidly evolving digital landscape. Experience the difference of a truly unified, seamless, and reliable media ecosystem.",
     backgroundColor: "#0c0e15",
     textColor: "#ffffff",
+    highlightColor: "",
+    highlightStart: 0,
+    highlightEnd: 0,
     dimOpacity: 0.3,
     fontSize: 56,
     fontWeight: 400,
@@ -250,5 +271,30 @@ addPropertyControls(ValuePropositionStrip, {
         type: ControlType.Color,
         title: "Text Color",
         defaultValue: "#ffffff",
+    },
+    highlightColor: {
+        type: ControlType.Color,
+        title: "Highlight Color",
+        defaultValue: "",
+        description:
+            "Pick a color, then set Start / End word numbers to highlight a range.",
+    },
+    highlightStart: {
+        type: ControlType.Number,
+        title: "Highlight Start",
+        min: 0,
+        max: 200,
+        step: 1,
+        defaultValue: 0,
+        description: "First word to highlight (1-based). 0 = off.",
+    },
+    highlightEnd: {
+        type: ControlType.Number,
+        title: "Highlight End",
+        min: 0,
+        max: 200,
+        step: 1,
+        defaultValue: 0,
+        description: "Last word to highlight (1-based, inclusive).",
     },
 })
