@@ -250,6 +250,18 @@ function CABRScience(props: Props) {
                             transition: "opacity 0.7s ease, transform 0.7s ease",
                         }}
                     >
+                        <span
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: accentColor,
+                                fontFamily,
+                                letterSpacing: "0.08em",
+                                textTransform: "uppercase",
+                            }}
+                        >
+                            TECHNOLOGY
+                        </span>
                         <h2
                             style={{
                                 fontSize: headingSize,
