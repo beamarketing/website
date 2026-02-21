@@ -21,6 +21,7 @@ interface Props {
     subheadingSize: number
     cardTitleSize: number
     cardDescSize: number
+    buttonScale: number
     cards: SolutionCard[]
     bgColor: string
     cardBgColor: string
@@ -28,7 +29,7 @@ interface Props {
     secondaryTextColor: string
     accentColor: string
     fontFamily: string
-    imageHeight: number
+    cardHeight: number
     cardBorderRadius: number
     style?: React.CSSProperties
 }
@@ -42,6 +43,7 @@ function Solutions(props: Props) {
         subheadingSize = 17,
         cardTitleSize = 20,
         cardDescSize = 15,
+        buttonScale = 1,
         cards = [
             {
                 icon: "🎬",
@@ -77,7 +79,7 @@ function Solutions(props: Props) {
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
         fontFamily = "'Inter', sans-serif",
-        imageHeight = 200,
+        cardHeight = 420,
         cardBorderRadius = 16,
         style,
     } = props
@@ -89,6 +91,16 @@ function Solutions(props: Props) {
         const s = document.createElement("style")
         s.id = id
         s.textContent = `
+            @keyframes sol-echo-ring {
+                0% { transform: scale(1); opacity: 0.5; }
+                100% { transform: scale(2.2); opacity: 0; }
+            }
+            @keyframes sol-arrow-nudge {
+                0%, 100% { transform: translateX(0); }
+                40% { transform: translateX(3px); }
+                60% { transform: translateX(1px); }
+                80% { transform: translateX(2px); }
+            }
             .sol-card {
                 transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             }
@@ -97,11 +109,30 @@ function Solutions(props: Props) {
                 border-color: rgba(255,255,255,0.14) !important;
                 box-shadow: 0 12px 32px rgba(0,0,0,0.25);
             }
-            .sol-card .sol-arrow {
-                transition: transform 0.25s ease;
+            .sol-arrow-wrap {
+                position: relative;
             }
-            .sol-card:hover .sol-arrow {
-                transform: translateX(2px);
+            .sol-arrow-wrap .sol-echo-1,
+            .sol-arrow-wrap .sol-echo-2,
+            .sol-arrow-wrap .sol-echo-3 {
+                position: absolute;
+                inset: 0;
+                border-radius: 50%;
+                border: 1.5px solid currentColor;
+                opacity: 0;
+                pointer-events: none;
+            }
+            .sol-card:hover .sol-arrow-wrap .sol-echo-1 {
+                animation: sol-echo-ring 1s ease-out 0s infinite;
+            }
+            .sol-card:hover .sol-arrow-wrap .sol-echo-2 {
+                animation: sol-echo-ring 1s ease-out 0.25s infinite;
+            }
+            .sol-card:hover .sol-arrow-wrap .sol-echo-3 {
+                animation: sol-echo-ring 1s ease-out 0.5s infinite;
+            }
+            .sol-card:hover .sol-arrow-svg {
+                animation: sol-arrow-nudge 0.8s ease-in-out infinite;
             }
             .sol-card .sol-link {
                 transition: border-color 0.25s ease, background 0.25s ease;
@@ -197,13 +228,15 @@ function Solutions(props: Props) {
                                 display: "flex",
                                 flexDirection: "column",
                                 cursor: "pointer",
+                                height: cardHeight,
                             }}
                         >
                             {/* Card Image */}
                             <div
                                 style={{
                                     width: "100%",
-                                    height: imageHeight,
+                                    flex: 1,
+                                    minHeight: 0,
                                     backgroundColor: "rgba(255,255,255,0.03)",
                                     overflow: "hidden",
                                 }}
@@ -243,7 +276,7 @@ function Solutions(props: Props) {
                                     display: "flex",
                                     flexDirection: "column",
                                     gap: 12,
-                                    flex: 1,
+                                    flexShrink: 0,
                                 }}
                             >
                                 <h3
@@ -273,16 +306,16 @@ function Solutions(props: Props) {
                                     href={card.linkUrl}
                                     className="sol-link"
                                     style={{
-                                        fontSize: 14,
+                                        fontSize: Math.round(14 * buttonScale),
                                         fontWeight: 600,
                                         color: accentColor,
                                         textDecoration: "none",
                                         display: "inline-flex",
                                         alignItems: "center",
-                                        gap: 10,
+                                        gap: Math.round(10 * buttonScale),
                                         fontFamily,
                                         marginTop: 8,
-                                        padding: "8px 6px 8px 16px",
+                                        padding: `${Math.round(8 * buttonScale)}px ${Math.round(6 * buttonScale)}px ${Math.round(8 * buttonScale)}px ${Math.round(16 * buttonScale)}px`,
                                         borderRadius: 100,
                                         border: `1px solid ${accentColor}30`,
                                         background: `${accentColor}08`,
@@ -292,21 +325,37 @@ function Solutions(props: Props) {
                                 >
                                     {card.linkText}
                                     <span
-                                        className="sol-arrow"
+                                        className="sol-arrow-wrap"
                                         style={{
-                                            width: 28,
-                                            height: 28,
-                                            borderRadius: "50%",
-                                            backgroundColor: accentColor,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
+                                            width: Math.round(28 * buttonScale),
+                                            height: Math.round(28 * buttonScale),
+                                            position: "relative",
                                             flexShrink: 0,
+                                            color: accentColor,
                                         }}
                                     >
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                            <path d="M2.5 6H9.5M9.5 6L6.5 3M9.5 6L6.5 9" stroke={cardBgColor === "#0f1029" ? "#0f1029" : "#ffffff"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                        </svg>
+                                        {/* Echo rings */}
+                                        <span className="sol-echo-1" />
+                                        <span className="sol-echo-2" />
+                                        <span className="sol-echo-3" />
+                                        {/* Arrow circle */}
+                                        <span
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                borderRadius: "50%",
+                                                backgroundColor: accentColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                position: "relative",
+                                                zIndex: 1,
+                                            }}
+                                        >
+                                            <svg className="sol-arrow-svg" width={Math.round(12 * buttonScale)} height={Math.round(12 * buttonScale)} viewBox="0 0 12 12" fill="none">
+                                                <path d="M2.5 6H9.5M9.5 6L6.5 3M9.5 6L6.5 9" stroke={cardBgColor === "#0f1029" ? "#0f1029" : "#ffffff"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        </span>
                                     </span>
                                 </a>
                             </div>
@@ -368,12 +417,20 @@ addPropertyControls(Solutions, {
         max: 22,
         step: 1,
     },
-    imageHeight: {
+    buttonScale: {
         type: ControlType.Number,
-        title: "Image Height",
-        defaultValue: 200,
-        min: 80,
-        max: 500,
+        title: "Button Scale",
+        defaultValue: 1,
+        min: 0.75,
+        max: 2,
+        step: 0.05,
+    },
+    cardHeight: {
+        type: ControlType.Number,
+        title: "Card Height",
+        defaultValue: 420,
+        min: 280,
+        max: 700,
         step: 10,
     },
     cards: {
