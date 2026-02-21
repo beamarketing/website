@@ -236,8 +236,7 @@ function CABRScience(props: Props) {
                         display: "grid",
                         gridTemplateColumns: "1fr 1.15fr",
                         gap: 64,
-                        alignItems: "center",
-                        marginBottom: 80,
+                        alignItems: "start",
                     }}
                 >
                     {/* Left: text content */}
@@ -304,152 +303,156 @@ function CABRScience(props: Props) {
                         </div>
                     </div>
 
-                    {/* Right: tilted media */}
+                    {/* Right: tilted media + features */}
                     <div
                         style={{
-                            opacity: visible ? 1 : 0,
-                            transform: visible
-                                ? "perspective(1200px) rotateY(-6deg) rotateX(2deg)"
-                                : "perspective(1200px) rotateY(-6deg) rotateX(2deg) translateY(50px)",
-                            transition: "opacity 0.8s ease 0.15s, transform 0.8s ease 0.15s",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 40,
                         }}
                     >
                         <div
                             style={{
-                                width: "100%",
-                                aspectRatio: "4/3",
-                                borderRadius: 14,
-                                overflow: "hidden",
-                                backgroundColor: "#0d1025",
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                boxShadow: "0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+                                opacity: visible ? 1 : 0,
+                                transform: visible
+                                    ? "perspective(1200px) rotateY(-6deg) rotateX(2deg)"
+                                    : "perspective(1200px) rotateY(-6deg) rotateX(2deg) translateY(50px)",
+                                transition: "opacity 0.8s ease 0.15s, transform 0.8s ease 0.15s",
                             }}
                         >
-                            {useVideo && mediaVideo ? (
-                                <video
-                                    autoPlay
-                                    muted
-                                    loop
-                                    playsInline
-                                    src={mediaVideo}
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                    }}
-                                />
-                            ) : mediaImage ? (
-                                <img
-                                    src={mediaImage}
-                                    alt={heading}
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                    }}
-                                />
-                            ) : (
-                                <div
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        background: "linear-gradient(135deg, #0d1025 0%, #151a35 100%)",
-                                    }}
-                                >
-                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+                            <div
+                                style={{
+                                    width: "100%",
+                                    aspectRatio: "4/3",
+                                    borderRadius: 14,
+                                    overflow: "hidden",
+                                    backgroundColor: "#0d1025",
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                    boxShadow: "0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+                                }}
+                            >
+                                {useVideo && mediaVideo ? (
+                                    <video
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                        src={mediaVideo}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : mediaImage ? (
+                                    <img
+                                        src={mediaImage}
+                                        alt={heading}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            background: "linear-gradient(135deg, #0d1025 0%, #151a35 100%)",
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+                                            <div
+                                                style={{
+                                                    width: 64,
+                                                    height: 64,
+                                                    borderRadius: "50%",
+                                                    border: "1.5px solid rgba(255,255,255,0.12)",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                }}
+                                            >
+                                                <span style={{ fontSize: 24, color: "rgba(255,255,255,0.3)", marginLeft: 3 }}>&#9654;</span>
+                                            </div>
+                                            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily }}>
+                                                Add video or image
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Features grid – 2x2 under media */}
+                        <div
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                gap: 24,
+                            }}
+                        >
+                            {features.map((feat, i) => {
+                                const iconFn = featureIcons[feat.icon] || featureIcons.star
+                                return (
+                                    <div
+                                        key={i}
+                                        className="cabr-feature-item"
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 12,
+                                            opacity: visible ? 1 : 0,
+                                            transform: visible ? "translateY(0)" : "translateY(30px)",
+                                            transition: `opacity 0.5s ease ${0.3 + i * 0.1}s, transform 0.5s ease ${0.3 + i * 0.1}s`,
+                                        }}
+                                    >
                                         <div
                                             style={{
-                                                width: 64,
-                                                height: 64,
+                                                width: 40,
+                                                height: 40,
                                                 borderRadius: "50%",
-                                                border: "1.5px solid rgba(255,255,255,0.12)",
+                                                backgroundColor: "rgba(255,255,255,0.04)",
+                                                border: "1px solid rgba(255,255,255,0.08)",
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                             }}
                                         >
-                                            <span style={{ fontSize: 24, color: "rgba(255,255,255,0.3)", marginLeft: 3 }}>&#9654;</span>
+                                            {iconFn(accentColor)}
                                         </div>
-                                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily }}>
-                                            Add video or image
-                                        </span>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                            <span
+                                                style={{
+                                                    fontSize: 14,
+                                                    fontWeight: 600,
+                                                    color: textColor,
+                                                    fontFamily,
+                                                    letterSpacing: "-0.01em",
+                                                }}
+                                            >
+                                                {feat.title}
+                                            </span>
+                                            <span
+                                                style={{
+                                                    fontSize: 12,
+                                                    color: secondaryTextColor,
+                                                    fontFamily,
+                                                    lineHeight: 1.5,
+                                                }}
+                                            >
+                                                {feat.description}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )
+                            })}
                         </div>
                     </div>
-                </div>
-
-                {/* Features row – 4 columns */}
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(4, 1fr)",
-                        gap: 32,
-                        borderTop: "1px solid rgba(255,255,255,0.06)",
-                        paddingTop: 48,
-                    }}
-                >
-                    {features.map((feat, i) => {
-                        const iconFn = featureIcons[feat.icon] || featureIcons.star
-                        return (
-                            <div
-                                key={i}
-                                className="cabr-feature-item"
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 14,
-                                    opacity: visible ? 1 : 0,
-                                    transform: visible ? "translateY(0)" : "translateY(30px)",
-                                    transition: `opacity 0.5s ease ${0.3 + i * 0.1}s, transform 0.5s ease ${0.3 + i * 0.1}s`,
-                                }}
-                            >
-                                {/* Icon circle */}
-                                <div
-                                    style={{
-                                        width: 44,
-                                        height: 44,
-                                        borderRadius: "50%",
-                                        backgroundColor: "rgba(255,255,255,0.04)",
-                                        border: "1px solid rgba(255,255,255,0.08)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    {iconFn(accentColor)}
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                    <span
-                                        style={{
-                                            fontSize: 15,
-                                            fontWeight: 600,
-                                            color: textColor,
-                                            fontFamily,
-                                            letterSpacing: "-0.01em",
-                                        }}
-                                    >
-                                        {feat.title}
-                                    </span>
-                                    <span
-                                        style={{
-                                            fontSize: 13,
-                                            color: secondaryTextColor,
-                                            fontFamily,
-                                            lineHeight: 1.5,
-                                        }}
-                                    >
-                                        {feat.description}
-                                    </span>
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
             </div>
         </section>
     )
