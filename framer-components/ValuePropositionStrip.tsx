@@ -78,7 +78,6 @@ export default function ValuePropositionStrip(props) {
     const litColor = textColor
     const dimColor = colorWithAlpha(textColor, dimOpacity)
     const hlLitColor = highlightColor || textColor
-    const hlDimColor = colorWithAlpha(highlightColor || textColor, dimOpacity)
     // Convert 1-based panel values to 0-based indices
     const hlStart = (highlightStart || 0) - 1
     const hlEnd = (highlightEnd || 0) - 1
@@ -133,7 +132,7 @@ export default function ValuePropositionStrip(props) {
                             i >= hlStart &&
                             i <= hlEnd
                         const lit = inHighlight ? hlLitColor : litColor
-                        const dim = inHighlight ? hlDimColor : dimColor
+                        const dim = dimColor
                         return (
                             <span
                                 key={`${word}-${i}`}
