@@ -109,7 +109,7 @@ function Solutions(props: Props) {
             id: i,
             x: rand() * 100,
             y: rand() * 100,
-            size: 2 + rand() * 4,
+            size: 6 + rand() * 6,
             opacity: 0.12 + rand() * 0.28,
             speed: 0.3 + rand() * 0.7,
             delay: rand() * 20,
@@ -341,7 +341,7 @@ function Solutions(props: Props) {
                                 aspectRatio: `${cardAspectRatio}`,
                                 width: "auto",
                                 flex: `0 0 auto`,
-                                maxWidth: `calc((100% - ${(Math.min(cards.length, 3) - 1) * 24}px) / ${Math.min(cards.length, 3)})`,
+                                maxWidth: `min(280px, calc((100% - ${(Math.min(cards.length, 3) - 1) * 24}px) / ${Math.min(cards.length, 3)}))`,
                                 opacity: visible ? 1 : 0,
                                 transform: visible
                                     ? "translateY(0)"
