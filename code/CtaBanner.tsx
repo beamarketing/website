@@ -109,7 +109,10 @@ function easeOut(t: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Build a chess grid for the right portion of the canvas
+// Build a chess grid for the right portion of the canvas.
+// Density is structured: rightmost columns are full, then rows start
+// losing pixels as we move left — with per-row character variation so
+// some rows stay full, some have just a handful of pixels, etc.
 // ---------------------------------------------------------------------------
 
 function buildChessGrid(
@@ -125,42 +128,63 @@ function buildChessGrid(
     const rows = Math.ceil(h / stride)
     const cells: ChessCell[] = []
 
-    // Jitter intensity — how much each cell can drift from its grid slot
-    const jitterX = cellSize * 0.6
-    const jitterY = cellSize * 0.6
-    // Size variation — each cell gets a slightly different size
-    const sizeVariance = cellSize * 0.4
+    const sizeVariance = cellSize * 0.35
+
+    // ---- Assign each row a "character" for density variation ----
+    // Types: "full" = almost every cell, "normal" = density-gradient,
+    //        "sparse" = few pixels, "accent" = just 2-5 random pixels
+    type RowType = "full" | "normal" | "sparse" | "accent"
+    const rowTypes: RowType[] = []
+    for (let row = 0; row < rows; row++) {
+        const r = Math.random()
+        if (r < 0.15) rowTypes.push("full")
+        else if (r < 0.30) rowTypes.push("sparse")
+        else if (r < 0.42) rowTypes.push("accent")
+        else rowTypes.push("normal")
+    }
 
     for (let col = 0; col < cols; col++) {
+        // Column density: 1.0 at rightmost → 0.0 at leftmost
+        const colNorm = cols > 1 ? col / (cols - 1) : 0
+        const colDensity = Math.pow(colNorm, 0.6) // denser on right
+
         for (let row = 0; row < rows; row++) {
-            // Checkerboard: only fill cells where (col + row) is even
+            // Checkerboard: only consider cells where (col + row) is even
             if ((col + row) % 2 !== 0) continue
 
-            // Randomly skip some cells for an organic, broken-up feel
-            if (Math.random() < 0.12) continue
+            const rType = rowTypes[row]
+            let keep = false
+
+            if (rType === "full") {
+                // Full rows: keep almost everything across the width
+                keep = colNorm > 0.15 || Math.random() < 0.7
+            } else if (rType === "normal") {
+                // Normal: right side dense, fading left
+                keep = Math.random() < colDensity
+            } else if (rType === "sparse") {
+                // Sparse: only keep right quarter + occasional strays
+                keep = colNorm > 0.75
+                    ? Math.random() < 0.8
+                    : Math.random() < colDensity * 0.25
+            } else {
+                // Accent: just a few scattered pixels in the row
+                keep = Math.random() < 0.06
+            }
+
+            if (!keep) continue
 
             const baseX = gridStartX + col * stride
             const baseY = row * stride
 
-            // Apply positional jitter
-            const homeX = baseX + (Math.random() - 0.5) * 2 * jitterX
-            const homeY = baseY + (Math.random() - 0.5) * 2 * jitterY
-
-            // Normalized column position within the chess area (0 = leftmost, 1 = rightmost)
-            const colNorm = cols > 1 ? col / (cols - 1) : 0
-
             cells.push({
                 col,
                 row,
-                homeX,
-                homeY,
-                baseOpacity: 0.06 + Math.random() * 0.58,
-                // Per-cell size variation
+                homeX: baseX,
+                homeY: baseY,
+                baseOpacity: 0.08 + Math.random() * 0.55,
                 size: cellSize + (Math.random() - 0.5) * 2 * sizeVariance,
-                // Scatter: fly leftward, distance proportional to width
                 scatterDist: w * (0.55 + Math.random() * 0.6),
                 scatterVy: (Math.random() - 0.5) * h * 0.4,
-                // Left columns scatter first (delay=0), right columns last (delay→0.35)
                 scatterDelay: colNorm * 0.35,
             })
         }
