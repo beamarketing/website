@@ -145,6 +145,7 @@ function HorizontalCardStack(props: Props) {
 
     const [translateX, setTranslateX] = useState(0)
     const [scrollProgress, setScrollProgress] = useState(0)
+    const [hoveredCard, setHoveredCard] = useState(-1)
 
     // Total width of all cards
     const gap = 24
@@ -152,6 +153,7 @@ function HorizontalCardStack(props: Props) {
 
     // -----------------------------------------------------------------------
     // Scroll → translateX + progress
+    // Movement starts ONLY after the full section is visible in the viewport.
     // -----------------------------------------------------------------------
     useEffect(() => {
         const el = sectionRef.current
@@ -160,17 +162,32 @@ function HorizontalCardStack(props: Props) {
         const onScroll = () => {
             const rect = el.getBoundingClientRect()
             const vh = window.innerHeight
-            // Progress: 0 when section top hits viewport bottom, 1 when section top is at top
-            const raw = (vh - rect.top) / (vh + rect.height)
+
+            // The section is fully visible when rect.top <= 0
+            // (its top edge has reached or passed the viewport top).
+            // Only then do we start horizontal movement.
+            if (rect.top > 0) {
+                // Section not fully scrolled into view yet — no movement
+                scrollRef.current = 0
+                setScrollProgress(0)
+                setTranslateX(0)
+                return
+            }
+
+            // How far past the "locked" point we've scrolled
+            // rect.top goes from 0 → -(sectionHeight - vh)
+            const scrollableRange = rect.height - vh
+            const scrolled = Math.abs(rect.top)
+            const raw = scrollableRange > 0 ? scrolled / scrollableRange : 0
             const clamped = Math.max(0, Math.min(1, raw))
             scrollRef.current = clamped
             setScrollProgress(clamped)
 
-            // Map scroll progress to horizontal translation
-            // Cards start ~centered, slide left as user scrolls
-            const maxShift = totalCardsWidth - (typeof window !== "undefined" ? window.innerWidth : 1280) + 200
-            const shift = Math.max(0, clamped * Math.max(scrollDistance, maxShift) * 0.9)
-            setTranslateX(-shift)
+            // Map to horizontal shift
+            const vw = typeof window !== "undefined" ? window.innerWidth : 1280
+            const maxShift = totalCardsWidth - vw + 200
+            const shift = clamped * Math.max(scrollDistance, maxShift)
+            setTranslateX(-Math.max(0, shift))
         }
 
         window.addEventListener("scroll", onScroll, { passive: true })
@@ -345,22 +362,41 @@ function HorizontalCardStack(props: Props) {
                 width: "100%",
                 backgroundColor: bgColor,
                 position: "relative",
-                overflow: "hidden",
-                padding: "80px 0 120px",
+                // Use clip instead of hidden so sticky positioning still works
+                overflowX: "clip" as any,
+                overflowY: "visible",
+                // Extra height creates the scroll runway for the horizontal movement.
+                // The sticky inner keeps content pinned while the outer section scrolls.
+                padding: "0",
                 boxSizing: "border-box" as const,
                 fontFamily,
-                minHeight: "80vh",
+                // Section height = viewport + scrollDistance so there's room to scroll
+                // after the section is fully visible
+                height: `calc(100vh + ${scrollDistance}px)`,
             }}
         >
-            {/* Hide scrollbar on carousel */}
+            {/* Hide scrollbar */}
             <style>{`
                 .hcs-track::-webkit-scrollbar{display:none}
                 .hcs-track{-ms-overflow-style:none;scrollbar-width:none}
             `}</style>
 
             {/* ============================================================= */}
-            {/* PARTICLE LAYER — canvas behind everything                     */}
+            {/* STICKY CONTAINER — pins content while outer section scrolls    */}
             {/* ============================================================= */}
+            <div
+                style={{
+                    position: "sticky",
+                    top: 0,
+                    height: "100vh",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column" as const,
+                    justifyContent: "center",
+                }}
+            >
+
+            {/* PARTICLE LAYER */}
             {showParticles && (
                 <canvas
                     ref={canvasRef}
@@ -375,9 +411,7 @@ function HorizontalCardStack(props: Props) {
                 />
             )}
 
-            {/* ============================================================= */}
-            {/* HEADER — sits in a max-width container                        */}
-            {/* ============================================================= */}
+            {/* HEADER */}
             <div
                 style={{
                     position: "relative",
@@ -386,6 +420,8 @@ function HorizontalCardStack(props: Props) {
                     margin: "0 auto",
                     padding: "0 48px",
                     marginBottom: 56,
+                    width: "100%",
+                    boxSizing: "border-box" as const,
                 }}
             >
                 {sectionLabel && (
@@ -433,9 +469,7 @@ function HorizontalCardStack(props: Props) {
                 )}
             </div>
 
-            {/* ============================================================= */}
-            {/* CAROUSEL — full-width, scroll-driven translateX               */}
-            {/* ============================================================= */}
+            {/* CAROUSEL — full-width, scroll-driven translateX */}
             <div
                 style={{
                     position: "relative",
@@ -448,7 +482,6 @@ function HorizontalCardStack(props: Props) {
                     style={{
                         display: "flex",
                         gap,
-                        // Start with left offset ~50vw so first card is roughly centered
                         paddingLeft: "calc(50vw - " + cardWidth / 2 + "px)",
                         paddingRight: 80,
                         transform: `translate3d(${translateX}px, 0, 0)`,
@@ -456,24 +489,34 @@ function HorizontalCardStack(props: Props) {
                         transition: "transform 0.08s linear",
                     }}
                 >
-                    {(cards || []).map((card, i) => (
+                    {(cards || []).map((card, i) => {
+                        const isHovered = hoveredCard === i
+                        return (
                         <div
                             key={i}
+                            onMouseEnter={() => setHoveredCard(i)}
+                            onMouseLeave={() => setHoveredCard(-1)}
                             style={{
                                 flex: `0 0 ${cardWidth}px`,
                                 height: cardHeight,
                                 borderRadius: 16,
-                                border: `1px solid ${cardBorderColor}`,
+                                border: `1px solid ${isHovered ? "rgba(255,255,255,0.25)" : cardBorderColor}`,
                                 backgroundColor: cardBgColor,
-                                boxShadow: "rgba(255, 255, 255, 0.1) 0px 0px 0px 4px",
+                                boxShadow: isHovered
+                                    ? `rgba(255,255,255,0.15) 0px 0px 0px 4px, ${card.glowColor || "rgba(253,192,25,0.15)"} 0px 8px 40px 0px`
+                                    : "rgba(255, 255, 255, 0.1) 0px 0px 0px 4px",
                                 position: "relative",
                                 overflow: "hidden",
                                 display: "flex",
                                 flexDirection: "column" as const,
-                                transform: "translate3d(0,0,0)",
+                                transform: isHovered
+                                    ? "translate3d(0,-6px,0) scale(1.02)"
+                                    : "translate3d(0,0,0)",
                                 willChange: "transform",
                                 backdropFilter: "blur(16px)",
                                 WebkitBackdropFilter: "blur(16px)",
+                                transition: "transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease, border-color 0.3s ease",
+                                cursor: "pointer",
                             }}
                         >
                             {/* Content */}
@@ -608,16 +651,20 @@ function HorizontalCardStack(props: Props) {
                                     backgroundColor:
                                         card.glowColor || "rgba(253, 192, 25, 0.4)",
                                     filter: "blur(120px)",
-                                    opacity: scrollProgress > 0.25 ? 0.5 : 0,
-                                    transition: "opacity 0.6s ease",
+                                    opacity: isHovered ? 0.7 : scrollProgress > 0.25 ? 0.5 : 0,
+                                    transition: "opacity 0.4s ease",
                                     zIndex: 1,
                                     pointerEvents: "none",
                                     willChange: "transform",
                                 }}
                             />
                         </div>
-                    ))}
+                        )
+                    })}
                 </div>
+            </div>
+
+            {/* Close sticky container */}
             </div>
         </section>
     )
