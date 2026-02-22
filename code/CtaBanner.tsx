@@ -1,10 +1,12 @@
-// CtaBanner – Scroll-driven CTA with pixel particle animation
+// CtaBanner – Scroll-driven CTA with chess-grid pixel animation
 //
 // Behavior:
-//   • Starts with a "before" color scheme (dark bg, cool-toned pixels)
-//   • As user scrolls and the section becomes fully visible, background
-//     transitions to an "after" color (e.g. lime-green) and pixels shift
-//     to a new palette with increased energy
+//   • A checkerboard grid of pixels sits on the right ~20% of the card,
+//     each cell at a random opacity of a single "before" color
+//   • When the section is scrolled into full visibility, the chess pixels
+//     scatter leftward across the section (staggered by column)
+//   • Background transitions from "before" to "after" color
+//   • A new chess grid in the "after" color materializes on the right
 //   • Pill button with stripe-reveal hover animation
 //
 // Framer Code Component with full property controls
@@ -28,37 +30,33 @@ interface Props {
     buttonBgColor: string
     buttonTextColor: string
     buttonHoverBgColor: string
-    pixelColor1Before: string
-    pixelColor2Before: string
-    pixelColor3Before: string
-    pixelColor1After: string
-    pixelColor2After: string
-    pixelColor3After: string
-    particleCount: number
+    chessColorBefore: string
+    chessColorAfter: string
+    cellSize: number
+    chessWidthPercent: number
     borderRadius: number
     fontFamily: string
     style?: React.CSSProperties
 }
 
-interface Pixel {
-    x: number
-    y: number
-    vx: number
-    vy: number
-    size: number
-    opacity: number
-    maxOpacity: number
-    colorIndex: number // 0, 1, or 2 — picks from the trio
-    life: number
-    maxLife: number
+interface ChessCell {
+    col: number
+    row: number
+    homeX: number
+    homeY: number
+    baseOpacity: number
+    // Pre-computed scatter trajectory
+    scatterDist: number
+    scatterVy: number
+    // 0-1 normalized delay — left columns scatter first
+    scatterDelay: number
 }
 
 // ---------------------------------------------------------------------------
-// Color utility — parse any CSS color to [r,g,b,a] & lerp
+// Color utility
 // ---------------------------------------------------------------------------
 
 function parseColor(c: string): [number, number, number, number] {
-    // Handle rgb()/rgba()
     const rgbaMatch = c.match(
         /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/
     )
@@ -70,9 +68,9 @@ function parseColor(c: string): [number, number, number, number] {
             rgbaMatch[4] !== undefined ? +rgbaMatch[4] : 1,
         ]
     }
-    // Handle hex
     let hex = c.replace("#", "")
-    if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+    if (hex.length === 3)
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
     if (hex.length === 8) {
         return [
             parseInt(hex.slice(0, 2), 16),
@@ -89,11 +87,7 @@ function parseColor(c: string): [number, number, number, number] {
     ]
 }
 
-function lerpColor(
-    a: string,
-    b: string,
-    t: number
-): string {
+function lerpColor(a: string, b: string, t: number): string {
     const [r1, g1, b1, a1] = parseColor(a)
     const [r2, g2, b2, a2] = parseColor(b)
     const r = Math.round(r1 + (r2 - r1) * t)
@@ -101,6 +95,61 @@ function lerpColor(
     const bv = Math.round(b1 + (b2 - b1) * t)
     const av = a1 + (a2 - a1) * t
     return `rgba(${r},${g},${bv},${av})`
+}
+
+function colorWithAlpha(c: string, alpha: number): string {
+    const [r, g, b] = parseColor(c)
+    return `rgba(${r},${g},${b},${alpha})`
+}
+
+// Ease-out cubic
+function easeOut(t: number): number {
+    return 1 - Math.pow(1 - t, 3)
+}
+
+// ---------------------------------------------------------------------------
+// Build a chess grid for the right portion of the canvas
+// ---------------------------------------------------------------------------
+
+function buildChessGrid(
+    w: number,
+    h: number,
+    cellSize: number,
+    chessWidthFrac: number
+): ChessCell[] {
+    const gap = Math.max(1, Math.round(cellSize * 0.15))
+    const stride = cellSize + gap
+    const gridStartX = w * (1 - chessWidthFrac)
+    const cols = Math.ceil((w * chessWidthFrac) / stride)
+    const rows = Math.ceil(h / stride)
+    const cells: ChessCell[] = []
+
+    for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows; row++) {
+            // Checkerboard: only fill cells where (col + row) is even
+            if ((col + row) % 2 !== 0) continue
+
+            const homeX = gridStartX + col * stride
+            const homeY = row * stride
+
+            // Normalized column position within the chess area (0 = leftmost, 1 = rightmost)
+            const colNorm = cols > 1 ? col / (cols - 1) : 0
+
+            cells.push({
+                col,
+                row,
+                homeX,
+                homeY,
+                baseOpacity: 0.08 + Math.random() * 0.55,
+                // Scatter: fly leftward, distance proportional to width
+                scatterDist: w * (0.6 + Math.random() * 0.5),
+                scatterVy: (Math.random() - 0.5) * h * 0.3,
+                // Left columns scatter first (delay=0), right columns last (delay→0.35)
+                scatterDelay: colNorm * 0.35,
+            })
+        }
+    }
+    return cells
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +189,6 @@ function StripeButton({
                 cursor: "pointer",
             }}
         >
-            {/* Stripe overlay */}
             <div
                 style={{
                     position: "absolute",
@@ -170,8 +218,6 @@ function StripeButton({
                     )
                 })}
             </div>
-
-            {/* Text */}
             <span
                 style={{
                     position: "relative",
@@ -210,13 +256,10 @@ function CtaBanner(props: Props) {
         buttonBgColor = "#0a1628",
         buttonTextColor = "#ffffff",
         buttonHoverBgColor = "#2563eb",
-        pixelColor1Before = "#0066FF",
-        pixelColor2Before = "#00E5FF",
-        pixelColor3Before = "#4D8FFF",
-        pixelColor1After = "#0a1628",
-        pixelColor2After = "#1a3a1a",
-        pixelColor3After = "#2d5a0e",
-        particleCount = 90,
+        chessColorBefore = "#ffffff",
+        chessColorAfter = "#0a1628",
+        cellSize = 10,
+        chessWidthPercent = 20,
         borderRadius = 12,
         fontFamily = "'Inter', sans-serif",
         style,
@@ -224,7 +267,8 @@ function CtaBanner(props: Props) {
 
     const sectionRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const pixelsRef = useRef<Pixel[]>([])
+    const gridBeforeRef = useRef<ChessCell[]>([])
+    const gridAfterRef = useRef<ChessCell[]>([])
     const animRef = useRef(0)
     const scrollRef = useRef(0)
     const dimsRef = useRef({ w: 0, h: 0 })
@@ -232,8 +276,10 @@ function CtaBanner(props: Props) {
     const [scrollProgress, setScrollProgress] = useState(0)
     const [isMobile, setIsMobile] = useState(false)
 
+    const chessWidthFrac = Math.max(0.05, Math.min(0.5, chessWidthPercent / 100))
+
     // -----------------------------------------------------------------------
-    // Responsive check
+    // Responsive
     // -----------------------------------------------------------------------
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 768)
@@ -243,7 +289,7 @@ function CtaBanner(props: Props) {
     }, [])
 
     // -----------------------------------------------------------------------
-    // Scroll → progress (0 = section entering, 1 = fully visible)
+    // Scroll progress
     // -----------------------------------------------------------------------
     useEffect(() => {
         const el = sectionRef.current
@@ -252,10 +298,8 @@ function CtaBanner(props: Props) {
         const onScroll = () => {
             const rect = el.getBoundingClientRect()
             const vh = window.innerHeight
-            // 0 when section bottom just enters viewport, 1 when section top
-            // reaches the viewport top (fully visible)
+            // 0 when section bottom enters viewport, 1 when fully in view
             const raw = (vh - rect.top) / (vh + rect.height)
-            // Remap so we reach 1.0 earlier — when the card is mostly visible
             const boosted = Math.pow(Math.max(0, Math.min(1, raw * 1.8)), 0.7)
             const clamped = Math.max(0, Math.min(1, boosted))
             scrollRef.current = clamped
@@ -268,39 +312,20 @@ function CtaBanner(props: Props) {
     }, [])
 
     // -----------------------------------------------------------------------
-    // Spawn a pixel
-    // -----------------------------------------------------------------------
-    const spawnPixel = useCallback(
-        (w: number, h: number): Pixel => {
-            const spawnX = Math.random() * w
-            const spawnY = Math.random() * h
-            const angle = Math.random() * Math.PI * 2
-            const speed = 0.3 + Math.random() * 1.2
-
-            return {
-                x: spawnX,
-                y: spawnY,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: 1.5 + Math.random() * 3.5,
-                opacity: 0,
-                maxOpacity: 0.2 + Math.random() * 0.6,
-                colorIndex: Math.floor(Math.random() * 3),
-                life: 0,
-                maxLife: 150 + Math.random() * 250,
-            }
-        },
-        []
-    )
-
-    // -----------------------------------------------------------------------
-    // Canvas particle animation
+    // Canvas animation
     // -----------------------------------------------------------------------
     useEffect(() => {
         const canvas = canvasRef.current
         if (!canvas) return
         const ctx = canvas.getContext("2d")
         if (!ctx) return
+
+        const buildGrids = () => {
+            const { w, h } = dimsRef.current
+            if (!w || !h) return
+            gridBeforeRef.current = buildChessGrid(w, h, cellSize, chessWidthFrac)
+            gridAfterRef.current = buildChessGrid(w, h, cellSize, chessWidthFrac)
+        }
 
         const resize = () => {
             const parent = canvas.parentElement
@@ -313,28 +338,11 @@ function CtaBanner(props: Props) {
             canvas.style.height = `${rect.height}px`
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
             dimsRef.current = { w: rect.width, h: rect.height }
+            buildGrids()
         }
+
         resize()
         window.addEventListener("resize", resize)
-
-        // Seed initial pixels
-        const { w, h } = dimsRef.current
-        if (w && h) {
-            pixelsRef.current = Array.from(
-                { length: Math.floor(particleCount * 0.5) },
-                () => {
-                    const p = spawnPixel(w, h)
-                    p.life = Math.random() * p.maxLife
-                    p.x += p.vx * p.life
-                    p.y += p.vy * p.life
-                    return p
-                }
-            )
-        }
-
-        // Color arrays for lerping in the loop
-        const colorsBefore = [pixelColor1Before, pixelColor2Before, pixelColor3Before]
-        const colorsAfter = [pixelColor1After, pixelColor2After, pixelColor3After]
 
         const animate = () => {
             const { w, h } = dimsRef.current
@@ -346,76 +354,69 @@ function CtaBanner(props: Props) {
             ctx.clearRect(0, 0, w, h)
 
             const sp = scrollRef.current
-            // Pixel energy ramps up with scroll
-            const speedMul = 0.6 + sp * 1.5
-            const spawnRate = Math.max(1, Math.floor(sp * particleCount * 0.06) + 1)
-            const pixels = pixelsRef.current
+            const gridBefore = gridBeforeRef.current
+            const gridAfter = gridAfterRef.current
 
-            // Spawn
-            for (let s = 0; s < spawnRate; s++) {
-                if (pixels.length < particleCount * 1.4) {
-                    pixels.push(spawnPixel(w, h))
-                }
+            // =============================================================
+            // Draw "BEFORE" chess pixels — scatter leftward as sp increases
+            // =============================================================
+            for (let i = 0; i < gridBefore.length; i++) {
+                const cell = gridBefore[i]
+
+                // Effective scatter progress for this cell (accounting for stagger delay)
+                const raw =
+                    cell.scatterDelay < 1
+                        ? Math.max(
+                              0,
+                              (sp - cell.scatterDelay) /
+                                  (1 - cell.scatterDelay)
+                          )
+                        : sp
+                const t = Math.min(1, raw)
+                const eased = easeOut(t)
+
+                // Position: scatter from home to the left
+                const x = cell.homeX - cell.scatterDist * eased
+                const y = cell.homeY + cell.scatterVy * eased
+
+                // Fade out as they scatter
+                const opacity = cell.baseOpacity * (1 - t * 0.95)
+
+                // Skip if off-screen or fully transparent
+                if (x + cellSize < 0 || opacity < 0.005) continue
+
+                ctx.globalAlpha = opacity
+                ctx.fillStyle = chessColorBefore
+                ctx.fillRect(x, y, cellSize, cellSize)
             }
 
-            // Update + draw
-            for (let i = pixels.length - 1; i >= 0; i--) {
-                const p = pixels[i]
-                p.life += 1
-                p.x += p.vx * speedMul
-                p.y += p.vy * speedMul
+            // =============================================================
+            // Draw "AFTER" chess pixels — materialize on right as sp grows
+            // =============================================================
+            for (let i = 0; i < gridAfter.length; i++) {
+                const cell = gridAfter[i]
 
-                // Lifecycle opacity
-                const lifeFrac = p.life / p.maxLife
-                if (lifeFrac < 0.15) {
-                    p.opacity = (lifeFrac / 0.15) * p.maxOpacity
-                } else if (lifeFrac > 0.7) {
-                    p.opacity = ((1 - lifeFrac) / 0.3) * p.maxOpacity
-                } else {
-                    p.opacity = p.maxOpacity
-                }
+                // "After" pixels start appearing at ~30% scroll, right columns first
+                const appearStart = 0.25
+                const globalAppear =
+                    sp <= appearStart
+                        ? 0
+                        : (sp - appearStart) / (1 - appearStart)
 
-                // Remove dead / off-screen
-                if (
-                    p.life >= p.maxLife ||
-                    p.x < -20 || p.x > w + 20 ||
-                    p.y < -20 || p.y > h + 20
-                ) {
-                    pixels.splice(i, 1)
-                    continue
-                }
-
-                // Lerp color based on scroll progress
-                const color = lerpColor(
-                    colorsBefore[p.colorIndex],
-                    colorsAfter[p.colorIndex],
-                    sp
+                // Rightmost columns (high scatterDelay) appear first
+                const colDelay = 1 - cell.scatterDelay // invert: right=0, left=high
+                const stagger = Math.max(
+                    0,
+                    (globalAppear - colDelay * 0.5) / (1 - colDelay * 0.5)
                 )
+                const opacity =
+                    cell.baseOpacity * Math.min(1, easeOut(stagger) * 1.2)
 
-                // Glow
-                const glowR = p.size * 3
-                const gradient = ctx.createRadialGradient(
-                    p.x, p.y, 0,
-                    p.x, p.y, glowR
-                )
-                gradient.addColorStop(0, color)
-                gradient.addColorStop(1, "transparent")
-                ctx.globalAlpha = p.opacity * 0.3
-                ctx.fillStyle = gradient
-                ctx.fillRect(
-                    p.x - glowR, p.y - glowR,
-                    glowR * 2, glowR * 2
-                )
+                if (opacity < 0.005) continue
 
-                // Pixel square
-                ctx.globalAlpha = p.opacity
-                ctx.fillStyle = color
-                ctx.fillRect(
-                    p.x - p.size / 2,
-                    p.y - p.size / 2,
-                    p.size,
-                    p.size
-                )
+                ctx.globalAlpha = opacity
+                ctx.fillStyle = chessColorAfter
+                ctx.fillRect(cell.homeX, cell.homeY, cellSize, cellSize)
             }
 
             ctx.globalAlpha = 1
@@ -428,15 +429,10 @@ function CtaBanner(props: Props) {
             cancelAnimationFrame(animRef.current)
             window.removeEventListener("resize", resize)
         }
-    }, [
-        spawnPixel,
-        particleCount,
-        pixelColor1Before, pixelColor2Before, pixelColor3Before,
-        pixelColor1After, pixelColor2After, pixelColor3After,
-    ])
+    }, [cellSize, chessWidthFrac, chessColorBefore, chessColorAfter])
 
     // -----------------------------------------------------------------------
-    // Interpolated colors for this frame
+    // Interpolated colors
     // -----------------------------------------------------------------------
     const currentBg = lerpColor(bgColorBefore, bgColorAfter, scrollProgress)
     const currentText = lerpColor(textColorBefore, textColorAfter, scrollProgress)
@@ -454,7 +450,6 @@ function CtaBanner(props: Props) {
                 fontFamily,
             }}
         >
-            {/* Outer wrapper */}
             <div
                 style={{
                     maxWidth: 1376,
@@ -475,11 +470,10 @@ function CtaBanner(props: Props) {
                         padding: isMobile ? "72px 24px 48px" : "76px 80px",
                         boxSizing: "border-box",
                         transition: "background-color 0.05s linear",
+                        minHeight: isMobile ? 320 : 400,
                     }}
                 >
-                    {/* ===================================================== */}
-                    {/* PIXEL CANVAS — behind content                          */}
-                    {/* ===================================================== */}
+                    {/* Chess pixel canvas */}
                     <canvas
                         ref={canvasRef}
                         style={{
@@ -492,9 +486,7 @@ function CtaBanner(props: Props) {
                         }}
                     />
 
-                    {/* ===================================================== */}
-                    {/* Heading                                                */}
-                    {/* ===================================================== */}
+                    {/* Heading */}
                     <h2
                         style={{
                             position: "relative",
@@ -516,9 +508,7 @@ function CtaBanner(props: Props) {
                         {heading}
                     </h2>
 
-                    {/* ===================================================== */}
-                    {/* Subheading                                             */}
-                    {/* ===================================================== */}
+                    {/* Subheading */}
                     {subheading && (
                         <p
                             style={{
@@ -539,9 +529,7 @@ function CtaBanner(props: Props) {
                         </p>
                     )}
 
-                    {/* ===================================================== */}
-                    {/* Button                                                 */}
-                    {/* ===================================================== */}
+                    {/* Button */}
                     <div
                         style={{
                             position: "relative",
@@ -628,43 +616,32 @@ addPropertyControls(CtaBanner, {
         title: "Button Hover",
         defaultValue: "#2563eb",
     },
-    pixelColor1Before: {
+    chessColorBefore: {
         type: ControlType.Color,
-        title: "Pixel 1 Before",
-        defaultValue: "#0066FF",
+        title: "Chess Before",
+        defaultValue: "#ffffff",
     },
-    pixelColor2Before: {
+    chessColorAfter: {
         type: ControlType.Color,
-        title: "Pixel 2 Before",
-        defaultValue: "#00E5FF",
-    },
-    pixelColor3Before: {
-        type: ControlType.Color,
-        title: "Pixel 3 Before",
-        defaultValue: "#4D8FFF",
-    },
-    pixelColor1After: {
-        type: ControlType.Color,
-        title: "Pixel 1 After",
+        title: "Chess After",
         defaultValue: "#0a1628",
     },
-    pixelColor2After: {
-        type: ControlType.Color,
-        title: "Pixel 2 After",
-        defaultValue: "#1a3a1a",
-    },
-    pixelColor3After: {
-        type: ControlType.Color,
-        title: "Pixel 3 After",
-        defaultValue: "#2d5a0e",
-    },
-    particleCount: {
+    cellSize: {
         type: ControlType.Number,
-        title: "Particle Count",
-        defaultValue: 90,
-        min: 20,
-        max: 200,
-        step: 5,
+        title: "Cell Size",
+        defaultValue: 10,
+        min: 4,
+        max: 24,
+        step: 1,
+    },
+    chessWidthPercent: {
+        type: ControlType.Number,
+        title: "Chess Width %",
+        defaultValue: 20,
+        min: 5,
+        max: 50,
+        step: 1,
+        description: "Percentage of the card width covered by the chess grid",
     },
     borderRadius: {
         type: ControlType.Number,
