@@ -53,6 +53,14 @@ interface ChessCell {
     scatterDelay: number
 }
 
+interface TransitionCell {
+    x: number
+    y: number
+    size: number
+    // 0 = appears first (right edge), 1 = appears last (left edge)
+    waveDelay: number
+}
+
 // ---------------------------------------------------------------------------
 // Color utility
 // ---------------------------------------------------------------------------
@@ -193,6 +201,44 @@ function buildChessGrid(
 }
 
 // ---------------------------------------------------------------------------
+// Build a full-width transition grid — dense pixel coverage that sweeps
+// the new background color from right to left.
+// ---------------------------------------------------------------------------
+
+function buildTransitionGrid(
+    w: number,
+    h: number,
+    cellSize: number
+): TransitionCell[] {
+    const stride = cellSize + 1 // tight packing for near-full coverage
+    const cols = Math.ceil(w / stride)
+    const rows = Math.ceil(h / stride)
+    const cells: TransitionCell[] = []
+
+    for (let col = 0; col < cols; col++) {
+        const colNorm = cols > 1 ? col / (cols - 1) : 0
+
+        for (let row = 0; row < rows; row++) {
+            // Skip ~5% for organic feel (not perfectly solid)
+            if (Math.random() < 0.04) continue
+
+            cells.push({
+                x: col * stride,
+                y: row * stride,
+                size:
+                    cellSize +
+                    (Math.random() - 0.5) * cellSize * 0.3,
+                // Right columns first (low delay), left columns last (high delay)
+                // Plus a bit of per-cell randomness for organic wave front
+                waveDelay:
+                    (1 - colNorm) * 0.75 + Math.random() * 0.2,
+            })
+        }
+    }
+    return cells
+}
+
+// ---------------------------------------------------------------------------
 // Animated button with stripe-reveal hover
 // ---------------------------------------------------------------------------
 
@@ -309,6 +355,7 @@ function CtaBanner(props: Props) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const gridBeforeRef = useRef<ChessCell[]>([])
     const gridAfterRef = useRef<ChessCell[]>([])
+    const transitionGridRef = useRef<TransitionCell[]>([])
     const animRef = useRef(0)
     const scrollRef = useRef(0)
     const dimsRef = useRef({ w: 0, h: 0 })
@@ -354,6 +401,13 @@ function CtaBanner(props: Props) {
     // -----------------------------------------------------------------------
     // Canvas animation
     // -----------------------------------------------------------------------
+
+    // Transition timing thresholds
+    const SCATTER_START = 0.6 // "before" chess begins scattering
+    const WAVE_START = 0.6 // color wave begins sweeping
+    const WAVE_END = 0.92 // wave fully covers the card
+    const AFTER_CHESS_START = 0.8 // "after" chess pattern starts appearing
+
     useEffect(() => {
         const canvas = canvasRef.current
         if (!canvas) return
@@ -365,6 +419,7 @@ function CtaBanner(props: Props) {
             if (!w || !h) return
             gridBeforeRef.current = buildChessGrid(w, h, cellSize, chessWidthFrac)
             gridAfterRef.current = buildChessGrid(w, h, cellSize, chessWidthFrac)
+            transitionGridRef.current = buildTransitionGrid(w, h, cellSize)
         }
 
         const resize = () => {
@@ -396,33 +451,47 @@ function CtaBanner(props: Props) {
             const sp = scrollRef.current
             const gridBefore = gridBeforeRef.current
             const gridAfter = gridAfterRef.current
+            const transGrid = transitionGridRef.current
+
+            // Derived progress values
+            const scatterP =
+                sp <= SCATTER_START
+                    ? 0
+                    : (sp - SCATTER_START) / (1 - SCATTER_START)
+            const waveP =
+                sp <= WAVE_START
+                    ? 0
+                    : Math.min(
+                          1,
+                          (sp - WAVE_START) / (WAVE_END - WAVE_START)
+                      )
+            const afterP =
+                sp <= AFTER_CHESS_START
+                    ? 0
+                    : (sp - AFTER_CHESS_START) / (1 - AFTER_CHESS_START)
 
             // =============================================================
-            // Draw "BEFORE" chess pixels — scatter leftward as sp increases
+            // 1. "BEFORE" chess — static until SCATTER_START, then scatter
             // =============================================================
             for (let i = 0; i < gridBefore.length; i++) {
                 const cell = gridBefore[i]
 
-                // Effective scatter progress for this cell (accounting for stagger delay)
+                // Per-cell staggered scatter (left cols first)
                 const raw =
                     cell.scatterDelay < 1
                         ? Math.max(
                               0,
-                              (sp - cell.scatterDelay) /
+                              (scatterP - cell.scatterDelay) /
                                   (1 - cell.scatterDelay)
                           )
-                        : sp
+                        : scatterP
                 const t = Math.min(1, raw)
                 const eased = easeOut(t)
 
-                // Position: scatter from home to the left
                 const x = cell.homeX - cell.scatterDist * eased
                 const y = cell.homeY + cell.scatterVy * eased
-
-                // Fade out as they scatter
                 const opacity = cell.baseOpacity * (1 - t * 0.95)
 
-                // Skip if off-screen or fully transparent
                 if (x + cell.size < 0 || opacity < 0.005) continue
 
                 ctx.globalAlpha = opacity
@@ -431,32 +500,66 @@ function CtaBanner(props: Props) {
             }
 
             // =============================================================
-            // Draw "AFTER" chess pixels — materialize on right as sp grows
+            // 2. TRANSITION WAVE — bgColorAfter pixels sweep right→left
+            //    This replaces the background color pixel by pixel.
             // =============================================================
-            for (let i = 0; i < gridAfter.length; i++) {
-                const cell = gridAfter[i]
+            if (waveP > 0) {
+                ctx.fillStyle = bgColorAfter
+                for (let i = 0; i < transGrid.length; i++) {
+                    const cell = transGrid[i]
 
-                // "After" pixels start appearing at ~30% scroll, right columns first
-                const appearStart = 0.25
-                const globalAppear =
-                    sp <= appearStart
-                        ? 0
-                        : (sp - appearStart) / (1 - appearStart)
+                    // Per-cell appearance based on wave delay
+                    const cellRaw =
+                        cell.waveDelay < 1
+                            ? Math.max(
+                                  0,
+                                  (waveP - cell.waveDelay) /
+                                      (1 - cell.waveDelay)
+                              )
+                            : waveP
+                    const cellT = Math.min(1, cellRaw)
+                    if (cellT < 0.001) continue
 
-                // Rightmost columns (high scatterDelay) appear first
-                const colDelay = 1 - cell.scatterDelay // invert: right=0, left=high
-                const stagger = Math.max(
-                    0,
-                    (globalAppear - colDelay * 0.5) / (1 - colDelay * 0.5)
-                )
-                const opacity =
-                    cell.baseOpacity * Math.min(1, easeOut(stagger) * 1.2)
+                    const opacity = Math.min(1, easeOut(cellT) * 1.3)
+                    ctx.globalAlpha = opacity
+                    ctx.fillRect(
+                        cell.x,
+                        cell.y,
+                        cell.size,
+                        cell.size
+                    )
+                }
+            }
 
-                if (opacity < 0.005) continue
+            // =============================================================
+            // 3. "AFTER" chess — materializes on top of the new bg color
+            // =============================================================
+            if (afterP > 0) {
+                for (let i = 0; i < gridAfter.length; i++) {
+                    const cell = gridAfter[i]
 
-                ctx.globalAlpha = opacity
-                ctx.fillStyle = chessColorAfter
-                ctx.fillRect(cell.homeX, cell.homeY, cell.size, cell.size)
+                    // Right columns appear first
+                    const colDelay = 1 - cell.scatterDelay
+                    const stagger = Math.max(
+                        0,
+                        (afterP - colDelay * 0.5) /
+                            (1 - colDelay * 0.5)
+                    )
+                    const opacity =
+                        cell.baseOpacity *
+                        Math.min(1, easeOut(stagger) * 1.2)
+
+                    if (opacity < 0.005) continue
+
+                    ctx.globalAlpha = opacity
+                    ctx.fillStyle = chessColorAfter
+                    ctx.fillRect(
+                        cell.homeX,
+                        cell.homeY,
+                        cell.size,
+                        cell.size
+                    )
+                }
             }
 
             ctx.globalAlpha = 1
@@ -469,13 +572,20 @@ function CtaBanner(props: Props) {
             cancelAnimationFrame(animRef.current)
             window.removeEventListener("resize", resize)
         }
-    }, [cellSize, chessWidthFrac, chessColorBefore, chessColorAfter])
+    }, [
+        cellSize,
+        chessWidthFrac,
+        chessColorBefore,
+        chessColorAfter,
+        bgColorAfter,
+    ])
 
     // -----------------------------------------------------------------------
-    // Interpolated colors
+    // Background + text: stay "before" until wave is nearly done, then snap
     // -----------------------------------------------------------------------
-    const currentBg = lerpColor(bgColorBefore, bgColorAfter, scrollProgress)
-    const currentText = lerpColor(textColorBefore, textColorAfter, scrollProgress)
+    const waveComplete = scrollProgress > 0.9
+    const currentBg = waveComplete ? bgColorAfter : bgColorBefore
+    const currentText = waveComplete ? textColorAfter : textColorBefore
 
     // -----------------------------------------------------------------------
     // Render
@@ -509,7 +619,7 @@ function CtaBanner(props: Props) {
                         backgroundColor: currentBg,
                         padding: isMobile ? "72px 24px 48px" : "76px 80px",
                         boxSizing: "border-box",
-                        transition: "background-color 0.05s linear",
+                        transition: "background-color 0.3s ease",
                         minHeight: isMobile ? 320 : 400,
                     }}
                 >
@@ -542,7 +652,7 @@ function CtaBanner(props: Props) {
                             maxWidth: isMobile ? "100%" : "50%",
                             whiteSpace: "pre-line",
                             boxSizing: "border-box",
-                            transition: "color 0.05s linear",
+                            transition: "color 0.3s ease",
                         }}
                     >
                         {heading}
@@ -562,7 +672,7 @@ function CtaBanner(props: Props) {
                                 fontFamily,
                                 textAlign: isMobile ? "center" : "left",
                                 whiteSpace: "pre-line",
-                                transition: "color 0.05s linear",
+                                transition: "color 0.3s ease",
                             }}
                         >
                             {subheading}
