@@ -45,6 +45,7 @@ interface ChessCell {
     homeX: number
     homeY: number
     baseOpacity: number
+    size: number
     // Pre-computed scatter trajectory
     scatterDist: number
     scatterVy: number
@@ -117,20 +118,33 @@ function buildChessGrid(
     cellSize: number,
     chessWidthFrac: number
 ): ChessCell[] {
-    const gap = Math.max(1, Math.round(cellSize * 0.15))
+    const gap = Math.max(2, Math.round(cellSize * 0.25))
     const stride = cellSize + gap
     const gridStartX = w * (1 - chessWidthFrac)
     const cols = Math.ceil((w * chessWidthFrac) / stride)
     const rows = Math.ceil(h / stride)
     const cells: ChessCell[] = []
 
+    // Jitter intensity — how much each cell can drift from its grid slot
+    const jitterX = cellSize * 0.6
+    const jitterY = cellSize * 0.6
+    // Size variation — each cell gets a slightly different size
+    const sizeVariance = cellSize * 0.4
+
     for (let col = 0; col < cols; col++) {
         for (let row = 0; row < rows; row++) {
             // Checkerboard: only fill cells where (col + row) is even
             if ((col + row) % 2 !== 0) continue
 
-            const homeX = gridStartX + col * stride
-            const homeY = row * stride
+            // Randomly skip some cells for an organic, broken-up feel
+            if (Math.random() < 0.12) continue
+
+            const baseX = gridStartX + col * stride
+            const baseY = row * stride
+
+            // Apply positional jitter
+            const homeX = baseX + (Math.random() - 0.5) * 2 * jitterX
+            const homeY = baseY + (Math.random() - 0.5) * 2 * jitterY
 
             // Normalized column position within the chess area (0 = leftmost, 1 = rightmost)
             const colNorm = cols > 1 ? col / (cols - 1) : 0
@@ -140,10 +154,12 @@ function buildChessGrid(
                 row,
                 homeX,
                 homeY,
-                baseOpacity: 0.08 + Math.random() * 0.55,
+                baseOpacity: 0.06 + Math.random() * 0.58,
+                // Per-cell size variation
+                size: cellSize + (Math.random() - 0.5) * 2 * sizeVariance,
                 // Scatter: fly leftward, distance proportional to width
-                scatterDist: w * (0.6 + Math.random() * 0.5),
-                scatterVy: (Math.random() - 0.5) * h * 0.3,
+                scatterDist: w * (0.55 + Math.random() * 0.6),
+                scatterVy: (Math.random() - 0.5) * h * 0.4,
                 // Left columns scatter first (delay=0), right columns last (delay→0.35)
                 scatterDelay: colNorm * 0.35,
             })
@@ -258,8 +274,8 @@ function CtaBanner(props: Props) {
         buttonHoverBgColor = "#2563eb",
         chessColorBefore = "#ffffff",
         chessColorAfter = "#0a1628",
-        cellSize = 10,
-        chessWidthPercent = 20,
+        cellSize = 16,
+        chessWidthPercent = 40,
         borderRadius = 12,
         fontFamily = "'Inter', sans-serif",
         style,
@@ -383,11 +399,11 @@ function CtaBanner(props: Props) {
                 const opacity = cell.baseOpacity * (1 - t * 0.95)
 
                 // Skip if off-screen or fully transparent
-                if (x + cellSize < 0 || opacity < 0.005) continue
+                if (x + cell.size < 0 || opacity < 0.005) continue
 
                 ctx.globalAlpha = opacity
                 ctx.fillStyle = chessColorBefore
-                ctx.fillRect(x, y, cellSize, cellSize)
+                ctx.fillRect(x, y, cell.size, cell.size)
             }
 
             // =============================================================
@@ -416,7 +432,7 @@ function CtaBanner(props: Props) {
 
                 ctx.globalAlpha = opacity
                 ctx.fillStyle = chessColorAfter
-                ctx.fillRect(cell.homeX, cell.homeY, cellSize, cellSize)
+                ctx.fillRect(cell.homeX, cell.homeY, cell.size, cell.size)
             }
 
             ctx.globalAlpha = 1
@@ -629,17 +645,17 @@ addPropertyControls(CtaBanner, {
     cellSize: {
         type: ControlType.Number,
         title: "Cell Size",
-        defaultValue: 10,
-        min: 4,
-        max: 24,
+        defaultValue: 16,
+        min: 6,
+        max: 32,
         step: 1,
     },
     chessWidthPercent: {
         type: ControlType.Number,
         title: "Chess Width %",
-        defaultValue: 20,
-        min: 5,
-        max: 50,
+        defaultValue: 40,
+        min: 10,
+        max: 60,
         step: 1,
         description: "Percentage of the card width covered by the chess grid",
     },
