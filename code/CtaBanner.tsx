@@ -376,7 +376,9 @@ function CtaBanner(props: Props) {
     }, [])
 
     // -----------------------------------------------------------------------
-    // Scroll progress
+    // Scroll progress — stays 0 until the section top reaches the viewport
+    // top, then ramps 0→1 as the section scrolls further up.
+    // In Framer editor (no real scroll), this stays at 0.
     // -----------------------------------------------------------------------
     useEffect(() => {
         const el = sectionRef.current
@@ -385,10 +387,21 @@ function CtaBanner(props: Props) {
         const onScroll = () => {
             const rect = el.getBoundingClientRect()
             const vh = window.innerHeight
-            // 0 when section bottom enters viewport, 1 when fully in view
-            const raw = (vh - rect.top) / (vh + rect.height)
-            const boosted = Math.pow(Math.max(0, Math.min(1, raw * 1.8)), 0.7)
-            const clamped = Math.max(0, Math.min(1, boosted))
+
+            // Section top hasn't reached viewport top yet → progress = 0
+            if (rect.top > 0) {
+                scrollRef.current = 0
+                setScrollProgress(0)
+                return
+            }
+
+            // How far past the "locked" point:
+            // rect.top goes from 0 → -(rect.height)
+            // We use rect.height as the scroll runway
+            const scrolled = Math.abs(rect.top)
+            const runway = rect.height * 0.6 // complete by 60% through
+            const raw = runway > 0 ? scrolled / runway : 0
+            const clamped = Math.max(0, Math.min(1, raw))
             scrollRef.current = clamped
             setScrollProgress(clamped)
         }
