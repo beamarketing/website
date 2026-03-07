@@ -2,8 +2,10 @@
 // Framer Code Component with full property controls
 // Responsive layout: sidebar header on desktop, stacked on mobile
 // Matches original design: featured card + 2x2 regular cards grid
+// Supports RSS feed for dynamic card population
 
 import { addPropertyControls, ControlType } from "framer"
+import React from "react"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,6 +31,15 @@ interface ArticleCard {
     title: string
     url: string
     bgColor: string
+}
+
+interface RSSItem {
+    title: string
+    link: string
+    pubDate: string
+    category: string
+    image: string
+    description: string
 }
 
 interface Props {
@@ -88,7 +99,17 @@ interface Props {
     featuredImageMobileHeight: number
     featuredImageRadius: number
 
-    // Regular cards
+    // RSS feed
+    useRSSFeed: boolean
+    rssFeedUrl: string
+    rssMaxItems: number
+    rssDefaultCategory: string
+    rssDefaultCategoryBgColor: string
+    rssDefaultCategoryBorderColor: string
+    rssDefaultCategoryTextColor: string
+    rssDefaultCardBgColor: string
+
+    // Regular cards (manual)
     cards: ArticleCard[]
 
     // Regular card title
@@ -121,12 +142,96 @@ interface Props {
     // Grid
     cardGap: number
     cardMobileGap: number
+    cardTabletGap: number
     featuredCardGap: number
 
-    // Mobile breakpoint
+    // Breakpoints
     mobileBreakpoint: number
+    tabletBreakpoint: number
+
+    // Tablet card columns
+    tabletCardColumns: number
 
     style?: React.CSSProperties
+}
+
+// ─── RSS Feed Parser ─────────────────────────────────────────────────────────
+
+function parseRSSItems(xmlText: string): RSSItem[] {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(xmlText, "text/xml")
+    const items = doc.querySelectorAll("item")
+    const results: RSSItem[] = []
+
+    items.forEach((item) => {
+        const getTag = (tag: string) =>
+            item.querySelector(tag)?.textContent?.trim() || ""
+
+        // Try to extract image from multiple common RSS sources
+        let image = ""
+        // 1. <media:content> or <media:thumbnail>
+        const mediaContent = item.querySelector("content")
+        if (mediaContent?.getAttribute("url")) {
+            image = mediaContent.getAttribute("url") || ""
+        }
+        const mediaThumbnail = item.querySelector("thumbnail")
+        if (!image && mediaThumbnail?.getAttribute("url")) {
+            image = mediaThumbnail.getAttribute("url") || ""
+        }
+        // 2. <enclosure> with image type
+        const enclosure = item.querySelector("enclosure")
+        if (
+            !image &&
+            enclosure?.getAttribute("url") &&
+            enclosure?.getAttribute("type")?.startsWith("image")
+        ) {
+            image = enclosure.getAttribute("url") || ""
+        }
+        // 3. Extract first <img> from description/content:encoded
+        if (!image) {
+            const desc =
+                getTag("content\\:encoded") || getTag("description") || ""
+            const imgMatch = desc.match(/<img[^>]+src=["']([^"']+)["']/)
+            if (imgMatch) {
+                image = imgMatch[1]
+            }
+        }
+
+        // Extract category
+        let category = getTag("category")
+        if (!category) {
+            // Try multiple category tags
+            const cats = item.querySelectorAll("category")
+            if (cats.length > 0) {
+                category = cats[0].textContent?.trim() || ""
+            }
+        }
+
+        results.push({
+            title: getTag("title"),
+            link: getTag("link"),
+            pubDate: getTag("pubDate"),
+            category,
+            image,
+            description: getTag("description"),
+        })
+    })
+
+    return results
+}
+
+function formatRSSDate(dateStr: string): string {
+    if (!dateStr) return ""
+    try {
+        const date = new Date(dateStr)
+        return date.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        })
+    } catch {
+        return dateStr
+    }
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -194,6 +299,16 @@ function NewsSection(props: Props) {
         featuredImageHeight = 336,
         featuredImageMobileHeight = 220,
         featuredImageRadius = 12,
+
+        // RSS feed
+        useRSSFeed = false,
+        rssFeedUrl = "",
+        rssMaxItems = 4,
+        rssDefaultCategory = "News",
+        rssDefaultCategoryBgColor = "#FFFFFF",
+        rssDefaultCategoryBorderColor = "#CCCCCC",
+        rssDefaultCategoryTextColor = "#666666",
+        rssDefaultCardBgColor = "#E5E5E5",
 
         // Regular cards
         cards = [
@@ -268,14 +383,17 @@ function NewsSection(props: Props) {
 
         cardGap = 24,
         cardMobileGap = 16,
+        cardTabletGap = 20,
         featuredCardGap = 56,
 
         mobileBreakpoint = 768,
+        tabletBreakpoint = 1100,
+        tabletCardColumns = 2,
 
         style,
     } = props
 
-    // Detect container width for responsive behavior
+    // ─── Responsive detection ────────────────────────
     const containerRef = React.useRef<HTMLDivElement>(null)
     const [containerWidth, setContainerWidth] = React.useState(1200)
 
@@ -291,9 +409,68 @@ function NewsSection(props: Props) {
     }, [])
 
     const isMobile = containerWidth < mobileBreakpoint
-    const isTablet = containerWidth >= mobileBreakpoint && containerWidth < 1100
+    const isTablet =
+        containerWidth >= mobileBreakpoint && containerWidth < tabletBreakpoint
     const padding = isMobile ? sectionPaddingMobile : sectionPaddingDesktop
     const hPadding = isMobile ? 20 : isTablet ? 40 : 150
+
+    // ─── RSS Feed fetching ───────────────────────────
+    const [rssItems, setRssItems] = React.useState<RSSItem[]>([])
+    const [rssLoading, setRssLoading] = React.useState(false)
+    const [rssError, setRssError] = React.useState("")
+
+    React.useEffect(() => {
+        if (!useRSSFeed || !rssFeedUrl) {
+            setRssItems([])
+            setRssError("")
+            return
+        }
+
+        let cancelled = false
+        setRssLoading(true)
+        setRssError("")
+
+        fetch(rssFeedUrl)
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                return res.text()
+            })
+            .then((text) => {
+                if (cancelled) return
+                const items = parseRSSItems(text)
+                setRssItems(items.slice(0, rssMaxItems))
+                setRssLoading(false)
+            })
+            .catch((err) => {
+                if (cancelled) return
+                setRssError(err.message || "Failed to load RSS feed")
+                setRssLoading(false)
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [useRSSFeed, rssFeedUrl, rssMaxItems])
+
+    // Convert RSS items to ArticleCard format
+    const rssCards: ArticleCard[] = rssItems.map((item) => ({
+        image: item.image,
+        category: item.category || rssDefaultCategory,
+        categoryBgColor: rssDefaultCategoryBgColor,
+        categoryBorderColor: rssDefaultCategoryBorderColor,
+        categoryTextColor: rssDefaultCategoryTextColor,
+        date: formatRSSDate(item.pubDate),
+        title: item.title,
+        url: item.link,
+        bgColor: rssDefaultCardBgColor,
+    }))
+
+    // Use RSS cards when enabled and loaded, otherwise fall back to manual cards
+    const displayCards =
+        useRSSFeed && rssCards.length > 0 ? rssCards : cards
+
+    // Grid columns per breakpoint
+    const gridColumns = isMobile ? 1 : isTablet ? tabletCardColumns : 2
 
     // Arrow SVG for "Read more"
     const ArrowIcon = () => (
@@ -310,6 +487,13 @@ function NewsSection(props: Props) {
             />
         </svg>
     )
+
+    // Gap based on breakpoint
+    const currentGap = isMobile
+        ? cardMobileGap
+        : isTablet
+          ? cardTabletGap
+          : cardGap
 
     return (
         <div
@@ -343,7 +527,9 @@ function NewsSection(props: Props) {
                         minWidth: isMobile ? "100%" : 200,
                         display: "flex",
                         flexDirection: isMobile ? "row" : "column",
-                        justifyContent: isMobile ? "space-between" : "flex-start",
+                        justifyContent: isMobile
+                            ? "space-between"
+                            : "flex-start",
                         alignItems: isMobile ? "flex-end" : "flex-start",
                         gap: 24,
                         flexShrink: 0,
@@ -400,7 +586,11 @@ function NewsSection(props: Props) {
                         display: "flex",
                         flexDirection: "column",
                         gap: isMobile ? 32 : featuredCardGap,
-                        maxWidth: isMobile ? "100%" : isTablet ? "100%" : 1000,
+                        maxWidth: isMobile
+                            ? "100%"
+                            : isTablet
+                              ? "100%"
+                              : 1000,
                         width: "100%",
                     }}
                 >
@@ -460,7 +650,8 @@ function NewsSection(props: Props) {
                                     left: 16,
                                     top: 16,
                                     zIndex: 2,
-                                    backgroundColor: featured.categoryBgColor,
+                                    backgroundColor:
+                                        featured.categoryBgColor,
                                     borderRadius: 50,
                                     border: `1px solid #666666`,
                                     paddingLeft: 12,
@@ -491,7 +682,9 @@ function NewsSection(props: Props) {
                                 display: "flex",
                                 flexDirection: isMobile ? "column" : "row",
                                 justifyContent: "space-between",
-                                alignItems: isMobile ? "flex-start" : "flex-start",
+                                alignItems: isMobile
+                                    ? "flex-start"
+                                    : "flex-start",
                                 gap: isMobile ? 16 : 24,
                                 width: "100%",
                             }}
@@ -512,7 +705,8 @@ function NewsSection(props: Props) {
                                         lineHeight: `${featuredDateLineHeight}px`,
                                         color: featuredDateColor,
                                         textTransform: "uppercase",
-                                        letterSpacing: featuredDateLetterSpacing,
+                                        letterSpacing:
+                                            featuredDateLetterSpacing,
                                     }}
                                 >
                                     {featured.date}
@@ -535,7 +729,11 @@ function NewsSection(props: Props) {
                             </div>
 
                             {featured.buttonText && (
-                                <div style={{ paddingTop: isMobile ? 0 : 32 }}>
+                                <div
+                                    style={{
+                                        paddingTop: isMobile ? 0 : 32,
+                                    }}
+                                >
                                     <a
                                         href={featured.buttonUrl}
                                         style={{
@@ -546,16 +744,21 @@ function NewsSection(props: Props) {
                                             paddingRight: 24,
                                             paddingTop: 12,
                                             paddingBottom: 12,
-                                            backgroundColor: featuredButtonBgColor,
-                                            borderRadius: featuredButtonRadius,
+                                            backgroundColor:
+                                                featuredButtonBgColor,
+                                            borderRadius:
+                                                featuredButtonRadius,
                                             textDecoration: "none",
                                         }}
                                     >
                                         <span
                                             style={{
-                                                fontSize: featuredButtonFontSize,
-                                                fontFamily: featuredButtonFontFamily,
-                                                fontWeight: featuredButtonFontWeight,
+                                                fontSize:
+                                                    featuredButtonFontSize,
+                                                fontFamily:
+                                                    featuredButtonFontFamily,
+                                                fontWeight:
+                                                    featuredButtonFontWeight,
                                                 color: featuredButtonTextColor,
                                                 textAlign: "center",
                                             }}
@@ -568,18 +771,45 @@ function NewsSection(props: Props) {
                         </div>
                     </div>
 
-                    {/* ─── Regular Cards 2×2 Grid ──────────────── */}
+                    {/* ─── RSS Loading / Error State ───────────── */}
+                    {useRSSFeed && rssLoading && (
+                        <div
+                            style={{
+                                padding: 24,
+                                textAlign: "center",
+                                color: cardDateColor,
+                                fontFamily: cardTitleFontFamily,
+                                fontSize: 14,
+                            }}
+                        >
+                            Loading articles from RSS feed...
+                        </div>
+                    )}
+
+                    {useRSSFeed && rssError && (
+                        <div
+                            style={{
+                                padding: 24,
+                                textAlign: "center",
+                                color: "#CC3333",
+                                fontFamily: cardTitleFontFamily,
+                                fontSize: 14,
+                            }}
+                        >
+                            RSS Error: {rssError}. Showing manual cards.
+                        </div>
+                    )}
+
+                    {/* ─── Regular Cards Grid ──────────────────── */}
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: isMobile
-                                ? "1fr"
-                                : "repeat(2, 1fr)",
-                            gap: isMobile ? cardMobileGap : cardGap,
+                            gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                            gap: currentGap,
                             width: "100%",
                         }}
                     >
-                        {cards.map((card, i) => (
+                        {displayCards.map((card, i) => (
                             <a
                                 key={i}
                                 href={card.url}
@@ -621,7 +851,8 @@ function NewsSection(props: Props) {
                                             position: "absolute",
                                             left: 16,
                                             top: 16,
-                                            backgroundColor: card.categoryBgColor,
+                                            backgroundColor:
+                                                card.categoryBgColor,
                                             borderRadius: 50,
                                             border: `1px solid ${card.categoryBorderColor}`,
                                             paddingLeft: 12,
@@ -632,9 +863,12 @@ function NewsSection(props: Props) {
                                     >
                                         <span
                                             style={{
-                                                fontSize: cardCategoryFontSize,
-                                                fontFamily: cardCategoryFontFamily,
-                                                fontWeight: cardCategoryFontWeight,
+                                                fontSize:
+                                                    cardCategoryFontSize,
+                                                fontFamily:
+                                                    cardCategoryFontFamily,
+                                                fontWeight:
+                                                    cardCategoryFontWeight,
                                                 lineHeight: `${cardCategoryLineHeight}px`,
                                                 color: card.categoryTextColor,
                                                 textTransform: "uppercase",
@@ -662,7 +896,8 @@ function NewsSection(props: Props) {
                                             lineHeight: `${cardDateLineHeight}px`,
                                             color: cardDateColor,
                                             textTransform: "uppercase",
-                                            letterSpacing: cardDateLetterSpacing,
+                                            letterSpacing:
+                                                cardDateLetterSpacing,
                                         }}
                                     >
                                         {card.date}
@@ -723,6 +958,21 @@ addPropertyControls(NewsSection, {
         min: 320,
         max: 1200,
         step: 1,
+    },
+    tabletBreakpoint: {
+        type: ControlType.Number,
+        title: "Tablet Breakpoint",
+        defaultValue: 1100,
+        min: 600,
+        max: 1400,
+        step: 1,
+    },
+    tabletCardColumns: {
+        type: ControlType.Enum,
+        title: "Tablet Columns",
+        options: [1, 2],
+        optionTitles: ["1 Column", "2 Columns"],
+        defaultValue: 2,
     },
 
     // Heading
@@ -1036,11 +1286,64 @@ addPropertyControls(NewsSection, {
         step: 1,
     },
 
-    // ─── Regular Cards ───────────────────────────────
+    // ─── RSS Feed ────────────────────────────────────
+    useRSSFeed: {
+        type: ControlType.Boolean,
+        title: "Use RSS Feed",
+        defaultValue: false,
+    },
+    rssFeedUrl: {
+        type: ControlType.String,
+        title: "RSS Feed URL",
+        defaultValue: "",
+        hidden: (props) => !props.useRSSFeed,
+    },
+    rssMaxItems: {
+        type: ControlType.Number,
+        title: "Max RSS Items",
+        defaultValue: 4,
+        min: 1,
+        max: 8,
+        step: 1,
+        hidden: (props) => !props.useRSSFeed,
+    },
+    rssDefaultCategory: {
+        type: ControlType.String,
+        title: "Default Category",
+        defaultValue: "News",
+        hidden: (props) => !props.useRSSFeed,
+    },
+    rssDefaultCategoryBgColor: {
+        type: ControlType.Color,
+        title: "RSS Badge BG",
+        defaultValue: "#FFFFFF",
+        hidden: (props) => !props.useRSSFeed,
+    },
+    rssDefaultCategoryBorderColor: {
+        type: ControlType.Color,
+        title: "RSS Badge Border",
+        defaultValue: "#CCCCCC",
+        hidden: (props) => !props.useRSSFeed,
+    },
+    rssDefaultCategoryTextColor: {
+        type: ControlType.Color,
+        title: "RSS Badge Text",
+        defaultValue: "#666666",
+        hidden: (props) => !props.useRSSFeed,
+    },
+    rssDefaultCardBgColor: {
+        type: ControlType.Color,
+        title: "RSS Card BG",
+        defaultValue: "#E5E5E5",
+        hidden: (props) => !props.useRSSFeed,
+    },
+
+    // ─── Regular Cards (Manual) ──────────────────────
     cards: {
         type: ControlType.Array,
         title: "Article Cards",
         maxCount: 8,
+        hidden: (props) => props.useRSSFeed,
         control: {
             type: ControlType.Object,
             controls: {
@@ -1277,6 +1580,14 @@ addPropertyControls(NewsSection, {
         type: ControlType.Number,
         title: "Card Gap",
         defaultValue: 24,
+        min: 0,
+        max: 64,
+        step: 4,
+    },
+    cardTabletGap: {
+        type: ControlType.Number,
+        title: "Card Gap (Tablet)",
+        defaultValue: 20,
         min: 0,
         max: 64,
         step: 4,
