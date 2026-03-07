@@ -6,7 +6,7 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useState } from "react"
 
 // --- Types ---
 
@@ -27,8 +27,12 @@ interface Props {
     heading: string
     headingFontSize: number
     headingFontWeight: number
+    headingLineHeight: number
     headingBottomPadding: number
     headingHighlightColor: string
+    mobileBreakpoint: number
+    mobileHeadingFontSize: number
+    mobileHeadingLineHeight: number
     videoSrc: string
     posterImage: string
     useVideo: boolean
@@ -69,8 +73,12 @@ function HeroScroll(props: Props) {
         heading = "Break the Video\nQuality-Cost-Time\nTrade-Off",
         headingFontSize = 52,
         headingFontWeight = 700,
+        headingLineHeight = 85,
         headingBottomPadding = 12,
         headingHighlightColor = "#4F6BED",
+        mobileBreakpoint = 768,
+        mobileHeadingFontSize = 32,
+        mobileHeadingLineHeight = 42,
         videoSrc = "",
         posterImage = "",
         useVideo = true,
@@ -113,6 +121,15 @@ function HeroScroll(props: Props) {
     } = props
 
     const containerRef = useRef<HTMLDivElement>(null)
+
+    // Mobile detection
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < mobileBreakpoint)
+        check()
+        window.addEventListener("resize", check)
+        return () => window.removeEventListener("resize", check)
+    }, [mobileBreakpoint])
 
     // Inject !important CSS to nuke all Framer wrapper spacing
     useEffect(() => {
@@ -275,6 +292,185 @@ function HeroScroll(props: Props) {
         }
     }
 
+    // ========================
+    // MOBILE — static hero, no scroll transition
+    // ========================
+    if (isMobile) {
+        return (
+            <div
+                ref={containerRef}
+                style={{
+                    ...style,
+                    position: "relative",
+                    width: "100%",
+                    height: "100vh",
+                    marginTop: -navOverlap,
+                    overflow: "hidden",
+                    fontFamily,
+                }}
+            >
+                {/* Video / Image background */}
+                {useVideo && videoSrc ? (
+                    <video
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        src={videoSrc}
+                        poster={posterImage || undefined}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                        }}
+                    />
+                ) : posterImage ? (
+                    <img
+                        src={posterImage}
+                        alt=""
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                        }}
+                    />
+                ) : (
+                    <div
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            background:
+                                "linear-gradient(135deg, #1a1b35 0%, #2d2d6a 50%, #1a2a4a 100%)",
+                        }}
+                    />
+                )}
+
+                {/* Dark overlay */}
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity + 0.3}) 0%, rgba(0,0,0,${overlayOpacity * 0.2}) 50%, rgba(0,0,0,${overlayOpacity * 0.15}) 100%)`,
+                        zIndex: 2,
+                    }}
+                />
+                {/* Pixel / noise texture overlay */}
+                {overlayStyle !== "solid" && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 2,
+                            opacity: overlayOpacity,
+                            mixBlendMode: "multiply",
+                            ...(overlayStyle === "pixels"
+                                ? {
+                                      backgroundImage:
+                                          "linear-gradient(0deg, rgba(0,0,0,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.12) 1px, transparent 1px)",
+                                      backgroundSize: "4px 4px",
+                                  }
+                                : {
+                                      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+                                      backgroundSize: "128px 128px",
+                                  }),
+                        }}
+                    />
+                )}
+
+                {/* Centered heading */}
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 3,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "0 24px",
+                        textAlign: "center",
+                    }}
+                >
+                    <h1
+                        style={{
+                            fontSize: mobileHeadingFontSize,
+                            fontWeight: headingFontWeight,
+                            color: "#ffffff",
+                            lineHeight: `${mobileHeadingLineHeight}px`,
+                            margin: 0,
+                            fontFamily,
+                            letterSpacing: "-2px",
+                            whiteSpace: "pre-line",
+                            textShadow: "0 2px 40px rgba(0,0,0,0.3)",
+                        }}
+                    >
+                        {renderHeading()}
+                    </h1>
+                </div>
+
+                {/* Logo bar */}
+                {showLogos && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: 24,
+                            left: 0,
+                            right: 0,
+                            zIndex: 3,
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 24,
+                            flexWrap: "wrap",
+                            padding: "0 16px",
+                        }}
+                    >
+                        {logos.map((logo, i) =>
+                            logo.image ? (
+                                <img
+                                    key={i}
+                                    src={logo.image}
+                                    alt={logo.name}
+                                    style={{
+                                        height: Math.min(logo.height || 20, 16),
+                                        objectFit: "contain",
+                                        filter: "brightness(0) invert(1)",
+                                        opacity: 0.8,
+                                    }}
+                                />
+                            ) : (
+                                <span
+                                    key={i}
+                                    style={{
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        color: "rgba(255,255,255,0.7)",
+                                        letterSpacing: "0.04em",
+                                        fontFamily,
+                                    }}
+                                >
+                                    {logo.name}
+                                </span>
+                            )
+                        )}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    // ========================
+    // DESKTOP — scroll-driven transition
+    // ========================
     return (
         <div
             ref={containerRef}
@@ -409,7 +605,7 @@ function HeroScroll(props: Props) {
                                 fontSize: headingFontSize,
                                 fontWeight: headingFontWeight,
                                 color: "#ffffff",
-                                lineHeight: "85px",
+                                lineHeight: `${headingLineHeight}px`,
                                 margin: 0,
                                 fontFamily,
                                 letterSpacing: "-5px",
@@ -440,7 +636,7 @@ function HeroScroll(props: Props) {
                                 fontSize: headingFontSize * 0.9,
                                 fontWeight: headingFontWeight,
                                 color: "#ffffff",
-                                lineHeight: "85px",
+                                lineHeight: `${headingLineHeight}px`,
                                 margin: 0,
                                 fontFamily,
                                 letterSpacing: "-5px",
@@ -659,6 +855,14 @@ addPropertyControls(HeroScroll, {
         ],
         defaultValue: 700,
     },
+    headingLineHeight: {
+        type: ControlType.Number,
+        title: "Line Height (px)",
+        defaultValue: 85,
+        min: 20,
+        max: 200,
+        step: 1,
+    },
     headingBottomPadding: {
         type: ControlType.Number,
         title: "Title Bottom %",
@@ -673,6 +877,33 @@ addPropertyControls(HeroScroll, {
         title: "Title Highlight",
         defaultValue: "#4F6BED",
         description: "Color for the last two words of the heading",
+    },
+
+    // --- Mobile ---
+    mobileBreakpoint: {
+        type: ControlType.Number,
+        title: "Mobile Breakpoint",
+        defaultValue: 768,
+        min: 320,
+        max: 1024,
+        step: 8,
+        description: "Width below which mobile layout activates",
+    },
+    mobileHeadingFontSize: {
+        type: ControlType.Number,
+        title: "Mobile Font Size",
+        defaultValue: 32,
+        min: 18,
+        max: 60,
+        step: 1,
+    },
+    mobileHeadingLineHeight: {
+        type: ControlType.Number,
+        title: "Mobile Line Height",
+        defaultValue: 42,
+        min: 16,
+        max: 120,
+        step: 1,
     },
 
     // --- Media ---
