@@ -3,7 +3,7 @@
 // Section is taller than one viewport; text stays pinned with position: sticky.
 // Paste this into Framer: Assets panel → Code → New Component
 
-import { addPropertyControls, ControlType } from "framer"
+import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { useScroll, useMotionValueEvent } from "framer-motion"
 import { useRef, useMemo, useState } from "react"
 
@@ -53,6 +53,7 @@ export default function ValuePropositionStrip(props) {
         style,
     } = props
 
+    const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const sectionRef = useRef(null)
     const [revealedCount, setRevealedCount] = useState(0)
 
@@ -87,7 +88,7 @@ export default function ValuePropositionStrip(props) {
             ref={sectionRef}
             style={{
                 width: style?.width || "100%",
-                height: `${scrollScreens * 100}vh`,
+                height: isCanvas ? "auto" : `${scrollScreens * 100}vh`,
                 position: "relative",
                 backgroundColor,
             }}
@@ -95,14 +96,20 @@ export default function ValuePropositionStrip(props) {
             {/* Sticky container — text stays visible while scrolling through */}
             <div
                 style={{
-                    position: "sticky",
+                    position: isCanvas ? "relative" : "sticky",
                     top: 0,
-                    height: "100vh",
+                    height: isCanvas ? "auto" : "100vh",
                     display: "flex",
                     alignItems: textAlign === "center" ? "center" : "flex-start",
                     justifyContent: textAlign === "center" ? "center" : "flex-start",
-                    padding: `0 ${paddingX}px`,
-                    paddingTop: textAlign === "center" ? 0 : "15vh",
+                    padding: isCanvas
+                        ? `40px ${paddingX}px`
+                        : `0 ${paddingX}px`,
+                    paddingTop: isCanvas
+                        ? 40
+                        : textAlign === "center"
+                          ? 0
+                          : "15vh",
                 }}
             >
                 <p
@@ -137,8 +144,11 @@ export default function ValuePropositionStrip(props) {
                             <span
                                 key={`${word}-${i}`}
                                 style={{
-                                    color:
-                                        i < revealedCount ? lit : dim,
+                                    color: isCanvas
+                                        ? lit
+                                        : i < revealedCount
+                                          ? lit
+                                          : dim,
                                     transition: "color 0.3s ease-out",
                                     display: "inline",
                                 }}
