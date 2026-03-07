@@ -3,7 +3,7 @@
 // Matches VSN "Desktop Card Stack": dark cards, lime CTA, hover glow.
 // Paste into Framer: Assets panel → Code → New Component
 
-import { addPropertyControls, ControlType } from "framer"
+import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useRef, useState, useEffect } from "react"
 
@@ -55,6 +55,7 @@ function ProductCard({
     buttonSize,
     buttonWeight,
     showButton,
+    isCanvas,
 }) {
     const [hovered, setHovered] = useState(false)
 
@@ -74,7 +75,7 @@ function ProductCard({
                 flexShrink: 0,
                 position: "relative",
                 overflow: "hidden",
-                height: cardHeight > 0 ? cardHeight : "100%",
+                height: cardHeight > 0 ? cardHeight : isCanvas ? 400 : "100%",
             }}
         >
             {/* Content stack: title + description + CTA */}
@@ -235,6 +236,7 @@ export default function HorizontalCardStack(props) {
         style,
     } = props
 
+    const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const sectionRef = useRef(null)
     const containerRef = useRef(null)
     const [maxScroll, setMaxScroll] = useState(0)
@@ -271,7 +273,7 @@ export default function HorizontalCardStack(props) {
             ref={sectionRef}
             style={{
                 width: style?.width || "100%",
-                height: `${scrollScreens * 100}vh`,
+                height: isCanvas ? "auto" : `${scrollScreens * 100}vh`,
                 position: "relative",
                 backgroundColor,
             }}
@@ -280,10 +282,10 @@ export default function HorizontalCardStack(props) {
             <div
                 ref={containerRef}
                 style={{
-                    position: "sticky",
+                    position: isCanvas ? "relative" : "sticky",
                     top: 0,
-                    height: "100vh",
-                    overflow: "hidden",
+                    height: isCanvas ? "auto" : "100vh",
+                    overflow: isCanvas ? "visible" : "hidden",
                     display: "flex",
                     flexDirection: "column",
                     padding: `${paddingY}px 0`,
@@ -312,11 +314,12 @@ export default function HorizontalCardStack(props) {
                 {/* Sliding card track */}
                 <motion.div
                     style={{
-                        x,
+                        x: isCanvas ? 0 : x,
                         display: "flex",
-                        flex: 1,
+                        flexWrap: isCanvas ? "wrap" : "nowrap",
+                        flex: isCanvas ? undefined : 1,
                         gap: cardGap,
-                        paddingLeft: "33vw",
+                        paddingLeft: isCanvas ? `${paddingX}px` : "33vw",
                         paddingRight: `${paddingX}px`,
                         alignItems: "stretch",
                     }}
@@ -347,6 +350,7 @@ export default function HorizontalCardStack(props) {
                             buttonSize={buttonSize}
                             buttonWeight={buttonWeight}
                             showButton={showButton}
+                            isCanvas={isCanvas}
                         />
                     ))}
                 </motion.div>
