@@ -470,7 +470,7 @@ function NewsSection(props: Props) {
         useRSSFeed && rssCards.length > 0 ? rssCards : cards
 
     // Grid columns per breakpoint
-    const gridColumns = isMobile ? 1 : isTablet ? tabletCardColumns : 2
+    const gridColumns = isMobile ? 2 : isTablet ? tabletCardColumns : 2
 
     // Arrow SVG for "Read more"
     const ArrowIcon = () => (
