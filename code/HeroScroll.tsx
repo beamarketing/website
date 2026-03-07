@@ -26,6 +26,7 @@ interface Props {
     // Content
     heading: string
     headingFontSize: number
+    headingFontWeight: number
     headingBottomPadding: number
     headingHighlightColor: string
     videoSrc: string
@@ -53,6 +54,7 @@ interface Props {
     cardBgColor: string
     pageBgLight: string
     overlayOpacity: number
+    overlayStyle: "solid" | "pixels" | "noise"
     fontFamily: string
     videoContainedInset: number
     videoContainedTop: number
@@ -66,6 +68,7 @@ function HeroScroll(props: Props) {
     const {
         heading = "Break the Video\nQuality-Cost-Time\nTrade-Off",
         headingFontSize = 52,
+        headingFontWeight = 700,
         headingBottomPadding = 12,
         headingHighlightColor = "#4F6BED",
         videoSrc = "",
@@ -99,6 +102,7 @@ function HeroScroll(props: Props) {
         cardBgColor = "#ffffff",
         pageBgLight = "#eef0f5",
         overlayOpacity = 0.35,
+        overlayStyle = "solid" as const,
         fontFamily = "'Inter', sans-serif",
         videoContainedInset = 64,
         videoContainedTop = 80,
@@ -356,7 +360,7 @@ function HeroScroll(props: Props) {
                         />
                     )}
 
-                    {/* Dark overlay gradient */}
+                    {/* Dark overlay */}
                     <div
                         style={{
                             position: "absolute",
@@ -365,6 +369,29 @@ function HeroScroll(props: Props) {
                             zIndex: 2,
                         }}
                     />
+                    {/* Pixel / noise texture overlay */}
+                    {overlayStyle !== "solid" && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 2,
+                                opacity: overlayOpacity,
+                                mixBlendMode: "multiply",
+                                ...(overlayStyle === "pixels"
+                                    ? {
+                                          backgroundImage:
+                                              "linear-gradient(0deg, rgba(0,0,0,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.12) 1px, transparent 1px)",
+                                          backgroundSize: "4px 4px",
+                                      }
+                                    : {
+                                          // noise via inline SVG data-URI
+                                          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+                                          backgroundSize: "128px 128px",
+                                      }),
+                            }}
+                        />
+                    )}
 
                     {/* Heading — State 1: bottom-left */}
                     <motion.div
@@ -380,7 +407,7 @@ function HeroScroll(props: Props) {
                         <h1
                             style={{
                                 fontSize: headingFontSize,
-                                fontWeight: 700,
+                                fontWeight: headingFontWeight,
                                 color: "#ffffff",
                                 lineHeight: 1.05,
                                 margin: 0,
@@ -411,7 +438,7 @@ function HeroScroll(props: Props) {
                         <h1
                             style={{
                                 fontSize: headingFontSize * 0.9,
-                                fontWeight: 700,
+                                fontWeight: headingFontWeight,
                                 color: "#ffffff",
                                 lineHeight: 1.05,
                                 margin: 0,
@@ -617,6 +644,21 @@ addPropertyControls(HeroScroll, {
         max: 80,
         step: 2,
     },
+    headingFontWeight: {
+        type: ControlType.Enum,
+        title: "Font Weight",
+        options: [300, 400, 500, 600, 700, 800, 900],
+        optionTitles: [
+            "300 Light",
+            "400 Regular",
+            "500 Medium",
+            "600 Semi-Bold",
+            "700 Bold",
+            "800 Extra-Bold",
+            "900 Black",
+        ],
+        defaultValue: 700,
+    },
     headingBottomPadding: {
         type: ControlType.Number,
         title: "Title Bottom %",
@@ -651,11 +693,18 @@ addPropertyControls(HeroScroll, {
     },
     overlayOpacity: {
         type: ControlType.Number,
-        title: "Overlay",
+        title: "Overlay Opacity",
         defaultValue: 0.35,
         min: 0,
         max: 0.8,
         step: 0.05,
+    },
+    overlayStyle: {
+        type: ControlType.Enum,
+        title: "Overlay Style",
+        options: ["solid", "pixels", "noise"],
+        optionTitles: ["Solid Black", "Pixel Grid", "Noise / Grain"],
+        defaultValue: "solid",
     },
 
     // --- Floating Cards ---
