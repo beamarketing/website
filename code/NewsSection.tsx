@@ -513,36 +513,36 @@ function NewsSection(props: Props) {
             <div
                 style={{
                     display: "flex",
-                    flexDirection: isMobile ? "column" : "row",
+                    flexDirection: isMobile || isTablet ? "column" : "row",
                     justifyContent: "space-between",
                     alignItems: "flex-start",
-                    gap: isMobile ? 32 : isTablet ? 32 : 0,
+                    gap: isMobile ? 32 : isTablet ? 40 : 0,
                     width: "100%",
                 }}
             >
                 {/* ─── Left Header ─────────────────────────────── */}
                 <div
                     style={{
-                        maxWidth: isMobile ? "100%" : 200,
-                        minWidth: isMobile ? "100%" : 200,
+                        maxWidth: isMobile || isTablet ? "100%" : 200,
+                        minWidth: isMobile || isTablet ? "100%" : 200,
                         display: "flex",
-                        flexDirection: isMobile ? "row" : "column",
-                        justifyContent: isMobile
+                        flexDirection: isMobile || isTablet ? "row" : "column",
+                        justifyContent: isMobile || isTablet
                             ? "space-between"
                             : "flex-start",
-                        alignItems: isMobile ? "flex-end" : "flex-start",
+                        alignItems: isMobile || isTablet ? "flex-end" : "flex-start",
                         gap: 24,
                         flexShrink: 0,
                     }}
                 >
                     <h2
                         style={{
-                            fontSize: isMobile
+                            fontSize: isMobile || isTablet
                                 ? headingMobileFontSize
                                 : headingFontSize,
                             fontFamily: headingFontFamily,
                             fontWeight: headingFontWeight,
-                            lineHeight: `${isMobile ? headingMobileFontSize + 12 : headingLineHeight}px`,
+                            lineHeight: `${isMobile || isTablet ? headingMobileFontSize + 12 : headingLineHeight}px`,
                             color: headingColor,
                             margin: 0,
                             whiteSpace: "pre-line",
@@ -586,11 +586,7 @@ function NewsSection(props: Props) {
                         display: "flex",
                         flexDirection: "column",
                         gap: isMobile ? 32 : featuredCardGap,
-                        maxWidth: isMobile
-                            ? "100%"
-                            : isTablet
-                              ? "100%"
-                              : 1000,
+                        maxWidth: isMobile || isTablet ? "100%" : 1000,
                         width: "100%",
                     }}
                 >
