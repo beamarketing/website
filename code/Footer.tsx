@@ -2,15 +2,17 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
+import { useState } from "react"
 
 interface FooterLink {
     label: string
     url: string
 }
 
-interface FooterColumn {
-    title: string
-    links: FooterLink[]
+interface NavLink {
+    column: string
+    label: string
+    url: string
 }
 
 interface SocialLink {
@@ -23,12 +25,14 @@ interface Props {
     logoImage: string
     useLogoImage: boolean
     tagline: string
-    columns: FooterColumn[]
+    navLinks: NavLink[]
     socialLinks: SocialLink[]
     showNewsletter: boolean
     newsletterHeading: string
     newsletterPlaceholder: string
     newsletterButtonText: string
+    hubspotPortalId: string
+    hubspotFormId: string
     copyrightText: string
     bottomLinks: FooterLink[]
     bgColor: string
@@ -46,34 +50,19 @@ function Footer(props: Props) {
         logoImage = "",
         useLogoImage = false,
         tagline = "AI-powered video optimization for the modern enterprise.",
-        columns = [
-            {
-                title: "Solutions",
-                links: [
-                    { label: "Media & Entertainment", url: "#" },
-                    { label: "Autonomous Vehicles", url: "#" },
-                    { label: "AI / Machine Learning", url: "#" },
-                    { label: "Cloud Gaming", url: "#" },
-                ],
-            },
-            {
-                title: "Company",
-                links: [
-                    { label: "About Us", url: "#" },
-                    { label: "Careers", url: "#" },
-                    { label: "Press", url: "#" },
-                    { label: "Contact", url: "#" },
-                ],
-            },
-            {
-                title: "Resources",
-                links: [
-                    { label: "Blog", url: "#" },
-                    { label: "Documentation", url: "#" },
-                    { label: "Case Studies", url: "#" },
-                    { label: "Webinars", url: "#" },
-                ],
-            },
+        navLinks = [
+            { column: "Solutions", label: "Media & Entertainment", url: "#" },
+            { column: "Solutions", label: "Autonomous Vehicles", url: "#" },
+            { column: "Solutions", label: "AI / Machine Learning", url: "#" },
+            { column: "Solutions", label: "Cloud Gaming", url: "#" },
+            { column: "Company", label: "About Us", url: "#" },
+            { column: "Company", label: "Careers", url: "#" },
+            { column: "Company", label: "Press", url: "#" },
+            { column: "Company", label: "Contact", url: "#" },
+            { column: "Resources", label: "Blog", url: "#" },
+            { column: "Resources", label: "Documentation", url: "#" },
+            { column: "Resources", label: "Case Studies", url: "#" },
+            { column: "Resources", label: "Webinars", url: "#" },
         ],
         socialLinks = [
             { platform: "LinkedIn", url: "#" },
@@ -84,6 +73,8 @@ function Footer(props: Props) {
         newsletterHeading = "Stay Updated",
         newsletterPlaceholder = "Enter your email",
         newsletterButtonText = "Subscribe",
+        hubspotPortalId = "",
+        hubspotFormId = "",
         copyrightText = "2026 Beamr Imaging Ltd. All rights reserved.",
         bottomLinks = [
             { label: "Privacy Policy", url: "#privacy" },
@@ -97,6 +88,56 @@ function Footer(props: Props) {
         fontFamily = "'Inter', sans-serif",
         style,
     } = props
+
+    // Group flat navLinks by column name, preserving order
+    const columns: { title: string; links: { label: string; url: string }[] }[] = []
+    const columnMap = new Map<string, { label: string; url: string }[]>()
+    for (const link of navLinks) {
+        const col = link.column || "Links"
+        if (!columnMap.has(col)) {
+            const links: { label: string; url: string }[] = []
+            columnMap.set(col, links)
+            columns.push({ title: col, links })
+        }
+        columnMap.get(col)!.push({ label: link.label, url: link.url })
+    }
+
+    // Newsletter state
+    const [email, setEmail] = useState("")
+    const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle")
+
+    const handleNewsletterSubmit = async () => {
+        if (!email) return
+
+        // If HubSpot is configured, submit to HubSpot
+        if (hubspotPortalId && hubspotFormId) {
+            setSubmitState("loading")
+            try {
+                const res = await fetch(
+                    `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormId}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            fields: [{ name: "email", value: email }],
+                            context: {
+                                pageUri: typeof window !== "undefined" ? window.location.href : "",
+                                pageName: typeof document !== "undefined" ? document.title : "",
+                            },
+                        }),
+                    }
+                )
+                if (res.ok) {
+                    setSubmitState("success")
+                    setEmail("")
+                } else {
+                    setSubmitState("error")
+                }
+            } catch {
+                setSubmitState("error")
+            }
+        }
+    }
 
     const socialIcons: Record<string, string> = {
         LinkedIn: "in",
@@ -291,6 +332,14 @@ function Footer(props: Props) {
                                 <input
                                     type="email"
                                     placeholder={newsletterPlaceholder}
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value)
+                                        if (submitState !== "idle") setSubmitState("idle")
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") handleNewsletterSubmit()
+                                    }}
                                     style={{
                                         flex: 1,
                                         padding: "10px 14px",
@@ -305,20 +354,40 @@ function Footer(props: Props) {
                                     }}
                                 />
                                 <button
+                                    onClick={handleNewsletterSubmit}
+                                    disabled={submitState === "loading"}
                                     style={{
                                         padding: "10px 20px",
                                         borderRadius: 8,
                                         border: "none",
-                                        backgroundColor: accentColor,
+                                        backgroundColor:
+                                            submitState === "success"
+                                                ? "#22c55e"
+                                                : submitState === "error"
+                                                  ? "#ef4444"
+                                                  : accentColor,
                                         color: "#07071c",
                                         fontSize: 14,
                                         fontWeight: 600,
-                                        cursor: "pointer",
+                                        cursor:
+                                            submitState === "loading"
+                                                ? "wait"
+                                                : "pointer",
                                         fontFamily,
                                         whiteSpace: "nowrap",
+                                        opacity:
+                                            submitState === "loading" ? 0.7 : 1,
+                                        transition:
+                                            "background-color 0.2s, opacity 0.2s",
                                     }}
                                 >
-                                    {newsletterButtonText}
+                                    {submitState === "loading"
+                                        ? "..."
+                                        : submitState === "success"
+                                          ? "Subscribed!"
+                                          : submitState === "error"
+                                            ? "Try Again"
+                                            : newsletterButtonText}
                                 </button>
                             </div>
                             <p
@@ -330,7 +399,11 @@ function Footer(props: Props) {
                                     fontFamily,
                                 }}
                             >
-                                No spam. Unsubscribe anytime.
+                                {submitState === "success"
+                                    ? "Thank you for subscribing!"
+                                    : submitState === "error"
+                                      ? "Something went wrong. Please try again."
+                                      : "No spam. Unsubscribe anytime."}
                             </p>
                         </div>
                     )}
@@ -408,69 +481,43 @@ addPropertyControls(Footer, {
             "AI-powered video optimization for the modern enterprise.",
         displayTextArea: true,
     },
-    columns: {
+    navLinks: {
         type: ControlType.Array,
-        title: "Link Columns",
-        maxCount: 5,
+        title: "Navigation Links",
+        maxCount: 40,
         control: {
             type: ControlType.Object,
             controls: {
-                title: {
+                column: {
                     type: ControlType.String,
-                    title: "Column Title",
+                    title: "Column",
                     defaultValue: "Links",
                 },
-                links: {
-                    type: ControlType.Array,
-                    title: "Links",
-                    maxCount: 20,
-                    control: {
-                        type: ControlType.Object,
-                        controls: {
-                            label: {
-                                type: ControlType.String,
-                                title: "Label",
-                                defaultValue: "Link",
-                            },
-                            url: {
-                                type: ControlType.String,
-                                title: "URL",
-                                defaultValue: "#",
-                            },
-                        },
-                    },
-                    defaultValue: [{ label: "Link 1", url: "#" }],
+                label: {
+                    type: ControlType.String,
+                    title: "Label",
+                    defaultValue: "Link",
+                },
+                url: {
+                    type: ControlType.String,
+                    title: "URL",
+                    defaultValue: "#",
                 },
             },
         },
         defaultValue: [
-            {
-                title: "Solutions",
-                links: [
-                    { label: "Media & Entertainment", url: "#" },
-                    { label: "Autonomous Vehicles", url: "#" },
-                    { label: "AI / Machine Learning", url: "#" },
-                    { label: "Cloud Gaming", url: "#" },
-                ],
-            },
-            {
-                title: "Company",
-                links: [
-                    { label: "About Us", url: "#" },
-                    { label: "Careers", url: "#" },
-                    { label: "Press", url: "#" },
-                    { label: "Contact", url: "#" },
-                ],
-            },
-            {
-                title: "Resources",
-                links: [
-                    { label: "Blog", url: "#" },
-                    { label: "Documentation", url: "#" },
-                    { label: "Case Studies", url: "#" },
-                    { label: "Webinars", url: "#" },
-                ],
-            },
+            { column: "Solutions", label: "Media & Entertainment", url: "#" },
+            { column: "Solutions", label: "Autonomous Vehicles", url: "#" },
+            { column: "Solutions", label: "AI / Machine Learning", url: "#" },
+            { column: "Solutions", label: "Cloud Gaming", url: "#" },
+            { column: "Company", label: "About Us", url: "#" },
+            { column: "Company", label: "Careers", url: "#" },
+            { column: "Company", label: "Press", url: "#" },
+            { column: "Company", label: "Contact", url: "#" },
+            { column: "Resources", label: "Blog", url: "#" },
+            { column: "Resources", label: "Documentation", url: "#" },
+            { column: "Resources", label: "Case Studies", url: "#" },
+            { column: "Resources", label: "Webinars", url: "#" },
         ],
     },
     socialLinks: {
@@ -528,6 +575,20 @@ addPropertyControls(Footer, {
         title: "Button Text",
         defaultValue: "Subscribe",
         hidden: (props) => !props.showNewsletter,
+    },
+    hubspotPortalId: {
+        type: ControlType.String,
+        title: "HubSpot Portal ID",
+        defaultValue: "",
+        hidden: (props) => !props.showNewsletter,
+        description: "Your HubSpot portal ID (e.g. 12345678)",
+    },
+    hubspotFormId: {
+        type: ControlType.String,
+        title: "HubSpot Form ID",
+        defaultValue: "",
+        hidden: (props) => !props.showNewsletter,
+        description: "The HubSpot form GUID for newsletter signup",
     },
     copyrightText: {
         type: ControlType.String,
