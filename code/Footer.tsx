@@ -30,6 +30,7 @@ interface Props {
     newsletterPlaceholder: string
     newsletterButtonText: string
     copyrightText: string
+    bottomLinks: FooterLink[]
     bgColor: string
     textColor: string
     secondaryTextColor: string
@@ -84,6 +85,10 @@ function Footer(props: Props) {
         newsletterPlaceholder = "Enter your email",
         newsletterButtonText = "Subscribe",
         copyrightText = "2026 Beamr Imaging Ltd. All rights reserved.",
+        bottomLinks = [
+            { label: "Privacy Policy", url: "#privacy" },
+            { label: "Terms of Service", url: "#terms" },
+        ],
         bgColor = "#050516",
         textColor = "#ffffff",
         secondaryTextColor = "#8b8ba3",
@@ -357,30 +362,21 @@ function Footer(props: Props) {
                             gap: 24,
                         }}
                     >
-                        <a
-                            href="#privacy"
-                            style={{
-                                fontSize: 13,
-                                color: secondaryTextColor,
-                                textDecoration: "none",
-                                fontFamily,
-                                opacity: 0.7,
-                            }}
-                        >
-                            Privacy Policy
-                        </a>
-                        <a
-                            href="#terms"
-                            style={{
-                                fontSize: 13,
-                                color: secondaryTextColor,
-                                textDecoration: "none",
-                                fontFamily,
-                                opacity: 0.7,
-                            }}
-                        >
-                            Terms of Service
-                        </a>
+                        {bottomLinks.map((link, i) => (
+                            <a
+                                key={i}
+                                href={link.url}
+                                style={{
+                                    fontSize: 13,
+                                    color: secondaryTextColor,
+                                    textDecoration: "none",
+                                    fontFamily,
+                                    opacity: 0.7,
+                                }}
+                            >
+                                {link.label}
+                            </a>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -427,7 +423,7 @@ addPropertyControls(Footer, {
                 links: {
                     type: ControlType.Array,
                     title: "Links",
-                    maxCount: 8,
+                    maxCount: 20,
                     control: {
                         type: ControlType.Object,
                         controls: {
@@ -537,6 +533,30 @@ addPropertyControls(Footer, {
         type: ControlType.String,
         title: "Copyright",
         defaultValue: "2026 Beamr Imaging Ltd. All rights reserved.",
+    },
+    bottomLinks: {
+        type: ControlType.Array,
+        title: "Bottom Links",
+        maxCount: 10,
+        control: {
+            type: ControlType.Object,
+            controls: {
+                label: {
+                    type: ControlType.String,
+                    title: "Label",
+                    defaultValue: "Link",
+                },
+                url: {
+                    type: ControlType.String,
+                    title: "URL",
+                    defaultValue: "#",
+                },
+            },
+        },
+        defaultValue: [
+            { label: "Privacy Policy", url: "#privacy" },
+            { label: "Terms of Service", url: "#terms" },
+        ],
     },
     bgColor: {
         type: ControlType.Color,
