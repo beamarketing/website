@@ -55,6 +55,7 @@ interface Props {
     headingFontFamily: string
     headingFontWeight: number
     headingLineHeight: number
+    headingMobileLineHeight: number
     headingColor: string
 
     // Read More link
@@ -250,6 +251,7 @@ function NewsSection(props: Props) {
         headingFontFamily = "Poppins, sans-serif",
         headingFontWeight = 500,
         headingLineHeight = 76,
+        headingMobileLineHeight = 48,
         headingColor = "#171717",
 
         // Read more
@@ -542,7 +544,7 @@ function NewsSection(props: Props) {
                                 : headingFontSize,
                             fontFamily: headingFontFamily,
                             fontWeight: headingFontWeight,
-                            lineHeight: `${isMobile || isTablet ? headingMobileFontSize + 12 : headingLineHeight}px`,
+                            lineHeight: `${isMobile || isTablet ? headingMobileLineHeight : headingLineHeight}px`,
                             color: headingColor,
                             margin: 0,
                             whiteSpace: "pre-line",
@@ -632,7 +634,7 @@ function NewsSection(props: Props) {
                                         position: "absolute",
                                         right: 0,
                                         top: 0,
-                                        width: isMobile ? "100%" : "70%",
+                                        width: "100%",
                                         height: "100%",
                                         objectFit: "cover",
                                     }}
@@ -1020,6 +1022,14 @@ addPropertyControls(NewsSection, {
         defaultValue: 76,
         min: 16,
         max: 150,
+        step: 1,
+    },
+    headingMobileLineHeight: {
+        type: ControlType.Number,
+        title: "Heading Line Ht (M)",
+        defaultValue: 48,
+        min: 16,
+        max: 100,
         step: 1,
     },
     headingColor: {
