@@ -282,13 +282,13 @@ function NewsSection(props: Props) {
         featuredTitleFontFamily = "Poppins, sans-serif",
         featuredTitleFontWeight = 500,
         featuredTitleLineHeight = 32,
-        featuredTitleColor = "#171717",
+        featuredTitleColor = "#FFFFFF",
 
         featuredDateFontSize = 12,
         featuredDateFontFamily = "Poppins, sans-serif",
         featuredDateFontWeight = 600,
         featuredDateLineHeight = 18,
-        featuredDateColor = "#666666",
+        featuredDateColor = "#CCCCCC",
         featuredDateLetterSpacing = 0.5,
 
         featuredButtonBgColor = "#3751FF",
@@ -595,96 +595,89 @@ function NewsSection(props: Props) {
                     {/* Featured Card */}
                     <div
                         style={{
-                            display: "flex",
-                            flexDirection: "column",
                             width: "100%",
+                            height: isMobile
+                                ? featuredImageMobileHeight
+                                : featuredImageHeight,
+                            position: "relative",
+                            backgroundColor: featured.overlayBgColor,
+                            borderRadius: featuredImageRadius,
+                            overflow: "hidden",
                         }}
                     >
-                        {/* Featured Image */}
-                        <div
-                            style={{
-                                width: "100%",
-                                height: isMobile
-                                    ? featuredImageMobileHeight
-                                    : featuredImageHeight,
-                                position: "relative",
-                                backgroundColor: featured.overlayBgColor,
-                                borderRadius: featuredImageRadius,
-                                overflow: "hidden",
-                                marginBottom: 16,
-                            }}
-                        >
-                            {/* Gradient overlay */}
-                            <div
+                        {/* Featured image */}
+                        {featured.image && (
+                            <img
+                                src={featured.image}
+                                alt={featured.title}
                                 style={{
                                     position: "absolute",
-                                    inset: 0,
-                                    background:
-                                        "linear-gradient(90deg, rgba(1,3,20,0) 0%, #010314 100%)",
-                                    zIndex: 1,
+                                    right: 0,
+                                    top: 0,
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
                                 }}
                             />
+                        )}
 
-                            {/* Featured image */}
-                            {featured.image && (
-                                <img
-                                    src={featured.image}
-                                    alt={featured.title}
-                                    style={{
-                                        position: "absolute",
-                                        right: 0,
-                                        top: 0,
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                    }}
-                                />
-                            )}
-
-                            {/* Category badge */}
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    left: 16,
-                                    top: 16,
-                                    zIndex: 2,
-                                    backgroundColor:
-                                        featured.categoryBgColor,
-                                    borderRadius: 50,
-                                    border: `1px solid #666666`,
-                                    paddingLeft: 12,
-                                    paddingRight: 12,
-                                    paddingTop: 6,
-                                    paddingBottom: 6,
-                                }}
-                            >
-                                <span
-                                    style={{
-                                        fontSize: cardCategoryFontSize,
-                                        fontFamily: cardCategoryFontFamily,
-                                        fontWeight: cardCategoryFontWeight,
-                                        lineHeight: `${cardCategoryLineHeight}px`,
-                                        color: featured.categoryTextColor,
-                                        textTransform: "uppercase",
-                                        letterSpacing: 0.5,
-                                    }}
-                                >
-                                    {featured.category}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Featured content row */}
+                        {/* Gradient overlay - bottom for text readability */}
                         <div
                             style={{
+                                position: "absolute",
+                                inset: 0,
+                                background:
+                                    "linear-gradient(to top, rgba(1,3,20,0.85) 0%, rgba(1,3,20,0.4) 50%, rgba(1,3,20,0) 100%)",
+                                zIndex: 1,
+                            }}
+                        />
+
+                        {/* Category badge */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: 16,
+                                top: 16,
+                                zIndex: 2,
+                                backgroundColor:
+                                    featured.categoryBgColor,
+                                borderRadius: 50,
+                                border: `1px solid #666666`,
+                                paddingLeft: 12,
+                                paddingRight: 12,
+                                paddingTop: 6,
+                                paddingBottom: 6,
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontSize: cardCategoryFontSize,
+                                    fontFamily: cardCategoryFontFamily,
+                                    fontWeight: cardCategoryFontWeight,
+                                    lineHeight: `${cardCategoryLineHeight}px`,
+                                    color: featured.categoryTextColor,
+                                    textTransform: "uppercase",
+                                    letterSpacing: 0.5,
+                                }}
+                            >
+                                {featured.category}
+                            </span>
+                        </div>
+
+                        {/* Overlay content: date, title, button */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 2,
+                                padding: isMobile ? 16 : 24,
                                 display: "flex",
                                 flexDirection: isMobile ? "column" : "row",
                                 justifyContent: "space-between",
-                                alignItems: isMobile
-                                    ? "flex-start"
-                                    : "flex-start",
-                                gap: isMobile ? 16 : 24,
-                                width: "100%",
+                                alignItems: isMobile ? "flex-start" : "flex-end",
+                                gap: isMobile ? 12 : 24,
                             }}
                         >
                             <div
@@ -692,7 +685,7 @@ function NewsSection(props: Props) {
                                     flex: 1,
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: 8,
+                                    gap: 6,
                                 }}
                             >
                                 <span
@@ -719,7 +712,6 @@ function NewsSection(props: Props) {
                                         lineHeight: `${featuredTitleLineHeight}px`,
                                         color: featuredTitleColor,
                                         margin: 0,
-                                        maxWidth: isMobile ? "100%" : 602,
                                     }}
                                 >
                                     {featured.title}
@@ -727,44 +719,39 @@ function NewsSection(props: Props) {
                             </div>
 
                             {featured.buttonText && (
-                                <div
+                                <a
+                                    href={featured.buttonUrl}
                                     style={{
-                                        paddingTop: isMobile ? 0 : 32,
+                                        display: "inline-flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        paddingLeft: 24,
+                                        paddingRight: 24,
+                                        paddingTop: 12,
+                                        paddingBottom: 12,
+                                        backgroundColor:
+                                            featuredButtonBgColor,
+                                        borderRadius:
+                                            featuredButtonRadius,
+                                        textDecoration: "none",
+                                        flexShrink: 0,
                                     }}
                                 >
-                                    <a
-                                        href={featured.buttonUrl}
+                                    <span
                                         style={{
-                                            display: "inline-flex",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            paddingLeft: 24,
-                                            paddingRight: 24,
-                                            paddingTop: 12,
-                                            paddingBottom: 12,
-                                            backgroundColor:
-                                                featuredButtonBgColor,
-                                            borderRadius:
-                                                featuredButtonRadius,
-                                            textDecoration: "none",
+                                            fontSize:
+                                                featuredButtonFontSize,
+                                            fontFamily:
+                                                featuredButtonFontFamily,
+                                            fontWeight:
+                                                featuredButtonFontWeight,
+                                            color: featuredButtonTextColor,
+                                            textAlign: "center",
                                         }}
                                     >
-                                        <span
-                                            style={{
-                                                fontSize:
-                                                    featuredButtonFontSize,
-                                                fontFamily:
-                                                    featuredButtonFontFamily,
-                                                fontWeight:
-                                                    featuredButtonFontWeight,
-                                                color: featuredButtonTextColor,
-                                                textAlign: "center",
-                                            }}
-                                        >
-                                            {featured.buttonText}
-                                        </span>
-                                    </a>
-                                </div>
+                                        {featured.buttonText}
+                                    </span>
+                                </a>
                             )}
                         </div>
                     </div>
@@ -1186,7 +1173,7 @@ addPropertyControls(NewsSection, {
     featuredTitleColor: {
         type: ControlType.Color,
         title: "Feat. Title Color",
-        defaultValue: "#171717",
+        defaultValue: "#FFFFFF",
     },
     featuredDateFontSize: {
         type: ControlType.Number,
@@ -1219,7 +1206,7 @@ addPropertyControls(NewsSection, {
     featuredDateColor: {
         type: ControlType.Color,
         title: "Feat. Date Color",
-        defaultValue: "#666666",
+        defaultValue: "#CCCCCC",
     },
     featuredDateLetterSpacing: {
         type: ControlType.Number,
