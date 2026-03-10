@@ -27,6 +27,7 @@ interface Props {
     tagline: string
     navLinks: NavLink[]
     socialLinks: SocialLink[]
+    soc2Image: string
     showNewsletter: boolean
     newsletterHeading: string
     newsletterPlaceholder: string
@@ -69,6 +70,7 @@ function Footer(props: Props) {
             { platform: "Twitter", url: "#" },
             { platform: "YouTube", url: "#" },
         ],
+        soc2Image = "",
         showNewsletter = true,
         newsletterHeading = "Stay Updated",
         newsletterPlaceholder = "Enter your email",
@@ -219,6 +221,20 @@ function Footer(props: Props) {
                         >
                             {tagline}
                         </p>
+
+                        {/* SOC 2 Badge */}
+                        {soc2Image && (
+                            <img
+                                src={soc2Image}
+                                alt="SOC 2 Certified"
+                                style={{
+                                    height: 64,
+                                    objectFit: "contain",
+                                    alignSelf: "flex-start",
+                                    marginTop: 8,
+                                }}
+                            />
+                        )}
 
                         {/* Social Links */}
                         <div
@@ -552,6 +568,10 @@ addPropertyControls(Footer, {
             { platform: "Twitter", url: "#" },
             { platform: "YouTube", url: "#" },
         ],
+    },
+    soc2Image: {
+        type: ControlType.Image,
+        title: "SOC 2 Badge",
     },
     showNewsletter: {
         type: ControlType.Boolean,
