@@ -118,6 +118,7 @@ function Navigation(props: Props) {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
     const [forceSolid, setForceSolid] = useState(false)
+    const [isHovered, setIsHovered] = useState(false)
 
     // Responsive state
     const [isMobile, setIsMobile] = useState(false)
@@ -269,7 +270,7 @@ function Navigation(props: Props) {
 
     // --- Derived visual state ---
     const isOverlay =
-        overlayMode && !pastThreshold && !forceSolid && !mobileMenuOpen
+        overlayMode && !pastThreshold && !forceSolid && !mobileMenuOpen && !isHovered
     const currentBg = isOverlay ? overlayBgColor : bgColor
     const currentText = isOverlay ? overlayTextColor : textColor
     const currentHover = isOverlay ? "rgba(255,255,255,0.7)" : textHoverColor
@@ -1262,7 +1263,13 @@ function Navigation(props: Props) {
                 fontFamily,
                 boxSizing: "border-box",
             }}
-            onMouseLeave={() => !isMobile && setActiveDropdown(null)}
+            onMouseEnter={() => !isMobile && setIsHovered(true)}
+            onMouseLeave={() => {
+                if (!isMobile) {
+                    setActiveDropdown(null)
+                    setIsHovered(false)
+                }
+            }}
         >
             {/* Main Bar */}
             <div
