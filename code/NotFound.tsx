@@ -3,8 +3,6 @@
 // "We Compressed This Page a Bit Too Hard."
 
 import { addPropertyControls, ControlType } from "framer"
-import { useState, useEffect } from "react"
-
 interface Props {
     heading: string
     body: string
@@ -29,12 +27,12 @@ interface Props {
     ctaSecondaryBgColor: string
     ctaSecondaryTextColor: string
     ctaSecondaryBorderColor: string
+    // Hero image
+    heroImage: string
+    heroMaxWidth: number
     // General
     bgColor: string
     accentColor: string
-    illustrationFontSize: number
-    illustrationFontFamily: string
-    illustrationFontWeight: number
     showLogo: boolean
     logoImage: string
     logoText: string
@@ -44,232 +42,6 @@ interface Props {
     headingFontFamily: string
     bodyFontFamily: string
     style?: React.CSSProperties
-}
-
-// Inline SVG 404 illustration — Beamr's eye analyzing and deconstructing "404"
-function Illustration404({
-    accentColor,
-    textColor,
-    fontSize,
-    fontFamily,
-    fontWeight,
-}: {
-    accentColor: string
-    textColor: string
-    fontSize: number
-    fontFamily: string
-    fontWeight: number
-}) {
-    const [scattered, setScattered] = useState(false)
-
-    useEffect(() => {
-        const timer = setTimeout(() => setScattered(true), 600)
-        return () => clearTimeout(timer)
-    }, [])
-
-    return (
-        <svg
-            viewBox="0 0 800 320"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "100%", maxWidth: 720, height: "auto" }}
-        >
-            {/* First "4" — fully opaque */}
-            <text
-                x="80"
-                y="240"
-                fontFamily={fontFamily}
-                fontWeight={fontWeight}
-                fontSize={fontSize}
-                fill={textColor}
-                opacity="1"
-            >
-                4
-            </text>
-
-            {/* "0" — semi-transparent, being interrogated */}
-            <g opacity="0.35">
-                <text
-                    x="280"
-                    y="240"
-                    fontFamily={fontFamily}
-                    fontWeight={fontWeight}
-                    fontSize={fontSize}
-                    fill={textColor}
-                >
-                    0
-                </text>
-            </g>
-
-            {/* Crop marks around the "0" — centered on glyph bounding box (~300-460 x, ~55-245 y) */}
-            <g stroke={accentColor} strokeWidth="1.5" opacity="0.6">
-                {/* Top-left crop */}
-                <line x1="295" y1="50" x2="295" y2="70" />
-                <line x1="295" y1="50" x2="315" y2="50" />
-                {/* Top-right crop */}
-                <line x1="465" y1="50" x2="465" y2="70" />
-                <line x1="465" y1="50" x2="445" y2="50" />
-                {/* Bottom-left crop */}
-                <line x1="295" y1="248" x2="295" y2="228" />
-                <line x1="295" y1="248" x2="315" y2="248" />
-                {/* Bottom-right crop */}
-                <line x1="465" y1="248" x2="465" y2="228" />
-                <line x1="465" y1="248" x2="445" y2="248" />
-            </g>
-
-            {/* Scan line across the "0" — sweeps within crop mark bounds */}
-            <line
-                x1="295"
-                y1="150"
-                x2="465"
-                y2="150"
-                stroke={accentColor}
-                strokeWidth="1"
-                opacity="0.8"
-                strokeDasharray="6 3"
-            >
-                <animate
-                    attributeName="y1"
-                    values="60;240;60"
-                    dur="3s"
-                    repeatCount="indefinite"
-                />
-                <animate
-                    attributeName="y2"
-                    values="60;240;60"
-                    dur="3s"
-                    repeatCount="indefinite"
-                />
-            </line>
-
-
-            {/* Last "4" — dissolving with scattered pixel debris */}
-            <text
-                x="480"
-                y="240"
-                fontFamily={fontFamily}
-                fontWeight={fontWeight}
-                fontSize={fontSize}
-                fill={textColor}
-                opacity="0.15"
-            >
-                4
-            </text>
-
-            {/* Scattered pixel debris from the last "4" */}
-            {[
-                { x: 620, y: 80, size: 8, delay: 0, opacity: 0.6 },
-                { x: 650, y: 120, size: 6, delay: 0.2, opacity: 0.5 },
-                { x: 670, y: 160, size: 10, delay: 0.4, opacity: 0.4 },
-                { x: 690, y: 90, size: 5, delay: 0.1, opacity: 0.35 },
-                { x: 710, y: 200, size: 7, delay: 0.3, opacity: 0.3 },
-                { x: 640, y: 200, size: 4, delay: 0.5, opacity: 0.5 },
-                { x: 730, y: 140, size: 9, delay: 0.15, opacity: 0.25 },
-                { x: 660, y: 60, size: 5, delay: 0.35, opacity: 0.45 },
-                { x: 750, y: 100, size: 6, delay: 0.25, opacity: 0.2 },
-                { x: 720, y: 220, size: 4, delay: 0.45, opacity: 0.3 },
-                { x: 680, y: 240, size: 7, delay: 0.55, opacity: 0.35 },
-                { x: 760, y: 180, size: 3, delay: 0.6, opacity: 0.15 },
-            ].map((p, i) => (
-                <rect
-                    key={i}
-                    x={scattered ? p.x : 580}
-                    y={scattered ? p.y : 150}
-                    width={p.size}
-                    height={p.size}
-                    fill={textColor}
-                    opacity={p.opacity}
-                    style={{
-                        transition: `all 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${p.delay}s`,
-                    }}
-                />
-            ))}
-
-            {/* BQM Badge: "VERDICT: REMOVABLE" */}
-            <g transform="translate(620, 30)">
-                <rect
-                    x="0"
-                    y="0"
-                    width="140"
-                    height="24"
-                    rx="4"
-                    fill={accentColor}
-                    opacity="0.15"
-                />
-                <rect
-                    x="0"
-                    y="0"
-                    width="140"
-                    height="24"
-                    rx="4"
-                    stroke={accentColor}
-                    strokeWidth="0.5"
-                    fill="none"
-                    opacity="0.4"
-                />
-                <text
-                    x="10"
-                    y="16"
-                    fontFamily="'SF Mono', 'Fira Code', monospace"
-                    fontSize="9"
-                    fontWeight="600"
-                    fill={accentColor}
-                    opacity="0.9"
-                    letterSpacing="0.05em"
-                >
-                    VERDICT: REMOVABLE
-                </text>
-            </g>
-
-            {/* Badge: "PAGE BITS: 0 found" */}
-            <g transform="translate(620, 62)">
-                <rect
-                    x="0"
-                    y="0"
-                    width="120"
-                    height="22"
-                    rx="4"
-                    fill="rgba(255,255,255,0.04)"
-                />
-                <rect
-                    x="0"
-                    y="0"
-                    width="120"
-                    height="22"
-                    rx="4"
-                    stroke="rgba(255,255,255,0.12)"
-                    strokeWidth="0.5"
-                    fill="none"
-                />
-                <text
-                    x="10"
-                    y="15"
-                    fontFamily="'SF Mono', 'Fira Code', monospace"
-                    fontSize="8.5"
-                    fill={textColor}
-                    opacity="0.45"
-                    letterSpacing="0.03em"
-                >
-                    PAGE BITS: 0 found
-                </text>
-            </g>
-
-            {/* Monospace diagnostic line at bottom */}
-            <text
-                x="400"
-                y="300"
-                textAnchor="middle"
-                fontFamily="'SF Mono', 'Fira Code', 'Courier New', monospace"
-                fontSize="10"
-                fill={textColor}
-                opacity="0.2"
-                letterSpacing="0.06em"
-            >
-                COMPRESS_RATIO: &#8734; / QUALITY_DELTA: N/A / OUTPUT: 0
-                bytes
-            </text>
-        </svg>
-    )
 }
 
 function NotFound(props: Props) {
@@ -294,9 +66,8 @@ function NotFound(props: Props) {
         ctaSecondaryBgColor = "rgba(255,255,255,0.06)",
         ctaSecondaryTextColor = "#ffffff",
         ctaSecondaryBorderColor = "rgba(255,255,255,0.1)",
-        illustrationFontSize = 220,
-        illustrationFontFamily = "'Poppins', 'Inter', sans-serif",
-        illustrationFontWeight = 700,
+        heroImage = "",
+        heroMaxWidth = 720,
         showLogo = true,
         logoImage = "",
         logoText = "beamr",
@@ -397,14 +168,19 @@ function NotFound(props: Props) {
                     gap: 24,
                 }}
             >
-                {/* 404 Illustration — the hero */}
-                <Illustration404
-                    accentColor={accentColor}
-                    textColor={headingColor}
-                    fontSize={illustrationFontSize}
-                    fontFamily={illustrationFontFamily}
-                    fontWeight={illustrationFontWeight}
-                />
+                {/* Hero image */}
+                {heroImage && (
+                    <img
+                        src={heroImage}
+                        alt="404"
+                        style={{
+                            width: "100%",
+                            maxWidth: heroMaxWidth,
+                            height: "auto",
+                            objectFit: "contain",
+                        }}
+                    />
+                )}
 
                 {/* Heading */}
                 <h1
@@ -692,26 +468,17 @@ addPropertyControls(NotFound, {
         step: 2,
         hidden: (props) => !props.showLogo,
     },
-    illustrationFontSize: {
+    heroImage: {
+        type: ControlType.Image,
+        title: "Hero Image",
+    },
+    heroMaxWidth: {
         type: ControlType.Number,
-        title: "404 Font Size",
-        defaultValue: 220,
-        min: 100,
-        max: 300,
+        title: "Hero Max Width",
+        defaultValue: 720,
+        min: 200,
+        max: 1200,
         step: 10,
-    },
-    illustrationFontFamily: {
-        type: ControlType.String,
-        title: "404 Font Family",
-        defaultValue: "'Poppins', 'Inter', sans-serif",
-    },
-    illustrationFontWeight: {
-        type: ControlType.Number,
-        title: "404 Font Weight",
-        defaultValue: 700,
-        min: 100,
-        max: 900,
-        step: 100,
     },
     bgColor: {
         type: ControlType.Color,
