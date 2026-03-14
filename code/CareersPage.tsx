@@ -4,7 +4,6 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { useEffect } from "react"
-import { COLORS, DEFAULT_FONTS } from "./career/theme"
 import CareerHero from "./career/CareerHero"
 import CareerOpenRoles from "./career/CareerOpenRoles"
 import CareerSignalTest from "./career/CareerSignalTest"
@@ -85,18 +84,18 @@ interface CareersPageProps {
 
 function CareersPage(props: CareersPageProps) {
     const {
-        headingFont = DEFAULT_FONTS.heading,
-        bodyFont = DEFAULT_FONTS.body,
-        monoFont = DEFAULT_FONTS.mono,
-        heroHeadlineSize = DEFAULT_FONTS.heroHeadlineSize,
-        heroSubheadlineSize = DEFAULT_FONTS.heroSubheadlineSize,
-        sectionHeadlineSize = DEFAULT_FONTS.sectionHeadlineSize,
-        signalHeadlineSize = DEFAULT_FONTS.signalHeadlineSize,
-        roleTitleSize = DEFAULT_FONTS.roleTitleSize,
-        bodySize = DEFAULT_FONTS.bodySize,
-        statNumberSize = DEFAULT_FONTS.statNumberSize,
-        labelSize = DEFAULT_FONTS.labelSize,
-        ctaButtonSize = DEFAULT_FONTS.ctaButtonSize,
+        headingFont = "'Poppins', 'Inter', sans-serif",
+        bodyFont = "'Inter', 'Poppins', sans-serif",
+        monoFont = "'JetBrains Mono', 'Fira Code', monospace",
+        heroHeadlineSize = 130,
+        heroSubheadlineSize = 18,
+        sectionHeadlineSize = 28,
+        signalHeadlineSize = 22,
+        roleTitleSize = 16,
+        bodySize = "'Inter', 'Poppins', sans-serif"Size,
+        statNumberSize = 28,
+        labelSize = 11,
+        ctaButtonSize = 14,
         heroBadge = "Now Hiring",
         heroHeadline = "EVERY\nBIT\nCOUNTS.",
         heroSubheadline1 = "We analyze every bit to find the ones that matter.",
@@ -165,7 +164,7 @@ function CareersPage(props: CareersPageProps) {
         <div style={{
             ...style, width: "100%", display: "flex",
             flexDirection: "column" as const, minHeight: "100vh",
-            backgroundColor: COLORS.white,
+            backgroundColor: "#FFFFFF",
         }}>
             <CareerHero
                 headingFont={headingFont}
@@ -268,9 +267,9 @@ function CareersPage(props: CareersPageProps) {
 // ═══════════════════════════════════════════════════════════════
 addPropertyControls(CareersPage, {
     // ─── Typography ───────────────────────────────────────────
-    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULT_FONTS.heading },
-    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULT_FONTS.body },
-    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULT_FONTS.mono },
+    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: "'Poppins', 'Inter', sans-serif" },
+    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: "'Inter', 'Poppins', sans-serif" },
+    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: "'JetBrains Mono', 'Fira Code', monospace" },
     heroHeadlineSize: { type: ControlType.Number, title: "Hero Headline", defaultValue: 130, min: 48, max: 200, step: 1, unit: "px" },
     heroSubheadlineSize: { type: ControlType.Number, title: "Hero Subhead", defaultValue: 18, min: 12, max: 32, step: 1, unit: "px" },
     sectionHeadlineSize: { type: ControlType.Number, title: "Section Head", defaultValue: 28, min: 16, max: 48, step: 1, unit: "px" },

@@ -3,7 +3,20 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect } from "react"
-import { COLORS, DEFAULT_FONTS } from "./theme"
+
+const COLORS = {
+    darkNavy: "#000737",
+    fullBlue: "#3751FF",
+    accentBlue: "#0099FF",
+    white: "#FFFFFF",
+}
+
+const DEFAULTS = {
+    headingFont: "'Poppins', 'Inter', sans-serif",
+    bodyFont: "'Inter', 'Poppins', sans-serif",
+    signalHeadlineSize: 22,
+    bodySize: 14,
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CAREER SIGNAL TEST — main export
@@ -33,10 +46,10 @@ interface CareerSignalTestProps {
 
 function CareerSignalTest(props: CareerSignalTestProps) {
     const {
-        headingFont = DEFAULT_FONTS.heading,
-        bodyFont = DEFAULT_FONTS.body,
-        signalHeadlineSize = DEFAULT_FONTS.signalHeadlineSize,
-        bodySize = DEFAULT_FONTS.bodySize,
+        headingFont = DEFAULTS.headingFont,
+        bodyFont = DEFAULTS.bodyFont,
+        signalHeadlineSize = DEFAULTS.signalHeadlineSize,
+        bodySize = DEFAULTS.bodyFontSize,
         headline = "Not sure?\nRun the test.",
         subtext = "Three or more true — we should talk.",
         item1 = "You've gone deep on something and can explain it without dumbing it down.",
@@ -221,8 +234,8 @@ function CareerSignalTest(props: CareerSignalTestProps) {
 }
 
 addPropertyControls(CareerSignalTest, {
-    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULT_FONTS.heading },
-    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULT_FONTS.body },
+    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULTS.headingFont },
+    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULTS.bodyFont },
     signalHeadlineSize: { type: ControlType.Number, title: "Headline Size", defaultValue: 22, min: 14, max: 40, step: 1, unit: "px" },
     bodySize: { type: ControlType.Number, title: "Body Size", defaultValue: 14, min: 10, max: 22, step: 1, unit: "px" },
     headline: { type: ControlType.String, title: "Headline", defaultValue: "Not sure?\nRun the test." },

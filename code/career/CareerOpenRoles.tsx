@@ -3,8 +3,44 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect } from "react"
-import { COLORS, DEFAULT_FONTS, DEFAULT_ROLES } from "./theme"
-import type { FontConfig, Role } from "./theme"
+
+const COLORS = {
+    fullBlue: "#3751FF",
+    accentBlue: "#0099FF",
+    lightLavender: "#EAEBFF",
+    white: "#FFFFFF",
+    muted: "#8896AB",
+    darkText: "#1E293B",
+}
+
+interface Role {
+    title: string
+    department: string
+    location: string
+    url: string
+}
+
+const DEFAULT_ROLES: Role[] = [
+    { title: "Senior Video Codec Engineer", department: "Engineering", location: "Tel Aviv", url: "#" },
+    { title: "GPU Systems Engineer", department: "Engineering", location: "Tel Aviv", url: "#" },
+    { title: "Perceptual Quality Researcher", department: "Research", location: "Tel Aviv", url: "#" },
+    { title: "Full-Stack Engineer", department: "Engineering", location: "Tel Aviv", url: "#" },
+    { title: "Algorithm Developer — Video", department: "Engineering", location: "Tel Aviv", url: "#" },
+    { title: "Data Engineer", department: "Engineering", location: "Tel Aviv", url: "#" },
+    { title: "Director of Product", department: "Product", location: "Tel Aviv", url: "#" },
+    { title: "Product Manager — AV & ML", department: "Product", location: "Remote", url: "#" },
+    { title: "VidOps Engineer", department: "Operations", location: "Remote", url: "#" },
+    { title: "Technical Account Manager", department: "Operations", location: "Remote", url: "#" },
+]
+
+const DEFAULTS = {
+    headingFont: "'Poppins', 'Inter', sans-serif",
+    bodyFont: "'Inter', 'Poppins', sans-serif",
+    monoFont: "'JetBrains Mono', 'Fira Code', monospace",
+    sectionHeadlineSize: 28,
+    roleTitleSize: 16,
+    bodySize: 14,
+}
 
 // ─── Role Row ──────────────────────────────────────────────────
 function RoleRow({ role, headingFont, monoFont, bodyFont, roleTitleSize }: {
@@ -92,12 +128,12 @@ interface CareerOpenRolesProps {
 
 function CareerOpenRoles(props: CareerOpenRolesProps) {
     const {
-        headingFont = DEFAULT_FONTS.heading,
-        bodyFont = DEFAULT_FONTS.body,
-        monoFont = DEFAULT_FONTS.mono,
-        sectionHeadlineSize = DEFAULT_FONTS.sectionHeadlineSize,
-        roleTitleSize = DEFAULT_FONTS.roleTitleSize,
-        bodySize = DEFAULT_FONTS.bodySize,
+        headingFont = DEFAULTS.headingFont,
+        bodyFont = DEFAULTS.bodyFont,
+        monoFont = DEFAULTS.monoFont,
+        sectionHeadlineSize = DEFAULTS.sectionHeadlineSize,
+        roleTitleSize = DEFAULTS.roleTitleSize,
+        bodySize = DEFAULTS.bodyFontSize,
         headline = "Find Your Next Career Opportunity",
         filterLocationLabel = "Location",
         filterDeptLabel = "Department",
@@ -229,9 +265,9 @@ function CareerOpenRoles(props: CareerOpenRolesProps) {
 }
 
 addPropertyControls(CareerOpenRoles, {
-    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULT_FONTS.heading },
-    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULT_FONTS.body },
-    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULT_FONTS.mono },
+    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULTS.headingFont },
+    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULTS.bodyFont },
+    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULTS.monoFont },
     sectionHeadlineSize: { type: ControlType.Number, title: "Headline Size", defaultValue: 28, min: 16, max: 48, step: 1, unit: "px" },
     roleTitleSize: { type: ControlType.Number, title: "Role Title Size", defaultValue: 16, min: 12, max: 24, step: 1, unit: "px" },
     bodySize: { type: ControlType.Number, title: "Body Size", defaultValue: 14, min: 10, max: 22, step: 1, unit: "px" },

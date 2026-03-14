@@ -3,7 +3,20 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect } from "react"
-import { COLORS, DEFAULT_FONTS } from "./theme"
+
+const COLORS = {
+    accentBlue: "#0099FF",
+    white: "#FFFFFF",
+    darkBg: "#080E1F",
+    muted: "#8896AB",
+}
+
+const DEFAULTS = {
+    bodyFont: "'Inter', 'Poppins', sans-serif",
+    monoFont: "'JetBrains Mono', 'Fira Code', monospace",
+    statNumberSize: 28,
+    labelSize: 11,
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CAREER FOOTER STATS — main export
@@ -33,10 +46,10 @@ interface CareerFooterStatsProps {
 
 function CareerFooterStats(props: CareerFooterStatsProps) {
     const {
-        bodyFont = DEFAULT_FONTS.body,
-        monoFont = DEFAULT_FONTS.mono,
-        statNumberSize = DEFAULT_FONTS.statNumberSize,
-        labelSize = DEFAULT_FONTS.labelSize,
+        bodyFont = DEFAULTS.bodyFont,
+        monoFont = DEFAULTS.monoFont,
+        statNumberSize = DEFAULTS.statNumberSize,
+        labelSize = DEFAULTS.labelSize,
         stat1Value = "53", stat1Label = "Patents",
         stat2Value = "1", stat2Unit = "Emmy", stat2Label = "Technology & Engineering",
         stat3Value = "12", stat3Label = "APIs in the GPU driver",
@@ -98,8 +111,8 @@ function CareerFooterStats(props: CareerFooterStatsProps) {
 }
 
 addPropertyControls(CareerFooterStats, {
-    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULT_FONTS.body },
-    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULT_FONTS.mono },
+    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULTS.bodyFont },
+    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULTS.monoFont },
     statNumberSize: { type: ControlType.Number, title: "Stat Number Size", defaultValue: 28, min: 16, max: 48, step: 1, unit: "px" },
     labelSize: { type: ControlType.Number, title: "Label Size", defaultValue: 11, min: 8, max: 16, step: 1, unit: "px" },
     stat1Value: { type: ControlType.String, title: "Stat 1 Value", defaultValue: "53" },

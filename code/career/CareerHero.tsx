@@ -3,8 +3,24 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect, useRef } from "react"
-import { COLORS, DEFAULT_FONTS } from "./theme"
-import type { FontConfig } from "./theme"
+
+const COLORS = {
+    darkNavy: "#000737",
+    fullBlue: "#3751FF",
+    accentBlue: "#0099FF",
+    white: "#FFFFFF",
+}
+
+const DEFAULTS = {
+    headingFont: "'Poppins', 'Inter', sans-serif",
+    bodyFont: "'Inter', 'Poppins', sans-serif",
+    monoFont: "'JetBrains Mono', 'Fira Code', monospace",
+    heroHeadlineSize: 130,
+    heroSubheadlineSize: 18,
+    statNumberSize: 28,
+    labelSize: 11,
+    ctaButtonSize: 14,
+}
 
 // ─── Pixel Canvas ──────────────────────────────────────────────
 function PixelCanvas() {
@@ -216,14 +232,14 @@ interface CareerHeroProps {
 
 function CareerHero(props: CareerHeroProps) {
     const {
-        headingFont = DEFAULT_FONTS.heading,
-        bodyFont = DEFAULT_FONTS.body,
-        monoFont = DEFAULT_FONTS.mono,
-        heroHeadlineSize = DEFAULT_FONTS.heroHeadlineSize,
-        heroSubheadlineSize = DEFAULT_FONTS.heroSubheadlineSize,
-        statNumberSize = DEFAULT_FONTS.statNumberSize,
-        labelSize = DEFAULT_FONTS.labelSize,
-        ctaButtonSize = DEFAULT_FONTS.ctaButtonSize,
+        headingFont = DEFAULTS.headingFont,
+        bodyFont = DEFAULTS.bodyFont,
+        monoFont = DEFAULTS.monoFont,
+        heroHeadlineSize = DEFAULTS.heroHeadlineSize,
+        heroSubheadlineSize = DEFAULTS.heroSubheadlineSize,
+        statNumberSize = DEFAULTS.statNumberSize,
+        labelSize = DEFAULTS.labelSize,
+        ctaButtonSize = DEFAULTS.ctaButtonSize,
         badge = "Now Hiring",
         headline = "EVERY\nBIT\nCOUNTS.",
         subheadline1 = "We analyze every bit to find the ones that matter.",
@@ -401,9 +417,9 @@ function CareerHero(props: CareerHeroProps) {
 }
 
 addPropertyControls(CareerHero, {
-    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULT_FONTS.heading },
-    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULT_FONTS.body },
-    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULT_FONTS.mono },
+    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULTS.headingFont },
+    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULTS.bodyFont },
+    monoFont: { type: ControlType.String, title: "Mono Font", defaultValue: DEFAULTS.monoFont },
     heroHeadlineSize: { type: ControlType.Number, title: "Headline Size", defaultValue: 130, min: 48, max: 200, step: 1, unit: "px" },
     heroSubheadlineSize: { type: ControlType.Number, title: "Subhead Size", defaultValue: 18, min: 12, max: 32, step: 1, unit: "px" },
     statNumberSize: { type: ControlType.Number, title: "Stat Number Size", defaultValue: 28, min: 16, max: 48, step: 1, unit: "px" },

@@ -3,7 +3,21 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect } from "react"
-import { COLORS, DEFAULT_FONTS } from "./theme"
+
+const COLORS = {
+    fullBlue: "#3751FF",
+    accentBlue: "#0099FF",
+    white: "#FFFFFF",
+    muted: "#8896AB",
+    darkText: "#1E293B",
+}
+
+const DEFAULTS = {
+    headingFont: "'Poppins', 'Inter', sans-serif",
+    bodyFont: "'Inter', 'Poppins', sans-serif",
+    bodySize: 14,
+    ctaButtonSize: 14,
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CAREER CTA — main export
@@ -28,10 +42,10 @@ interface CareerCTAProps {
 
 function CareerCTA(props: CareerCTAProps) {
     const {
-        headingFont = DEFAULT_FONTS.heading,
-        bodyFont = DEFAULT_FONTS.body,
-        bodySize = DEFAULT_FONTS.bodySize,
-        ctaButtonSize = DEFAULT_FONTS.ctaButtonSize,
+        headingFont = DEFAULTS.headingFont,
+        bodyFont = DEFAULTS.bodyFont,
+        bodySize = DEFAULTS.bodyFontSize,
+        ctaButtonSize = DEFAULTS.ctaButtonSize,
         headline = "Not every bit makes the cut.",
         subtext = "Don't see your role? Tell us what we're missing.",
         primaryText = "Send Us Your Story",
@@ -114,8 +128,8 @@ function CareerCTA(props: CareerCTAProps) {
 }
 
 addPropertyControls(CareerCTA, {
-    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULT_FONTS.heading },
-    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULT_FONTS.body },
+    headingFont: { type: ControlType.String, title: "Heading Font", defaultValue: DEFAULTS.headingFont },
+    bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULTS.bodyFont },
     bodySize: { type: ControlType.Number, title: "Body Size", defaultValue: 14, min: 10, max: 22, step: 1, unit: "px" },
     ctaButtonSize: { type: ControlType.Number, title: "Button Size", defaultValue: 14, min: 10, max: 20, step: 1, unit: "px" },
     headline: { type: ControlType.String, title: "Headline", defaultValue: "Not every bit makes the cut." },
