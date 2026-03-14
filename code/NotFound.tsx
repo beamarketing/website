@@ -73,7 +73,7 @@ function Illustration404({
                     x="280"
                     y="240"
                     fontFamily={fontFamily}
-                    fontWeight={Math.max(100, fontWeight - 300)}
+                    fontWeight={fontWeight}
                     fontSize={fontSize}
                     fill={textColor}
                 >
