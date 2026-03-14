@@ -27,6 +27,25 @@ interface Role {
     niceToHave: string[]
 }
 
+// Framer property control shape — requirements/niceToHave as newline-separated strings
+interface RoleInput {
+    title: string
+    department: string
+    location: string
+    type: string
+    description: string
+    requirements: string
+    niceToHave: string
+}
+
+function parseRole(input: RoleInput): Role {
+    return {
+        ...input,
+        requirements: input.requirements ? input.requirements.split("\n").filter(Boolean) : [],
+        niceToHave: input.niceToHave ? input.niceToHave.split("\n").filter(Boolean) : [],
+    }
+}
+
 const DEFAULT_ROLES: Role[] = [
     {
         title: "Senior Video Codec Engineer",
@@ -736,8 +755,8 @@ interface CareerOpenRolesProps {
     filterLocationLabel: string
     filterDeptLabel: string
     emptyText: string
-    // Data — JSON string for custom role data
-    rolesJson: string
+    // Data
+    roles: RoleInput[]
     // Style
     style?: React.CSSProperties
 }
@@ -754,9 +773,14 @@ function CareerOpenRoles(props: CareerOpenRolesProps) {
         filterLocationLabel = "Location",
         filterDeptLabel = "Department",
         emptyText = "No roles match your filters. Try broadening your search.",
-        rolesJson = "",
+        roles: roleInputs = [],
         style,
     } = props
+
+    // Convert Framer inputs to Role objects, fall back to defaults
+    const roles: Role[] = roleInputs.length > 0
+        ? roleInputs.map(parseRole)
+        : DEFAULT_ROLES
 
     const [locationFilter, setLocationFilter] = useState("all")
     const [deptFilter, setDeptFilter] = useState("all")
@@ -779,15 +803,6 @@ function CareerOpenRoles(props: CareerOpenRolesProps) {
             if (match) setSelectedRole(match)
         }
     }, [])
-
-    // Parse roles from JSON or use defaults
-    let roles: Role[] = DEFAULT_ROLES
-    if (rolesJson && rolesJson.trim()) {
-        try {
-            const parsed = JSON.parse(rolesJson)
-            if (Array.isArray(parsed)) roles = parsed
-        } catch {}
-    }
 
     const locations = Array.from(new Set(roles.map((r) => r.location)))
     const departments = Array.from(new Set(roles.map((r) => r.department)))
@@ -915,7 +930,34 @@ addPropertyControls(CareerOpenRoles, {
     filterLocationLabel: { type: ControlType.String, title: "Location Label", defaultValue: "Location" },
     filterDeptLabel: { type: ControlType.String, title: "Dept Label", defaultValue: "Department" },
     emptyText: { type: ControlType.String, title: "Empty Text", defaultValue: "No roles match your filters. Try broadening your search." },
-    rolesJson: { type: ControlType.String, title: "Roles (JSON)", defaultValue: "", description: "JSON array of roles: [{title, department, location, type, description, requirements[], niceToHave[]}]. Leave empty for defaults." },
+    roles: {
+        type: ControlType.Array,
+        title: "Roles",
+        description: "Add, edit, or remove roles. Leave empty to use built-in defaults.",
+        control: {
+            type: ControlType.Object,
+            controls: {
+                title: { type: ControlType.String, title: "Title", defaultValue: "New Role" },
+                department: {
+                    type: ControlType.Enum,
+                    title: "Department",
+                    options: ["Engineering", "Research", "Product", "Operations", "Design", "Marketing", "Sales", "HR"],
+                    defaultValue: "Engineering",
+                },
+                location: { type: ControlType.String, title: "Location", defaultValue: "Tel Aviv" },
+                type: {
+                    type: ControlType.Enum,
+                    title: "Type",
+                    options: ["Full-time", "Part-time", "Contract", "Internship"],
+                    defaultValue: "Full-time",
+                },
+                description: { type: ControlType.String, title: "Description", defaultValue: "Describe the role..." },
+                requirements: { type: ControlType.String, title: "Requirements", defaultValue: "", description: "One requirement per line" },
+                niceToHave: { type: ControlType.String, title: "Nice to Have", defaultValue: "", description: "One item per line" },
+            },
+        },
+        defaultValue: [],
+    },
 })
 
 export default CareerOpenRoles

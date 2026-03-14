@@ -46,7 +46,7 @@ interface CareersPageProps {
     rolesFilterLocationLabel: string
     rolesFilterDeptLabel: string
     rolesEmptyText: string
-    rolesJson: string
+    roles: any[]
     // Signal Test copy
     signalHeadline: string
     signalSubtext: string
@@ -108,7 +108,7 @@ function CareersPage(props: CareersPageProps) {
         rolesFilterLocationLabel = "Location",
         rolesFilterDeptLabel = "Department",
         rolesEmptyText = "No roles match your filters. Try broadening your search.",
-        rolesJson = "",
+        roles: roles = [],
         signalHeadline = "Not sure?\nRun the test.",
         signalSubtext = "Three or more true — we should talk.",
         signalItem1 = "You've gone deep on something and can explain it without dumbing it down.",
@@ -201,7 +201,7 @@ function CareersPage(props: CareersPageProps) {
                     filterLocationLabel={rolesFilterLocationLabel}
                     filterDeptLabel={rolesFilterDeptLabel}
                     emptyText={rolesEmptyText}
-                    rolesJson={rolesJson}
+                    roles={roles}
                 />
             </div>
 
@@ -299,7 +299,34 @@ addPropertyControls(CareersPage, {
     rolesFilterLocationLabel: { type: ControlType.String, title: "Location Label", defaultValue: "Location" },
     rolesFilterDeptLabel: { type: ControlType.String, title: "Dept Label", defaultValue: "Department" },
     rolesEmptyText: { type: ControlType.String, title: "Empty Text", defaultValue: "No roles match your filters. Try broadening your search." },
-    rolesJson: { type: ControlType.String, title: "Roles (JSON)", defaultValue: "", description: "Optional JSON array: [{title, department, location, url}]" },
+    roles: {
+        type: ControlType.Array,
+        title: "Roles",
+        description: "Add, edit, or remove roles. Leave empty to use built-in defaults.",
+        control: {
+            type: ControlType.Object,
+            controls: {
+                title: { type: ControlType.String, title: "Title", defaultValue: "New Role" },
+                department: {
+                    type: ControlType.Enum,
+                    title: "Department",
+                    options: ["Engineering", "Research", "Product", "Operations", "Design", "Marketing", "Sales", "HR"],
+                    defaultValue: "Engineering",
+                },
+                location: { type: ControlType.String, title: "Location", defaultValue: "Tel Aviv" },
+                type: {
+                    type: ControlType.Enum,
+                    title: "Type",
+                    options: ["Full-time", "Part-time", "Contract", "Internship"],
+                    defaultValue: "Full-time",
+                },
+                description: { type: ControlType.String, title: "Description", defaultValue: "Describe the role..." },
+                requirements: { type: ControlType.String, title: "Requirements", defaultValue: "", description: "One per line" },
+                niceToHave: { type: ControlType.String, title: "Nice to Have", defaultValue: "", description: "One per line" },
+            },
+        },
+        defaultValue: [],
+    },
 
     // ─── Signal Test ──────────────────────────────────────────
     signalHeadline: { type: ControlType.String, title: "Signal Headline", defaultValue: "Not sure?\nRun the test." },
