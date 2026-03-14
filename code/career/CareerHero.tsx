@@ -351,7 +351,8 @@ function CareerHero(props: CareerHeroProps) {
                     color: subheadlineColor,
                     lineHeight: 1.6, margin: 0, maxWidth: 480,
                 }}>
-                    {subheadline1}{" "}
+                    {subheadline1}
+                    <br />
                     <span style={{ color: subheadlineBoldColor, fontWeight: 600 }}>
                         {subheadline2}
                     </span>
