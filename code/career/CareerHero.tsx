@@ -236,6 +236,11 @@ interface CareerHeroProps {
     stat2Label: string
     stat3Value: string
     stat3Label: string
+    // Logo
+    showLogo: boolean
+    logoText: string
+    logoIconColor: string
+    logoLink: string
     // Style
     style?: React.CSSProperties
 }
@@ -267,6 +272,10 @@ function CareerHero(props: CareerHeroProps) {
         stat1Value = "53", stat1Label = "Patents",
         stat2Value = "1", stat2Unit = "Emmy", stat2Label = "Technology & Engineering",
         stat3Value = "~50", stat3Label = "People",
+        showLogo = true,
+        logoText = "beamr",
+        logoIconColor = "#6C5CE7",
+        logoLink = "/",
         style,
     } = props
 
@@ -298,6 +307,45 @@ function CareerHero(props: CareerHeroProps) {
             <ScanLine />
             {!isMobile && <CropMarks />}
             <BitStream isMobile={isMobile} font={monoFont} />
+
+            {/* Logo — top left */}
+            {showLogo && (
+                <a
+                    href={logoLink}
+                    style={{
+                        position: "absolute",
+                        top: isMobile ? 24 : 36,
+                        left: isMobile ? 24 : 48,
+                        zIndex: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        textDecoration: "none",
+                        cursor: "pointer",
+                    }}
+                >
+                    <div style={{
+                        width: 30, height: 30, borderRadius: 6,
+                        backgroundColor: logoIconColor,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                        <svg width={15} height={15} viewBox="0 0 16 16" fill="none">
+                            <rect x="2" y="2" width="5" height="5" rx="1" fill="white" opacity="0.9" />
+                            <rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.6" />
+                            <rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.6" />
+                            <rect x="9" y="9" width="5" height="5" rx="1" fill="white" opacity="0.35" />
+                        </svg>
+                    </div>
+                    <span style={{
+                        fontFamily: headingFont,
+                        fontSize: 20, fontWeight: 700,
+                        color: COLORS.white,
+                        letterSpacing: "-0.01em",
+                    }}>
+                        {logoText}
+                    </span>
+                </a>
+            )}
 
             <div style={{
                 position: "relative", zIndex: 3, maxWidth: 720,
@@ -466,6 +514,10 @@ addPropertyControls(CareerHero, {
     stat2Label: { type: ControlType.String, title: "Stat 2 Label", defaultValue: "Technology & Engineering" },
     stat3Value: { type: ControlType.String, title: "Stat 3 Value", defaultValue: "~50" },
     stat3Label: { type: ControlType.String, title: "Stat 3 Label", defaultValue: "People" },
+    showLogo: { type: ControlType.Boolean, title: "Show Logo", defaultValue: true },
+    logoText: { type: ControlType.String, title: "Logo Text", defaultValue: "beamr" },
+    logoIconColor: { type: ControlType.Color, title: "Logo Icon BG", defaultValue: "#6C5CE7" },
+    logoLink: { type: ControlType.String, title: "Logo Link", defaultValue: "/" },
 })
 
 export default CareerHero
