@@ -64,7 +64,7 @@ function Illustration404({
                     x="280"
                     y="240"
                     fontFamily="'Poppins', 'Inter', sans-serif"
-                    fontWeight="200"
+                    fontWeight="400"
                     fontSize="220"
                     fill={textColor}
                 >
