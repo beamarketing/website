@@ -324,18 +324,11 @@ function CareerHero(props: CareerHeroProps) {
                         cursor: "pointer",
                     }}
                 >
-                    <div style={{
-                        width: 30, height: 30, borderRadius: 6,
-                        backgroundColor: logoIconColor,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                        <svg width={15} height={15} viewBox="0 0 16 16" fill="none">
-                            <rect x="2" y="2" width="5" height="5" rx="1" fill="white" opacity="0.9" />
-                            <rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.6" />
-                            <rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.6" />
-                            <rect x="9" y="9" width="5" height="5" rx="1" fill="white" opacity="0.35" />
-                        </svg>
-                    </div>
+                    <svg width={32} height={32} viewBox="0 0 64 64" fill="none">
+                        <rect width="64" height="64" rx="14" fill={logoIconColor} />
+                        <path d="M22 14 L22 50 Q22 50 22 50 C22 50 28 50 34 50 C46 50 50 42 50 36 C50 28 44 23 36 23 L30 23 L30 14 Z M30 31 L35 31 C39 31 42 33 42 36.5 C42 40 39 42 35 42 L30 42 Z" fill="white" />
+                        <circle cx="34" cy="36.5" r="7" fill={logoIconColor} />
+                    </svg>
                     <span style={{
                         fontFamily: headingFont,
                         fontSize: 20, fontWeight: 700,
