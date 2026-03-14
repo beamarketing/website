@@ -87,27 +87,27 @@ function Illustration404({
                 </text>
             </g>
 
-            {/* Crop marks around the "0" — centered on glyph visual center (~360, 155) */}
+            {/* Crop marks around the "0" — centered on glyph bounding box (~300-460 x, ~55-245 y) */}
             <g stroke={accentColor} strokeWidth="1.5" opacity="0.6">
                 {/* Top-left crop */}
-                <line x1="280" y1="55" x2="280" y2="75" />
-                <line x1="280" y1="55" x2="300" y2="55" />
+                <line x1="295" y1="50" x2="295" y2="70" />
+                <line x1="295" y1="50" x2="315" y2="50" />
                 {/* Top-right crop */}
-                <line x1="440" y1="55" x2="440" y2="75" />
-                <line x1="440" y1="55" x2="420" y2="55" />
+                <line x1="465" y1="50" x2="465" y2="70" />
+                <line x1="465" y1="50" x2="445" y2="50" />
                 {/* Bottom-left crop */}
-                <line x1="280" y1="250" x2="280" y2="230" />
-                <line x1="280" y1="250" x2="300" y2="250" />
+                <line x1="295" y1="248" x2="295" y2="228" />
+                <line x1="295" y1="248" x2="315" y2="248" />
                 {/* Bottom-right crop */}
-                <line x1="440" y1="250" x2="440" y2="230" />
-                <line x1="440" y1="250" x2="420" y2="250" />
+                <line x1="465" y1="248" x2="465" y2="228" />
+                <line x1="465" y1="248" x2="445" y2="248" />
             </g>
 
             {/* Scan line across the "0" — sweeps within crop mark bounds */}
             <line
-                x1="280"
+                x1="295"
                 y1="150"
-                x2="440"
+                x2="465"
                 y2="150"
                 stroke={accentColor}
                 strokeWidth="1"
@@ -116,13 +116,13 @@ function Illustration404({
             >
                 <animate
                     attributeName="y1"
-                    values="65;240;65"
+                    values="60;240;60"
                     dur="3s"
                     repeatCount="indefinite"
                 />
                 <animate
                     attributeName="y2"
-                    values="65;240;65"
+                    values="60;240;60"
                     dur="3s"
                     repeatCount="indefinite"
                 />
