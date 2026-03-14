@@ -14,10 +14,24 @@ interface Props {
     ctaSecondaryText: string
     ctaSecondaryUrl: string
     showDiagnostics: boolean
+    // Text sizes
+    headingFontSize: number
+    bodyFontSize: number
+    subBodyFontSize: number
+    // Text colors
+    headingColor: string
+    bodyColor: string
+    subBodyColor: string
+    // Button sizes & colors
+    ctaFontSize: number
+    ctaPrimaryBgColor: string
+    ctaPrimaryTextColor: string
+    ctaSecondaryBgColor: string
+    ctaSecondaryTextColor: string
+    ctaSecondaryBorderColor: string
+    // General
     bgColor: string
-    textColor: string
     accentColor: string
-    secondaryTextColor: string
     illustrationFontSize: number
     illustrationFontFamily: string
     illustrationFontWeight: number
@@ -268,6 +282,18 @@ function NotFound(props: Props) {
         ctaSecondaryText = "Explore Use Cases",
         ctaSecondaryUrl = "/use-cases",
         showDiagnostics = true,
+        headingFontSize = 44,
+        bodyFontSize = 18,
+        subBodyFontSize = 15,
+        headingColor = "#ffffff",
+        bodyColor = "#ffffff",
+        subBodyColor = "#8b8ba3",
+        ctaFontSize = 16,
+        ctaPrimaryBgColor = "#4A7BF7",
+        ctaPrimaryTextColor = "#ffffff",
+        ctaSecondaryBgColor = "rgba(255,255,255,0.06)",
+        ctaSecondaryTextColor = "#ffffff",
+        ctaSecondaryBorderColor = "rgba(255,255,255,0.1)",
         illustrationFontSize = 220,
         illustrationFontFamily = "'Poppins', 'Inter', sans-serif",
         illustrationFontWeight = 700,
@@ -278,9 +304,7 @@ function NotFound(props: Props) {
         logoHeight = 28,
         paddingTop = 120,
         bgColor = "#000737",
-        textColor = "#ffffff",
         accentColor = "#4A7BF7",
-        secondaryTextColor = "#8b8ba3",
         headingFontFamily = "'Poppins', 'Inter', sans-serif",
         bodyFontFamily = "'Inter', sans-serif",
         style,
@@ -333,7 +357,7 @@ function NotFound(props: Props) {
                             style={{
                                 fontSize: logoHeight,
                                 fontWeight: 700,
-                                color: textColor,
+                                color: headingColor,
                                 fontFamily: headingFontFamily,
                                 letterSpacing: "-0.02em",
                                 lineHeight: 1,
@@ -376,7 +400,7 @@ function NotFound(props: Props) {
                 {/* 404 Illustration — the hero */}
                 <Illustration404
                     accentColor={accentColor}
-                    textColor={textColor}
+                    textColor={headingColor}
                     fontSize={illustrationFontSize}
                     fontFamily={illustrationFontFamily}
                     fontWeight={illustrationFontWeight}
@@ -385,9 +409,9 @@ function NotFound(props: Props) {
                 {/* Heading */}
                 <h1
                     style={{
-                        fontSize: 44,
+                        fontSize: headingFontSize,
                         fontWeight: 700,
-                        color: textColor,
+                        color: headingColor,
                         margin: 0,
                         marginTop: 16,
                         lineHeight: 1.15,
@@ -401,8 +425,8 @@ function NotFound(props: Props) {
                 {/* Body */}
                 <p
                     style={{
-                        fontSize: 18,
-                        color: textColor,
+                        fontSize: bodyFontSize,
+                        color: bodyColor,
                         opacity: 0.5,
                         margin: 0,
                         maxWidth: 520,
@@ -416,8 +440,8 @@ function NotFound(props: Props) {
                 {/* Sub-body */}
                 <p
                     style={{
-                        fontSize: 15,
-                        color: secondaryTextColor,
+                        fontSize: subBodyFontSize,
+                        color: subBodyColor,
                         margin: 0,
                         maxWidth: 480,
                         lineHeight: 1.6,
@@ -440,11 +464,11 @@ function NotFound(props: Props) {
                     <a
                         href={ctaPrimaryUrl}
                         style={{
-                            backgroundColor: accentColor,
-                            color: "#ffffff",
+                            backgroundColor: ctaPrimaryBgColor,
+                            color: ctaPrimaryTextColor,
                             padding: "14px 32px",
                             borderRadius: 10,
-                            fontSize: 16,
+                            fontSize: ctaFontSize,
                             fontWeight: 600,
                             textDecoration: "none",
                             fontFamily: bodyFontFamily,
@@ -454,21 +478,21 @@ function NotFound(props: Props) {
                         }}
                     >
                         {ctaPrimaryText}
-                        <span style={{ fontSize: 18 }}>&#8594;</span>
+                        <span style={{ fontSize: ctaFontSize + 2 }}>&#8594;</span>
                     </a>
 
                     {/* Secondary: ghost pill style */}
                     <a
                         href={ctaSecondaryUrl}
                         style={{
-                            backgroundColor: "rgba(255,255,255,0.06)",
-                            color: textColor,
+                            backgroundColor: ctaSecondaryBgColor,
+                            color: ctaSecondaryTextColor,
                             padding: "14px 32px",
                             borderRadius: 100,
-                            fontSize: 16,
+                            fontSize: ctaFontSize,
                             fontWeight: 500,
                             textDecoration: "none",
-                            border: "1px solid rgba(255,255,255,0.1)",
+                            border: `1px solid ${ctaSecondaryBorderColor}`,
                             fontFamily: bodyFontFamily,
                             display: "inline-flex",
                             alignItems: "center",
@@ -476,7 +500,7 @@ function NotFound(props: Props) {
                         }}
                     >
                         {ctaSecondaryText}
-                        <span style={{ fontSize: 18 }}>&#8594;</span>
+                        <span style={{ fontSize: ctaFontSize + 2 }}>&#8594;</span>
                     </a>
                 </div>
 
@@ -496,7 +520,7 @@ function NotFound(props: Props) {
                                 fontFamily:
                                     "'SF Mono', 'Fira Code', 'Courier New', monospace",
                                 fontSize: 11,
-                                color: textColor,
+                                color: headingColor,
                                 opacity: 0.2,
                                 letterSpacing: "0.05em",
                             }}
@@ -556,6 +580,78 @@ addPropertyControls(NotFound, {
         type: ControlType.Boolean,
         title: "Show Diagnostics",
         defaultValue: true,
+    },
+    headingFontSize: {
+        type: ControlType.Number,
+        title: "Heading Size",
+        defaultValue: 44,
+        min: 24,
+        max: 72,
+        step: 2,
+    },
+    headingColor: {
+        type: ControlType.Color,
+        title: "Heading Color",
+        defaultValue: "#ffffff",
+    },
+    bodyFontSize: {
+        type: ControlType.Number,
+        title: "Body Size",
+        defaultValue: 18,
+        min: 12,
+        max: 28,
+        step: 1,
+    },
+    bodyColor: {
+        type: ControlType.Color,
+        title: "Body Color",
+        defaultValue: "#ffffff",
+    },
+    subBodyFontSize: {
+        type: ControlType.Number,
+        title: "Sub-body Size",
+        defaultValue: 15,
+        min: 10,
+        max: 24,
+        step: 1,
+    },
+    subBodyColor: {
+        type: ControlType.Color,
+        title: "Sub-body Color",
+        defaultValue: "#8b8ba3",
+    },
+    ctaFontSize: {
+        type: ControlType.Number,
+        title: "CTA Font Size",
+        defaultValue: 16,
+        min: 12,
+        max: 24,
+        step: 1,
+    },
+    ctaPrimaryBgColor: {
+        type: ControlType.Color,
+        title: "Primary CTA BG",
+        defaultValue: "#4A7BF7",
+    },
+    ctaPrimaryTextColor: {
+        type: ControlType.Color,
+        title: "Primary CTA Text",
+        defaultValue: "#ffffff",
+    },
+    ctaSecondaryBgColor: {
+        type: ControlType.Color,
+        title: "Secondary CTA BG",
+        defaultValue: "rgba(255,255,255,0.06)",
+    },
+    ctaSecondaryTextColor: {
+        type: ControlType.Color,
+        title: "Secondary CTA Text",
+        defaultValue: "#ffffff",
+    },
+    ctaSecondaryBorderColor: {
+        type: ControlType.Color,
+        title: "Secondary CTA Border",
+        defaultValue: "rgba(255,255,255,0.1)",
     },
     paddingTop: {
         type: ControlType.Number,
@@ -622,20 +718,10 @@ addPropertyControls(NotFound, {
         title: "Background",
         defaultValue: "#000737",
     },
-    textColor: {
-        type: ControlType.Color,
-        title: "Text Color",
-        defaultValue: "#ffffff",
-    },
     accentColor: {
         type: ControlType.Color,
         title: "Accent Color",
         defaultValue: "#4A7BF7",
-    },
-    secondaryTextColor: {
-        type: ControlType.Color,
-        title: "Secondary Text",
-        defaultValue: "#8b8ba3",
     },
     headingFontFamily: {
         type: ControlType.String,
