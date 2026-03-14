@@ -27,6 +27,13 @@ interface CareerSignalTestProps {
     bodyFont: string
     signalHeadlineSize: number
     bodySize: number
+    // Colors
+    bgColor: string
+    headlineColor: string
+    subtextColor: string
+    itemTextColor: string
+    resultTextColor: string
+    accentColor: string
     // Copy
     headline: string
     subtext: string
@@ -49,7 +56,13 @@ function CareerSignalTest(props: CareerSignalTestProps) {
         headingFont = DEFAULTS.headingFont,
         bodyFont = DEFAULTS.bodyFont,
         signalHeadlineSize = DEFAULTS.signalHeadlineSize,
-        bodySize = DEFAULTS.bodyFontSize,
+        bodySize = DEFAULTS.bodySize,
+        bgColor = COLORS.darkNavy,
+        headlineColor = COLORS.white,
+        subtextColor = COLORS.white,
+        itemTextColor = COLORS.white,
+        resultTextColor = COLORS.white,
+        accentColor = COLORS.accentBlue,
         headline = "Not sure?\nRun the test.",
         subtext = "Three or more true — we should talk.",
         item1 = "You've gone deep on something and can explain it without dumbing it down.",
@@ -95,7 +108,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
     return (
         <section style={{
             ...style,
-            width: "100%", backgroundColor: COLORS.darkNavy,
+            width: "100%", backgroundColor: bgColor,
             padding: isMobile ? "64px 24px" : "80px 48px",
             boxSizing: "border-box", position: "relative", overflow: "hidden",
         }}>
@@ -119,7 +132,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                 <div style={{ flex: 1, minWidth: 260 }}>
                     <h2 style={{
                         fontFamily: headingFont, fontSize: signalHeadlineSize,
-                        fontWeight: 700, color: COLORS.white,
+                        fontWeight: 700, color: headlineColor,
                         letterSpacing: "-0.3px", margin: "0 0 12px 0", lineHeight: 1.3,
                     }}>
                         {headlineLines.map((line, i) => (
@@ -128,7 +141,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                     </h2>
                     <p style={{
                         fontFamily: bodyFont, fontSize: bodySize,
-                        color: COLORS.white, opacity: 0.35, margin: 0, lineHeight: 1.5,
+                        color: subtextColor, opacity: 0.35, margin: 0, lineHeight: 1.5,
                     }}>
                         {subtext}
                     </p>
@@ -146,17 +159,17 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                                     style={{
                                         display: "flex", alignItems: "flex-start", gap: 12,
                                         padding: "12px 14px", borderRadius: 10,
-                                        backgroundColor: isChecked ? "rgba(0,153,255,0.05)" : "rgba(255,255,255,0.015)",
-                                        border: `1.5px solid ${isChecked ? "rgba(0,153,255,0.18)" : "rgba(255,255,255,0.04)"}`,
+                                        backgroundColor: isChecked ? `${accentColor}0D` : "rgba(255,255,255,0.015)",
+                                        border: `1.5px solid ${isChecked ? `${accentColor}2E` : "rgba(255,255,255,0.04)"}`,
                                         cursor: "pointer", transition: "all 0.2s ease", userSelect: "none" as const,
                                     }}
-                                    onMouseEnter={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(0,153,255,0.1)" }}
+                                    onMouseEnter={(e) => { if (!isChecked) e.currentTarget.style.borderColor = `${accentColor}1A` }}
                                     onMouseLeave={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)" }}
                                 >
                                     <div style={{
                                         width: 18, height: 18, minWidth: 18, borderRadius: 5,
                                         border: isChecked ? "none" : "1.5px solid rgba(255,255,255,0.08)",
-                                        backgroundColor: isChecked ? COLORS.accentBlue : "transparent",
+                                        backgroundColor: isChecked ? accentColor : "transparent",
                                         display: "flex", alignItems: "center", justifyContent: "center",
                                         transition: "all 0.2s ease", marginTop: 1,
                                     }}>
@@ -168,7 +181,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                                     </div>
                                     <span style={{
                                         fontFamily: bodyFont, fontSize: 12.5,
-                                        color: COLORS.white, opacity: isChecked ? 0.85 : 0.35,
+                                        color: itemTextColor, opacity: isChecked ? 0.85 : 0.35,
                                         lineHeight: 1.5, transition: "opacity 0.2s ease",
                                     }}>
                                         {item}
@@ -181,9 +194,9 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                     {/* Signal meter + result */}
                     <div style={{
                         marginTop: 20, padding: "16px 18px", borderRadius: 10,
-                        backgroundColor: isHot ? "rgba(0,153,255,0.07)" : "rgba(0,153,255,0.03)",
-                        border: `1.5px solid ${isHot ? "rgba(0,153,255,0.2)" : "rgba(0,153,255,0.06)"}`,
-                        boxShadow: isHot ? "0 0 24px rgba(0,153,255,0.15)" : "none",
+                        backgroundColor: isHot ? `${accentColor}12` : `${accentColor}08`,
+                        border: `1.5px solid ${isHot ? `${accentColor}33` : `${accentColor}0F`}`,
+                        boxShadow: isHot ? `0 0 24px ${accentColor}26` : "none",
                         display: "flex", alignItems: "center", gap: 16,
                         flexWrap: "wrap" as const, transition: "all 0.3s ease",
                     }}>
@@ -191,8 +204,8 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <div key={i} style={{
                                     width: 32, height: 4, borderRadius: 2,
-                                    backgroundColor: i < checkedCount ? COLORS.accentBlue : "rgba(255,255,255,0.04)",
-                                    boxShadow: i < checkedCount ? `0 0 8px ${COLORS.accentBlue}40` : "none",
+                                    backgroundColor: i < checkedCount ? accentColor : "rgba(255,255,255,0.04)",
+                                    boxShadow: i < checkedCount ? `0 0 8px ${accentColor}40` : "none",
                                     transition: "all 0.3s ease",
                                 }} />
                             ))}
@@ -200,7 +213,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
 
                         <span style={{
                             fontFamily: bodyFont, fontSize: 13, fontWeight: 500,
-                            color: COLORS.white, opacity: checkedCount === 0 ? 0.3 : 0.8,
+                            color: resultTextColor, opacity: checkedCount === 0 ? 0.3 : 0.8,
                             flex: 1, transition: "opacity 0.3s ease",
                         }}>
                             {getResultText()}
@@ -215,13 +228,13 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                                 }}
                                 style={{
                                     fontFamily: headingFont, fontSize: 12, fontWeight: 600,
-                                    color: COLORS.white, backgroundColor: COLORS.accentBlue,
+                                    color: COLORS.white, backgroundColor: accentColor,
                                     padding: "8px 20px", borderRadius: 6, textDecoration: "none",
                                     cursor: "pointer", transition: "background-color 0.2s ease",
                                     whiteSpace: "nowrap" as const,
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = COLORS.fullBlue }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = COLORS.accentBlue }}
+                                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85" }}
+                                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1" }}
                             >
                                 {ctaText}
                             </a>
@@ -238,6 +251,12 @@ addPropertyControls(CareerSignalTest, {
     bodyFont: { type: ControlType.String, title: "Body Font", defaultValue: DEFAULTS.bodyFont },
     signalHeadlineSize: { type: ControlType.Number, title: "Headline Size", defaultValue: 22, min: 14, max: 40, step: 1, unit: "px" },
     bodySize: { type: ControlType.Number, title: "Body Size", defaultValue: 14, min: 10, max: 22, step: 1, unit: "px" },
+    bgColor: { type: ControlType.Color, title: "Background", defaultValue: COLORS.darkNavy },
+    headlineColor: { type: ControlType.Color, title: "Headline Color", defaultValue: COLORS.white },
+    subtextColor: { type: ControlType.Color, title: "Subtext Color", defaultValue: COLORS.white },
+    itemTextColor: { type: ControlType.Color, title: "Item Text Color", defaultValue: COLORS.white },
+    resultTextColor: { type: ControlType.Color, title: "Result Text Color", defaultValue: COLORS.white },
+    accentColor: { type: ControlType.Color, title: "Accent Color", defaultValue: COLORS.accentBlue },
     headline: { type: ControlType.String, title: "Headline", defaultValue: "Not sure?\nRun the test." },
     subtext: { type: ControlType.String, title: "Subtext", defaultValue: "Three or more true — we should talk." },
     item1: { type: ControlType.String, title: "Item 1", defaultValue: "You've gone deep on something and can explain it without dumbing it down." },

@@ -34,11 +34,15 @@ const EXPERIENCE_OPTIONS = [
 // ═══════════════════════════════════════════════════════════════
 // OPEN APPLICATION MODAL
 // ═══════════════════════════════════════════════════════════════
-function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor, onClose, webhookUrl, comeetPositionUid }: {
+function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor, modalHeadlineColor, modalBodyColor, modalLabelColor, modalInputColor, onClose, webhookUrl, comeetPositionUid }: {
     headingFont: string
     bodyFont: string
     monoFont: string
     primaryBgColor: string
+    modalHeadlineColor: string
+    modalBodyColor: string
+    modalLabelColor: string
+    modalInputColor: string
     onClose: () => void
     webhookUrl: string
     comeetPositionUid: string
@@ -112,13 +116,13 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
         border: "1.5px solid rgba(0,0,0,0.1)",
         outline: "none", width: "100%", boxSizing: "border-box",
         transition: "border-color 0.2s ease",
-        color: COLORS.darkText,
+        color: modalInputColor,
     }
 
     const labelStyle: React.CSSProperties = {
         fontFamily: monoFont, fontSize: 10, fontWeight: 500,
         textTransform: "uppercase", letterSpacing: "1.5px",
-        color: COLORS.muted, marginBottom: 6, display: "block",
+        color: modalLabelColor, marginBottom: 6, display: "block",
     }
 
     return (
@@ -150,13 +154,13 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                         <div>
                             <h2 style={{
                                 fontFamily: headingFont, fontSize: 22, fontWeight: 700,
-                                color: COLORS.darkText, margin: "0 0 4px 0", lineHeight: 1.2,
+                                color: modalHeadlineColor, margin: "0 0 4px 0", lineHeight: 1.2,
                             }}>
                                 Drop Your Best Bits
                             </h2>
                             <p style={{
                                 fontFamily: bodyFont, fontSize: 13,
-                                color: COLORS.muted, margin: 0, lineHeight: 1.5,
+                                color: modalBodyColor, margin: 0, lineHeight: 1.5,
                             }}>
                                 No matching role? No problem. Show us what makes you signal, not noise.
                             </p>
@@ -190,19 +194,19 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                             </div>
                             <h3 style={{
                                 fontFamily: headingFont, fontSize: 20, fontWeight: 700,
-                                color: COLORS.darkText, margin: "0 0 8px 0",
+                                color: modalHeadlineColor, margin: "0 0 8px 0",
                             }}>
                                 Bits Received
                             </h3>
                             <p style={{
                                 fontFamily: bodyFont, fontSize: 14,
-                                color: COLORS.muted, margin: "0 0 8px 0", lineHeight: 1.6,
+                                color: modalBodyColor, margin: "0 0 8px 0", lineHeight: 1.6,
                             }}>
                                 Thanks, {firstName}! Your signal came through loud and clear.
                             </p>
                             <p style={{
                                 fontFamily: monoFont, fontSize: 11,
-                                color: COLORS.muted, opacity: 0.6, margin: "0 0 24px 0",
+                                color: modalBodyColor, opacity: 0.6, margin: "0 0 24px 0",
                             }}>
                                 We'll decode your profile and get back to you soon.
                             </p>
@@ -269,7 +273,7 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                                         appearance: "none" as const, cursor: "pointer",
                                         backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238896AB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                                         backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center",
-                                        color: experience ? COLORS.darkText : COLORS.muted,
+                                        color: experience ? modalInputColor : modalLabelColor,
                                     }}
                                     value={experience}
                                     onChange={(e) => setExperience(e.target.value)}
@@ -343,7 +347,7 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
 
                             <p style={{
                                 fontFamily: monoFont, fontSize: 10,
-                                color: COLORS.muted, opacity: 0.5,
+                                color: modalBodyColor, opacity: 0.5,
                                 textAlign: "center", margin: "12px 0 0",
                                 letterSpacing: "0.5px",
                             }}>
@@ -384,6 +388,11 @@ interface CareerCTAProps {
     // Webhook / Comeet
     webhookUrl: string
     comeetPositionUid: string
+    // Modal colors
+    modalHeadlineColor: string
+    modalBodyColor: string
+    modalLabelColor: string
+    modalInputColor: string
     // Style
     style?: React.CSSProperties
 }
@@ -409,6 +418,10 @@ function CareerCTA(props: CareerCTAProps) {
         linkedInUrl = "#linkedin",
         webhookUrl = "",
         comeetPositionUid = "",
+        modalHeadlineColor = COLORS.darkText,
+        modalBodyColor = COLORS.muted,
+        modalLabelColor = COLORS.muted,
+        modalInputColor = COLORS.darkText,
         style,
     } = props
 
@@ -491,6 +504,10 @@ function CareerCTA(props: CareerCTAProps) {
                     bodyFont={bodyFont}
                     monoFont={monoFont}
                     primaryBgColor={primaryBgColor}
+                    modalHeadlineColor={modalHeadlineColor}
+                    modalBodyColor={modalBodyColor}
+                    modalLabelColor={modalLabelColor}
+                    modalInputColor={modalInputColor}
                     onClose={() => setShowForm(false)}
                     webhookUrl={webhookUrl}
                     comeetPositionUid={comeetPositionUid}
@@ -520,6 +537,10 @@ addPropertyControls(CareerCTA, {
     linkedInUrl: { type: ControlType.String, title: "LinkedIn URL", defaultValue: "#linkedin" },
     webhookUrl: { type: ControlType.String, title: "Webhook URL", defaultValue: "", description: "POST endpoint for submissions (e.g. Zapier/Make webhook that forwards to Comeet)." },
     comeetPositionUid: { type: ControlType.String, title: "Comeet Position UID", defaultValue: "", description: "Optional Comeet position_uid sent in the webhook payload." },
+    modalHeadlineColor: { type: ControlType.Color, title: "Modal Headline", defaultValue: COLORS.darkText },
+    modalBodyColor: { type: ControlType.Color, title: "Modal Body Text", defaultValue: COLORS.muted },
+    modalLabelColor: { type: ControlType.Color, title: "Modal Labels", defaultValue: COLORS.muted },
+    modalInputColor: { type: ControlType.Color, title: "Modal Input Text", defaultValue: COLORS.darkText },
 })
 
 export default CareerCTA
