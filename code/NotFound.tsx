@@ -26,6 +26,7 @@ interface Props {
     logoText: string
     logoUrl: string
     logoHeight: number
+    paddingTop: number
     headingFontFamily: string
     bodyFontFamily: string
     style?: React.CSSProperties
@@ -86,27 +87,27 @@ function Illustration404({
                 </text>
             </g>
 
-            {/* Crop marks around the "0" */}
+            {/* Crop marks around the "0" — centered on glyph visual center (~360, 155) */}
             <g stroke={accentColor} strokeWidth="1.5" opacity="0.6">
                 {/* Top-left crop */}
-                <line x1="275" y1="42" x2="275" y2="62" />
-                <line x1="275" y1="42" x2="295" y2="42" />
+                <line x1="280" y1="55" x2="280" y2="75" />
+                <line x1="280" y1="55" x2="300" y2="55" />
                 {/* Top-right crop */}
-                <line x1="445" y1="42" x2="445" y2="62" />
-                <line x1="445" y1="42" x2="425" y2="42" />
+                <line x1="440" y1="55" x2="440" y2="75" />
+                <line x1="440" y1="55" x2="420" y2="55" />
                 {/* Bottom-left crop */}
-                <line x1="275" y1="258" x2="275" y2="238" />
-                <line x1="275" y1="258" x2="295" y2="258" />
+                <line x1="280" y1="250" x2="280" y2="230" />
+                <line x1="280" y1="250" x2="300" y2="250" />
                 {/* Bottom-right crop */}
-                <line x1="445" y1="258" x2="445" y2="238" />
-                <line x1="445" y1="258" x2="425" y2="258" />
+                <line x1="440" y1="250" x2="440" y2="230" />
+                <line x1="440" y1="250" x2="420" y2="250" />
             </g>
 
-            {/* Scan line across the "0" */}
+            {/* Scan line across the "0" — sweeps within crop mark bounds */}
             <line
-                x1="270"
+                x1="280"
                 y1="150"
-                x2="450"
+                x2="440"
                 y2="150"
                 stroke={accentColor}
                 strokeWidth="1"
@@ -115,66 +116,18 @@ function Illustration404({
             >
                 <animate
                     attributeName="y1"
-                    values="60;245;60"
+                    values="65;240;65"
                     dur="3s"
                     repeatCount="indefinite"
                 />
                 <animate
                     attributeName="y2"
-                    values="60;245;60"
+                    values="65;240;65"
                     dur="3s"
                     repeatCount="indefinite"
                 />
             </line>
 
-            {/* Beamr analysis eye — pointed at the "0" */}
-            <g transform="translate(360, 40)">
-                <ellipse
-                    cx="0"
-                    cy="0"
-                    rx="18"
-                    ry="10"
-                    stroke={accentColor}
-                    strokeWidth="1.5"
-                    fill="none"
-                    opacity="0.8"
-                />
-                <circle
-                    cx="0"
-                    cy="0"
-                    r="4"
-                    fill={accentColor}
-                    opacity="0.9"
-                >
-                    <animate
-                        attributeName="r"
-                        values="3;5;3"
-                        dur="2s"
-                        repeatCount="indefinite"
-                    />
-                </circle>
-                {/* Scan rays from eye */}
-                <line
-                    x1="0"
-                    y1="12"
-                    x2="-20"
-                    y2="50"
-                    stroke={accentColor}
-                    strokeWidth="0.5"
-                    opacity="0.3"
-                    strokeDasharray="3 3"
-                />
-                <line
-                    x1="0"
-                    y1="12"
-                    x2="20"
-                    y2="50"
-                    stroke={accentColor}
-                    strokeWidth="0.5"
-                    opacity="0.3"
-                    strokeDasharray="3 3"
-                />
-            </g>
 
             {/* Last "4" — dissolving with scattered pixel debris */}
             <text
@@ -323,6 +276,7 @@ function NotFound(props: Props) {
         logoText = "beamr",
         logoUrl = "/",
         logoHeight = 28,
+        paddingTop = 120,
         bgColor = "#000737",
         textColor = "#ffffff",
         accentColor = "#4A7BF7",
@@ -343,7 +297,7 @@ function NotFound(props: Props) {
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: bgColor,
-                padding: "120px 48px 80px",
+                padding: `${paddingTop}px 48px 80px`,
                 boxSizing: "border-box",
                 fontFamily: bodyFontFamily,
                 textAlign: "center",
@@ -602,6 +556,14 @@ addPropertyControls(NotFound, {
         type: ControlType.Boolean,
         title: "Show Diagnostics",
         defaultValue: true,
+    },
+    paddingTop: {
+        type: ControlType.Number,
+        title: "Padding Top",
+        defaultValue: 120,
+        min: 40,
+        max: 240,
+        step: 8,
     },
     showLogo: {
         type: ControlType.Boolean,
