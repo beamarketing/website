@@ -343,7 +343,7 @@ function NotFound(props: Props) {
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: bgColor,
-                padding: "80px 48px",
+                padding: "120px 48px 80px",
                 boxSizing: "border-box",
                 fontFamily: bodyFontFamily,
                 textAlign: "center",
