@@ -213,6 +213,16 @@ interface CareerHeroProps {
     statNumberSize: number
     labelSize: number
     ctaButtonSize: number
+    // Colors
+    headlineColor: string
+    subheadlineColor: string
+    subheadlineBoldColor: string
+    badgeTextColor: string
+    badgeBgColor: string
+    statNumberColor: string
+    statLabelColor: string
+    ctaTextColor: string
+    ctaBgColor: string
     // Copy
     badge: string
     headline: string
@@ -240,6 +250,15 @@ function CareerHero(props: CareerHeroProps) {
         statNumberSize = DEFAULTS.statNumberSize,
         labelSize = DEFAULTS.labelSize,
         ctaButtonSize = DEFAULTS.ctaButtonSize,
+        headlineColor = COLORS.white,
+        subheadlineColor = "rgba(255,255,255,0.35)",
+        subheadlineBoldColor = "rgba(255,255,255,0.7)",
+        badgeTextColor = COLORS.white,
+        badgeBgColor = COLORS.fullBlue,
+        statNumberColor = COLORS.white,
+        statLabelColor = "rgba(255,255,255,0.25)",
+        ctaTextColor = COLORS.white,
+        ctaBgColor = COLORS.accentBlue,
         badge = "Now Hiring",
         headline = "EVERY\nBIT\nCOUNTS.",
         subheadline1 = "We analyze every bit to find the ones that matter.",
@@ -290,9 +309,9 @@ function CareerHero(props: CareerHeroProps) {
                 <div style={{
                     display: "inline-flex", alignItems: "center", gap: 8,
                     padding: "6px 16px", borderRadius: 12,
-                    backgroundColor: COLORS.fullBlue,
+                    backgroundColor: badgeBgColor,
                     fontFamily: headingFont, fontSize: 10, fontWeight: 600,
-                    color: COLORS.white, letterSpacing: "1px", textTransform: "uppercase" as const,
+                    color: badgeTextColor, letterSpacing: "1px", textTransform: "uppercase" as const,
                 }}>
                     <span style={{
                         width: 6, height: 6, borderRadius: "50%",
@@ -308,7 +327,7 @@ function CareerHero(props: CareerHeroProps) {
                     fontSize: isMobile
                         ? `clamp(56px, 14vw, ${heroHeadlineSize * 0.62}px)`
                         : `clamp(72px, 9vw, ${heroHeadlineSize}px)`,
-                    fontWeight: 900, color: COLORS.white,
+                    fontWeight: 900, color: headlineColor,
                     lineHeight: 0.9, letterSpacing: isMobile ? "-2px" : "-4px", margin: 0,
                 }}>
                     {headlineLines.map((line, i) => {
@@ -329,11 +348,11 @@ function CareerHero(props: CareerHeroProps) {
                 {/* Subheadline */}
                 <p style={{
                     fontFamily: bodyFont, fontSize: heroSubheadlineSize,
-                    color: COLORS.white, opacity: 0.35,
+                    color: subheadlineColor,
                     lineHeight: 1.6, margin: 0, maxWidth: 480,
                 }}>
                     {subheadline1}{" "}
-                    <span style={{ opacity: 1, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
+                    <span style={{ color: subheadlineBoldColor, fontWeight: 600 }}>
                         {subheadline2}
                     </span>
                 </p>
@@ -346,7 +365,7 @@ function CareerHero(props: CareerHeroProps) {
                         document.getElementById("open-roles")?.scrollIntoView({ behavior: "smooth" })
                     }}
                     style={{
-                        backgroundColor: COLORS.accentBlue, color: COLORS.white,
+                        backgroundColor: ctaBgColor, color: ctaTextColor,
                         padding: "14px 32px", borderRadius: 8,
                         fontSize: ctaButtonSize, fontWeight: 600, fontFamily: headingFont,
                         textDecoration: "none", display: "inline-flex", alignItems: "center",
@@ -360,7 +379,7 @@ function CareerHero(props: CareerHeroProps) {
                     }}
                     onMouseLeave={(e) => {
                         const el = e.currentTarget
-                        el.style.backgroundColor = COLORS.accentBlue
+                        el.style.backgroundColor = ctaBgColor
                         el.style.transform = "translateY(0)"
                         el.style.boxShadow = "none"
                     }}
@@ -388,7 +407,7 @@ function CareerHero(props: CareerHeroProps) {
                         }}>
                             <span style={{
                                 fontFamily: monoFont, fontSize: statNumberSize,
-                                fontWeight: 700, color: COLORS.white, letterSpacing: "-1px",
+                                fontWeight: 700, color: statNumberColor, letterSpacing: "-1px",
                             }}>
                                 {stat.unit ? (
                                     <>{stat.value}{" "}<span style={{ color: COLORS.accentBlue, fontSize: statNumberSize * 0.7 }}>{stat.unit}</span></>
@@ -396,7 +415,7 @@ function CareerHero(props: CareerHeroProps) {
                             </span>
                             <span style={{
                                 fontFamily: monoFont, fontSize: labelSize,
-                                color: COLORS.white, opacity: 0.25,
+                                color: statLabelColor,
                                 textTransform: "uppercase" as const, letterSpacing: "1.2px",
                             }}>
                                 {stat.label}
@@ -425,6 +444,15 @@ addPropertyControls(CareerHero, {
     statNumberSize: { type: ControlType.Number, title: "Stat Number Size", defaultValue: 28, min: 16, max: 48, step: 1, unit: "px" },
     labelSize: { type: ControlType.Number, title: "Label Size", defaultValue: 11, min: 8, max: 16, step: 1, unit: "px" },
     ctaButtonSize: { type: ControlType.Number, title: "CTA Size", defaultValue: 14, min: 10, max: 20, step: 1, unit: "px" },
+    headlineColor: { type: ControlType.Color, title: "Headline Color", defaultValue: "#FFFFFF" },
+    subheadlineColor: { type: ControlType.Color, title: "Subhead Color", defaultValue: "rgba(255,255,255,0.35)" },
+    subheadlineBoldColor: { type: ControlType.Color, title: "Subhead Bold Color", defaultValue: "rgba(255,255,255,0.7)" },
+    badgeTextColor: { type: ControlType.Color, title: "Badge Text Color", defaultValue: "#FFFFFF" },
+    badgeBgColor: { type: ControlType.Color, title: "Badge BG Color", defaultValue: "#3751FF" },
+    statNumberColor: { type: ControlType.Color, title: "Stat Number Color", defaultValue: "#FFFFFF" },
+    statLabelColor: { type: ControlType.Color, title: "Stat Label Color", defaultValue: "rgba(255,255,255,0.25)" },
+    ctaTextColor: { type: ControlType.Color, title: "CTA Text Color", defaultValue: "#FFFFFF" },
+    ctaBgColor: { type: ControlType.Color, title: "CTA BG Color", defaultValue: "#0099FF" },
     badge: { type: ControlType.String, title: "Badge", defaultValue: "Now Hiring" },
     headline: { type: ControlType.String, title: "Headline", defaultValue: "EVERY\nBIT\nCOUNTS." },
     subheadline1: { type: ControlType.String, title: "Subhead (dim)", defaultValue: "We analyze every bit to find the ones that matter." },
