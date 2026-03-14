@@ -18,6 +18,9 @@ interface Props {
     textColor: string
     accentColor: string
     secondaryTextColor: string
+    illustrationFontSize: number
+    illustrationFontFamily: string
+    illustrationFontWeight: number
     headingFontFamily: string
     bodyFontFamily: string
     style?: React.CSSProperties
@@ -27,9 +30,15 @@ interface Props {
 function Illustration404({
     accentColor,
     textColor,
+    fontSize,
+    fontFamily,
+    fontWeight,
 }: {
     accentColor: string
     textColor: string
+    fontSize: number
+    fontFamily: string
+    fontWeight: number
 }) {
     const [scattered, setScattered] = useState(false)
 
@@ -49,9 +58,9 @@ function Illustration404({
             <text
                 x="80"
                 y="240"
-                fontFamily="'Poppins', 'Inter', sans-serif"
-                fontWeight="700"
-                fontSize="220"
+                fontFamily={fontFamily}
+                fontWeight={fontWeight}
+                fontSize={fontSize}
                 fill={textColor}
                 opacity="1"
             >
@@ -63,9 +72,9 @@ function Illustration404({
                 <text
                     x="280"
                     y="240"
-                    fontFamily="'Poppins', 'Inter', sans-serif"
-                    fontWeight="400"
-                    fontSize="220"
+                    fontFamily={fontFamily}
+                    fontWeight={Math.max(100, fontWeight - 300)}
+                    fontSize={fontSize}
                     fill={textColor}
                 >
                     0
@@ -166,9 +175,9 @@ function Illustration404({
             <text
                 x="480"
                 y="240"
-                fontFamily="'Poppins', 'Inter', sans-serif"
-                fontWeight="700"
-                fontSize="220"
+                fontFamily={fontFamily}
+                fontWeight={fontWeight}
+                fontSize={fontSize}
                 fill={textColor}
                 opacity="0.15"
             >
@@ -301,6 +310,9 @@ function NotFound(props: Props) {
         ctaSecondaryText = "Explore Use Cases",
         ctaSecondaryUrl = "/use-cases",
         showDiagnostics = true,
+        illustrationFontSize = 220,
+        illustrationFontFamily = "'Poppins', 'Inter', sans-serif",
+        illustrationFontWeight = 700,
         bgColor = "#000737",
         textColor = "#ffffff",
         accentColor = "#4A7BF7",
@@ -361,6 +373,9 @@ function NotFound(props: Props) {
                 <Illustration404
                     accentColor={accentColor}
                     textColor={textColor}
+                    fontSize={illustrationFontSize}
+                    fontFamily={illustrationFontFamily}
+                    fontWeight={illustrationFontWeight}
                 />
 
                 {/* Heading */}
@@ -537,6 +552,27 @@ addPropertyControls(NotFound, {
         type: ControlType.Boolean,
         title: "Show Diagnostics",
         defaultValue: true,
+    },
+    illustrationFontSize: {
+        type: ControlType.Number,
+        title: "404 Font Size",
+        defaultValue: 220,
+        min: 100,
+        max: 300,
+        step: 10,
+    },
+    illustrationFontFamily: {
+        type: ControlType.String,
+        title: "404 Font Family",
+        defaultValue: "'Poppins', 'Inter', sans-serif",
+    },
+    illustrationFontWeight: {
+        type: ControlType.Number,
+        title: "404 Font Weight",
+        defaultValue: 700,
+        min: 100,
+        max: 900,
+        step: 100,
     },
     bgColor: {
         type: ControlType.Color,
