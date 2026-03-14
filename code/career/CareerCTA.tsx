@@ -34,7 +34,7 @@ const EXPERIENCE_OPTIONS = [
 // ═══════════════════════════════════════════════════════════════
 // OPEN APPLICATION MODAL
 // ═══════════════════════════════════════════════════════════════
-function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor, modalHeadlineColor, modalBodyColor, modalLabelColor, modalInputColor, onClose, webhookUrl, comeetPositionUid }: {
+function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor, modalHeadlineColor, modalBodyColor, modalLabelColor, modalInputColor, onClose, webhookUrl, comeetPositionUid, modalTitle, modalSubtitle, modalSuccessTitle, modalSuccessMessage, modalSuccessSubtext, modalSubmitText, modalSubmittingText, modalFooterText }: {
     headingFont: string
     bodyFont: string
     monoFont: string
@@ -46,6 +46,14 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
     onClose: () => void
     webhookUrl: string
     comeetPositionUid: string
+    modalTitle: string
+    modalSubtitle: string
+    modalSuccessTitle: string
+    modalSuccessMessage: string
+    modalSuccessSubtext: string
+    modalSubmitText: string
+    modalSubmittingText: string
+    modalFooterText: string
 }) {
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
@@ -156,13 +164,13 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                                 fontFamily: headingFont, fontSize: 22, fontWeight: 700,
                                 color: modalHeadlineColor, margin: "0 0 4px 0", lineHeight: 1.2,
                             }}>
-                                Drop Your Best Bits
+                                {modalTitle}
                             </h2>
                             <p style={{
                                 fontFamily: bodyFont, fontSize: 13,
                                 color: modalBodyColor, margin: 0, lineHeight: 1.5,
                             }}>
-                                No matching role? No problem. Show us what makes you signal, not noise.
+                                {modalSubtitle}
                             </p>
                         </div>
                         <button
@@ -196,19 +204,19 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                                 fontFamily: headingFont, fontSize: 20, fontWeight: 700,
                                 color: modalHeadlineColor, margin: "0 0 8px 0",
                             }}>
-                                Bits Received
+                                {modalSuccessTitle}
                             </h3>
                             <p style={{
                                 fontFamily: bodyFont, fontSize: 14,
                                 color: modalBodyColor, margin: "0 0 8px 0", lineHeight: 1.6,
                             }}>
-                                Thanks, {firstName}! Your signal came through loud and clear.
+                                {modalSuccessMessage.replace("{firstName}", firstName)}
                             </p>
                             <p style={{
                                 fontFamily: monoFont, fontSize: 11,
                                 color: modalBodyColor, opacity: 0.6, margin: "0 0 24px 0",
                             }}>
-                                We'll decode your profile and get back to you soon.
+                                {modalSuccessSubtext}
                             </p>
                             <button
                                 onClick={onClose}
@@ -342,7 +350,7 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                                     transition: "all 0.2s ease",
                                 }}
                             >
-                                {submitting ? "Transmitting..." : "Submit Your Bits"}
+                                {submitting ? modalSubmittingText : modalSubmitText}
                             </button>
 
                             <p style={{
@@ -351,7 +359,7 @@ function OpenApplicationModal({ headingFont, bodyFont, monoFont, primaryBgColor,
                                 textAlign: "center", margin: "12px 0 0",
                                 letterSpacing: "0.5px",
                             }}>
-                                Every bit counts. We read every application.
+                                {modalFooterText}
                             </p>
                         </>
                     )}
@@ -393,6 +401,15 @@ interface CareerCTAProps {
     modalBodyColor: string
     modalLabelColor: string
     modalInputColor: string
+    // Modal copy
+    modalTitle: string
+    modalSubtitle: string
+    modalSuccessTitle: string
+    modalSuccessMessage: string
+    modalSuccessSubtext: string
+    modalSubmitText: string
+    modalSubmittingText: string
+    modalFooterText: string
     // Style
     style?: React.CSSProperties
 }
@@ -422,6 +439,14 @@ function CareerCTA(props: CareerCTAProps) {
         modalBodyColor = COLORS.muted,
         modalLabelColor = COLORS.muted,
         modalInputColor = COLORS.darkText,
+        modalTitle = "Drop Your Best Bits",
+        modalSubtitle = "No matching role? No problem. Show us what makes you signal, not noise.",
+        modalSuccessTitle = "Bits Received",
+        modalSuccessMessage = "Thanks, {firstName}! Your signal came through loud and clear.",
+        modalSuccessSubtext = "We'll decode your profile and get back to you soon.",
+        modalSubmitText = "Submit Your Bits",
+        modalSubmittingText = "Transmitting...",
+        modalFooterText = "Every bit counts. We read every application.",
         style,
     } = props
 
@@ -511,6 +536,14 @@ function CareerCTA(props: CareerCTAProps) {
                     onClose={() => setShowForm(false)}
                     webhookUrl={webhookUrl}
                     comeetPositionUid={comeetPositionUid}
+                    modalTitle={modalTitle}
+                    modalSubtitle={modalSubtitle}
+                    modalSuccessTitle={modalSuccessTitle}
+                    modalSuccessMessage={modalSuccessMessage}
+                    modalSuccessSubtext={modalSuccessSubtext}
+                    modalSubmitText={modalSubmitText}
+                    modalSubmittingText={modalSubmittingText}
+                    modalFooterText={modalFooterText}
                 />
             )}
         </>
@@ -537,6 +570,14 @@ addPropertyControls(CareerCTA, {
     linkedInUrl: { type: ControlType.String, title: "LinkedIn URL", defaultValue: "#linkedin" },
     webhookUrl: { type: ControlType.String, title: "Webhook URL", defaultValue: "", description: "POST endpoint for submissions (e.g. Zapier/Make webhook that forwards to Comeet)." },
     comeetPositionUid: { type: ControlType.String, title: "Comeet Position UID", defaultValue: "", description: "Optional Comeet position_uid sent in the webhook payload." },
+    modalTitle: { type: ControlType.String, title: "Modal Title", defaultValue: "Drop Your Best Bits" },
+    modalSubtitle: { type: ControlType.String, title: "Modal Subtitle", defaultValue: "No matching role? No problem. Show us what makes you signal, not noise." },
+    modalSuccessTitle: { type: ControlType.String, title: "Success Title", defaultValue: "Bits Received" },
+    modalSuccessMessage: { type: ControlType.String, title: "Success Message", defaultValue: "Thanks, {firstName}! Your signal came through loud and clear.", description: "Use {firstName} to insert the applicant's first name." },
+    modalSuccessSubtext: { type: ControlType.String, title: "Success Subtext", defaultValue: "We'll decode your profile and get back to you soon." },
+    modalSubmitText: { type: ControlType.String, title: "Submit Button", defaultValue: "Submit Your Bits" },
+    modalSubmittingText: { type: ControlType.String, title: "Submitting Text", defaultValue: "Transmitting..." },
+    modalFooterText: { type: ControlType.String, title: "Footer Text", defaultValue: "Every bit counts. We read every application." },
     modalHeadlineColor: { type: ControlType.Color, title: "Modal Headline", defaultValue: COLORS.darkText },
     modalBodyColor: { type: ControlType.Color, title: "Modal Body Text", defaultValue: COLORS.muted },
     modalLabelColor: { type: ControlType.Color, title: "Modal Labels", defaultValue: COLORS.muted },
