@@ -238,6 +238,8 @@ interface CareerHeroProps {
     stat3Label: string
     // Logo
     showLogo: boolean
+    logoImage: string
+    logoHeight: number
     logoText: string
     logoIconColor: string
     logoLink: string
@@ -273,6 +275,8 @@ function CareerHero(props: CareerHeroProps) {
         stat2Value = "1", stat2Unit = "Emmy", stat2Label = "Technology & Engineering",
         stat3Value = "~50", stat3Label = "People",
         showLogo = true,
+        logoImage = "",
+        logoHeight = 32,
         logoText = "beamr",
         logoIconColor = "#6C5CE7",
         logoLink = "/",
@@ -324,19 +328,29 @@ function CareerHero(props: CareerHeroProps) {
                         cursor: "pointer",
                     }}
                 >
-                    <svg width={32} height={32} viewBox="0 0 64 64" fill="none">
-                        <rect width="64" height="64" rx="14" fill={logoIconColor} />
-                        <path d="M22 14 L22 50 Q22 50 22 50 C22 50 28 50 34 50 C46 50 50 42 50 36 C50 28 44 23 36 23 L30 23 L30 14 Z M30 31 L35 31 C39 31 42 33 42 36.5 C42 40 39 42 35 42 L30 42 Z" fill="white" />
-                        <circle cx="34" cy="36.5" r="7" fill={logoIconColor} />
-                    </svg>
-                    <span style={{
-                        fontFamily: headingFont,
-                        fontSize: 20, fontWeight: 700,
-                        color: COLORS.white,
-                        letterSpacing: "-0.01em",
-                    }}>
-                        {logoText}
-                    </span>
+                    {logoImage ? (
+                        <img
+                            src={logoImage}
+                            alt={logoText || "Logo"}
+                            style={{ height: logoHeight, width: "auto", display: "block" }}
+                        />
+                    ) : (
+                        <>
+                            <svg width={32} height={32} viewBox="0 0 64 64" fill="none">
+                                <rect width="64" height="64" rx="14" fill={logoIconColor} />
+                                <path d="M22 14 L22 50 Q22 50 22 50 C22 50 28 50 34 50 C46 50 50 42 50 36 C50 28 44 23 36 23 L30 23 L30 14 Z M30 31 L35 31 C39 31 42 33 42 36.5 C42 40 39 42 35 42 L30 42 Z" fill="white" />
+                                <circle cx="34" cy="36.5" r="7" fill={logoIconColor} />
+                            </svg>
+                            <span style={{
+                                fontFamily: headingFont,
+                                fontSize: 20, fontWeight: 700,
+                                color: COLORS.white,
+                                letterSpacing: "-0.01em",
+                            }}>
+                                {logoText}
+                            </span>
+                        </>
+                    )}
                 </a>
             )}
 
@@ -508,8 +522,10 @@ addPropertyControls(CareerHero, {
     stat3Value: { type: ControlType.String, title: "Stat 3 Value", defaultValue: "~50" },
     stat3Label: { type: ControlType.String, title: "Stat 3 Label", defaultValue: "People" },
     showLogo: { type: ControlType.Boolean, title: "Show Logo", defaultValue: true },
-    logoText: { type: ControlType.String, title: "Logo Text", defaultValue: "beamr" },
-    logoIconColor: { type: ControlType.Color, title: "Logo Icon BG", defaultValue: "#6C5CE7" },
+    logoImage: { type: ControlType.Image, title: "Logo Image", description: "Upload a logo image. When set, replaces the default icon + text." },
+    logoHeight: { type: ControlType.Number, title: "Logo Height", defaultValue: 32, min: 16, max: 80, step: 1, unit: "px" },
+    logoText: { type: ControlType.String, title: "Logo Text", defaultValue: "beamr", description: "Used as fallback when no image is uploaded." },
+    logoIconColor: { type: ControlType.Color, title: "Logo Icon BG", defaultValue: "#6C5CE7", description: "Fallback icon color when no image is uploaded." },
     logoLink: { type: ControlType.String, title: "Logo Link", defaultValue: "/" },
 })
 
