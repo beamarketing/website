@@ -21,6 +21,11 @@ interface Props {
     illustrationFontSize: number
     illustrationFontFamily: string
     illustrationFontWeight: number
+    showLogo: boolean
+    logoImage: string
+    logoText: string
+    logoUrl: string
+    logoHeight: number
     headingFontFamily: string
     bodyFontFamily: string
     style?: React.CSSProperties
@@ -313,6 +318,11 @@ function NotFound(props: Props) {
         illustrationFontSize = 220,
         illustrationFontFamily = "'Poppins', 'Inter', sans-serif",
         illustrationFontWeight = 700,
+        showLogo = true,
+        logoImage = "",
+        logoText = "beamr",
+        logoUrl = "/",
+        logoHeight = 28,
         bgColor = "#000737",
         textColor = "#ffffff",
         accentColor = "#4A7BF7",
@@ -341,6 +351,46 @@ function NotFound(props: Props) {
                 overflow: "hidden",
             }}
         >
+            {/* Logo — top right corner */}
+            {showLogo && (
+                <a
+                    href={logoUrl}
+                    style={{
+                        position: "absolute",
+                        top: 32,
+                        right: 48,
+                        zIndex: 2,
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                    }}
+                >
+                    {logoImage ? (
+                        <img
+                            src={logoImage}
+                            alt={logoText}
+                            style={{
+                                height: logoHeight,
+                                objectFit: "contain",
+                            }}
+                        />
+                    ) : (
+                        <span
+                            style={{
+                                fontSize: logoHeight,
+                                fontWeight: 700,
+                                color: textColor,
+                                fontFamily: headingFontFamily,
+                                letterSpacing: "-0.02em",
+                                lineHeight: 1,
+                            }}
+                        >
+                            {logoText}
+                        </span>
+                    )}
+                </a>
+            )}
+
             {/* Subtle glow */}
             <div
                 style={{
@@ -552,6 +602,37 @@ addPropertyControls(NotFound, {
         type: ControlType.Boolean,
         title: "Show Diagnostics",
         defaultValue: true,
+    },
+    showLogo: {
+        type: ControlType.Boolean,
+        title: "Show Logo",
+        defaultValue: true,
+    },
+    logoImage: {
+        type: ControlType.Image,
+        title: "Logo Image",
+        hidden: (props) => !props.showLogo,
+    },
+    logoText: {
+        type: ControlType.String,
+        title: "Logo Text",
+        defaultValue: "beamr",
+        hidden: (props) => !props.showLogo,
+    },
+    logoUrl: {
+        type: ControlType.String,
+        title: "Logo URL",
+        defaultValue: "/",
+        hidden: (props) => !props.showLogo,
+    },
+    logoHeight: {
+        type: ControlType.Number,
+        title: "Logo Height",
+        defaultValue: 28,
+        min: 16,
+        max: 60,
+        step: 2,
+        hidden: (props) => !props.showLogo,
     },
     illustrationFontSize: {
         type: ControlType.Number,
