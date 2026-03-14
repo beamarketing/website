@@ -358,7 +358,7 @@ function NotFound(props: Props) {
                     style={{
                         position: "absolute",
                         top: 32,
-                        right: 48,
+                        left: 48,
                         zIndex: 2,
                         textDecoration: "none",
                         display: "inline-flex",
