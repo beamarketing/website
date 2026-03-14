@@ -17,13 +17,6 @@ const COLORS = {
     darkText: "#1E293B",
 }
 
-// ─── Font Stacks ───────────────────────────────────────────────
-const FONTS = {
-    heading: "'Poppins', 'Inter', sans-serif",
-    body: "'Inter', 'Poppins', sans-serif",
-    mono: "'JetBrains Mono', 'Fira Code', monospace",
-}
-
 // ─── Role Data ─────────────────────────────────────────────────
 interface Role {
     title: string
@@ -45,14 +38,21 @@ const DEFAULT_ROLES: Role[] = [
     { title: "Technical Account Manager", department: "Operations", location: "Remote", url: "#" },
 ]
 
-// ─── Signal Test Items ─────────────────────────────────────────
-const SIGNAL_ITEMS = [
-    "You've gone deep on something and can explain it without dumbing it down.",
-    "You've shipped something real users depend on.",
-    'You care about "right" vs "good enough" — even when no one notices.',
-    "You read this far instead of just scrolling to the titles.",
-    "You want problems that don't exist at most companies.",
-]
+// ─── Font config type shared across all sections ───────────────
+interface FontConfig {
+    heading: string
+    body: string
+    mono: string
+    heroHeadlineSize: number
+    heroSubheadlineSize: number
+    sectionHeadlineSize: number
+    signalHeadlineSize: number
+    roleTitleSize: number
+    bodySize: number
+    statNumberSize: number
+    labelSize: number
+    ctaButtonSize: number
+}
 
 // ═══════════════════════════════════════════════════════════════
 // PIXEL CANVAS — animated hero background
@@ -115,11 +115,9 @@ function PixelCanvas() {
             const my = mouseRef.current.y
 
             for (const p of pixelsRef.current) {
-                // Sine-wave breathing
                 const breath = Math.sin(time * 0.001 * p.speed + p.phase)
                 let opacity = p.baseOpacity + breath * 0.015
 
-                // Drift
                 p.x += p.driftX * 0.16
                 p.y += p.driftY * 0.16
                 if (p.x < -p.size) p.x = w + p.size
@@ -127,7 +125,6 @@ function PixelCanvas() {
                 if (p.y < -p.size) p.y = h + p.size
                 if (p.y > h + p.size) p.y = -p.size
 
-                // Blinker
                 if (p.blinker) {
                     p.blinkTimer -= 16
                     if (p.blinkTimer <= 0) {
@@ -137,21 +134,14 @@ function PixelCanvas() {
                     if (!p.blinkState) opacity *= 0.1
                 }
 
-                // Mouse proximity glow
                 const dx = p.x - mx
                 const dy = p.y - my
                 const dist = Math.sqrt(dx * dx + dy * dy)
                 if (dist < 180) {
-                    const proximity = 1 - (dist / 180)
-                    const glow = proximity * proximity // quadratic falloff
-                    // Draw glow halo
+                    const proximity = 1 - dist / 180
+                    const glow = proximity * proximity
                     ctx.fillStyle = `rgba(0,153,255,${glow * 0.12})`
-                    ctx.fillRect(
-                        p.x - p.size * 0.5 - 2,
-                        p.y - p.size * 0.5 - 2,
-                        p.size + 4,
-                        p.size + 4
-                    )
+                    ctx.fillRect(p.x - p.size * 0.5 - 2, p.y - p.size * 0.5 - 2, p.size + 4, p.size + 4)
                     opacity += glow * 0.04
                 }
 
@@ -185,19 +175,15 @@ function PixelCanvas() {
             ref={canvasRef}
             style={{
                 position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                zIndex: 0,
-                pointerEvents: "auto",
+                top: 0, left: 0, width: "100%", height: "100%",
+                zIndex: 0, pointerEvents: "auto",
             }}
         />
     )
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SCAN LINE — sweeping horizontal gradient
+// SCAN LINE
 // ═══════════════════════════════════════════════════════════════
 function ScanLine() {
     return (
@@ -210,14 +196,9 @@ function ScanLine() {
             `}</style>
             <div
                 style={{
-                    position: "absolute",
-                    left: 0,
-                    width: "100%",
-                    height: 1,
+                    position: "absolute", left: 0, width: "100%", height: 1,
                     background: `linear-gradient(90deg, transparent 0%, ${COLORS.accentBlue}33 20%, ${COLORS.accentBlue}66 50%, ${COLORS.accentBlue}33 80%, transparent 100%)`,
-                    opacity: 0.4,
-                    zIndex: 1,
-                    pointerEvents: "none",
+                    opacity: 0.4, zIndex: 1, pointerEvents: "none",
                     animation: "scanSweep 6s ease-in-out infinite",
                 }}
             />
@@ -226,9 +207,9 @@ function ScanLine() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BITSTREAM — cycling binary in bottom-right
+// BITSTREAM
 // ═══════════════════════════════════════════════════════════════
-function BitStream({ isMobile }: { isMobile: boolean }) {
+function BitStream({ isMobile, font }: { isMobile: boolean; font: string }) {
     const [bits, setBits] = useState("")
 
     useEffect(() => {
@@ -242,62 +223,29 @@ function BitStream({ isMobile }: { isMobile: boolean }) {
     }, [isMobile])
 
     return (
-        <div
-            style={{
-                position: "absolute",
-                bottom: isMobile ? 16 : 24,
-                right: isMobile ? 24 : 48,
-                fontFamily: FONTS.mono,
-                fontSize: isMobile ? 7 : 9,
-                color: COLORS.white,
-                opacity: 0.06,
-                letterSpacing: "1.5px",
-                zIndex: 2,
-                pointerEvents: "none",
-            }}
-        >
+        <div style={{
+            position: "absolute", bottom: isMobile ? 16 : 24, right: isMobile ? 24 : 48,
+            fontFamily: font, fontSize: isMobile ? 7 : 9,
+            color: COLORS.white, opacity: 0.06, letterSpacing: "1.5px",
+            zIndex: 2, pointerEvents: "none",
+        }}>
             {bits}
         </div>
     )
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CROP MARKS — L-brackets at corners
+// CROP MARKS
 // ═══════════════════════════════════════════════════════════════
 function CropMarks() {
-    const markStyle = (
-        top?: number,
-        right?: number,
-        bottom?: number,
-        left?: number,
-        borderTop?: string,
-        borderRight?: string,
-        borderBottom?: string,
-        borderLeft?: string
-    ): React.CSSProperties => ({
-        position: "absolute",
-        width: 36,
-        height: 36,
-        zIndex: 2,
-        pointerEvents: "none",
-        ...(top !== undefined && { top }),
-        ...(right !== undefined && { right }),
-        ...(bottom !== undefined && { bottom }),
-        ...(left !== undefined && { left }),
-        ...(borderTop && { borderTop }),
-        ...(borderRight && { borderRight }),
-        ...(borderBottom && { borderBottom }),
-        ...(borderLeft && { borderLeft }),
-    })
-
     const stroke = `1.5px solid rgba(0,153,255,0.2)`
-
+    const base: React.CSSProperties = { position: "absolute", width: 36, height: 36, zIndex: 2, pointerEvents: "none" }
     return (
         <>
-            <div style={markStyle(40, undefined, undefined, 40, stroke, undefined, undefined, stroke)} />
-            <div style={markStyle(40, 40, undefined, undefined, stroke, stroke, undefined, undefined)} />
-            <div style={markStyle(undefined, undefined, 40, 40, undefined, undefined, stroke, stroke)} />
-            <div style={markStyle(undefined, 40, 40, undefined, undefined, stroke, stroke, undefined)} />
+            <div style={{ ...base, top: 40, left: 40, borderTop: stroke, borderLeft: stroke }} />
+            <div style={{ ...base, top: 40, right: 40, borderTop: stroke, borderRight: stroke }} />
+            <div style={{ ...base, bottom: 40, left: 40, borderBottom: stroke, borderLeft: stroke }} />
+            <div style={{ ...base, bottom: 40, right: 40, borderBottom: stroke, borderRight: stroke }} />
         </>
     )
 }
@@ -305,110 +253,108 @@ function CropMarks() {
 // ═══════════════════════════════════════════════════════════════
 // SECTION 1: HERO
 // ═══════════════════════════════════════════════════════════════
-function HeroSection({ isMobile }: { isMobile: boolean }) {
+interface HeroProps {
+    isMobile: boolean
+    fonts: FontConfig
+    badge: string
+    headline: string
+    subheadline1: string
+    subheadline2: string
+    ctaText: string
+    stat1Value: string
+    stat1Label: string
+    stat2Value: string
+    stat2Unit: string
+    stat2Label: string
+    stat3Value: string
+    stat3Label: string
+}
+
+function HeroSection(props: HeroProps) {
+    const { isMobile, fonts, badge, headline, subheadline1, subheadline2, ctaText,
+        stat1Value, stat1Label, stat2Value, stat2Unit, stat2Label, stat3Value, stat3Label } = props
+
+    // Parse headline into lines (split on \n)
+    const headlineLines = headline.split("\n")
+
     return (
         <section
             id="careers-hero"
             style={{
-                width: "100%",
-                minHeight: "100vh",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: isMobile ? "flex-start" : "center",
-                justifyContent: "center",
-                position: "relative",
-                overflow: "hidden",
+                width: "100%", minHeight: "100vh",
+                display: "flex", flexDirection: "column",
+                alignItems: isMobile ? "flex-start" : "center", justifyContent: "center",
+                position: "relative", overflow: "hidden",
                 backgroundColor: COLORS.darkNavy,
                 padding: isMobile ? "120px 24px 80px" : "120px 48px 80px",
                 boxSizing: "border-box",
             }}
         >
-            {/* Dynamic layers */}
             <PixelCanvas />
             <ScanLine />
             {!isMobile && <CropMarks />}
-            <BitStream isMobile={isMobile} />
+            <BitStream isMobile={isMobile} font={fonts.mono} />
 
-            {/* Content */}
-            <div
-                style={{
-                    position: "relative",
-                    zIndex: 3,
-                    maxWidth: 720,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: isMobile ? "flex-start" : "center",
-                    textAlign: isMobile ? "left" : "center",
-                    gap: 24,
-                }}
-            >
+            <div style={{
+                position: "relative", zIndex: 3, maxWidth: 720,
+                display: "flex", flexDirection: "column",
+                alignItems: isMobile ? "flex-start" : "center",
+                textAlign: isMobile ? "left" : "center", gap: 24,
+            }}>
                 {/* Badge */}
-                <div
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "6px 16px",
-                        borderRadius: 12,
-                        backgroundColor: COLORS.fullBlue,
-                        fontFamily: FONTS.heading,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        color: COLORS.white,
-                        letterSpacing: "1px",
-                        textTransform: "uppercase" as const,
-                    }}
-                >
-                    <span
-                        style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            backgroundColor: COLORS.accentBlue,
-                            animation: "pulse 2s ease-in-out infinite",
-                        }}
-                    />
-                    Now Hiring
+                <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    padding: "6px 16px", borderRadius: 12,
+                    backgroundColor: COLORS.fullBlue,
+                    fontFamily: fonts.heading, fontSize: 10, fontWeight: 600,
+                    color: COLORS.white, letterSpacing: "1px", textTransform: "uppercase" as const,
+                }}>
+                    <span style={{
+                        width: 6, height: 6, borderRadius: "50%",
+                        backgroundColor: COLORS.accentBlue,
+                        animation: "pulse 2s ease-in-out infinite",
+                    }} />
+                    {badge}
                 </div>
 
                 {/* Headline */}
-                <h1
-                    style={{
-                        fontFamily: FONTS.heading,
-                        fontSize: isMobile ? "clamp(56px, 14vw, 80px)" : "clamp(72px, 9vw, 130px)",
-                        fontWeight: 900,
-                        color: COLORS.white,
-                        lineHeight: 0.9,
-                        letterSpacing: isMobile ? "-2px" : "-4px",
-                        margin: 0,
-                    }}
-                >
-                    EVERY
-                    <br />
-                    BIT
-                    <br />
-                    COUNTS<span style={{ color: COLORS.fullBlue }}>.</span>
+                <h1 style={{
+                    fontFamily: fonts.heading,
+                    fontSize: isMobile
+                        ? `clamp(56px, 14vw, ${fonts.heroHeadlineSize * 0.62}px)`
+                        : `clamp(72px, 9vw, ${fonts.heroHeadlineSize}px)`,
+                    fontWeight: 900, color: COLORS.white,
+                    lineHeight: 0.9, letterSpacing: isMobile ? "-2px" : "-4px", margin: 0,
+                }}>
+                    {headlineLines.map((line, i) => {
+                        const isLast = i === headlineLines.length - 1
+                        // If last line ends with a period, color the period in fullBlue
+                        if (isLast && line.endsWith(".")) {
+                            return (
+                                <span key={i}>
+                                    {i > 0 && <br />}
+                                    {line.slice(0, -1)}
+                                    <span style={{ color: COLORS.fullBlue }}>.</span>
+                                </span>
+                            )
+                        }
+                        return <span key={i}>{i > 0 && <br />}{line}</span>
+                    })}
                 </h1>
 
                 {/* Subheadline */}
-                <p
-                    style={{
-                        fontFamily: FONTS.body,
-                        fontSize: 18,
-                        color: COLORS.white,
-                        opacity: 0.35,
-                        lineHeight: 1.6,
-                        margin: 0,
-                        maxWidth: 480,
-                    }}
-                >
-                    We analyze every bit to find the ones that matter.{" "}
+                <p style={{
+                    fontFamily: fonts.body, fontSize: fonts.heroSubheadlineSize,
+                    color: COLORS.white, opacity: 0.35,
+                    lineHeight: 1.6, margin: 0, maxWidth: 480,
+                }}>
+                    {subheadline1}{" "}
                     <span style={{ opacity: 1, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
-                        We hire the same way.
+                        {subheadline2}
                     </span>
                 </p>
 
-                {/* CTA Button */}
+                {/* CTA */}
                 <a
                     href="#open-roles"
                     onClick={(e) => {
@@ -416,20 +362,11 @@ function HeroSection({ isMobile }: { isMobile: boolean }) {
                         document.getElementById("open-roles")?.scrollIntoView({ behavior: "smooth" })
                     }}
                     style={{
-                        backgroundColor: COLORS.accentBlue,
-                        color: COLORS.white,
-                        padding: "14px 32px",
-                        borderRadius: 8,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        fontFamily: FONTS.heading,
-                        textDecoration: "none",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                        border: "none",
+                        backgroundColor: COLORS.accentBlue, color: COLORS.white,
+                        padding: "14px 32px", borderRadius: 8,
+                        fontSize: fonts.ctaButtonSize, fontWeight: 600, fontFamily: fonts.heading,
+                        textDecoration: "none", display: "inline-flex", alignItems: "center",
+                        gap: 8, cursor: "pointer", transition: "all 0.2s ease", border: "none",
                     }}
                     onMouseEnter={(e) => {
                         const el = e.currentTarget
@@ -444,67 +381,40 @@ function HeroSection({ isMobile }: { isMobile: boolean }) {
                         el.style.boxShadow = "none"
                     }}
                 >
-                    See Open Roles ↓
+                    {ctaText}
                 </a>
 
                 {/* Stats Row */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: isMobile ? "flex-start" : "center",
-                        justifyContent: isMobile ? "flex-start" : "center",
-                        gap: isMobile ? 24 : 48,
-                        marginTop: 32,
-                        paddingTop: 32,
-                        borderTop: "1px solid rgba(255,255,255,0.04)",
-                        width: "100%",
-                        flexWrap: "wrap" as const,
-                    }}
-                >
+                <div style={{
+                    display: "flex",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    justifyContent: isMobile ? "flex-start" : "center",
+                    gap: isMobile ? 24 : 48, marginTop: 32, paddingTop: 32,
+                    borderTop: "1px solid rgba(255,255,255,0.04)",
+                    width: "100%", flexWrap: "wrap" as const,
+                }}>
                     {[
-                        { value: "53", label: "Patents" },
-                        { value: "1 Emmy", label: "Technology & Engineering", accent: true },
-                        { value: "~50", label: "People" },
+                        { value: stat1Value, label: stat1Label },
+                        { value: stat2Value, unit: stat2Unit, label: stat2Label },
+                        { value: stat3Value, label: stat3Label },
                     ].map((stat, i) => (
-                        <div
-                            key={i}
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: isMobile ? "flex-start" : "center",
-                                gap: 2,
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontFamily: FONTS.mono,
-                                    fontSize: 28,
-                                    fontWeight: 700,
-                                    color: COLORS.white,
-                                    letterSpacing: "-1px",
-                                }}
-                            >
-                                {stat.value.includes("Emmy") ? (
-                                    <>
-                                        1{" "}
-                                        <span style={{ color: COLORS.accentBlue, fontSize: 20 }}>
-                                            Emmy
-                                        </span>
-                                    </>
-                                ) : (
-                                    stat.value
-                                )}
+                        <div key={i} style={{
+                            display: "flex", flexDirection: "column",
+                            alignItems: isMobile ? "flex-start" : "center", gap: 2,
+                        }}>
+                            <span style={{
+                                fontFamily: fonts.mono, fontSize: fonts.statNumberSize,
+                                fontWeight: 700, color: COLORS.white, letterSpacing: "-1px",
+                            }}>
+                                {stat.unit ? (
+                                    <>{stat.value}{" "}<span style={{ color: COLORS.accentBlue, fontSize: fonts.statNumberSize * 0.7 }}>{stat.unit}</span></>
+                                ) : stat.value}
                             </span>
-                            <span
-                                style={{
-                                    fontFamily: FONTS.mono,
-                                    fontSize: 11,
-                                    color: COLORS.white,
-                                    opacity: 0.25,
-                                    textTransform: "uppercase" as const,
-                                    letterSpacing: "1.2px",
-                                }}
-                            >
+                            <span style={{
+                                fontFamily: fonts.mono, fontSize: fonts.labelSize,
+                                color: COLORS.white, opacity: 0.25,
+                                textTransform: "uppercase" as const, letterSpacing: "1.2px",
+                            }}>
                                 {stat.label}
                             </span>
                         </div>
@@ -512,7 +422,6 @@ function HeroSection({ isMobile }: { isMobile: boolean }) {
                 </div>
             </div>
 
-            {/* Pulse animation keyframes */}
             <style>{`
                 @keyframes pulse {
                     0%, 100% { opacity: 1; }
@@ -524,86 +433,55 @@ function HeroSection({ isMobile }: { isMobile: boolean }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SECTION 2: OPEN ROLES
+// ROLE ROW
 // ═══════════════════════════════════════════════════════════════
-function RoleRow({ role, isMobile }: { role: Role; isMobile: boolean }) {
+function RoleRow({ role, fonts }: { role: Role; fonts: FontConfig }) {
     const [hovered, setHovered] = useState(false)
 
     return (
         <a
             href={role.url}
             style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: hovered ? "16px 16px 16px 28px" : "16px",
                 borderBottom: "1px solid rgba(0,0,0,0.04)",
-                textDecoration: "none",
-                position: "relative",
-                transition: "all 0.25s ease",
-                cursor: "pointer",
+                textDecoration: "none", position: "relative",
+                transition: "all 0.25s ease", cursor: "pointer",
             }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            {/* Quality strip */}
-            <div
-                style={{
-                    position: "absolute",
-                    left: 0,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: 3,
-                    height: hovered ? 28 : 0,
-                    background: `linear-gradient(${COLORS.accentBlue}, ${COLORS.fullBlue})`,
-                    borderRadius: 2,
-                    transition: "height 0.25s ease",
-                }}
-            />
+            <div style={{
+                position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+                width: 3, height: hovered ? 28 : 0,
+                background: `linear-gradient(${COLORS.accentBlue}, ${COLORS.fullBlue})`,
+                borderRadius: 2, transition: "height 0.25s ease",
+            }} />
 
-            <span
-                style={{
-                    fontFamily: FONTS.heading,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    color: hovered ? COLORS.fullBlue : COLORS.darkText,
-                    transition: "color 0.2s ease",
-                }}
-            >
+            <span style={{
+                fontFamily: fonts.heading, fontSize: fonts.roleTitleSize, fontWeight: 600,
+                color: hovered ? COLORS.fullBlue : COLORS.darkText,
+                transition: "color 0.2s ease",
+            }}>
                 {role.title}
             </span>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                {/* Department tag — visible on hover */}
-                <span
-                    style={{
-                        fontFamily: FONTS.mono,
-                        fontSize: 8,
-                        fontWeight: 500,
-                        textTransform: "uppercase" as const,
-                        letterSpacing: "1.2px",
-                        color: COLORS.fullBlue,
-                        backgroundColor: COLORS.lightLavender,
-                        padding: "4px 8px",
-                        borderRadius: 4,
-                        opacity: hovered ? 1 : 0,
-                        transition: "opacity 0.2s ease",
-                    }}
-                >
+                <span style={{
+                    fontFamily: fonts.mono, fontSize: 8, fontWeight: 500,
+                    textTransform: "uppercase" as const, letterSpacing: "1.2px",
+                    color: COLORS.fullBlue, backgroundColor: COLORS.lightLavender,
+                    padding: "4px 8px", borderRadius: 4,
+                    opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease",
+                }}>
                     {role.department}
                 </span>
-
-                {/* Arrow */}
-                <span
-                    style={{
-                        fontFamily: FONTS.body,
-                        fontSize: 14,
-                        color: COLORS.muted,
-                        transition: "transform 0.2s ease",
-                        transform: hovered ? "translateX(4px)" : "translateX(0)",
-                        display: "inline-block",
-                    }}
-                >
+                <span style={{
+                    fontFamily: fonts.body, fontSize: 14, color: COLORS.muted,
+                    transition: "transform 0.2s ease",
+                    transform: hovered ? "translateX(4px)" : "translateX(0)",
+                    display: "inline-block",
+                }}>
                     →
                 </span>
             </div>
@@ -611,7 +489,21 @@ function RoleRow({ role, isMobile }: { role: Role; isMobile: boolean }) {
     )
 }
 
-function OpenRolesSection({ roles, isMobile }: { roles: Role[]; isMobile: boolean }) {
+// ═══════════════════════════════════════════════════════════════
+// SECTION 2: OPEN ROLES
+// ═══════════════════════════════════════════════════════════════
+interface OpenRolesProps {
+    roles: Role[]
+    isMobile: boolean
+    fonts: FontConfig
+    headline: string
+    filterLocationLabel: string
+    filterDeptLabel: string
+    emptyText: string
+}
+
+function OpenRolesSection(props: OpenRolesProps) {
+    const { roles, isMobile, fonts, headline, filterLocationLabel, filterDeptLabel, emptyText } = props
     const [locationFilter, setLocationFilter] = useState("all")
     const [deptFilter, setDeptFilter] = useState("all")
 
@@ -624,7 +516,6 @@ function OpenRolesSection({ roles, isMobile }: { roles: Role[]; isMobile: boolea
         return true
     })
 
-    // Group by location
     const grouped: Record<string, Role[]> = {}
     for (const r of filtered) {
         if (!grouped[r.location]) grouped[r.location] = []
@@ -632,138 +523,77 @@ function OpenRolesSection({ roles, isMobile }: { roles: Role[]; isMobile: boolea
     }
 
     const selectStyle: React.CSSProperties = {
-        fontFamily: FONTS.body,
-        fontSize: 13,
-        fontWeight: 500,
+        fontFamily: fonts.body, fontSize: 13, fontWeight: 500,
         padding: "10px 36px 10px 14px",
-        border: "1.5px solid rgba(0,0,0,0.07)",
-        borderRadius: 8,
-        backgroundColor: COLORS.white,
-        color: COLORS.darkText,
-        appearance: "none" as const,
-        cursor: "pointer",
+        border: "1.5px solid rgba(0,0,0,0.07)", borderRadius: 8,
+        backgroundColor: COLORS.white, color: COLORS.darkText,
+        appearance: "none" as const, cursor: "pointer",
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238896AB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 12px center",
-        outline: "none",
-        minWidth: 160,
+        backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center",
+        outline: "none", minWidth: 160,
     }
 
     const labelStyle: React.CSSProperties = {
-        fontFamily: FONTS.mono,
-        fontSize: 9,
-        fontWeight: 500,
-        textTransform: "uppercase",
-        letterSpacing: "1.5px",
-        color: COLORS.muted,
-        opacity: 0.5,
-        marginBottom: 6,
+        fontFamily: fonts.mono, fontSize: 9, fontWeight: 500,
+        textTransform: "uppercase", letterSpacing: "1.5px",
+        color: COLORS.muted, opacity: 0.5, marginBottom: 6,
     }
 
     return (
-        <section
-            id="open-roles"
-            style={{
-                width: "100%",
-                backgroundColor: COLORS.white,
-                padding: isMobile ? "64px 24px" : "80px 48px",
-                boxSizing: "border-box",
-            }}
-        >
+        <section id="open-roles" style={{
+            width: "100%", backgroundColor: COLORS.white,
+            padding: isMobile ? "64px 24px" : "80px 48px", boxSizing: "border-box",
+        }}>
             <div style={{ maxWidth: 900, margin: "0 auto" }}>
-                {/* Headline */}
-                <h2
-                    style={{
-                        fontFamily: FONTS.heading,
-                        fontSize: 28,
-                        fontWeight: 700,
-                        color: COLORS.darkText,
-                        letterSpacing: "-0.5px",
-                        margin: "0 0 32px 0",
-                    }}
-                >
-                    Find Your Next Career Opportunity
+                <h2 style={{
+                    fontFamily: fonts.heading, fontSize: fonts.sectionHeadlineSize,
+                    fontWeight: 700, color: COLORS.darkText,
+                    letterSpacing: "-0.5px", margin: "0 0 32px 0",
+                }}>
+                    {headline}
                 </h2>
 
-                {/* Filters */}
-                <div
-                    style={{
-                        display: "flex",
-                        gap: 24,
-                        marginBottom: 32,
-                        flexWrap: "wrap" as const,
-                    }}
-                >
+                <div style={{ display: "flex", gap: 24, marginBottom: 32, flexWrap: "wrap" as const }}>
                     <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={labelStyle}>Location</span>
-                        <select
-                            style={selectStyle}
-                            value={locationFilter}
-                            onChange={(e) => setLocationFilter(e.target.value)}
-                        >
+                        <span style={labelStyle}>{filterLocationLabel}</span>
+                        <select style={selectStyle} value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
                             <option value="all">All Locations</option>
-                            {locations.map((l) => (
-                                <option key={l} value={l}>
-                                    {l}
-                                </option>
-                            ))}
+                            {locations.map((l) => <option key={l} value={l}>{l}</option>)}
                         </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={labelStyle}>Department</span>
-                        <select
-                            style={selectStyle}
-                            value={deptFilter}
-                            onChange={(e) => setDeptFilter(e.target.value)}
-                        >
+                        <span style={labelStyle}>{filterDeptLabel}</span>
+                        <select style={selectStyle} value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
                             <option value="all">All Departments</option>
-                            {departments.map((d) => (
-                                <option key={d} value={d}>
-                                    {d}
-                                </option>
-                            ))}
+                            {departments.map((d) => <option key={d} value={d}>{d}</option>)}
                         </select>
                     </div>
                 </div>
 
-                {/* Separator */}
                 <div style={{ borderBottom: "1px solid rgba(0,0,0,0.04)", marginBottom: 8 }} />
 
-                {/* Grouped roles */}
                 {Object.entries(grouped).map(([location, locationRoles]) => (
                     <div key={location} style={{ marginBottom: 24 }}>
-                        <div
-                            style={{
-                                fontFamily: FONTS.heading,
-                                fontSize: 12,
-                                fontWeight: 700,
-                                textTransform: "uppercase" as const,
-                                letterSpacing: "1.5px",
-                                color: COLORS.muted,
-                                opacity: 0.5,
-                                padding: "16px 0 8px",
-                            }}
-                        >
+                        <div style={{
+                            fontFamily: fonts.heading, fontSize: 12, fontWeight: 700,
+                            textTransform: "uppercase" as const, letterSpacing: "1.5px",
+                            color: COLORS.muted, opacity: 0.5, padding: "16px 0 8px",
+                        }}>
                             {location}
                         </div>
                         <div style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }} />
                         {locationRoles.map((role, i) => (
-                            <RoleRow key={i} role={role} isMobile={isMobile} />
+                            <RoleRow key={i} role={role} fonts={fonts} />
                         ))}
                     </div>
                 ))}
 
                 {filtered.length === 0 && (
-                    <p
-                        style={{
-                            fontFamily: FONTS.body,
-                            fontSize: 14,
-                            color: COLORS.muted,
-                            padding: "32px 0",
-                            textAlign: "center",
-                        }}
-                    >
-                        No roles match your filters. Try broadening your search.
+                    <p style={{
+                        fontFamily: fonts.body, fontSize: fonts.bodySize,
+                        color: COLORS.muted, padding: "32px 0", textAlign: "center",
+                    }}>
+                        {emptyText}
                     </p>
                 )}
             </div>
@@ -774,187 +604,117 @@ function OpenRolesSection({ roles, isMobile }: { roles: Role[]; isMobile: boolea
 // ═══════════════════════════════════════════════════════════════
 // SECTION 3: SIGNAL TEST
 // ═══════════════════════════════════════════════════════════════
-function SignalTestSection({ isMobile }: { isMobile: boolean }) {
-    const [checked, setChecked] = useState<boolean[]>(new Array(SIGNAL_ITEMS.length).fill(false))
+interface SignalTestProps {
+    isMobile: boolean
+    fonts: FontConfig
+    headline: string
+    subtext: string
+    items: string[]
+    result0: string
+    result1: string
+    result3: string
+    result5: string
+    ctaText: string
+}
 
+function SignalTestSection(props: SignalTestProps) {
+    const { isMobile, fonts, headline, subtext, items, result0, result1, result3, result5, ctaText } = props
+    const [checked, setChecked] = useState<boolean[]>(new Array(items.length).fill(false))
     const checkedCount = checked.filter(Boolean).length
 
     const toggle = (index: number) => {
-        setChecked((prev) => {
-            const next = [...prev]
-            next[index] = !next[index]
-            return next
-        })
+        setChecked((prev) => { const next = [...prev]; next[index] = !next[index]; return next })
     }
 
     const getResultText = () => {
-        if (checkedCount === 0) return "Check what's true."
-        if (checkedCount <= 2) return "Signal detected. Below threshold."
-        if (checkedCount <= 4) return "High signal. Let's talk."
-        return "Zero wasted bits. Talk to us."
+        if (checkedCount === 0) return result0
+        if (checkedCount <= 2) return result1
+        if (checkedCount <= 4) return result3
+        return result5
     }
 
     const isHot = checkedCount >= 3
 
+    // Parse headline into lines
+    const headlineLines = headline.split("\n")
+
     return (
-        <section
-            style={{
-                width: "100%",
-                backgroundColor: COLORS.darkNavy,
-                padding: isMobile ? "64px 24px" : "80px 48px",
-                boxSizing: "border-box",
-                position: "relative",
-                overflow: "hidden",
-            }}
-        >
-            {/* Background pixel grid SVG */}
-            <svg
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    zIndex: 0,
-                    pointerEvents: "none",
-                }}
-            >
+        <section style={{
+            width: "100%", backgroundColor: COLORS.darkNavy,
+            padding: isMobile ? "64px 24px" : "80px 48px",
+            boxSizing: "border-box", position: "relative", overflow: "hidden",
+        }}>
+            <svg style={{
+                position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+                zIndex: 0, pointerEvents: "none",
+            }}>
                 <rect x="10%" y="15%" width="40" height="40" fill="white" opacity="0.015" />
                 <rect x="70%" y="25%" width="44" height="44" fill={COLORS.fullBlue} opacity="0.02" />
                 <rect x="30%" y="70%" width="42" height="42" fill={COLORS.fullBlue} opacity="0.015" />
                 <rect x="85%" y="75%" width="40" height="40" fill="white" opacity="0.02" />
             </svg>
 
-            <div
-                style={{
-                    maxWidth: 900,
-                    margin: "0 auto",
-                    display: "flex",
-                    flexDirection: isMobile ? "column" : "row",
-                    gap: isMobile ? 28 : 48,
-                    position: "relative",
-                    zIndex: 1,
-                }}
-            >
-                {/* Left: headline */}
+            <div style={{
+                maxWidth: 900, margin: "0 auto",
+                display: "flex", flexDirection: isMobile ? "column" : "row",
+                gap: isMobile ? 28 : 48, position: "relative", zIndex: 1,
+            }}>
+                {/* Left */}
                 <div style={{ flex: 1, minWidth: 260 }}>
-                    <h2
-                        style={{
-                            fontFamily: FONTS.heading,
-                            fontSize: 22,
-                            fontWeight: 700,
-                            color: COLORS.white,
-                            letterSpacing: "-0.3px",
-                            margin: "0 0 12px 0",
-                            lineHeight: 1.3,
-                        }}
-                    >
-                        Not sure?
-                        <br />
-                        Run the test.
+                    <h2 style={{
+                        fontFamily: fonts.heading, fontSize: fonts.signalHeadlineSize,
+                        fontWeight: 700, color: COLORS.white,
+                        letterSpacing: "-0.3px", margin: "0 0 12px 0", lineHeight: 1.3,
+                    }}>
+                        {headlineLines.map((line, i) => (
+                            <span key={i}>{i > 0 && <br />}{line}</span>
+                        ))}
                     </h2>
-                    <p
-                        style={{
-                            fontFamily: FONTS.body,
-                            fontSize: 14,
-                            color: COLORS.white,
-                            opacity: 0.35,
-                            margin: 0,
-                            lineHeight: 1.5,
-                        }}
-                    >
-                        Three or more true — we should talk.
+                    <p style={{
+                        fontFamily: fonts.body, fontSize: fonts.bodySize,
+                        color: COLORS.white, opacity: 0.35, margin: 0, lineHeight: 1.5,
+                    }}>
+                        {subtext}
                     </p>
                 </div>
 
-                {/* Right: checkboxes + meter */}
+                {/* Right */}
                 <div style={{ flex: 1.3, minWidth: 320 }}>
-                    {/* Checkbox items */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {SIGNAL_ITEMS.map((item, i) => {
+                        {items.map((item, i) => {
                             const isChecked = checked[i]
                             return (
                                 <div
                                     key={i}
                                     onClick={() => toggle(i)}
                                     style={{
-                                        display: "flex",
-                                        alignItems: "flex-start",
-                                        gap: 12,
-                                        padding: "12px 14px",
-                                        borderRadius: 10,
-                                        backgroundColor: isChecked
-                                            ? "rgba(0,153,255,0.05)"
-                                            : "rgba(255,255,255,0.015)",
-                                        border: `1.5px solid ${
-                                            isChecked
-                                                ? "rgba(0,153,255,0.18)"
-                                                : "rgba(255,255,255,0.04)"
-                                        }`,
-                                        cursor: "pointer",
-                                        transition: "all 0.2s ease",
-                                        userSelect: "none" as const,
+                                        display: "flex", alignItems: "flex-start", gap: 12,
+                                        padding: "12px 14px", borderRadius: 10,
+                                        backgroundColor: isChecked ? "rgba(0,153,255,0.05)" : "rgba(255,255,255,0.015)",
+                                        border: `1.5px solid ${isChecked ? "rgba(0,153,255,0.18)" : "rgba(255,255,255,0.04)"}`,
+                                        cursor: "pointer", transition: "all 0.2s ease", userSelect: "none" as const,
                                     }}
-                                    onMouseEnter={(e) => {
-                                        if (!isChecked) {
-                                            e.currentTarget.style.borderColor = "rgba(0,153,255,0.1)"
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!isChecked) {
-                                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)"
-                                        }
-                                    }}
+                                    onMouseEnter={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(0,153,255,0.1)" }}
+                                    onMouseLeave={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)" }}
                                 >
-                                    {/* Checkbox */}
-                                    <div
-                                        style={{
-                                            width: 18,
-                                            height: 18,
-                                            minWidth: 18,
-                                            borderRadius: 5,
-                                            border: isChecked
-                                                ? "none"
-                                                : "1.5px solid rgba(255,255,255,0.08)",
-                                            backgroundColor: isChecked
-                                                ? COLORS.accentBlue
-                                                : "transparent",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            transition: "all 0.2s ease",
-                                            marginTop: 1,
-                                        }}
-                                    >
+                                    <div style={{
+                                        width: 18, height: 18, minWidth: 18, borderRadius: 5,
+                                        border: isChecked ? "none" : "1.5px solid rgba(255,255,255,0.08)",
+                                        backgroundColor: isChecked ? COLORS.accentBlue : "transparent",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        transition: "all 0.2s ease", marginTop: 1,
+                                    }}>
                                         {isChecked && (
-                                            <svg
-                                                width="10"
-                                                height="8"
-                                                viewBox="0 0 10 8"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M1 4L3.5 6.5L9 1"
-                                                    stroke="white"
-                                                    strokeWidth="2"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                />
+                                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                         )}
                                     </div>
-
-                                    {/* Text */}
-                                    <span
-                                        style={{
-                                            fontFamily: FONTS.body,
-                                            fontSize: 12.5,
-                                            color: COLORS.white,
-                                            opacity: isChecked ? 0.85 : 0.35,
-                                            lineHeight: 1.5,
-                                            transition: "opacity 0.2s ease",
-                                        }}
-                                    >
+                                    <span style={{
+                                        fontFamily: fonts.body, fontSize: 12.5,
+                                        color: COLORS.white, opacity: isChecked ? 0.85 : 0.35,
+                                        lineHeight: 1.5, transition: "opacity 0.2s ease",
+                                    }}>
                                         {item}
                                     </span>
                                 </div>
@@ -963,96 +723,51 @@ function SignalTestSection({ isMobile }: { isMobile: boolean }) {
                     </div>
 
                     {/* Signal meter + result */}
-                    <div
-                        style={{
-                            marginTop: 20,
-                            padding: "16px 18px",
-                            borderRadius: 10,
-                            backgroundColor: isHot
-                                ? "rgba(0,153,255,0.07)"
-                                : "rgba(0,153,255,0.03)",
-                            border: `1.5px solid ${
-                                isHot ? "rgba(0,153,255,0.2)" : "rgba(0,153,255,0.06)"
-                            }`,
-                            boxShadow: isHot
-                                ? "0 0 24px rgba(0,153,255,0.15)"
-                                : "none",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 16,
-                            flexWrap: "wrap" as const,
-                            transition: "all 0.3s ease",
-                        }}
-                    >
-                        {/* Signal bars */}
+                    <div style={{
+                        marginTop: 20, padding: "16px 18px", borderRadius: 10,
+                        backgroundColor: isHot ? "rgba(0,153,255,0.07)" : "rgba(0,153,255,0.03)",
+                        border: `1.5px solid ${isHot ? "rgba(0,153,255,0.2)" : "rgba(0,153,255,0.06)"}`,
+                        boxShadow: isHot ? "0 0 24px rgba(0,153,255,0.15)" : "none",
+                        display: "flex", alignItems: "center", gap: 16,
+                        flexWrap: "wrap" as const, transition: "all 0.3s ease",
+                    }}>
                         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                             {Array.from({ length: 5 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    style={{
-                                        width: 32,
-                                        height: 4,
-                                        borderRadius: 2,
-                                        backgroundColor:
-                                            i < checkedCount
-                                                ? COLORS.accentBlue
-                                                : "rgba(255,255,255,0.04)",
-                                        boxShadow:
-                                            i < checkedCount
-                                                ? `0 0 8px ${COLORS.accentBlue}40`
-                                                : "none",
-                                        transition: "all 0.3s ease",
-                                    }}
-                                />
+                                <div key={i} style={{
+                                    width: 32, height: 4, borderRadius: 2,
+                                    backgroundColor: i < checkedCount ? COLORS.accentBlue : "rgba(255,255,255,0.04)",
+                                    boxShadow: i < checkedCount ? `0 0 8px ${COLORS.accentBlue}40` : "none",
+                                    transition: "all 0.3s ease",
+                                }} />
                             ))}
                         </div>
 
-                        {/* Result text */}
-                        <span
-                            style={{
-                                fontFamily: FONTS.body,
-                                fontSize: 13,
-                                fontWeight: 500,
-                                color: COLORS.white,
-                                opacity: checkedCount === 0 ? 0.3 : 0.8,
-                                flex: 1,
-                                transition: "opacity 0.3s ease",
-                            }}
-                        >
+                        <span style={{
+                            fontFamily: fonts.body, fontSize: 13, fontWeight: 500,
+                            color: COLORS.white, opacity: checkedCount === 0 ? 0.3 : 0.8,
+                            flex: 1, transition: "opacity 0.3s ease",
+                        }}>
                             {getResultText()}
                         </span>
 
-                        {/* CTA button — appears at 3+ */}
                         {isHot && (
                             <a
                                 href="#open-roles"
                                 onClick={(e) => {
                                     e.preventDefault()
-                                    document
-                                        .getElementById("open-roles")
-                                        ?.scrollIntoView({ behavior: "smooth" })
+                                    document.getElementById("open-roles")?.scrollIntoView({ behavior: "smooth" })
                                 }}
                                 style={{
-                                    fontFamily: FONTS.heading,
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    color: COLORS.white,
-                                    backgroundColor: COLORS.accentBlue,
-                                    padding: "8px 20px",
-                                    borderRadius: 6,
-                                    textDecoration: "none",
-                                    cursor: "pointer",
-                                    transition: "background-color 0.2s ease",
+                                    fontFamily: fonts.heading, fontSize: 12, fontWeight: 600,
+                                    color: COLORS.white, backgroundColor: COLORS.accentBlue,
+                                    padding: "8px 20px", borderRadius: 6, textDecoration: "none",
+                                    cursor: "pointer", transition: "background-color 0.2s ease",
                                     whiteSpace: "nowrap" as const,
                                 }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = COLORS.fullBlue
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = COLORS.accentBlue
-                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = COLORS.fullBlue }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = COLORS.accentBlue }}
                             >
-                                Apply
+                                {ctaText}
                             </a>
                         )}
                     </div>
@@ -1065,114 +780,75 @@ function SignalTestSection({ isMobile }: { isMobile: boolean }) {
 // ═══════════════════════════════════════════════════════════════
 // SECTION 4: OPEN APPLICATION CTA
 // ═══════════════════════════════════════════════════════════════
-function OpenAppCTASection({
-    isMobile,
-    openAppUrl,
-    linkedInUrl,
-}: {
+interface OpenAppCTAProps {
     isMobile: boolean
+    fonts: FontConfig
+    headline: string
+    subtext: string
+    primaryText: string
+    secondaryText: string
     openAppUrl: string
     linkedInUrl: string
-}) {
+}
+
+function OpenAppCTASection(props: OpenAppCTAProps) {
+    const { isMobile, fonts, headline, subtext, primaryText, secondaryText, openAppUrl, linkedInUrl } = props
+
     return (
-        <section
-            style={{
-                width: "100%",
-                backgroundColor: COLORS.white,
-                borderTop: "1px solid rgba(0,0,0,0.04)",
-                padding: isMobile ? "48px 24px" : "56px 48px",
-                boxSizing: "border-box",
-                textAlign: "center",
-            }}
-        >
-            <h3
-                style={{
-                    fontFamily: FONTS.heading,
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: COLORS.darkText,
-                    letterSpacing: "-0.3px",
-                    margin: 0,
-                }}
-            >
-                Not every bit makes the cut.
+        <section style={{
+            width: "100%", backgroundColor: COLORS.white,
+            borderTop: "1px solid rgba(0,0,0,0.04)",
+            padding: isMobile ? "48px 24px" : "56px 48px",
+            boxSizing: "border-box", textAlign: "center",
+        }}>
+            <h3 style={{
+                fontFamily: fonts.heading, fontSize: 20, fontWeight: 700,
+                color: COLORS.darkText, letterSpacing: "-0.3px", margin: 0,
+            }}>
+                {headline}
             </h3>
-            <p
-                style={{
-                    fontFamily: FONTS.body,
-                    fontSize: 14,
-                    color: COLORS.muted,
-                    margin: "6px 0 0",
-                }}
-            >
-                Don't see your role? Tell us what we're missing.
+            <p style={{
+                fontFamily: fonts.body, fontSize: fonts.bodySize,
+                color: COLORS.muted, margin: "6px 0 0",
+            }}>
+                {subtext}
             </p>
 
-            {/* Buttons */}
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 12,
-                    marginTop: 24,
-                    flexWrap: "wrap" as const,
-                }}
-            >
-                {/* Primary */}
+            <div style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                gap: 12, marginTop: 24, flexWrap: "wrap" as const,
+            }}>
                 <a
                     href={openAppUrl}
                     style={{
-                        fontFamily: FONTS.heading,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: COLORS.white,
-                        backgroundColor: COLORS.fullBlue,
-                        padding: "10px 24px",
-                        borderRadius: 8,
-                        textDecoration: "none",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                        border: "none",
+                        fontFamily: fonts.heading, fontSize: fonts.ctaButtonSize, fontWeight: 600,
+                        color: COLORS.white, backgroundColor: COLORS.fullBlue,
+                        padding: "10px 24px", borderRadius: 8,
+                        textDecoration: "none", cursor: "pointer",
+                        transition: "all 0.2s ease", border: "none",
                     }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = COLORS.accentBlue
-                        e.currentTarget.style.transform = "translateY(-1px)"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = COLORS.fullBlue
-                        e.currentTarget.style.transform = "translateY(0)"
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = COLORS.accentBlue; e.currentTarget.style.transform = "translateY(-1px)" }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = COLORS.fullBlue; e.currentTarget.style.transform = "translateY(0)" }}
                 >
-                    Send Us Your Story
+                    {primaryText}
                 </a>
 
-                {/* Secondary */}
                 <a
                     href={linkedInUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                        fontFamily: FONTS.heading,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: COLORS.fullBlue,
-                        backgroundColor: "transparent",
-                        padding: "10px 24px",
-                        borderRadius: 8,
-                        textDecoration: "none",
-                        cursor: "pointer",
+                        fontFamily: fonts.heading, fontSize: fonts.ctaButtonSize, fontWeight: 600,
+                        color: COLORS.fullBlue, backgroundColor: "transparent",
+                        padding: "10px 24px", borderRadius: 8,
+                        textDecoration: "none", cursor: "pointer",
                         transition: "all 0.2s ease",
                         border: `1.5px solid rgba(55,81,255,0.12)`,
                     }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = COLORS.fullBlue
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(55,81,255,0.12)"
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.fullBlue }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(55,81,255,0.12)" }}
                 >
-                    Follow on LinkedIn
+                    {secondaryText}
                 </a>
             </div>
         </section>
@@ -1182,76 +858,41 @@ function OpenAppCTASection({
 // ═══════════════════════════════════════════════════════════════
 // SECTION 5: FOOTER STATS
 // ═══════════════════════════════════════════════════════════════
-function FooterStatsSection({ isMobile }: { isMobile: boolean }) {
-    const stats = [
-        { value: "53", label: "Patents" },
-        { value: "1", unit: "Emmy", label: "Technology & Engineering" },
-        { value: "12", label: "APIs in the GPU driver" },
-        { value: "~50", label: "People" },
-    ]
+interface FooterStatsProps {
+    isMobile: boolean
+    fonts: FontConfig
+    stats: Array<{ value: string; unit?: string; label: string }>
+}
 
+function FooterStatsSection({ isMobile, fonts, stats }: FooterStatsProps) {
     return (
-        <section
-            style={{
-                width: "100%",
-                backgroundColor: COLORS.white,
-                padding: isMobile ? "24px 24px 48px" : "24px 48px 48px",
-                boxSizing: "border-box",
-            }}
-        >
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "center",
-                    gap: isMobile ? 24 : 48,
-                    flexWrap: "wrap" as const,
-                    maxWidth: 900,
-                    margin: "0 auto",
-                }}
-            >
+        <section style={{
+            width: "100%", backgroundColor: COLORS.white,
+            padding: isMobile ? "24px 24px 48px" : "24px 48px 48px",
+            boxSizing: "border-box",
+        }}>
+            <div style={{
+                display: "flex", alignItems: "flex-start", justifyContent: "center",
+                gap: isMobile ? 24 : 48, flexWrap: "wrap" as const,
+                maxWidth: 900, margin: "0 auto",
+            }}>
                 {stats.map((stat, i) => (
-                    <div
-                        key={i}
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 2,
-                        }}
-                    >
-                        <span
-                            style={{
-                                fontFamily: FONTS.mono,
-                                fontSize: 26,
-                                fontWeight: 700,
-                                color: COLORS.darkBg,
-                                letterSpacing: "-1px",
-                            }}
-                        >
+                    <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                        <span style={{
+                            fontFamily: fonts.mono, fontSize: fonts.statNumberSize,
+                            fontWeight: 700, color: COLORS.darkBg, letterSpacing: "-1px",
+                        }}>
                             {stat.value}
                             {stat.unit && (
-                                <span
-                                    style={{
-                                        color: COLORS.accentBlue,
-                                        fontSize: 13,
-                                        marginLeft: 4,
-                                    }}
-                                >
+                                <span style={{ color: COLORS.accentBlue, fontSize: 13, marginLeft: 4 }}>
                                     {stat.unit}
                                 </span>
                             )}
                         </span>
-                        <span
-                            style={{
-                                fontFamily: FONTS.body,
-                                fontSize: 10,
-                                color: COLORS.muted,
-                                letterSpacing: "0.3px",
-                                marginTop: 2,
-                                textAlign: "center",
-                            }}
-                        >
+                        <span style={{
+                            fontFamily: fonts.body, fontSize: fonts.labelSize,
+                            color: COLORS.muted, letterSpacing: "0.3px", marginTop: 2, textAlign: "center",
+                        }}>
                             {stat.label}
                         </span>
                     </div>
@@ -1265,30 +906,151 @@ function FooterStatsSection({ isMobile }: { isMobile: boolean }) {
 // MAIN: CAREERS PAGE
 // ═══════════════════════════════════════════════════════════════
 interface CareersPageProps {
+    // Fonts
+    headingFont: string
+    bodyFont: string
+    monoFont: string
+    // Font sizes
+    heroHeadlineSize: number
+    heroSubheadlineSize: number
+    sectionHeadlineSize: number
+    signalHeadlineSize: number
+    roleTitleSize: number
+    bodySize: number
+    statNumberSize: number
+    labelSize: number
+    ctaButtonSize: number
+    // Hero copy
+    heroBadge: string
+    heroHeadline: string
+    heroSubheadline1: string
+    heroSubheadline2: string
+    heroCtaText: string
+    heroStat1Value: string
+    heroStat1Label: string
+    heroStat2Value: string
+    heroStat2Unit: string
+    heroStat2Label: string
+    heroStat3Value: string
+    heroStat3Label: string
+    // Open Roles copy
+    rolesHeadline: string
+    rolesFilterLocationLabel: string
+    rolesFilterDeptLabel: string
+    rolesEmptyText: string
+    // Signal Test copy
+    signalHeadline: string
+    signalSubtext: string
+    signalItem1: string
+    signalItem2: string
+    signalItem3: string
+    signalItem4: string
+    signalItem5: string
+    signalResult0: string
+    signalResult1: string
+    signalResult3: string
+    signalResult5: string
+    signalCtaText: string
+    // Open App CTA copy
+    ctaHeadline: string
+    ctaSubtext: string
+    ctaPrimaryText: string
+    ctaSecondaryText: string
+    // URLs
     openAppUrl: string
     linkedInUrl: string
+    // Footer Stats copy
+    footerStat1Value: string
+    footerStat1Label: string
+    footerStat2Value: string
+    footerStat2Unit: string
+    footerStat2Label: string
+    footerStat3Value: string
+    footerStat3Label: string
+    footerStat4Value: string
+    footerStat4Label: string
+    // Style
     style?: React.CSSProperties
 }
 
 function CareersPage(props: CareersPageProps) {
     const {
+        // Fonts
+        headingFont = "'Poppins', 'Inter', sans-serif",
+        bodyFont = "'Inter', 'Poppins', sans-serif",
+        monoFont = "'JetBrains Mono', 'Fira Code', monospace",
+        // Font sizes
+        heroHeadlineSize = 130,
+        heroSubheadlineSize = 18,
+        sectionHeadlineSize = 28,
+        signalHeadlineSize = 22,
+        roleTitleSize = 16,
+        bodySize = 14,
+        statNumberSize = 28,
+        labelSize = 11,
+        ctaButtonSize = 14,
+        // Hero
+        heroBadge = "Now Hiring",
+        heroHeadline = "EVERY\nBIT\nCOUNTS.",
+        heroSubheadline1 = "We analyze every bit to find the ones that matter.",
+        heroSubheadline2 = "We hire the same way.",
+        heroCtaText = "See Open Roles ↓",
+        heroStat1Value = "53",
+        heroStat1Label = "Patents",
+        heroStat2Value = "1",
+        heroStat2Unit = "Emmy",
+        heroStat2Label = "Technology & Engineering",
+        heroStat3Value = "~50",
+        heroStat3Label = "People",
+        // Roles
+        rolesHeadline = "Find Your Next Career Opportunity",
+        rolesFilterLocationLabel = "Location",
+        rolesFilterDeptLabel = "Department",
+        rolesEmptyText = "No roles match your filters. Try broadening your search.",
+        // Signal Test
+        signalHeadline = "Not sure?\nRun the test.",
+        signalSubtext = "Three or more true — we should talk.",
+        signalItem1 = "You've gone deep on something and can explain it without dumbing it down.",
+        signalItem2 = "You've shipped something real users depend on.",
+        signalItem3 = 'You care about "right" vs "good enough" — even when no one notices.',
+        signalItem4 = "You read this far instead of just scrolling to the titles.",
+        signalItem5 = "You want problems that don't exist at most companies.",
+        signalResult0 = "Check what's true.",
+        signalResult1 = "Signal detected. Below threshold.",
+        signalResult3 = "High signal. Let's talk.",
+        signalResult5 = "Zero wasted bits. Talk to us.",
+        signalCtaText = "Apply",
+        // CTA
+        ctaHeadline = "Not every bit makes the cut.",
+        ctaSubtext = "Don't see your role? Tell us what we're missing.",
+        ctaPrimaryText = "Send Us Your Story",
+        ctaSecondaryText = "Follow on LinkedIn",
+        // URLs
         openAppUrl = "#open-application",
         linkedInUrl = "#linkedin",
+        // Footer Stats
+        footerStat1Value = "53",
+        footerStat1Label = "Patents",
+        footerStat2Value = "1",
+        footerStat2Unit = "Emmy",
+        footerStat2Label = "Technology & Engineering",
+        footerStat3Value = "12",
+        footerStat3Label = "APIs in the GPU driver",
+        footerStat4Value = "~50",
+        footerStat4Label = "People",
+        // Style
         style,
     } = props
 
     const [isMobile, setIsMobile] = useState(false)
 
     useEffect(() => {
-        function check() {
-            setIsMobile(window.innerWidth <= 900)
-        }
+        function check() { setIsMobile(window.innerWidth <= 900) }
         check()
         window.addEventListener("resize", check)
         return () => window.removeEventListener("resize", check)
     }, [])
 
-    // Scroll-triggered fade-in
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
@@ -1303,8 +1065,6 @@ function CareersPage(props: CareersPageProps) {
             },
             { threshold: 0.1 }
         )
-
-        // Observe all sections except hero
         const sections = document.querySelectorAll("[data-careers-reveal]")
         sections.forEach((s) => {
             const el = s as HTMLElement
@@ -1313,52 +1073,374 @@ function CareersPage(props: CareersPageProps) {
             el.style.transition = "opacity 0.6s ease, transform 0.6s ease"
             observer.observe(el)
         })
-
         return () => observer.disconnect()
     }, [])
 
+    const fonts: FontConfig = {
+        heading: headingFont,
+        body: bodyFont,
+        mono: monoFont,
+        heroHeadlineSize,
+        heroSubheadlineSize,
+        sectionHeadlineSize,
+        signalHeadlineSize,
+        roleTitleSize,
+        bodySize,
+        statNumberSize,
+        labelSize,
+        ctaButtonSize,
+    }
+
+    const signalItems = [signalItem1, signalItem2, signalItem3, signalItem4, signalItem5]
+
+    const footerStats = [
+        { value: footerStat1Value, label: footerStat1Label },
+        { value: footerStat2Value, unit: footerStat2Unit, label: footerStat2Label },
+        { value: footerStat3Value, label: footerStat3Label },
+        { value: footerStat4Value, label: footerStat4Label },
+    ]
+
     return (
-        <div
-            style={{
-                ...style,
-                width: "100%",
-                display: "flex",
-                flexDirection: "column" as const,
-                minHeight: "100vh",
-                backgroundColor: COLORS.white,
-            }}
-        >
-            {/* Section 1: Hero (Dark) */}
-            <HeroSection isMobile={isMobile} />
+        <div style={{
+            ...style, width: "100%", display: "flex",
+            flexDirection: "column" as const, minHeight: "100vh",
+            backgroundColor: COLORS.white,
+        }}>
+            <HeroSection
+                isMobile={isMobile}
+                fonts={fonts}
+                badge={heroBadge}
+                headline={heroHeadline}
+                subheadline1={heroSubheadline1}
+                subheadline2={heroSubheadline2}
+                ctaText={heroCtaText}
+                stat1Value={heroStat1Value}
+                stat1Label={heroStat1Label}
+                stat2Value={heroStat2Value}
+                stat2Unit={heroStat2Unit}
+                stat2Label={heroStat2Label}
+                stat3Value={heroStat3Value}
+                stat3Label={heroStat3Label}
+            />
 
-            {/* Section 2: Open Roles (White) */}
             <div data-careers-reveal>
-                <OpenRolesSection roles={DEFAULT_ROLES} isMobile={isMobile} />
+                <OpenRolesSection
+                    roles={DEFAULT_ROLES}
+                    isMobile={isMobile}
+                    fonts={fonts}
+                    headline={rolesHeadline}
+                    filterLocationLabel={rolesFilterLocationLabel}
+                    filterDeptLabel={rolesFilterDeptLabel}
+                    emptyText={rolesEmptyText}
+                />
             </div>
 
-            {/* Section 3: Signal Test (Dark) */}
             <div data-careers-reveal>
-                <SignalTestSection isMobile={isMobile} />
+                <SignalTestSection
+                    isMobile={isMobile}
+                    fonts={fonts}
+                    headline={signalHeadline}
+                    subtext={signalSubtext}
+                    items={signalItems}
+                    result0={signalResult0}
+                    result1={signalResult1}
+                    result3={signalResult3}
+                    result5={signalResult5}
+                    ctaText={signalCtaText}
+                />
             </div>
 
-            {/* Section 4: Open Application CTA (White) */}
             <div data-careers-reveal>
                 <OpenAppCTASection
                     isMobile={isMobile}
+                    fonts={fonts}
+                    headline={ctaHeadline}
+                    subtext={ctaSubtext}
+                    primaryText={ctaPrimaryText}
+                    secondaryText={ctaSecondaryText}
                     openAppUrl={openAppUrl}
                     linkedInUrl={linkedInUrl}
                 />
             </div>
 
-            {/* Section 5: Footer Stats (White) */}
             <div data-careers-reveal>
-                <FooterStatsSection isMobile={isMobile} />
+                <FooterStatsSection isMobile={isMobile} fonts={fonts} stats={footerStats} />
             </div>
         </div>
     )
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FRAMER PROPERTY CONTROLS
+// ═══════════════════════════════════════════════════════════════
 addPropertyControls(CareersPage, {
+    // ─── Typography ───────────────────────────────────────────
+    headingFont: {
+        type: ControlType.String,
+        title: "Heading Font",
+        defaultValue: "'Poppins', 'Inter', sans-serif",
+    },
+    bodyFont: {
+        type: ControlType.String,
+        title: "Body Font",
+        defaultValue: "'Inter', 'Poppins', sans-serif",
+    },
+    monoFont: {
+        type: ControlType.String,
+        title: "Mono Font",
+        defaultValue: "'JetBrains Mono', 'Fira Code', monospace",
+    },
+    heroHeadlineSize: {
+        type: ControlType.Number,
+        title: "Hero Headline",
+        defaultValue: 130,
+        min: 48,
+        max: 200,
+        step: 1,
+        unit: "px",
+    },
+    heroSubheadlineSize: {
+        type: ControlType.Number,
+        title: "Hero Subhead",
+        defaultValue: 18,
+        min: 12,
+        max: 32,
+        step: 1,
+        unit: "px",
+    },
+    sectionHeadlineSize: {
+        type: ControlType.Number,
+        title: "Section Head",
+        defaultValue: 28,
+        min: 16,
+        max: 48,
+        step: 1,
+        unit: "px",
+    },
+    signalHeadlineSize: {
+        type: ControlType.Number,
+        title: "Signal Head",
+        defaultValue: 22,
+        min: 14,
+        max: 40,
+        step: 1,
+        unit: "px",
+    },
+    roleTitleSize: {
+        type: ControlType.Number,
+        title: "Role Title",
+        defaultValue: 16,
+        min: 12,
+        max: 24,
+        step: 1,
+        unit: "px",
+    },
+    bodySize: {
+        type: ControlType.Number,
+        title: "Body Text",
+        defaultValue: 14,
+        min: 10,
+        max: 22,
+        step: 1,
+        unit: "px",
+    },
+    statNumberSize: {
+        type: ControlType.Number,
+        title: "Stat Numbers",
+        defaultValue: 28,
+        min: 16,
+        max: 48,
+        step: 1,
+        unit: "px",
+    },
+    labelSize: {
+        type: ControlType.Number,
+        title: "Labels",
+        defaultValue: 11,
+        min: 8,
+        max: 16,
+        step: 1,
+        unit: "px",
+    },
+    ctaButtonSize: {
+        type: ControlType.Number,
+        title: "CTA Button",
+        defaultValue: 14,
+        min: 10,
+        max: 20,
+        step: 1,
+        unit: "px",
+    },
+
+    // ─── Hero Copy ────────────────────────────────────────────
+    heroBadge: {
+        type: ControlType.String,
+        title: "Badge",
+        defaultValue: "Now Hiring",
+    },
+    heroHeadline: {
+        type: ControlType.String,
+        title: "Headline",
+        defaultValue: "EVERY\nBIT\nCOUNTS.",
+    },
+    heroSubheadline1: {
+        type: ControlType.String,
+        title: "Subhead (dim)",
+        defaultValue: "We analyze every bit to find the ones that matter.",
+    },
+    heroSubheadline2: {
+        type: ControlType.String,
+        title: "Subhead (bold)",
+        defaultValue: "We hire the same way.",
+    },
+    heroCtaText: {
+        type: ControlType.String,
+        title: "Hero CTA",
+        defaultValue: "See Open Roles ↓",
+    },
+    heroStat1Value: {
+        type: ControlType.String,
+        title: "Stat 1 Value",
+        defaultValue: "53",
+    },
+    heroStat1Label: {
+        type: ControlType.String,
+        title: "Stat 1 Label",
+        defaultValue: "Patents",
+    },
+    heroStat2Value: {
+        type: ControlType.String,
+        title: "Stat 2 Value",
+        defaultValue: "1",
+    },
+    heroStat2Unit: {
+        type: ControlType.String,
+        title: "Stat 2 Unit",
+        defaultValue: "Emmy",
+    },
+    heroStat2Label: {
+        type: ControlType.String,
+        title: "Stat 2 Label",
+        defaultValue: "Technology & Engineering",
+    },
+    heroStat3Value: {
+        type: ControlType.String,
+        title: "Stat 3 Value",
+        defaultValue: "~50",
+    },
+    heroStat3Label: {
+        type: ControlType.String,
+        title: "Stat 3 Label",
+        defaultValue: "People",
+    },
+
+    // ─── Open Roles Copy ──────────────────────────────────────
+    rolesHeadline: {
+        type: ControlType.String,
+        title: "Roles Headline",
+        defaultValue: "Find Your Next Career Opportunity",
+    },
+    rolesFilterLocationLabel: {
+        type: ControlType.String,
+        title: "Location Label",
+        defaultValue: "Location",
+    },
+    rolesFilterDeptLabel: {
+        type: ControlType.String,
+        title: "Dept Label",
+        defaultValue: "Department",
+    },
+    rolesEmptyText: {
+        type: ControlType.String,
+        title: "Empty Text",
+        defaultValue: "No roles match your filters. Try broadening your search.",
+    },
+
+    // ─── Signal Test Copy ─────────────────────────────────────
+    signalHeadline: {
+        type: ControlType.String,
+        title: "Signal Headline",
+        defaultValue: "Not sure?\nRun the test.",
+    },
+    signalSubtext: {
+        type: ControlType.String,
+        title: "Signal Subtext",
+        defaultValue: "Three or more true — we should talk.",
+    },
+    signalItem1: {
+        type: ControlType.String,
+        title: "Signal Item 1",
+        defaultValue: "You've gone deep on something and can explain it without dumbing it down.",
+    },
+    signalItem2: {
+        type: ControlType.String,
+        title: "Signal Item 2",
+        defaultValue: "You've shipped something real users depend on.",
+    },
+    signalItem3: {
+        type: ControlType.String,
+        title: "Signal Item 3",
+        defaultValue: 'You care about "right" vs "good enough" — even when no one notices.',
+    },
+    signalItem4: {
+        type: ControlType.String,
+        title: "Signal Item 4",
+        defaultValue: "You read this far instead of just scrolling to the titles.",
+    },
+    signalItem5: {
+        type: ControlType.String,
+        title: "Signal Item 5",
+        defaultValue: "You want problems that don't exist at most companies.",
+    },
+    signalResult0: {
+        type: ControlType.String,
+        title: "Result (0)",
+        defaultValue: "Check what's true.",
+    },
+    signalResult1: {
+        type: ControlType.String,
+        title: "Result (1–2)",
+        defaultValue: "Signal detected. Below threshold.",
+    },
+    signalResult3: {
+        type: ControlType.String,
+        title: "Result (3–4)",
+        defaultValue: "High signal. Let's talk.",
+    },
+    signalResult5: {
+        type: ControlType.String,
+        title: "Result (5)",
+        defaultValue: "Zero wasted bits. Talk to us.",
+    },
+    signalCtaText: {
+        type: ControlType.String,
+        title: "Signal CTA",
+        defaultValue: "Apply",
+    },
+
+    // ─── Open App CTA Copy ────────────────────────────────────
+    ctaHeadline: {
+        type: ControlType.String,
+        title: "CTA Headline",
+        defaultValue: "Not every bit makes the cut.",
+    },
+    ctaSubtext: {
+        type: ControlType.String,
+        title: "CTA Subtext",
+        defaultValue: "Don't see your role? Tell us what we're missing.",
+    },
+    ctaPrimaryText: {
+        type: ControlType.String,
+        title: "CTA Primary",
+        defaultValue: "Send Us Your Story",
+    },
+    ctaSecondaryText: {
+        type: ControlType.String,
+        title: "CTA Secondary",
+        defaultValue: "Follow on LinkedIn",
+    },
+
+    // ─── URLs ─────────────────────────────────────────────────
     openAppUrl: {
         type: ControlType.String,
         title: "Open App URL",
@@ -1368,6 +1450,53 @@ addPropertyControls(CareersPage, {
         type: ControlType.String,
         title: "LinkedIn URL",
         defaultValue: "#linkedin",
+    },
+
+    // ─── Footer Stats Copy ────────────────────────────────────
+    footerStat1Value: {
+        type: ControlType.String,
+        title: "Footer Stat 1 Val",
+        defaultValue: "53",
+    },
+    footerStat1Label: {
+        type: ControlType.String,
+        title: "Footer Stat 1 Lbl",
+        defaultValue: "Patents",
+    },
+    footerStat2Value: {
+        type: ControlType.String,
+        title: "Footer Stat 2 Val",
+        defaultValue: "1",
+    },
+    footerStat2Unit: {
+        type: ControlType.String,
+        title: "Footer Stat 2 Unit",
+        defaultValue: "Emmy",
+    },
+    footerStat2Label: {
+        type: ControlType.String,
+        title: "Footer Stat 2 Lbl",
+        defaultValue: "Technology & Engineering",
+    },
+    footerStat3Value: {
+        type: ControlType.String,
+        title: "Footer Stat 3 Val",
+        defaultValue: "12",
+    },
+    footerStat3Label: {
+        type: ControlType.String,
+        title: "Footer Stat 3 Lbl",
+        defaultValue: "APIs in the GPU driver",
+    },
+    footerStat4Value: {
+        type: ControlType.String,
+        title: "Footer Stat 4 Val",
+        defaultValue: "~50",
+    },
+    footerStat4Label: {
+        type: ControlType.String,
+        title: "Footer Stat 4 Lbl",
+        defaultValue: "People",
     },
 })
 
