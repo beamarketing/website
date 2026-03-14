@@ -27,22 +27,22 @@ interface Role {
     niceToHave: string[]
 }
 
-// Framer property control shape — requirements/niceToHave as newline-separated strings
+// Framer property control shape — requirements/niceToHave as ControlType.Array of strings
 interface RoleInput {
     title: string
     department: string
     location: string
     type: string
     description: string
-    requirements: string
-    niceToHave: string
+    requirements: string[]
+    niceToHave: string[]
 }
 
 function parseRole(input: RoleInput): Role {
     return {
         ...input,
-        requirements: input.requirements ? input.requirements.split("\n").filter(Boolean) : [],
-        niceToHave: input.niceToHave ? input.niceToHave.split("\n").filter(Boolean) : [],
+        requirements: (input.requirements || []).filter(Boolean),
+        niceToHave: (input.niceToHave || []).filter(Boolean),
     }
 }
 
@@ -952,8 +952,18 @@ addPropertyControls(CareerOpenRoles, {
                     defaultValue: "Full-time",
                 },
                 description: { type: ControlType.String, title: "Description", defaultValue: "Describe the role..." },
-                requirements: { type: ControlType.String, title: "Requirements", defaultValue: "", description: "One requirement per line" },
-                niceToHave: { type: ControlType.String, title: "Nice to Have", defaultValue: "", description: "One item per line" },
+                requirements: {
+                    type: ControlType.Array,
+                    title: "Requirements",
+                    control: { type: ControlType.String, defaultValue: "Requirement" },
+                    defaultValue: [],
+                },
+                niceToHave: {
+                    type: ControlType.Array,
+                    title: "Nice to Have",
+                    control: { type: ControlType.String, defaultValue: "Nice to have" },
+                    defaultValue: [],
+                },
             },
         },
         defaultValue: [],
