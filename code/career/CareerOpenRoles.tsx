@@ -219,6 +219,92 @@ const DEFAULT_ROLES: Role[] = [
     },
 ]
 
+// ─── Comeet API Integration ─────────────────────────────────
+interface ComeetPosition {
+    uid: string
+    name: string
+    department: string
+    employment_type: string
+    location: { name: string; city: string; country: string; is_remote: boolean }
+    details: { name: string; value: string }[]
+    url_active_page: string
+    position_url: string
+}
+
+function stripHtml(html: string): string {
+    const div = document.createElement("div")
+    div.innerHTML = html
+    return div.textContent || div.innerText || ""
+}
+
+function parseHtmlToList(html: string): string[] {
+    const div = document.createElement("div")
+    div.innerHTML = html
+    const items: string[] = []
+    div.querySelectorAll("li").forEach((li) => {
+        const text = (li.textContent || "").trim()
+        if (text) items.push(text)
+    })
+    if (items.length === 0) {
+        const text = stripHtml(html).trim()
+        if (text) return text.split("\n").map((s) => s.trim()).filter(Boolean)
+    }
+    return items
+}
+
+function comeetToRole(pos: ComeetPosition): Role {
+    const descDetail = pos.details?.find((d) => d.name === "Description")
+    const reqDetail = pos.details?.find((d) => d.name === "Requirements")
+    const niceDetail = pos.details?.find((d) => d.name === "Nice to Have")
+
+    const locationName = pos.location?.is_remote
+        ? "Remote"
+        : pos.location?.city || pos.location?.name || "Unknown"
+
+    return {
+        title: pos.name,
+        department: pos.department || "General",
+        location: locationName,
+        type: pos.employment_type || "Full-time",
+        description: descDetail ? stripHtml(descDetail.value) : "",
+        requirements: reqDetail ? parseHtmlToList(reqDetail.value) : [],
+        niceToHave: niceDetail ? parseHtmlToList(niceDetail.value) : [],
+    }
+}
+
+function useComeetRoles(companyUid: string, companyToken: string): {
+    roles: Role[]
+    loading: boolean
+    error: string | null
+} {
+    const [roles, setRoles] = useState<Role[]>([])
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (!companyUid || !companyToken) return
+
+        setLoading(true)
+        setError(null)
+
+        fetch(
+            `https://www.comeet.co/careers-api/2.0/company/${encodeURIComponent(companyUid)}/positions?token=${encodeURIComponent(companyToken)}`
+        )
+            .then((res) => {
+                if (!res.ok) throw new Error(`Comeet API error: ${res.status}`)
+                return res.json()
+            })
+            .then((data: ComeetPosition[]) => {
+                const parsed = (Array.isArray(data) ? data : []).map(comeetToRole)
+                setRoles(parsed)
+            })
+            .catch((err) => setError(err.message))
+            .finally(() => setLoading(false))
+    }, [companyUid, companyToken])
+
+    return { roles, loading, error }
+}
+
 const DEFAULTS = {
     headingFont: "'Poppins', 'Inter', sans-serif",
     bodyFont: "'Inter', 'Poppins', sans-serif",
@@ -755,7 +841,10 @@ interface CareerOpenRolesProps {
     filterLocationLabel: string
     filterDeptLabel: string
     emptyText: string
-    // Data
+    // Comeet Integration
+    comeetUid: string
+    comeetToken: string
+    // Data (manual override — ignored when Comeet is configured)
     roles: RoleInput[]
     // Style
     style?: React.CSSProperties
@@ -773,14 +862,25 @@ function CareerOpenRoles(props: CareerOpenRolesProps) {
         filterLocationLabel = "Location",
         filterDeptLabel = "Department",
         emptyText = "No roles match your filters. Try broadening your search.",
+        comeetUid = "",
+        comeetToken = "",
         roles: roleInputs = [],
         style,
     } = props
 
-    // Convert Framer inputs to Role objects, fall back to defaults
-    const roles: Role[] = roleInputs.length > 0
-        ? roleInputs.map(parseRole)
-        : DEFAULT_ROLES
+    // Comeet integration
+    const comeetEnabled = !!(comeetUid && comeetToken)
+    const { roles: comeetRoles, loading: comeetLoading, error: comeetError } = useComeetRoles(
+        comeetEnabled ? comeetUid : "",
+        comeetEnabled ? comeetToken : ""
+    )
+
+    // Priority: Comeet > manual Framer roles > built-in defaults
+    const roles: Role[] = comeetEnabled
+        ? comeetRoles
+        : roleInputs.length > 0
+            ? roleInputs.map(parseRole)
+            : DEFAULT_ROLES
 
     const [locationFilter, setLocationFilter] = useState("all")
     const [deptFilter, setDeptFilter] = useState("all")
@@ -871,7 +971,25 @@ function CareerOpenRoles(props: CareerOpenRolesProps) {
 
                     <div style={{ borderBottom: "1px solid rgba(0,0,0,0.04)", marginBottom: 8 }} />
 
-                    {Object.entries(grouped).map(([location, locationRoles]) => (
+                    {comeetLoading && (
+                        <p style={{
+                            fontFamily: bodyFont, fontSize: bodySize,
+                            color: COLORS.muted, padding: "32px 0", textAlign: "center",
+                        }}>
+                            Loading positions from Comeet...
+                        </p>
+                    )}
+
+                    {comeetError && (
+                        <p style={{
+                            fontFamily: bodyFont, fontSize: bodySize,
+                            color: COLORS.error, padding: "32px 0", textAlign: "center",
+                        }}>
+                            Failed to load from Comeet: {comeetError}
+                        </p>
+                    )}
+
+                    {!comeetLoading && Object.entries(grouped).map(([location, locationRoles]) => (
                         <div key={location} style={{ marginBottom: 24 }}>
                             <div style={{
                                 fontFamily: headingFont, fontSize: 12, fontWeight: 700,
@@ -895,7 +1013,7 @@ function CareerOpenRoles(props: CareerOpenRolesProps) {
                         </div>
                     ))}
 
-                    {filtered.length === 0 && (
+                    {!comeetLoading && filtered.length === 0 && (
                         <p style={{
                             fontFamily: bodyFont, fontSize: bodySize,
                             color: COLORS.muted, padding: "32px 0", textAlign: "center",
@@ -930,6 +1048,8 @@ addPropertyControls(CareerOpenRoles, {
     filterLocationLabel: { type: ControlType.String, title: "Location Label", defaultValue: "Location" },
     filterDeptLabel: { type: ControlType.String, title: "Dept Label", defaultValue: "Department" },
     emptyText: { type: ControlType.String, title: "Empty Text", defaultValue: "No roles match your filters. Try broadening your search." },
+    comeetUid: { type: ControlType.String, title: "Comeet UID", defaultValue: "", description: "Your Comeet Company UID. When set, roles sync from Comeet automatically." },
+    comeetToken: { type: ControlType.String, title: "Comeet Token", defaultValue: "", description: "Your Comeet Company Token." },
     roles: {
         type: ControlType.Array,
         title: "Roles",

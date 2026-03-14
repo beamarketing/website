@@ -46,6 +46,8 @@ interface CareersPageProps {
     rolesFilterLocationLabel: string
     rolesFilterDeptLabel: string
     rolesEmptyText: string
+    comeetUid: string
+    comeetToken: string
     roles: any[]
     // Signal Test copy
     signalHeadline: string
@@ -108,6 +110,8 @@ function CareersPage(props: CareersPageProps) {
         rolesFilterLocationLabel = "Location",
         rolesFilterDeptLabel = "Department",
         rolesEmptyText = "No roles match your filters. Try broadening your search.",
+        comeetUid = "",
+        comeetToken = "",
         roles: roles = [],
         signalHeadline = "Not sure?\nRun the test.",
         signalSubtext = "Three or more true — we should talk.",
@@ -201,6 +205,8 @@ function CareersPage(props: CareersPageProps) {
                     filterLocationLabel={rolesFilterLocationLabel}
                     filterDeptLabel={rolesFilterDeptLabel}
                     emptyText={rolesEmptyText}
+                    comeetUid={comeetUid}
+                    comeetToken={comeetToken}
                     roles={roles}
                 />
             </div>
@@ -299,6 +305,8 @@ addPropertyControls(CareersPage, {
     rolesFilterLocationLabel: { type: ControlType.String, title: "Location Label", defaultValue: "Location" },
     rolesFilterDeptLabel: { type: ControlType.String, title: "Dept Label", defaultValue: "Department" },
     rolesEmptyText: { type: ControlType.String, title: "Empty Text", defaultValue: "No roles match your filters. Try broadening your search." },
+    comeetUid: { type: ControlType.String, title: "Comeet UID", defaultValue: "", description: "Your Comeet Company UID. When set, roles sync from Comeet." },
+    comeetToken: { type: ControlType.String, title: "Comeet Token", defaultValue: "", description: "Your Comeet Company Token." },
     roles: {
         type: ControlType.Array,
         title: "Roles",
