@@ -141,7 +141,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                     </h2>
                     <p style={{
                         fontFamily: bodyFont, fontSize: bodySize,
-                        color: subtextColor, opacity: 0.35, margin: 0, lineHeight: 1.5,
+                        color: subtextColor, opacity: 0.7, margin: 0, lineHeight: 1.5,
                     }}>
                         {subtext}
                     </p>
@@ -159,16 +159,16 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                                     style={{
                                         display: "flex", alignItems: "flex-start", gap: 12,
                                         padding: "12px 14px", borderRadius: 10,
-                                        backgroundColor: isChecked ? `${accentColor}0D` : "rgba(255,255,255,0.015)",
-                                        border: `1.5px solid ${isChecked ? `${accentColor}2E` : "rgba(255,255,255,0.04)"}`,
+                                        backgroundColor: isChecked ? `${accentColor}0D` : "rgba(255,255,255,0.04)",
+                                        border: `1.5px solid ${isChecked ? `${accentColor}2E` : "rgba(255,255,255,0.12)"}`,
                                         cursor: "pointer", transition: "all 0.2s ease", userSelect: "none" as const,
                                     }}
-                                    onMouseEnter={(e) => { if (!isChecked) e.currentTarget.style.borderColor = `${accentColor}1A` }}
-                                    onMouseLeave={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)" }}
+                                    onMouseEnter={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)" }}
+                                    onMouseLeave={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)" }}
                                 >
                                     <div style={{
                                         width: 18, height: 18, minWidth: 18, borderRadius: 5,
-                                        border: isChecked ? "none" : "1.5px solid rgba(255,255,255,0.08)",
+                                        border: isChecked ? "none" : "1.5px solid rgba(255,255,255,0.2)",
                                         backgroundColor: isChecked ? accentColor : "transparent",
                                         display: "flex", alignItems: "center", justifyContent: "center",
                                         transition: "all 0.2s ease", marginTop: 1,
@@ -181,7 +181,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                                     </div>
                                     <span style={{
                                         fontFamily: bodyFont, fontSize: 12.5,
-                                        color: itemTextColor, opacity: isChecked ? 0.85 : 0.35,
+                                        color: itemTextColor, opacity: isChecked ? 1 : 0.7,
                                         lineHeight: 1.5, transition: "opacity 0.2s ease",
                                     }}>
                                         {item}
@@ -204,7 +204,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <div key={i} style={{
                                     width: 32, height: 4, borderRadius: 2,
-                                    backgroundColor: i < checkedCount ? accentColor : "rgba(255,255,255,0.04)",
+                                    backgroundColor: i < checkedCount ? accentColor : "rgba(255,255,255,0.1)",
                                     boxShadow: i < checkedCount ? `0 0 8px ${accentColor}40` : "none",
                                     transition: "all 0.3s ease",
                                 }} />
@@ -213,7 +213,7 @@ function CareerSignalTest(props: CareerSignalTestProps) {
 
                         <span style={{
                             fontFamily: bodyFont, fontSize: 13, fontWeight: 500,
-                            color: resultTextColor, opacity: checkedCount === 0 ? 0.3 : 0.8,
+                            color: resultTextColor, opacity: checkedCount === 0 ? 0.6 : 0.9,
                             flex: 1, transition: "opacity 0.3s ease",
                         }}>
                             {getResultText()}
