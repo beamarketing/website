@@ -68,8 +68,10 @@ interface CareersPageProps {
     ctaPrimaryText: string
     ctaSecondaryText: string
     // URLs
-    openAppUrl: string
     linkedInUrl: string
+    // Webhook / Comeet open application
+    ctaWebhookUrl: string
+    ctaComeetPositionUid: string
     // Footer Stats copy
     footerStat1Value: string
     footerStat1Label: string
@@ -129,8 +131,9 @@ function CareersPage(props: CareersPageProps) {
         ctaSubtext = "Don't see your role? Tell us what we're missing.",
         ctaPrimaryText = "Send Us Your Story",
         ctaSecondaryText = "Follow on LinkedIn",
-        openAppUrl = "#open-application",
         linkedInUrl = "#linkedin",
+        ctaWebhookUrl = "",
+        ctaComeetPositionUid = "",
         footerStat1Value = "53", footerStat1Label = "Patents",
         footerStat2Value = "1", footerStat2Unit = "Emmy", footerStat2Label = "Technology & Engineering",
         footerStat3Value = "12", footerStat3Label = "APIs in the GPU driver",
@@ -236,14 +239,16 @@ function CareersPage(props: CareersPageProps) {
                 <CareerCTA
                     headingFont={headingFont}
                     bodyFont={bodyFont}
+                    monoFont={monoFont}
                     bodySize={bodySize}
                     ctaButtonSize={ctaButtonSize}
                     headline={ctaHeadline}
                     subtext={ctaSubtext}
                     primaryText={ctaPrimaryText}
                     secondaryText={ctaSecondaryText}
-                    openAppUrl={openAppUrl}
                     linkedInUrl={linkedInUrl}
+                    webhookUrl={ctaWebhookUrl}
+                    comeetPositionUid={ctaComeetPositionUid}
                 />
             </div>
 
@@ -366,9 +371,10 @@ addPropertyControls(CareersPage, {
     ctaPrimaryText: { type: ControlType.String, title: "CTA Primary", defaultValue: "Send Us Your Story" },
     ctaSecondaryText: { type: ControlType.String, title: "CTA Secondary", defaultValue: "Follow on LinkedIn" },
 
-    // ─── URLs ─────────────────────────────────────────────────
-    openAppUrl: { type: ControlType.String, title: "Open App URL", defaultValue: "#open-application" },
+    // ─── URLs & Webhook ───────────────────────────────────────
     linkedInUrl: { type: ControlType.String, title: "LinkedIn URL", defaultValue: "#linkedin" },
+    ctaWebhookUrl: { type: ControlType.String, title: "CTA Webhook URL", defaultValue: "", description: "POST endpoint for open applications (e.g. Zapier/Make webhook that forwards to Comeet)." },
+    ctaComeetPositionUid: { type: ControlType.String, title: "Comeet Position UID", defaultValue: "", description: "Optional Comeet position_uid for open applications." },
 
     // ─── Footer Stats ─────────────────────────────────────────
     footerStat1Value: { type: ControlType.String, title: "Footer Stat 1 Val", defaultValue: "53" },
