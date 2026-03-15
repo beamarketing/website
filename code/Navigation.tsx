@@ -182,6 +182,19 @@ function Navigation(props: Props) {
         document.head.appendChild(s)
     }, [])
 
+    // --- Ensure nav parent wrappers have high z-index ---
+    // Framer wraps each component in divs that create stacking contexts,
+    // which can cause the hero to render on top of the sticky nav.
+    useEffect(() => {
+        if (!navRef.current) return
+        let el = navRef.current.parentElement
+        while (el && el !== document.body) {
+            el.style.setProperty("z-index", "1100", "important")
+            el.style.setProperty("position", "relative", "important")
+            el = el.parentElement
+        }
+    }, [])
+
     // --- Scroll-based overlay transition ---
     useEffect(() => {
         if (!overlayMode) {
@@ -1257,9 +1270,8 @@ function Navigation(props: Props) {
             style={{
                 ...style,
                 width: "100%",
-                position: overlayMode ? "fixed" : "sticky",
+                position: "sticky",
                 top: 0,
-                left: 0,
                 zIndex: 1100,
                 fontFamily,
                 boxSizing: "border-box",
