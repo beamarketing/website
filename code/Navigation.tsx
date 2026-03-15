@@ -155,7 +155,7 @@ function Navigation(props: Props) {
         }
     }, [isMobile])
 
-    // --- Framer wrapper reset ---
+    // --- Framer wrapper reset + nav z-index (pure CSS, no JS observers) ---
     useEffect(() => {
         const id = "__nav-reset-css"
         if (document.getElementById(id)) return
@@ -178,56 +178,12 @@ function Navigation(props: Props) {
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
             }
+            /* Lift all Framer wrappers containing the nav above the hero */
+            div:has(nav[data-beamr-nav]) {
+                z-index: 1100 !important;
+            }
         `
         document.head.appendChild(s)
-    }, [])
-
-    // --- Ensure nav's Framer wrapper has high z-index ---
-    // Framer wraps each component in divs. We walk up from the nav and
-    // set z-index only on the nav's OWN wrappers — stop at the first
-    // parent whose parent has multiple children (= page-level container
-    // shared with hero/other components). This avoids interfering with
-    // the hero's scroll animation.
-    useEffect(() => {
-        if (!navRef.current) return
-
-        // Collect only nav-specific wrapper elements
-        const navWrappers: HTMLElement[] = []
-        let el = navRef.current.parentElement
-        while (el && el !== document.body) {
-            navWrappers.push(el)
-            // Stop when we reach the page-level container (has sibling components)
-            if (el.parentElement && el.parentElement.children.length > 1) {
-                break
-            }
-            el = el.parentElement
-        }
-
-        const applyZIndex = () => {
-            for (const wrapper of navWrappers) {
-                wrapper.style.setProperty("z-index", "1100", "important")
-            }
-        }
-
-        applyZIndex()
-        const raf1 = requestAnimationFrame(applyZIndex)
-        const raf2 = requestAnimationFrame(() =>
-            requestAnimationFrame(applyZIndex)
-        )
-
-        const observer = new MutationObserver(applyZIndex)
-        for (const wrapper of navWrappers) {
-            observer.observe(wrapper, {
-                attributes: true,
-                attributeFilter: ["style"],
-            })
-        }
-
-        return () => {
-            cancelAnimationFrame(raf1)
-            cancelAnimationFrame(raf2)
-            observer.disconnect()
-        }
     }, [])
 
     // --- Scroll-based overlay transition ---
@@ -1302,6 +1258,7 @@ function Navigation(props: Props) {
     return (
         <nav
             ref={navRef}
+            data-beamr-nav=""
             style={{
                 ...style,
                 width: "100%",
