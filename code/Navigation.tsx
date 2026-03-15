@@ -185,13 +185,40 @@ function Navigation(props: Props) {
     // --- Ensure nav parent wrappers have high z-index ---
     // Framer wraps each component in divs that create stacking contexts,
     // which can cause the hero to render on top of the sticky nav.
+    // Uses MutationObserver to persist the z-index even when Framer re-applies styles.
     useEffect(() => {
         if (!navRef.current) return
+
+        const applyZIndex = () => {
+            let el = navRef.current?.parentElement
+            while (el && el !== document.body) {
+                el.style.setProperty("z-index", "1100", "important")
+                el = el.parentElement
+            }
+        }
+
+        // Apply immediately + on next frames to beat Framer's deferred layout
+        applyZIndex()
+        const raf1 = requestAnimationFrame(applyZIndex)
+        const raf2 = requestAnimationFrame(() =>
+            requestAnimationFrame(applyZIndex)
+        )
+
+        // Watch for Framer re-applying styles
+        const observer = new MutationObserver(applyZIndex)
         let el = navRef.current.parentElement
         while (el && el !== document.body) {
-            el.style.setProperty("z-index", "1100", "important")
-            el.style.setProperty("position", "relative", "important")
+            observer.observe(el, {
+                attributes: true,
+                attributeFilter: ["style"],
+            })
             el = el.parentElement
+        }
+
+        return () => {
+            cancelAnimationFrame(raf1)
+            cancelAnimationFrame(raf2)
+            observer.disconnect()
         }
     }, [])
 
