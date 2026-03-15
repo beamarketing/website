@@ -182,37 +182,45 @@ function Navigation(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // --- Ensure nav parent wrappers have high z-index ---
-    // Framer wraps each component in divs that create stacking contexts,
-    // which can cause the hero to render on top of the sticky nav.
-    // Uses MutationObserver to persist the z-index even when Framer re-applies styles.
+    // --- Ensure nav's Framer wrapper has high z-index ---
+    // Framer wraps each component in divs. We walk up from the nav and
+    // set z-index only on the nav's OWN wrappers — stop at the first
+    // parent whose parent has multiple children (= page-level container
+    // shared with hero/other components). This avoids interfering with
+    // the hero's scroll animation.
     useEffect(() => {
         if (!navRef.current) return
 
+        // Collect only nav-specific wrapper elements
+        const navWrappers: HTMLElement[] = []
+        let el = navRef.current.parentElement
+        while (el && el !== document.body) {
+            navWrappers.push(el)
+            // Stop when we reach the page-level container (has sibling components)
+            if (el.parentElement && el.parentElement.children.length > 1) {
+                break
+            }
+            el = el.parentElement
+        }
+
         const applyZIndex = () => {
-            let el = navRef.current?.parentElement
-            while (el && el !== document.body) {
-                el.style.setProperty("z-index", "1100", "important")
-                el = el.parentElement
+            for (const wrapper of navWrappers) {
+                wrapper.style.setProperty("z-index", "1100", "important")
             }
         }
 
-        // Apply immediately + on next frames to beat Framer's deferred layout
         applyZIndex()
         const raf1 = requestAnimationFrame(applyZIndex)
         const raf2 = requestAnimationFrame(() =>
             requestAnimationFrame(applyZIndex)
         )
 
-        // Watch for Framer re-applying styles
         const observer = new MutationObserver(applyZIndex)
-        let el = navRef.current.parentElement
-        while (el && el !== document.body) {
-            observer.observe(el, {
+        for (const wrapper of navWrappers) {
+            observer.observe(wrapper, {
                 attributes: true,
                 attributeFilter: ["style"],
             })
-            el = el.parentElement
         }
 
         return () => {
