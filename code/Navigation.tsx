@@ -1257,8 +1257,9 @@ function Navigation(props: Props) {
             style={{
                 ...style,
                 width: "100%",
-                position: "sticky",
+                position: overlayMode ? "fixed" : "sticky",
                 top: 0,
+                left: 0,
                 zIndex: 1100,
                 fontFamily,
                 boxSizing: "border-box",
