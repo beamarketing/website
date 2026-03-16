@@ -178,9 +178,17 @@ function Navigation(props: Props) {
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
             }
-            /* Lift all Framer wrappers containing the nav above the hero */
-            div:has(nav[data-beamr-nav]) {
+            /* Lift only the nav's OWN Framer wrappers (single-child chain)
+               above the hero. Stops at the page container which has
+               multiple children (nav + hero + other sections). */
+            div:has(nav[data-beamr-nav]):has(> :only-child) {
                 z-index: 1100 !important;
+                position: relative !important;
+            }
+            /* Also target the direct parent of nav in case it has siblings */
+            div:has(> nav[data-beamr-nav]) {
+                z-index: 1100 !important;
+                position: relative !important;
             }
         `
         document.head.appendChild(s)
