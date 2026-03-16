@@ -160,6 +160,10 @@ function HeroScroll(props: Props) {
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
             }
+            /* Preserve hero's negative margin so it overlaps behind the nav */
+            [data-beamr-hero] {
+                margin-top: -58px !important;
+            }
         `
         document.head.appendChild(s)
     }, [])
@@ -168,7 +172,10 @@ function HeroScroll(props: Props) {
     useEffect(() => {
         if (!containerRef.current) return
 
+        let applying = false
         const zeroParents = () => {
+            if (applying) return
+            applying = true
             let el = containerRef.current?.parentElement
             while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
@@ -179,6 +186,7 @@ function HeroScroll(props: Props) {
                 el.style.setProperty("z-index", "1", "important")
                 el = el.parentElement
             }
+            applying = false
         }
 
         // Run immediately
@@ -191,6 +199,8 @@ function HeroScroll(props: Props) {
         )
 
         // Watch for Framer re-applying styles via MutationObserver
+        // Guard flag prevents infinite loop (zeroParents modifies styles
+        // on the same elements the observer watches)
         const observer = new MutationObserver(zeroParents)
         let el = containerRef.current.parentElement
         while (el && el !== document.body) {
