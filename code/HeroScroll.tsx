@@ -141,7 +141,7 @@ function HeroScroll(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #07071c !important;
+                background: #000 !important;
             }
             /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
             div:has(> nav[data-beamr-nav]),
@@ -153,13 +153,6 @@ function HeroScroll(props: Props) {
             /* Preserve hero's negative margin so it overlaps behind the nav */
             [data-beamr-hero] {
                 margin-top: -58px !important;
-            }
-            /* Eliminate gaps between Framer section wrappers */
-            [data-framer-name] > div,
-            [id="main"] > div,
-            #__framer-badge-container ~ div > div {
-                margin: 0 !important;
-                gap: 0 !important;
             }
         `
         document.head.appendChild(s)
