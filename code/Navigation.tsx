@@ -164,14 +164,13 @@ function Navigation(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #000 !important;
             }
             /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
             div:has(> nav[data-beamr-nav]),
             div:has(> [data-beamr-hero]) {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
-                background-color: transparent !important;
+                background-color: #000 !important;
             }
             /* Preserve hero's negative margin so it overlaps behind the nav */
             [data-beamr-hero] {
@@ -198,7 +197,7 @@ function Navigation(props: Props) {
             while (el && el !== document.body && level < maxLevels) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
-                el.style.setProperty("background-color", "transparent", "important")
+                el.style.setProperty("background-color", "#000", "important")
                 el.style.setProperty("z-index", "1100", "important")
                 el = el.parentElement
                 level++
