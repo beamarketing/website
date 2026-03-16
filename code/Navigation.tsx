@@ -161,10 +161,11 @@ function Navigation(props: Props) {
         const s = document.createElement("style")
         s.id = id
         s.textContent = `
-            html, body {
+            /* Only scope body bg to pages that actually have the hero */
+            body:has([data-beamr-hero]) {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #000 !important;
+                background: #07071c !important;
             }
             /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
             div:has(> nav[data-beamr-nav]),
@@ -189,8 +190,10 @@ function Navigation(props: Props) {
     }, [])
 
     // Walk only a few levels up (not to body) to avoid touching shared page containers
+    // Only reset backgrounds when hero is present (homepage), otherwise leave alone
     useEffect(() => {
         if (!navRef.current) return
+        const hasHero = !!document.querySelector("[data-beamr-hero]")
         const maxLevels = 3
         const run = () => {
             let el: HTMLElement | null = navRef.current?.parentElement ?? null
@@ -198,7 +201,9 @@ function Navigation(props: Props) {
             while (el && el !== document.body && level < maxLevels) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
-                el.style.setProperty("background-color", "transparent", "important")
+                if (hasHero) {
+                    el.style.setProperty("background-color", "transparent", "important")
+                }
                 el.style.setProperty("z-index", "1100", "important")
                 el = el.parentElement
                 level++

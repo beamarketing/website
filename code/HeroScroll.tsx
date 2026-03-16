@@ -138,10 +138,11 @@ function HeroScroll(props: Props) {
         const s = document.createElement("style")
         s.id = id
         s.textContent = `
-            html, body {
+            /* Only scope body bg to pages that actually have the hero */
+            body:has([data-beamr-hero]) {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #000 !important;
+                background: #07071c !important;
             }
             /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
             div:has(> nav[data-beamr-nav]),
