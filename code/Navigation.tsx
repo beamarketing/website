@@ -154,7 +154,7 @@ function Navigation(props: Props) {
         }
     }, [isMobile])
 
-    // --- Framer wrapper reset + nav z-index (pure CSS, no JS observers) ---
+    // --- Framer wrapper reset (CSS only, no observers) ---
     useEffect(() => {
         const id = "__nav-reset-css"
         if (document.getElementById(id)) return
@@ -166,84 +166,67 @@ function Navigation(props: Props) {
                 padding: 0 !important;
                 background: #000 !important;
             }
+            /* Force ALL wrapper backgrounds transparent and zero spacing */
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div,
-            [data-framer-page-optimized], [data-framer-page-optimized] > *,
-            [data-framer-name], [data-framer-component-type] {
+            body > div > div > div > div > div > div,
+            body > div > div > div > div > div > div > div {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
                 gap: 0 !important;
+                row-gap: 0 !important;
+                background-color: transparent !important;
+                background: transparent !important;
+                border-top: none !important;
+                overflow: visible !important;
+            }
+            [data-framer-page-optimized], [data-framer-page-optimized] > *,
+            [data-framer-name], [data-framer-component-type],
+            [data-framer-component-type] > div,
+            [data-framer-component-type] > div > div {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+                gap: 0 !important;
+                row-gap: 0 !important;
+                background-color: transparent !important;
+                background: transparent !important;
             }
             /* Preserve hero's negative margin so it overlaps behind the nav */
             [data-beamr-hero] {
                 margin-top: -58px !important;
             }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div {
-                overflow: visible !important;
-            }
-            /* Zero out the nav element itself (Framer may pass padding via style prop) */
             nav[data-beamr-nav] {
                 padding: 0 !important;
                 margin: 0 !important;
             }
-            /* Lift all Framer wrappers containing the nav above the hero.
-               Works because HeroScroll sets z-index:1 on its own wrappers. */
             div:has(nav[data-beamr-nav]) {
                 z-index: 1100 !important;
-                padding-top: 0 !important;
-                margin-top: 0 !important;
             }
         `
         document.head.appendChild(s)
     }, [])
 
-    // --- Walk nav's parent chain and zero spacing (same approach as HeroScroll) ---
+    // One-shot parent walk (no MutationObserver — avoids perf issues)
     useEffect(() => {
         if (!navRef.current) return
-
-        let applying = false
-        const zeroParents = () => {
-            if (applying) return
-            applying = true
+        const run = () => {
             let el: HTMLElement | null = navRef.current?.parentElement ?? null
             while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
+                el.style.setProperty("background", "transparent", "important")
+                el.style.setProperty("background-color", "transparent", "important")
                 el.style.setProperty("border-top", "none", "important")
                 el.style.setProperty("z-index", "1100", "important")
-                el.style.setProperty("position", "relative", "important")
                 el = el.parentElement
             }
-            // Also zero body itself
-            document.body.style.setProperty("padding-top", "0px", "important")
-            document.body.style.setProperty("margin-top", "0px", "important")
-            applying = false
+            document.body.style.setProperty("background", "#000", "important")
         }
-
-        zeroParents()
-        const raf1 = requestAnimationFrame(zeroParents)
-        const raf2 = requestAnimationFrame(() =>
-            requestAnimationFrame(zeroParents)
-        )
-
-        const observer = new MutationObserver(zeroParents)
-        let el: HTMLElement | null = navRef.current.parentElement
-        while (el && el !== document.body) {
-            observer.observe(el, {
-                attributes: true,
-                attributeFilter: ["style"],
-            })
-            el = el.parentElement
-        }
-
-        return () => {
-            cancelAnimationFrame(raf1)
-            cancelAnimationFrame(raf2)
-            observer.disconnect()
-        }
+        run()
+        requestAnimationFrame(run)
+        requestAnimationFrame(() => requestAnimationFrame(run))
     }, [])
 
     // --- Scroll-based overlay transition ---

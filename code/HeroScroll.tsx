@@ -146,7 +146,16 @@ function HeroScroll(props: Props) {
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div,
             body > div > div > div > div > div > div,
-            body > div > div > div > div > div > div > div,
+            body > div > div > div > div > div > div > div {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+                gap: 0 !important;
+                row-gap: 0 !important;
+                background-color: transparent !important;
+                background: transparent !important;
+                border-top: none !important;
+                overflow: visible !important;
+            }
             [data-framer-page-optimized], [data-framer-page-optimized] > *,
             [data-framer-name], [data-framer-component-type],
             [data-framer-component-type] > div,
@@ -156,19 +165,8 @@ function HeroScroll(props: Props) {
                 margin-top: 0 !important;
                 gap: 0 !important;
                 row-gap: 0 !important;
-            }
-            /* Framer page-level containers (flex column with gap) */
-            [data-framer-name="Desktop"],
-            [data-framer-name="Tablet"],
-            [data-framer-name="Phone"],
-            [data-framer-name="Page"] {
-                padding: 0 !important;
-                gap: 0 !important;
-                row-gap: 0 !important;
-            }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div {
-                overflow: visible !important;
+                background-color: transparent !important;
+                background: transparent !important;
             }
             /* Preserve hero's negative margin so it overlaps behind the nav */
             [data-beamr-hero] {
@@ -178,54 +176,26 @@ function HeroScroll(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // Persistently zero-out any padding/margin Framer adds to parent wrappers
+    // One-shot parent walk (no MutationObserver — avoids perf issues)
     useEffect(() => {
         if (!containerRef.current) return
-
-        let applying = false
-        const zeroParents = () => {
-            if (applying) return
-            applying = true
+        const run = () => {
             let el = containerRef.current?.parentElement
             while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
-                // Keep hero wrappers at low z-index so the nav stacks above
+                el.style.setProperty("background", "transparent", "important")
+                el.style.setProperty("background-color", "transparent", "important")
+                el.style.setProperty("border-top", "none", "important")
                 el.style.setProperty("z-index", "1", "important")
                 el = el.parentElement
             }
-            applying = false
         }
-
-        // Run immediately
-        zeroParents()
-
-        // Run again on next frames to beat Framer's deferred layout
-        const raf1 = requestAnimationFrame(zeroParents)
-        const raf2 = requestAnimationFrame(() =>
-            requestAnimationFrame(zeroParents)
-        )
-
-        // Watch for Framer re-applying styles via MutationObserver
-        // Guard flag prevents infinite loop (zeroParents modifies styles
-        // on the same elements the observer watches)
-        const observer = new MutationObserver(zeroParents)
-        let el = containerRef.current.parentElement
-        while (el && el !== document.body) {
-            observer.observe(el, {
-                attributes: true,
-                attributeFilter: ["style"],
-            })
-            el = el.parentElement
-        }
-
-        return () => {
-            cancelAnimationFrame(raf1)
-            cancelAnimationFrame(raf2)
-            observer.disconnect()
-        }
+        run()
+        requestAnimationFrame(run)
+        requestAnimationFrame(() => requestAnimationFrame(run))
     }, [])
 
     const { scrollYProgress } = useScroll({
