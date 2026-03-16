@@ -117,7 +117,6 @@ function Navigation(props: Props) {
     const navRef = useRef<HTMLElement>(null)
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
-    const [forceSolid, setForceSolid] = useState(false)
     const [isHovered, setIsHovered] = useState(false)
 
     // Responsive state
@@ -182,7 +181,6 @@ function Navigation(props: Props) {
                Works because HeroScroll sets z-index:1 on its own wrappers. */
             div:has(nav[data-beamr-nav]) {
                 z-index: 1100 !important;
-                position: relative !important;
             }
         `
         document.head.appendChild(s)
@@ -225,58 +223,10 @@ function Navigation(props: Props) {
         return () => target.removeEventListener("scroll", onScroll)
     }, [overlayMode, scrollThreshold])
 
-    // --- Auto-detect background luminance ---
-    useEffect(() => {
-        if (!overlayMode) {
-            setForceSolid(false)
-            return
-        }
-        const checkBackground = () => {
-            if (!navRef.current) return
-            const rect = navRef.current.getBoundingClientRect()
-            const x = rect.left + rect.width / 2
-            const y = rect.bottom + 10
-            const elements = document.elementsFromPoint(x, y)
-            const behind = elements.find(
-                (el) => !navRef.current!.contains(el)
-            )
-            if (!behind) {
-                setForceSolid(true)
-                return
-            }
-            let node: Element | null = behind
-            while (node && node !== document.documentElement) {
-                const bg = getComputedStyle(node).backgroundColor
-                const m = bg.match(
-                    /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/
-                )
-                if (m) {
-                    const a = m[4] !== undefined ? parseFloat(m[4]) : 1
-                    if (a > 0.5) {
-                        const lum =
-                            (0.299 * +m[1] +
-                                0.587 * +m[2] +
-                                0.114 * +m[3]) /
-                            255
-                        setForceSolid(lum > 0.45)
-                        return
-                    }
-                }
-                node = node.parentElement
-            }
-            setForceSolid(true)
-        }
-        const raf = requestAnimationFrame(checkBackground)
-        const interval = setInterval(checkBackground, 1500)
-        return () => {
-            cancelAnimationFrame(raf)
-            clearInterval(interval)
-        }
-    }, [overlayMode])
 
     // --- Derived visual state ---
     const isOverlay =
-        overlayMode && !pastThreshold && !forceSolid && !mobileMenuOpen && !isHovered
+        overlayMode && !pastThreshold && !mobileMenuOpen && !isHovered
     const currentBg = isOverlay ? overlayBgColor : bgColor
     const currentText = isOverlay ? overlayTextColor : textColor
     const currentHover = isOverlay ? "rgba(255,255,255,0.7)" : textHoverColor
