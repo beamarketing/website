@@ -131,7 +131,7 @@ function HeroScroll(props: Props) {
         return () => window.removeEventListener("resize", check)
     }, [mobileBreakpoint])
 
-    // Inject !important CSS to nuke all Framer wrapper spacing
+    // Inject !important CSS to nuke Framer wrapper spacing (scoped narrowly)
     useEffect(() => {
         const id = "__hero-reset-css"
         if (document.getElementById(id)) return
@@ -143,21 +143,12 @@ function HeroScroll(props: Props) {
                 padding: 0 !important;
                 background: #000 !important;
             }
-            /* Only target ancestors of OUR components, not all divs */
+            /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
             div:has(> nav[data-beamr-nav]),
-            div:has(> div > nav[data-beamr-nav]),
-            div:has(> div > div > nav[data-beamr-nav]),
-            div:has(> div > div > div > nav[data-beamr-nav]),
-            div:has(> [data-beamr-hero]),
-            div:has(> div > [data-beamr-hero]),
-            div:has(> div > div > [data-beamr-hero]),
-            div:has(> div > div > div > [data-beamr-hero]) {
+            div:has(> [data-beamr-hero]) {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
-                gap: 0 !important;
-                row-gap: 0 !important;
                 background-color: transparent !important;
-                border-top: none !important;
             }
             /* Preserve hero's negative margin so it overlaps behind the nav */
             [data-beamr-hero] {
@@ -167,19 +158,20 @@ function HeroScroll(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // One-shot parent walk (no MutationObserver — avoids perf issues)
+    // Walk only a few levels up (not to body) to avoid touching shared page containers
     useEffect(() => {
         if (!containerRef.current) return
+        const maxLevels = 3
         const run = () => {
             let el = containerRef.current?.parentElement
-            while (el && el !== document.body) {
+            let level = 0
+            while (el && el !== document.body && level < maxLevels) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
-                el.style.setProperty("gap", "0px", "important")
-                el.style.setProperty("row-gap", "0px", "important")
                 el.style.setProperty("background-color", "transparent", "important")
                 el.style.setProperty("z-index", "1", "important")
                 el = el.parentElement
+                level++
             }
         }
         run()
