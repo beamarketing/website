@@ -164,6 +164,7 @@ function Navigation(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
+                background: #000 !important;
             }
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div,
