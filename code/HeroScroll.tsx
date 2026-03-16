@@ -175,6 +175,9 @@ function HeroScroll(props: Props) {
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
+                // Keep hero wrappers at low z-index so the nav stacks above
+                el.style.setProperty("z-index", "1", "important")
+                el.style.setProperty("position", "relative", "important")
                 el = el.parentElement
             }
         }
