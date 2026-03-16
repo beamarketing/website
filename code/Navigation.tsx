@@ -197,6 +197,54 @@ function Navigation(props: Props) {
         document.head.appendChild(s)
     }, [])
 
+    // --- Walk nav's parent chain and zero spacing (same approach as HeroScroll) ---
+    useEffect(() => {
+        if (!navRef.current) return
+
+        let applying = false
+        const zeroParents = () => {
+            if (applying) return
+            applying = true
+            let el: HTMLElement | null = navRef.current?.parentElement ?? null
+            while (el && el !== document.body) {
+                el.style.setProperty("padding-top", "0px", "important")
+                el.style.setProperty("margin-top", "0px", "important")
+                el.style.setProperty("gap", "0px", "important")
+                el.style.setProperty("row-gap", "0px", "important")
+                el.style.setProperty("border-top", "none", "important")
+                el.style.setProperty("z-index", "1100", "important")
+                el.style.setProperty("position", "relative", "important")
+                el = el.parentElement
+            }
+            // Also zero body itself
+            document.body.style.setProperty("padding-top", "0px", "important")
+            document.body.style.setProperty("margin-top", "0px", "important")
+            applying = false
+        }
+
+        zeroParents()
+        const raf1 = requestAnimationFrame(zeroParents)
+        const raf2 = requestAnimationFrame(() =>
+            requestAnimationFrame(zeroParents)
+        )
+
+        const observer = new MutationObserver(zeroParents)
+        let el: HTMLElement | null = navRef.current.parentElement
+        while (el && el !== document.body) {
+            observer.observe(el, {
+                attributes: true,
+                attributeFilter: ["style"],
+            })
+            el = el.parentElement
+        }
+
+        return () => {
+            cancelAnimationFrame(raf1)
+            cancelAnimationFrame(raf2)
+            observer.disconnect()
+        }
+    }, [])
+
     // --- Scroll-based overlay transition ---
     useEffect(() => {
         if (!overlayMode) {
