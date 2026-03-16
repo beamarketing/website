@@ -156,6 +156,15 @@ function HeroScroll(props: Props) {
                 gap: 0 !important;
                 row-gap: 0 !important;
             }
+            /* Framer page-level containers (flex column with gap) */
+            [data-framer-name="Desktop"],
+            [data-framer-name="Tablet"],
+            [data-framer-name="Phone"],
+            [data-framer-name="Page"] {
+                padding: 0 !important;
+                gap: 0 !important;
+                row-gap: 0 !important;
+            }
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;

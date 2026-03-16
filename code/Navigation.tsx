@@ -181,10 +181,17 @@ function Navigation(props: Props) {
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
             }
+            /* Zero out the nav element itself (Framer may pass padding via style prop) */
+            nav[data-beamr-nav] {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
             /* Lift all Framer wrappers containing the nav above the hero.
                Works because HeroScroll sets z-index:1 on its own wrappers. */
             div:has(nav[data-beamr-nav]) {
                 z-index: 1100 !important;
+                padding-top: 0 !important;
+                margin-top: 0 !important;
             }
         `
         document.head.appendChild(s)
@@ -1223,6 +1230,8 @@ function Navigation(props: Props) {
                 zIndex: 1100,
                 fontFamily,
                 boxSizing: "border-box",
+                padding: 0,
+                margin: 0,
             }}
             onMouseEnter={() => !isMobile && setIsHovered(true)}
             onMouseLeave={() => {
