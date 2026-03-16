@@ -143,30 +143,21 @@ function HeroScroll(props: Props) {
                 padding: 0 !important;
                 background: #000 !important;
             }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div,
-            body > div > div > div > div > div > div,
-            body > div > div > div > div > div > div > div {
+            /* Only target ancestors of OUR components, not all divs */
+            div:has(> nav[data-beamr-nav]),
+            div:has(> div > nav[data-beamr-nav]),
+            div:has(> div > div > nav[data-beamr-nav]),
+            div:has(> div > div > div > nav[data-beamr-nav]),
+            div:has(> [data-beamr-hero]),
+            div:has(> div > [data-beamr-hero]),
+            div:has(> div > div > [data-beamr-hero]),
+            div:has(> div > div > div > [data-beamr-hero]) {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
                 gap: 0 !important;
                 row-gap: 0 !important;
                 background-color: transparent !important;
-                background: transparent !important;
                 border-top: none !important;
-                overflow: visible !important;
-            }
-            [data-framer-page-optimized], [data-framer-page-optimized] > *,
-            [data-framer-name], [data-framer-component-type],
-            [data-framer-component-type] > div,
-            [data-framer-component-type] > div > div,
-            [data-framer-component-type] > div > div > div {
-                padding-top: 0 !important;
-                margin-top: 0 !important;
-                gap: 0 !important;
-                row-gap: 0 !important;
-                background-color: transparent !important;
-                background: transparent !important;
             }
             /* Preserve hero's negative margin so it overlaps behind the nav */
             [data-beamr-hero] {
@@ -186,9 +177,7 @@ function HeroScroll(props: Props) {
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
-                el.style.setProperty("background", "transparent", "important")
                 el.style.setProperty("background-color", "transparent", "important")
-                el.style.setProperty("border-top", "none", "important")
                 el.style.setProperty("z-index", "1", "important")
                 el = el.parentElement
             }
