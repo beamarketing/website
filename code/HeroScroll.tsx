@@ -301,6 +301,7 @@ function HeroScroll(props: Props) {
         return (
             <div
                 ref={containerRef}
+                data-beamr-hero=""
                 style={{
                     ...style,
                     position: "relative",
@@ -476,6 +477,7 @@ function HeroScroll(props: Props) {
     return (
         <div
             ref={containerRef}
+            data-beamr-hero=""
             style={{
                 ...style,
                 height: scrollDistance,

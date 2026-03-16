@@ -173,6 +173,10 @@ function Navigation(props: Props) {
                 margin-top: 0 !important;
                 gap: 0 !important;
             }
+            /* Preserve hero's negative margin so it overlaps behind the nav */
+            [data-beamr-hero] {
+                margin-top: -58px !important;
+            }
             body > div, body > div > div, body > div > div > div,
             body > div > div > div > div, body > div > div > div > div > div {
                 overflow: visible !important;
