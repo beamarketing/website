@@ -165,20 +165,39 @@ function Navigation(props: Props) {
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div,
-            [data-framer-page-optimized], [data-framer-page-optimized] > *,
-            [data-framer-name], [data-framer-component-type] {
-                padding-top: 0 !important;
-                margin-top: 0 !important;
-                gap: 0 !important;
-            }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div {
-                overflow: visible !important;
-            }
         `
         document.head.appendChild(s)
+    }, [])
+
+    // Zero padding/margin on nav's own Framer wrapper ancestors
+    useEffect(() => {
+        if (!navRef.current) return
+        const zeroParents = () => {
+            let el: HTMLElement | null = navRef.current?.parentElement ?? null
+            while (el && el !== document.body) {
+                el.style.setProperty("padding-top", "0px", "important")
+                el.style.setProperty("margin-top", "0px", "important")
+                el.style.setProperty("padding-bottom", "0px", "important")
+                el.style.setProperty("gap", "0px", "important")
+                el.style.setProperty("row-gap", "0px", "important")
+                el.style.setProperty("overflow", "visible", "important")
+                el = el.parentElement
+            }
+        }
+        zeroParents()
+        const raf1 = requestAnimationFrame(zeroParents)
+        const raf2 = requestAnimationFrame(() => requestAnimationFrame(zeroParents))
+        const observer = new MutationObserver(zeroParents)
+        let el: HTMLElement | null = navRef.current.parentElement
+        while (el && el !== document.body) {
+            observer.observe(el, { attributes: true, attributeFilter: ["style"] })
+            el = el.parentElement
+        }
+        return () => {
+            cancelAnimationFrame(raf1)
+            cancelAnimationFrame(raf2)
+            observer.disconnect()
+        }
     }, [])
 
     // --- Scroll-based overlay transition ---

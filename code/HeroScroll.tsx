@@ -131,7 +131,7 @@ function HeroScroll(props: Props) {
         return () => window.removeEventListener("resize", check)
     }, [mobileBreakpoint])
 
-    // Inject !important CSS to nuke all Framer wrapper spacing
+    // Inject minimal CSS reset — only html/body margin/padding
     useEffect(() => {
         const id = "__hero-reset-css"
         if (document.getElementById(id)) return
@@ -141,24 +141,6 @@ function HeroScroll(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-            }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div,
-            body > div > div > div > div > div > div,
-            body > div > div > div > div > div > div > div,
-            [data-framer-page-optimized], [data-framer-page-optimized] > *,
-            [data-framer-name], [data-framer-component-type],
-            [data-framer-component-type] > div,
-            [data-framer-component-type] > div > div,
-            [data-framer-component-type] > div > div > div {
-                padding-top: 0 !important;
-                margin-top: 0 !important;
-                gap: 0 !important;
-                row-gap: 0 !important;
-            }
-            body > div, body > div > div, body > div > div > div,
-            body > div > div > div > div, body > div > div > div > div > div {
-                overflow: visible !important;
             }
         `
         document.head.appendChild(s)
