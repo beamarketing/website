@@ -152,39 +152,53 @@ function HeroScroll(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // Persistently zero-out any padding/margin Framer adds to parent wrappers
+    // Bust Framer wrapper constraints so the 4000px height can propagate.
+    // STOP at the page's scroll container — never touch overflow:auto/scroll ancestors.
     useEffect(() => {
         if (!containerRef.current) return
 
-        const zeroParents = () => {
+        const isScrollContainer = (el: HTMLElement): boolean => {
+            const s = getComputedStyle(el)
+            return (
+                /(auto|scroll)/.test(s.overflow + s.overflowY) &&
+                el.scrollHeight > el.clientHeight + 50
+            )
+        }
+
+        const bustParents = () => {
             let el = containerRef.current?.parentElement
             while (el && el !== document.body) {
+                // Don't touch the scroll container or anything above it
+                if (isScrollContainer(el)) break
+
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
-                // Prevent Framer from clipping the tall scroll container
-                el.style.setProperty("overflow", "visible", "important")
+                // Let our tall container expand through Framer's wrappers
                 el.style.setProperty("height", "auto", "important")
                 el.style.setProperty("min-height", "0", "important")
                 el.style.setProperty("max-height", "none", "important")
+                el.style.setProperty("overflow", "visible", "important")
                 el = el.parentElement
             }
         }
 
-        // Run immediately
-        zeroParents()
-
-        // Run again on next frames to beat Framer's deferred layout
-        const raf1 = requestAnimationFrame(zeroParents)
+        bustParents()
+        const raf1 = requestAnimationFrame(bustParents)
         const raf2 = requestAnimationFrame(() =>
-            requestAnimationFrame(zeroParents)
+            requestAnimationFrame(bustParents)
+        )
+        // Re-apply after Framer's deferred layout passes
+        const raf3 = requestAnimationFrame(() =>
+            requestAnimationFrame(() => requestAnimationFrame(bustParents))
         )
 
-        // Watch for Framer re-applying styles via MutationObserver
-        const observer = new MutationObserver(zeroParents)
+        // Watch for Framer re-applying styles
+        const observer = new MutationObserver(bustParents)
         let el = containerRef.current.parentElement
         while (el && el !== document.body) {
+            if (isScrollContainer(el)) break
             observer.observe(el, {
                 attributes: true,
                 attributeFilter: ["style"],
@@ -195,48 +209,60 @@ function HeroScroll(props: Props) {
         return () => {
             cancelAnimationFrame(raf1)
             cancelAnimationFrame(raf2)
+            cancelAnimationFrame(raf3)
             observer.disconnect()
         }
     }, [])
 
-    // Manual scroll progress — works in Framer's scroll container or window
+    // Scroll tracking — measure container's actual position via getBoundingClientRect.
+    // Use the KNOWN scrollDistance (not measured height) for totalTravel,
+    // since Framer may still partially clip the container.
     useEffect(() => {
         const el = containerRef.current
         if (!el) return
 
-        const update = () => {
-            const rect = el.getBoundingClientRect()
-            const viewportH = window.innerHeight
-
-            // "start start" → progress=0 when top of el meets top of viewport
-            // "end end" → progress=1 when bottom of el meets bottom of viewport
-            const totalTravel = rect.height - viewportH
-            if (totalTravel <= 0) {
-                scrollYProgress.set(0)
-                return
-            }
-            const scrolled = -rect.top // how far past the top
-            const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
-            scrollYProgress.set(progress)
-        }
-
-        // Listen on window AND every ancestor (covers all Framer scroll scenarios)
-        const targets: (HTMLElement | Window)[] = [window]
+        // Find the nearest scroll ancestor (Framer's scroll container)
+        let scrollTarget: HTMLElement | Window = window
         let node: HTMLElement | null = el.parentElement
         while (node) {
             const s = getComputedStyle(node)
-            if (/(auto|scroll)/.test(s.overflow + s.overflowY)) {
-                targets.push(node)
+            if (
+                /(auto|scroll)/.test(s.overflow + s.overflowY) &&
+                node.scrollHeight > node.clientHeight
+            ) {
+                scrollTarget = node
+                break
             }
             node = node.parentElement
         }
 
-        for (const t of targets) {
-            t.addEventListener("scroll", update, { passive: true })
+        const update = () => {
+            const rect = el.getBoundingClientRect()
+            const viewportH =
+                scrollTarget instanceof Window
+                    ? window.innerHeight
+                    : scrollTarget.clientHeight
+
+            // Use the intended scrollDistance for travel calculation,
+            // NOT rect.height (which may be clipped by Framer)
+            const measuredHeight = Math.max(rect.height, scrollDistance)
+            const totalTravel = measuredHeight - viewportH
+            if (totalTravel <= 0) {
+                scrollYProgress.set(0)
+                return
+            }
+            const scrolled = -rect.top
+            const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
+            scrollYProgress.set(progress)
+        }
+
+        scrollTarget.addEventListener("scroll", update, { passive: true })
+        // Also listen on window in case Framer uses window scroll
+        if (scrollTarget !== window) {
+            window.addEventListener("scroll", update, { passive: true })
         }
         window.addEventListener("resize", update, { passive: true })
 
-        // Run now + deferred for Framer layout settling
         update()
         const raf1 = requestAnimationFrame(update)
         const raf2 = requestAnimationFrame(() =>
@@ -244,14 +270,15 @@ function HeroScroll(props: Props) {
         )
 
         return () => {
-            for (const t of targets) {
-                t.removeEventListener("scroll", update)
+            scrollTarget.removeEventListener("scroll", update)
+            if (scrollTarget !== window) {
+                window.removeEventListener("scroll", update)
             }
             window.removeEventListener("resize", update)
             cancelAnimationFrame(raf1)
             cancelAnimationFrame(raf2)
         }
-    }, [scrollYProgress])
+    }, [scrollYProgress, scrollDistance])
 
     const smooth = useSpring(scrollYProgress, {
         stiffness: 80,
@@ -288,6 +315,7 @@ function HeroScroll(props: Props) {
     const cardsOpacity = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0, 1])
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
+
 
     // Render heading with last two words in highlight color
     const renderHeading = () => {
