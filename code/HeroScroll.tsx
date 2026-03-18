@@ -5,8 +5,13 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { useRef, useEffect, useState, useCallback } from "react"
+import {
+    motion,
+    useTransform,
+    useSpring,
+    useMotionValue,
+} from "framer-motion"
+import { useRef, useEffect, useState } from "react"
 
 // --- Types ---
 
@@ -121,29 +126,7 @@ function HeroScroll(props: Props) {
     } = props
 
     const containerRef = useRef<HTMLDivElement>(null)
-    const [scrollContainer, setScrollContainer] =
-        useState<React.RefObject<HTMLElement | null> | undefined>(undefined)
-
-    // Find the actual scrollable ancestor (Framer wraps content in its own scroll container)
-    useEffect(() => {
-        if (!containerRef.current) return
-        let el: HTMLElement | null = containerRef.current.parentElement
-        while (el) {
-            const style = getComputedStyle(el)
-            const overflow = style.overflow + style.overflowY
-            if (
-                (overflow.includes("auto") || overflow.includes("scroll")) &&
-                el.scrollHeight > el.clientHeight
-            ) {
-                const ref = { current: el }
-                setScrollContainer(ref as React.RefObject<HTMLElement>)
-                return
-            }
-            el = el.parentElement
-        }
-        // No scrollable ancestor found — fall back to window (undefined)
-        setScrollContainer(undefined)
-    }, [])
+    const scrollYProgress = useMotionValue(0)
 
     // Mobile detection
     const [isMobile, setIsMobile] = useState(false)
@@ -211,12 +194,62 @@ function HeroScroll(props: Props) {
         }
     }, [])
 
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        container: scrollContainer,
-        offset: ["start start", "end end"],
-        layoutEffect: false,
-    })
+    // Manual scroll progress — works in Framer's scroll container or window
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+
+        // Find the scrollable ancestor (Framer wraps in its own scroll container)
+        const findScrollParent = (): HTMLElement | Window => {
+            let node: HTMLElement | null = el.parentElement
+            while (node) {
+                const s = getComputedStyle(node)
+                if (
+                    /(auto|scroll)/.test(s.overflow + s.overflowY) &&
+                    node.scrollHeight > node.clientHeight
+                ) {
+                    return node
+                }
+                node = node.parentElement
+            }
+            return window
+        }
+
+        const scrollParent = findScrollParent()
+
+        const update = () => {
+            const rect = el.getBoundingClientRect()
+            const viewportH =
+                scrollParent instanceof Window
+                    ? window.innerHeight
+                    : (scrollParent as HTMLElement).clientHeight
+
+            // "start start" → progress=0 when top of el meets top of viewport
+            // "end end" → progress=1 when bottom of el meets bottom of viewport
+            const totalTravel = el.offsetHeight - viewportH
+            if (totalTravel <= 0) {
+                scrollYProgress.set(0)
+                return
+            }
+            const scrolled = -rect.top // how far past the top
+            const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
+            scrollYProgress.set(progress)
+        }
+
+        const scrollTarget =
+            scrollParent instanceof Window ? window : scrollParent
+        scrollTarget.addEventListener("scroll", update, { passive: true })
+        window.addEventListener("resize", update, { passive: true })
+        // Initial check + deferred re-check for Framer layout
+        update()
+        const raf = requestAnimationFrame(update)
+
+        return () => {
+            scrollTarget.removeEventListener("scroll", update)
+            window.removeEventListener("resize", update)
+            cancelAnimationFrame(raf)
+        }
+    }, [scrollYProgress])
 
     const smooth = useSpring(scrollYProgress, {
         stiffness: 80,
