@@ -6,7 +6,7 @@
 
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useState, useCallback } from "react"
 
 // --- Types ---
 
@@ -121,6 +121,29 @@ function HeroScroll(props: Props) {
     } = props
 
     const containerRef = useRef<HTMLDivElement>(null)
+    const [scrollContainer, setScrollContainer] =
+        useState<React.RefObject<HTMLElement | null> | undefined>(undefined)
+
+    // Find the actual scrollable ancestor (Framer wraps content in its own scroll container)
+    useEffect(() => {
+        if (!containerRef.current) return
+        let el: HTMLElement | null = containerRef.current.parentElement
+        while (el) {
+            const style = getComputedStyle(el)
+            const overflow = style.overflow + style.overflowY
+            if (
+                (overflow.includes("auto") || overflow.includes("scroll")) &&
+                el.scrollHeight > el.clientHeight
+            ) {
+                const ref = { current: el }
+                setScrollContainer(ref as React.RefObject<HTMLElement>)
+                return
+            }
+            el = el.parentElement
+        }
+        // No scrollable ancestor found — fall back to window (undefined)
+        setScrollContainer(undefined)
+    }, [])
 
     // Mobile detection
     const [isMobile, setIsMobile] = useState(false)
@@ -190,6 +213,7 @@ function HeroScroll(props: Props) {
 
     const { scrollYProgress } = useScroll({
         target: containerRef,
+        container: scrollContainer,
         offset: ["start start", "end end"],
         layoutEffect: false,
     })
