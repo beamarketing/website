@@ -2,7 +2,8 @@
 // Full-screen video on load → contracts to rounded container on scroll
 // Pair with Navigation (overlayMode: true) for transparent-to-solid nav
 //
-// Framer Code Component with full property controls
+// Uses position:fixed overlay to bypass Framer's parent height/overflow constraints.
+// Animation driven by window.scrollY directly.
 
 import { addPropertyControls, ControlType } from "framer"
 import {
@@ -137,7 +138,11 @@ function HeroScroll(props: Props) {
         return () => window.removeEventListener("resize", check)
     }, [mobileBreakpoint])
 
-    // Inject minimal CSS reset — only html/body margin/padding
+    // Track whether the hero overlay should be visible
+    // (hidden once the component's layout space has scrolled fully out of view)
+    const [heroVisible, setHeroVisible] = useState(true)
+
+    // Inject minimal CSS reset
     useEffect(() => {
         const id = "__hero-reset-css"
         if (document.getElementById(id)) return
@@ -152,116 +157,85 @@ function HeroScroll(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // Bust Framer wrapper constraints so the 4000px height can propagate.
-    // STOP at the page's scroll container — never touch overflow:auto/scroll ancestors.
+    // Zero padding/margin on Framer parent wrappers (cosmetic only, not height busting)
     useEffect(() => {
         if (!containerRef.current) return
-
-        const isScrollContainer = (el: HTMLElement): boolean => {
-            const s = getComputedStyle(el)
-            return (
-                /(auto|scroll)/.test(s.overflow + s.overflowY) &&
-                el.scrollHeight > el.clientHeight + 50
-            )
-        }
-
-        const bustParents = () => {
+        const zeroParents = () => {
             let el = containerRef.current?.parentElement
             while (el && el !== document.body) {
-                // Don't touch the scroll container or anything above it
-                if (isScrollContainer(el)) break
-
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
-                // Let our tall container expand through Framer's wrappers
-                el.style.setProperty("height", "auto", "important")
-                el.style.setProperty("min-height", "0", "important")
-                el.style.setProperty("max-height", "none", "important")
-                el.style.setProperty("overflow", "visible", "important")
                 el = el.parentElement
             }
         }
-
-        bustParents()
-        const raf1 = requestAnimationFrame(bustParents)
+        zeroParents()
+        const raf1 = requestAnimationFrame(zeroParents)
         const raf2 = requestAnimationFrame(() =>
-            requestAnimationFrame(bustParents)
+            requestAnimationFrame(zeroParents)
         )
-        // Re-apply after Framer's deferred layout passes
-        const raf3 = requestAnimationFrame(() =>
-            requestAnimationFrame(() => requestAnimationFrame(bustParents))
-        )
-
-        // Watch for Framer re-applying styles
-        const observer = new MutationObserver(bustParents)
+        const observer = new MutationObserver(zeroParents)
         let el = containerRef.current.parentElement
         while (el && el !== document.body) {
-            if (isScrollContainer(el)) break
             observer.observe(el, {
                 attributes: true,
                 attributeFilter: ["style"],
             })
             el = el.parentElement
         }
-
         return () => {
             cancelAnimationFrame(raf1)
             cancelAnimationFrame(raf2)
-            cancelAnimationFrame(raf3)
             observer.disconnect()
         }
     }, [])
 
-    // Scroll tracking — measure container's actual position via getBoundingClientRect.
-    // Use the KNOWN scrollDistance (not measured height) for totalTravel,
-    // since Framer may still partially clip the container.
+    // Scroll-driven animation using window.scrollY directly.
+    // The animation distance = scrollDistance * transitionEnd (e.g. 4000 * 0.15 = 600px).
+    // Progress goes from 0→1 over the full scrollDistance.
+    // The hero stays visible until the component's layout element scrolls out of view.
     useEffect(() => {
         const el = containerRef.current
         if (!el) return
-
-        // Find the nearest scroll ancestor (Framer's scroll container)
-        let scrollTarget: HTMLElement | Window = window
-        let node: HTMLElement | null = el.parentElement
-        while (node) {
-            const s = getComputedStyle(node)
-            if (
-                /(auto|scroll)/.test(s.overflow + s.overflowY) &&
-                node.scrollHeight > node.clientHeight
-            ) {
-                scrollTarget = node
-                break
-            }
-            node = node.parentElement
-        }
+        if (isMobile) return
 
         const update = () => {
-            const rect = el.getBoundingClientRect()
-            const viewportH =
-                scrollTarget instanceof Window
-                    ? window.innerHeight
-                    : scrollTarget.clientHeight
+            // Get scroll position from any scroll ancestor or window
+            const scrollY = window.scrollY || document.documentElement.scrollTop || 0
 
-            // Use the intended scrollDistance for travel calculation,
-            // NOT rect.height (which may be clipped by Framer)
-            const measuredHeight = Math.max(rect.height, scrollDistance)
-            const totalTravel = measuredHeight - viewportH
+            // Calculate how far past the hero's starting position we've scrolled
+            const elRect = el.getBoundingClientRect()
+            const elTopInPage = scrollY + elRect.top
+            const scrolled = scrollY - elTopInPage + navOverlap
+            const totalTravel = scrollDistance - window.innerHeight
             if (totalTravel <= 0) {
                 scrollYProgress.set(0)
                 return
             }
-            const scrolled = -rect.top
             const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
             scrollYProgress.set(progress)
+
+            // Hide the fixed hero once the component has scrolled well out of view
+            const componentBottom = elRect.bottom
+            setHeroVisible(componentBottom > -200)
         }
 
-        scrollTarget.addEventListener("scroll", update, { passive: true })
-        // Also listen on window in case Framer uses window scroll
-        if (scrollTarget !== window) {
-            window.addEventListener("scroll", update, { passive: true })
-        }
+        // Listen on window scroll + any Framer scroll containers
+        window.addEventListener("scroll", update, { passive: true })
         window.addEventListener("resize", update, { passive: true })
+
+        // Also listen on Framer's scroll container if it exists
+        const scrollContainers: HTMLElement[] = []
+        let node: HTMLElement | null = el.parentElement
+        while (node) {
+            const s = getComputedStyle(node)
+            if (/(auto|scroll)/.test(s.overflow + s.overflowY)) {
+                scrollContainers.push(node)
+                node.addEventListener("scroll", update, { passive: true })
+            }
+            node = node.parentElement
+        }
 
         update()
         const raf1 = requestAnimationFrame(update)
@@ -270,15 +244,15 @@ function HeroScroll(props: Props) {
         )
 
         return () => {
-            scrollTarget.removeEventListener("scroll", update)
-            if (scrollTarget !== window) {
-                window.removeEventListener("scroll", update)
-            }
+            window.removeEventListener("scroll", update)
             window.removeEventListener("resize", update)
+            scrollContainers.forEach((c) =>
+                c.removeEventListener("scroll", update)
+            )
             cancelAnimationFrame(raf1)
             cancelAnimationFrame(raf2)
         }
-    }, [scrollYProgress, scrollDistance])
+    }, [scrollYProgress, scrollDistance, navOverlap, isMobile])
 
     const smooth = useSpring(scrollYProgress, {
         stiffness: 80,
@@ -316,11 +290,9 @@ function HeroScroll(props: Props) {
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
 
-
     // Render heading with last two words in highlight color
     const renderHeading = () => {
         const words = heading.split(/(\s+)/)
-        // Find the last two actual words (skip whitespace tokens)
         const wordIndices: number[] = []
         words.forEach((w, i) => {
             if (w.trim()) wordIndices.push(i)
@@ -360,6 +332,210 @@ function HeroScroll(props: Props) {
                 return { ...base, top: `${15 + index * 25}%`, left: "2%" }
         }
     }
+
+    // ========================
+    // Shared video/overlay/heading renderer
+    // ========================
+    const renderVideoContainer = (insetProps?: {
+        top: any; left: any; right: any; bottom: any; borderRadius: any
+    }) => (
+        <motion.div
+            style={{
+                position: "absolute",
+                top: insetProps?.top ?? 0,
+                left: insetProps?.left ?? 0,
+                right: insetProps?.right ?? 0,
+                bottom: insetProps?.bottom ?? 0,
+                borderRadius: insetProps?.borderRadius ?? 0,
+                overflow: "hidden",
+                zIndex: 1,
+            }}
+        >
+            {/* Video / Image */}
+            {useVideo && videoSrc ? (
+                <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    src={videoSrc}
+                    poster={posterImage || undefined}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                    }}
+                />
+            ) : posterImage ? (
+                <img
+                    src={posterImage}
+                    alt=""
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                    }}
+                />
+            ) : (
+                <div
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        background:
+                            "linear-gradient(135deg, #1a1b35 0%, #2d2d6a 50%, #1a2a4a 100%)",
+                    }}
+                />
+            )}
+
+            {/* Dark overlay */}
+            <div
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity + 0.3}) 0%, rgba(0,0,0,${overlayOpacity * 0.2}) 50%, rgba(0,0,0,${overlayOpacity * 0.15}) 100%)`,
+                    zIndex: 2,
+                }}
+            />
+            {/* Pixel / noise texture overlay */}
+            {overlayStyle !== "solid" && (
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 2,
+                        opacity: overlayOpacity,
+                        mixBlendMode: "multiply",
+                        ...(overlayStyle === "pixels"
+                            ? {
+                                  backgroundImage:
+                                      "linear-gradient(0deg, rgba(0,0,0,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.12) 1px, transparent 1px)",
+                                  backgroundSize: "4px 4px",
+                              }
+                            : {
+                                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+                                  backgroundSize: "128px 128px",
+                              }),
+                    }}
+                />
+            )}
+
+            {/* Heading — State 1: bottom-left */}
+            <motion.div
+                style={{
+                    position: "absolute",
+                    bottom: `${headingBottomPadding}%`,
+                    left: "5%",
+                    zIndex: 3,
+                    opacity: headingBottomOpacity,
+                    maxWidth: "55%",
+                }}
+            >
+                <h1
+                    style={{
+                        fontSize: headingFontSize,
+                        fontWeight: headingFontWeight,
+                        color: "#ffffff",
+                        lineHeight: `${headingLineHeight}px`,
+                        margin: 0,
+                        fontFamily,
+                        letterSpacing: "-5px",
+                        whiteSpace: "pre-line",
+                        textShadow: "0 2px 40px rgba(0,0,0,0.3)",
+                    }}
+                >
+                    {renderHeading()}
+                </h1>
+            </motion.div>
+
+            {/* Heading — State 2: centered */}
+            <motion.div
+                style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    x: "-50%",
+                    y: "-50%",
+                    zIndex: 3,
+                    opacity: headingCenterOpacity,
+                    width: "80%",
+                    textAlign: "center",
+                }}
+            >
+                <h1
+                    style={{
+                        fontSize: headingFontSize * 0.9,
+                        fontWeight: headingFontWeight,
+                        color: "#ffffff",
+                        lineHeight: `${headingLineHeight}px`,
+                        margin: 0,
+                        fontFamily,
+                        letterSpacing: "-5px",
+                        whiteSpace: "pre-line",
+                        textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                    }}
+                >
+                    {renderHeading()}
+                </h1>
+            </motion.div>
+
+            {/* Logo bar — State 1 only */}
+            {showLogos && (
+                <motion.div
+                    style={{
+                        position: "absolute",
+                        bottom: 28,
+                        left: 0,
+                        right: 0,
+                        zIndex: 3,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: 48,
+                        opacity: logosOpacity,
+                        y: logosY,
+                    }}
+                >
+                    {logos.map((logo, i) =>
+                        logo.image ? (
+                            <img
+                                key={i}
+                                src={logo.image}
+                                alt={logo.name}
+                                style={{
+                                    height: logo.height || 20,
+                                    objectFit: "contain",
+                                    filter: "brightness(0) invert(1)",
+                                    opacity: 0.8,
+                                }}
+                            />
+                        ) : (
+                            <span
+                                key={i}
+                                style={{
+                                    fontSize: logo.height ? logo.height * 0.65 : 13,
+                                    fontWeight: 700,
+                                    color: "rgba(255,255,255,0.7)",
+                                    letterSpacing: "0.04em",
+                                    fontFamily,
+                                }}
+                            >
+                                {logo.name}
+                            </span>
+                        )
+                    )}
+                </motion.div>
+            )}
+        </motion.div>
+    )
 
     // ========================
     // MOBILE — static hero, no scroll transition
@@ -432,7 +608,6 @@ function HeroScroll(props: Props) {
                         zIndex: 2,
                     }}
                 />
-                {/* Pixel / noise texture overlay */}
                 {overlayStyle !== "solid" && (
                     <div
                         style={{
@@ -538,358 +713,171 @@ function HeroScroll(props: Props) {
     }
 
     // ========================
-    // DESKTOP — scroll-driven transition
+    // DESKTOP — scroll-driven transition using position:fixed overlay
     // ========================
     return (
-        <div
-            ref={containerRef}
-            style={{
-                ...style,
-                height: scrollDistance,
-                position: "relative",
-                width: "100%",
-                marginTop: -navOverlap,
-                paddingTop: 0,
-                paddingBottom: 0,
-            }}
-        >
-            {/* Sticky viewport — exactly 100vh */}
-            <motion.div
+        <>
+            {/* Layout spacer — takes up space in Framer's flow.
+                This is what Framer "sees" and controls. */}
+            <div
+                ref={containerRef}
                 style={{
-                    position: "sticky",
-                    top: 0,
+                    ...style,
                     width: "100%",
                     height: "100vh",
-                    overflow: "hidden",
-                    backgroundColor: pageBg,
-                    fontFamily,
+                    marginTop: -navOverlap,
                 }}
-            >
-                {/* ================================
-                    VIDEO CONTAINER
-                    ================================ */}
+            />
+
+            {/* Fixed hero overlay — positioned relative to viewport,
+                completely bypasses Framer's parent height/overflow constraints */}
+            {heroVisible && (
                 <motion.div
                     style={{
-                        position: "absolute",
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100vw",
+                        height: "100vh",
+                        zIndex: 50,
+                        overflow: "hidden",
+                        backgroundColor: pageBg,
+                        fontFamily,
+                        pointerEvents: "auto",
+                    }}
+                >
+                    {/* VIDEO CONTAINER */}
+                    {renderVideoContainer({
                         top: videoInsetTop,
                         left: videoInsetLeft,
                         right: videoInsetRight,
                         bottom: videoInsetBottom,
                         borderRadius: videoBorderRadius,
-                        overflow: "hidden",
-                        zIndex: 1,
-                    }}
-                >
-                    {/* Video / Image */}
-                    {useVideo && videoSrc ? (
-                        <video
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            src={videoSrc}
-                            poster={posterImage || undefined}
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                            }}
-                        />
-                    ) : posterImage ? (
-                        <img
-                            src={posterImage}
-                            alt=""
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                            }}
-                        />
-                    ) : (
-                        <div
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                background:
-                                    "linear-gradient(135deg, #1a1b35 0%, #2d2d6a 50%, #1a2a4a 100%)",
-                            }}
-                        />
-                    )}
+                    })}
 
-                    {/* Dark overlay */}
-                    <div
+                    {/* FLOATING CARDS — State 2 */}
+                    <motion.div
                         style={{
                             position: "absolute",
                             inset: 0,
-                            background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity + 0.3}) 0%, rgba(0,0,0,${overlayOpacity * 0.2}) 50%, rgba(0,0,0,${overlayOpacity * 0.15}) 100%)`,
-                            zIndex: 2,
-                        }}
-                    />
-                    {/* Pixel / noise texture overlay */}
-                    {overlayStyle !== "solid" && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                inset: 0,
-                                zIndex: 2,
-                                opacity: overlayOpacity,
-                                mixBlendMode: "multiply",
-                                ...(overlayStyle === "pixels"
-                                    ? {
-                                          backgroundImage:
-                                              "linear-gradient(0deg, rgba(0,0,0,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.12) 1px, transparent 1px)",
-                                          backgroundSize: "4px 4px",
-                                      }
-                                    : {
-                                          // noise via inline SVG data-URI
-                                          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
-                                          backgroundSize: "128px 128px",
-                                      }),
-                            }}
-                        />
-                    )}
-
-                    {/* Heading — State 1: bottom-left */}
-                    <motion.div
-                        style={{
-                            position: "absolute",
-                            bottom: `${headingBottomPadding}%`,
-                            left: "5%",
-                            zIndex: 3,
-                            opacity: headingBottomOpacity,
-                            maxWidth: "55%",
+                            zIndex: 5,
+                            opacity: cardsOpacity,
+                            scale: cardsScale,
+                            y: cardsY,
+                            pointerEvents: "none",
                         }}
                     >
-                        <h1
-                            style={{
-                                fontSize: headingFontSize,
-                                fontWeight: headingFontWeight,
-                                color: "#ffffff",
-                                lineHeight: `${headingLineHeight}px`,
-                                margin: 0,
-                                fontFamily,
-                                letterSpacing: "-5px",
-                                whiteSpace: "pre-line",
-                                textShadow: "0 2px 40px rgba(0,0,0,0.3)",
-                            }}
-                        >
-                            {renderHeading()}
-                        </h1>
-                    </motion.div>
-
-                    {/* Heading — State 2: centered */}
-                    <motion.div
-                        style={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            x: "-50%",
-                            y: "-50%",
-                            zIndex: 3,
-                            opacity: headingCenterOpacity,
-                            width: "80%",
-                            textAlign: "center",
-                        }}
-                    >
-                        <h1
-                            style={{
-                                fontSize: headingFontSize * 0.9,
-                                fontWeight: headingFontWeight,
-                                color: "#ffffff",
-                                lineHeight: `${headingLineHeight}px`,
-                                margin: 0,
-                                fontFamily,
-                                letterSpacing: "-5px",
-                                whiteSpace: "pre-line",
-                                textShadow: "0 4px 40px rgba(0,0,0,0.4)",
-                            }}
-                        >
-                            {renderHeading()}
-                        </h1>
-                    </motion.div>
-
-                    {/* Logo bar — State 1 only */}
-                    {showLogos && (
-                        <motion.div
-                            style={{
-                                position: "absolute",
-                                bottom: 28,
-                                left: 0,
-                                right: 0,
-                                zIndex: 3,
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                gap: 48,
-                                opacity: logosOpacity,
-                                y: logosY,
-                            }}
-                        >
-                            {logos.map((logo, i) =>
-                                logo.image ? (
-                                    <img
-                                        key={i}
-                                        src={logo.image}
-                                        alt={logo.name}
-                                        style={{
-                                            height: logo.height || 20,
-                                            objectFit: "contain",
-                                            filter: "brightness(0) invert(1)",
-                                            opacity: 0.8,
-                                        }}
-                                    />
-                                ) : (
-                                    <span
-                                        key={i}
-                                        style={{
-                                            fontSize: logo.height ? logo.height * 0.65 : 13,
-                                            fontWeight: 700,
-                                            color: "rgba(255,255,255,0.7)",
-                                            letterSpacing: "0.04em",
-                                            fontFamily,
-                                        }}
-                                    >
-                                        {logo.name}
-                                    </span>
-                                )
-                            )}
-                        </motion.div>
-                    )}
-                </motion.div>
-
-                {/* ================================
-                    FLOATING CARDS — State 2
-                    ================================ */}
-                <motion.div
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        zIndex: 5,
-                        opacity: cardsOpacity,
-                        scale: cardsScale,
-                        y: cardsY,
-                        pointerEvents: "none",
-                    }}
-                >
-                    {cards.map((card, i) => (
-                        <motion.div
-                            key={i}
-                            style={{
-                                ...getCardStyle(card.position, i),
-                                backgroundColor: cardBgColor,
-                                borderRadius: 16,
-                                boxShadow:
-                                    "0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
-                                overflow: "hidden",
-                                pointerEvents: "auto",
-                            }}
-                            initial={false}
-                        >
-                            {/* Card image */}
-                            <div
+                        {cards.map((card, i) => (
+                            <motion.div
+                                key={i}
                                 style={{
-                                    width: "100%",
-                                    height: cardWidth * 0.55,
-                                    backgroundColor: "#f3f4f6",
+                                    ...getCardStyle(card.position, i),
+                                    backgroundColor: cardBgColor,
+                                    borderRadius: 16,
+                                    boxShadow:
+                                        "0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
                                     overflow: "hidden",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    pointerEvents: "auto",
                                 }}
+                                initial={false}
                             >
-                                {card.image ? (
-                                    <img
-                                        src={card.image}
-                                        alt={card.label}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                        }}
-                                    />
-                                ) : (
-                                    <span
-                                        style={{
-                                            fontSize: 12,
-                                            color: "#9ca3af",
-                                            fontFamily,
-                                        }}
-                                    >
-                                        Blog Post Image
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Card footer */}
-                            <div
-                                style={{
-                                    padding: "12px 16px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                }}
-                            >
-                                <span
-                                    style={{
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                        color: "#1a1a2e",
-                                        fontFamily,
-                                    }}
-                                >
-                                    {card.label}
-                                </span>
+                                {/* Card image */}
                                 <div
                                     style={{
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: "50%",
-                                        backgroundColor: accentColor,
+                                        width: "100%",
+                                        height: cardWidth * 0.55,
+                                        backgroundColor: "#f3f4f6",
+                                        overflow: "hidden",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        flexShrink: 0,
                                     }}
                                 >
-                                    <svg
-                                        width="12"
-                                        height="12"
-                                        viewBox="0 0 12 12"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M3 1.5L10 6L3 10.5V1.5Z"
-                                            fill="white"
+                                    {card.image ? (
+                                        <img
+                                            src={card.image}
+                                            alt={card.label}
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                            }}
                                         />
-                                    </svg>
+                                    ) : (
+                                        <span
+                                            style={{
+                                                fontSize: 12,
+                                                color: "#9ca3af",
+                                                fontFamily,
+                                            }}
+                                        >
+                                            Blog Post Image
+                                        </span>
+                                    )}
                                 </div>
-                            </div>
 
-                            {/* Pill placeholder */}
-                            <div style={{ padding: "0 16px 14px" }}>
+                                {/* Card footer */}
                                 <div
                                     style={{
-                                        width: "70%",
-                                        height: 8,
-                                        borderRadius: 4,
-                                        backgroundColor: "#e5e7eb",
+                                        padding: "12px 16px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
                                     }}
-                                />
-                            </div>
-                        </motion.div>
-                    ))}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: 14,
+                                            fontWeight: 600,
+                                            color: "#1a1a2e",
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {card.label}
+                                    </span>
+                                    <div
+                                        style={{
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: "50%",
+                                            backgroundColor: accentColor,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <svg
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 12 12"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M3 1.5L10 6L3 10.5V1.5Z"
+                                                fill="white"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Pill placeholder */}
+                                <div style={{ padding: "0 16px 14px" }}>
+                                    <div
+                                        style={{
+                                            width: "70%",
+                                            height: 8,
+                                            borderRadius: 4,
+                                            backgroundColor: "#e5e7eb",
+                                        }}
+                                    />
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 </motion.div>
-            </motion.div>
-        </div>
+            )}
+        </>
     )
 }
 
