@@ -164,7 +164,7 @@ function Navigation(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #07071c !important;
+                background: #000 !important;
             }
             /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
             div:has(> nav[data-beamr-nav]),
@@ -186,7 +186,6 @@ function Navigation(props: Props) {
             }
         `
         document.head.appendChild(s)
-        return () => { s.remove() }
     }, [])
 
     // Walk only a few levels up (not to body) to avoid touching shared page containers
