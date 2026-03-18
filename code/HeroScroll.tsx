@@ -163,6 +163,11 @@ function HeroScroll(props: Props) {
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
+                // Prevent Framer from clipping the tall scroll container
+                el.style.setProperty("overflow", "visible", "important")
+                el.style.setProperty("height", "auto", "important")
+                el.style.setProperty("min-height", "0", "important")
+                el.style.setProperty("max-height", "none", "important")
                 el = el.parentElement
             }
         }
@@ -199,34 +204,13 @@ function HeroScroll(props: Props) {
         const el = containerRef.current
         if (!el) return
 
-        // Find the scrollable ancestor (Framer wraps in its own scroll container)
-        const findScrollParent = (): HTMLElement | Window => {
-            let node: HTMLElement | null = el.parentElement
-            while (node) {
-                const s = getComputedStyle(node)
-                if (
-                    /(auto|scroll)/.test(s.overflow + s.overflowY) &&
-                    node.scrollHeight > node.clientHeight
-                ) {
-                    return node
-                }
-                node = node.parentElement
-            }
-            return window
-        }
-
-        const scrollParent = findScrollParent()
-
         const update = () => {
             const rect = el.getBoundingClientRect()
-            const viewportH =
-                scrollParent instanceof Window
-                    ? window.innerHeight
-                    : (scrollParent as HTMLElement).clientHeight
+            const viewportH = window.innerHeight
 
             // "start start" → progress=0 when top of el meets top of viewport
             // "end end" → progress=1 when bottom of el meets bottom of viewport
-            const totalTravel = el.offsetHeight - viewportH
+            const totalTravel = rect.height - viewportH
             if (totalTravel <= 0) {
                 scrollYProgress.set(0)
                 return
@@ -236,18 +220,36 @@ function HeroScroll(props: Props) {
             scrollYProgress.set(progress)
         }
 
-        const scrollTarget =
-            scrollParent instanceof Window ? window : scrollParent
-        scrollTarget.addEventListener("scroll", update, { passive: true })
+        // Listen on window AND every ancestor (covers all Framer scroll scenarios)
+        const targets: (HTMLElement | Window)[] = [window]
+        let node: HTMLElement | null = el.parentElement
+        while (node) {
+            const s = getComputedStyle(node)
+            if (/(auto|scroll)/.test(s.overflow + s.overflowY)) {
+                targets.push(node)
+            }
+            node = node.parentElement
+        }
+
+        for (const t of targets) {
+            t.addEventListener("scroll", update, { passive: true })
+        }
         window.addEventListener("resize", update, { passive: true })
-        // Initial check + deferred re-check for Framer layout
+
+        // Run now + deferred for Framer layout settling
         update()
-        const raf = requestAnimationFrame(update)
+        const raf1 = requestAnimationFrame(update)
+        const raf2 = requestAnimationFrame(() =>
+            requestAnimationFrame(update)
+        )
 
         return () => {
-            scrollTarget.removeEventListener("scroll", update)
+            for (const t of targets) {
+                t.removeEventListener("scroll", update)
+            }
             window.removeEventListener("resize", update)
-            cancelAnimationFrame(raf)
+            cancelAnimationFrame(raf1)
+            cancelAnimationFrame(raf2)
         }
     }, [scrollYProgress])
 
