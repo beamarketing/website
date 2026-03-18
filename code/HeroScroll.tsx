@@ -131,7 +131,7 @@ function HeroScroll(props: Props) {
         return () => window.removeEventListener("resize", check)
     }, [mobileBreakpoint])
 
-    // Inject !important CSS to nuke Framer wrapper spacing (scoped narrowly)
+    // Inject !important CSS to nuke all Framer wrapper spacing
     useEffect(() => {
         const id = "__hero-reset-css"
         if (document.getElementById(id)) return
@@ -141,42 +141,69 @@ function HeroScroll(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #000 !important;
             }
-            /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
-            div:has(> nav[data-beamr-nav]),
-            div:has(> [data-beamr-hero]) {
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div,
+            body > div > div > div > div > div > div,
+            body > div > div > div > div > div > div > div,
+            [data-framer-page-optimized], [data-framer-page-optimized] > *,
+            [data-framer-name], [data-framer-component-type],
+            [data-framer-component-type] > div,
+            [data-framer-component-type] > div > div,
+            [data-framer-component-type] > div > div > div {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
-                background-color: transparent !important;
+                gap: 0 !important;
+                row-gap: 0 !important;
             }
-            /* Preserve hero's negative margin so it overlaps behind the nav */
-            [data-beamr-hero] {
-                margin-top: -58px !important;
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div {
+                overflow: visible !important;
             }
         `
         document.head.appendChild(s)
     }, [])
 
-    // Walk only a few levels up (not to body) to avoid touching shared page containers
+    // Persistently zero-out any padding/margin Framer adds to parent wrappers
     useEffect(() => {
         if (!containerRef.current) return
-        const maxLevels = 3
-        const run = () => {
+
+        const zeroParents = () => {
             let el = containerRef.current?.parentElement
-            let level = 0
-            while (el && el !== document.body && level < maxLevels) {
+            while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
-                el.style.setProperty("background-color", "transparent", "important")
-                el.style.setProperty("z-index", "1", "important")
+                el.style.setProperty("gap", "0px", "important")
+                el.style.setProperty("row-gap", "0px", "important")
                 el = el.parentElement
-                level++
             }
         }
-        run()
-        requestAnimationFrame(run)
-        requestAnimationFrame(() => requestAnimationFrame(run))
+
+        // Run immediately
+        zeroParents()
+
+        // Run again on next frames to beat Framer's deferred layout
+        const raf1 = requestAnimationFrame(zeroParents)
+        const raf2 = requestAnimationFrame(() =>
+            requestAnimationFrame(zeroParents)
+        )
+
+        // Watch for Framer re-applying styles via MutationObserver
+        const observer = new MutationObserver(zeroParents)
+        let el = containerRef.current.parentElement
+        while (el && el !== document.body) {
+            observer.observe(el, {
+                attributes: true,
+                attributeFilter: ["style"],
+            })
+            el = el.parentElement
+        }
+
+        return () => {
+            cancelAnimationFrame(raf1)
+            cancelAnimationFrame(raf2)
+            observer.disconnect()
+        }
     }, [])
 
     const { scrollYProgress } = useScroll({
@@ -272,7 +299,6 @@ function HeroScroll(props: Props) {
         return (
             <div
                 ref={containerRef}
-                data-beamr-hero=""
                 style={{
                     ...style,
                     position: "relative",
@@ -448,7 +474,6 @@ function HeroScroll(props: Props) {
     return (
         <div
             ref={containerRef}
-            data-beamr-hero=""
             style={{
                 ...style,
                 height: scrollDistance,

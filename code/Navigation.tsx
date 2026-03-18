@@ -117,7 +117,7 @@ function Navigation(props: Props) {
     const navRef = useRef<HTMLElement>(null)
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
     const [pastThreshold, setPastThreshold] = useState(false)
-    const [isHovered, setIsHovered] = useState(false)
+    const [forceSolid, setForceSolid] = useState(false)
 
     // Responsive state
     const [isMobile, setIsMobile] = useState(false)
@@ -154,7 +154,7 @@ function Navigation(props: Props) {
         }
     }, [isMobile])
 
-    // --- Framer wrapper reset (CSS only, no observers) ---
+    // --- Framer wrapper reset ---
     useEffect(() => {
         const id = "__nav-reset-css"
         if (document.getElementById(id)) return
@@ -164,49 +164,21 @@ function Navigation(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #000 !important;
             }
-            /* Only the DIRECT wrapper around our nav/hero — not shared ancestors */
-            div:has(> nav[data-beamr-nav]),
-            div:has(> [data-beamr-hero]) {
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div,
+            [data-framer-page-optimized], [data-framer-page-optimized] > *,
+            [data-framer-name], [data-framer-component-type] {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
-                background-color: transparent !important;
+                gap: 0 !important;
             }
-            /* Preserve hero's negative margin so it overlaps behind the nav */
-            [data-beamr-hero] {
-                margin-top: -58px !important;
-            }
-            nav[data-beamr-nav] {
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            div:has(nav[data-beamr-nav]) {
-                z-index: 1100 !important;
+            body > div, body > div > div, body > div > div > div,
+            body > div > div > div > div, body > div > div > div > div > div {
+                overflow: visible !important;
             }
         `
         document.head.appendChild(s)
-    }, [])
-
-    // Walk only a few levels up (not to body) to avoid touching shared page containers
-    useEffect(() => {
-        if (!navRef.current) return
-        const maxLevels = 3
-        const run = () => {
-            let el: HTMLElement | null = navRef.current?.parentElement ?? null
-            let level = 0
-            while (el && el !== document.body && level < maxLevels) {
-                el.style.setProperty("padding-top", "0px", "important")
-                el.style.setProperty("margin-top", "0px", "important")
-                el.style.setProperty("background-color", "transparent", "important")
-                el.style.setProperty("z-index", "1100", "important")
-                el = el.parentElement
-                level++
-            }
-        }
-        run()
-        requestAnimationFrame(run)
-        requestAnimationFrame(() => requestAnimationFrame(run))
     }, [])
 
     // --- Scroll-based overlay transition ---
@@ -246,10 +218,58 @@ function Navigation(props: Props) {
         return () => target.removeEventListener("scroll", onScroll)
     }, [overlayMode, scrollThreshold])
 
+    // --- Auto-detect background luminance ---
+    useEffect(() => {
+        if (!overlayMode) {
+            setForceSolid(false)
+            return
+        }
+        const checkBackground = () => {
+            if (!navRef.current) return
+            const rect = navRef.current.getBoundingClientRect()
+            const x = rect.left + rect.width / 2
+            const y = rect.bottom + 10
+            const elements = document.elementsFromPoint(x, y)
+            const behind = elements.find(
+                (el) => !navRef.current!.contains(el)
+            )
+            if (!behind) {
+                setForceSolid(true)
+                return
+            }
+            let node: Element | null = behind
+            while (node && node !== document.documentElement) {
+                const bg = getComputedStyle(node).backgroundColor
+                const m = bg.match(
+                    /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/
+                )
+                if (m) {
+                    const a = m[4] !== undefined ? parseFloat(m[4]) : 1
+                    if (a > 0.5) {
+                        const lum =
+                            (0.299 * +m[1] +
+                                0.587 * +m[2] +
+                                0.114 * +m[3]) /
+                            255
+                        setForceSolid(lum > 0.45)
+                        return
+                    }
+                }
+                node = node.parentElement
+            }
+            setForceSolid(true)
+        }
+        const raf = requestAnimationFrame(checkBackground)
+        const interval = setInterval(checkBackground, 1500)
+        return () => {
+            cancelAnimationFrame(raf)
+            clearInterval(interval)
+        }
+    }, [overlayMode])
 
     // --- Derived visual state ---
     const isOverlay =
-        overlayMode && !pastThreshold && !mobileMenuOpen && !isHovered
+        overlayMode && !pastThreshold && !forceSolid && !mobileMenuOpen
     const currentBg = isOverlay ? overlayBgColor : bgColor
     const currentText = isOverlay ? overlayTextColor : textColor
     const currentHover = isOverlay ? "rgba(255,255,255,0.7)" : textHoverColor
@@ -1233,7 +1253,6 @@ function Navigation(props: Props) {
     return (
         <nav
             ref={navRef}
-            data-beamr-nav=""
             style={{
                 ...style,
                 width: "100%",
@@ -1242,16 +1261,8 @@ function Navigation(props: Props) {
                 zIndex: 1100,
                 fontFamily,
                 boxSizing: "border-box",
-                padding: 0,
-                margin: 0,
             }}
-            onMouseEnter={() => !isMobile && setIsHovered(true)}
-            onMouseLeave={() => {
-                if (!isMobile) {
-                    setActiveDropdown(null)
-                    setIsHovered(false)
-                }
-            }}
+            onMouseLeave={() => !isMobile && setActiveDropdown(null)}
         >
             {/* Main Bar */}
             <div
