@@ -2,7 +2,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface FooterLink {
     label: string
@@ -91,6 +91,15 @@ function Footer(props: Props) {
         style,
     } = props
 
+    // Mobile detection
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768)
+        check()
+        window.addEventListener("resize", check)
+        return () => window.removeEventListener("resize", check)
+    }, [])
+
     // Group flat navLinks by column name, preserving order
     const columns: { title: string; links: { label: string; url: string }[] }[] = []
     const columnMap = new Map<string, { label: string; url: string }[]>()
@@ -156,7 +165,7 @@ function Footer(props: Props) {
                 ...style,
                 width: "100%",
                 backgroundColor: bgColor,
-                padding: "80px 48px 40px",
+                padding: isMobile ? "48px 20px 32px" : "80px 48px 40px",
                 boxSizing: "border-box",
                 fontFamily,
                 borderTop: `1px solid ${borderColor}`,
@@ -172,9 +181,11 @@ function Footer(props: Props) {
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: `1.5fr ${columns.map(() => "1fr").join(" ")} ${showNewsletter ? "1.5fr" : ""}`,
-                        gap: 48,
-                        paddingBottom: 48,
+                        gridTemplateColumns: isMobile
+                            ? "1fr"
+                            : `1.5fr ${columns.map(() => "1fr").join(" ")} ${showNewsletter ? "1.5fr" : ""}`,
+                        gap: isMobile ? 32 : 48,
+                        paddingBottom: isMobile ? 32 : 48,
                         borderBottom: `1px solid ${borderColor}`,
                     }}
                 >
@@ -429,8 +440,10 @@ function Footer(props: Props) {
                 <div
                     style={{
                         display: "flex",
+                        flexDirection: isMobile ? "column" : "row",
                         justifyContent: "space-between",
-                        alignItems: "center",
+                        alignItems: isMobile ? "flex-start" : "center",
+                        gap: isMobile ? 16 : 0,
                         paddingTop: 24,
                     }}
                 >
