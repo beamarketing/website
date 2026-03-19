@@ -96,6 +96,23 @@ function CABRScience(props: Props) {
     const [scrollY, setScrollY] = useState(0)
     const sectionTopRef = useRef(0)
 
+    // Responsive detection based on component's own width
+    const [isMobile, setIsMobile] = useState(false)
+    const [isTablet, setIsTablet] = useState(false)
+    useEffect(() => {
+        const el = sectionRef.current
+        if (!el) return
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const w = entry.contentRect.width
+                setIsMobile(w < 480)
+                setIsTablet(w >= 480 && w < 900)
+            }
+        })
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
     // Generate deterministic pixel particles
     const particles = useMemo(() => {
         const rand = seededRandom(77)
@@ -186,7 +203,7 @@ function CABRScience(props: Props) {
                 ...style,
                 width: "100%",
                 backgroundColor: bgColor,
-                padding: "100px 48px",
+                padding: isMobile ? "48px 20px" : isTablet ? "64px 32px" : "100px 48px",
                 boxSizing: "border-box",
                 fontFamily,
                 position: "relative",
@@ -234,8 +251,8 @@ function CABRScience(props: Props) {
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "1fr 1.8fr",
-                        gap: 64,
+                        gridTemplateColumns: isMobile || isTablet ? "1fr" : "1fr 1.8fr",
+                        gap: isMobile ? 32 : isTablet ? 40 : 64,
                         alignItems: "center",
                     }}
                 >
@@ -264,7 +281,7 @@ function CABRScience(props: Props) {
                         </span>
                         <h2
                             style={{
-                                fontSize: headingSize,
+                                fontSize: isMobile ? Math.round(headingSize * 0.62) : isTablet ? Math.round(headingSize * 0.77) : headingSize,
                                 fontWeight: 700,
                                 color: textColor,
                                 margin: 0,
@@ -398,9 +415,9 @@ function CABRScience(props: Props) {
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(4, 1fr)",
-                        gap: 32,
-                        marginTop: 56,
+                        gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+                        gap: isMobile ? 24 : 32,
+                        marginTop: isMobile ? 36 : isTablet ? 44 : 56,
                     }}
                 >
                     {features.map((feat, i) => {
