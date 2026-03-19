@@ -96,12 +96,15 @@ function Footer(props: Props) {
     // Responsive detection based on component's own width (not viewport)
     const footerRef = useRef<HTMLElement>(null)
     const [isMobile, setIsMobile] = useState(false)
+    const [isTablet, setIsTablet] = useState(false)
     useEffect(() => {
         const el = footerRef.current
         if (!el) return
         const ro = new ResizeObserver((entries) => {
             for (const entry of entries) {
-                setIsMobile(entry.contentRect.width < 640)
+                const w = entry.contentRect.width
+                setIsMobile(w < 480)
+                setIsTablet(w >= 480 && w < 900)
             }
         })
         ro.observe(el)
@@ -174,7 +177,7 @@ function Footer(props: Props) {
                 ...style,
                 width: "100%",
                 backgroundColor: bgColor,
-                padding: isMobile ? "48px 20px 32px" : "80px 48px 40px",
+                padding: isMobile ? "48px 20px 32px" : isTablet ? "56px 32px 36px" : "80px 48px 40px",
                 boxSizing: "border-box",
                 fontFamily,
                 borderTop: `1px solid ${borderColor}`,
@@ -192,9 +195,11 @@ function Footer(props: Props) {
                         display: "grid",
                         gridTemplateColumns: isMobile
                             ? "1fr"
-                            : `1.5fr ${showNavigation ? columns.map(() => "1fr").join(" ") : ""} ${showNewsletter ? "1.5fr" : ""}`,
-                        gap: isMobile ? 32 : 48,
-                        paddingBottom: isMobile ? 32 : 48,
+                            : isTablet
+                              ? "repeat(2, 1fr)"
+                              : `1.5fr ${showNavigation ? columns.map(() => "1fr").join(" ") : ""} ${showNewsletter ? "1.5fr" : ""}`,
+                        gap: isMobile ? 32 : isTablet ? 32 : 48,
+                        paddingBottom: isMobile ? 32 : isTablet ? 36 : 48,
                         borderBottom: `1px solid ${borderColor}`,
                     }}
                 >
@@ -449,10 +454,10 @@ function Footer(props: Props) {
                 <div
                     style={{
                         display: "flex",
-                        flexDirection: isMobile ? "column" : "row",
+                        flexDirection: isMobile || isTablet ? "column" : "row",
                         justifyContent: "space-between",
-                        alignItems: isMobile ? "flex-start" : "center",
-                        gap: isMobile ? 16 : 0,
+                        alignItems: isMobile || isTablet ? "flex-start" : "center",
+                        gap: isMobile || isTablet ? 16 : 0,
                         paddingTop: 24,
                     }}
                 >
