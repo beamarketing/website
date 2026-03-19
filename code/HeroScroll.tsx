@@ -157,7 +157,7 @@ function HeroScroll(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // Zero padding/margin on Framer parent wrappers (cosmetic only, not height busting)
+    // Zero padding/margin/width constraints on Framer parent wrappers
     useEffect(() => {
         if (!containerRef.current) return
         const zeroParents = () => {
@@ -167,6 +167,9 @@ function HeroScroll(props: Props) {
                 el.style.setProperty("margin-top", "0px", "important")
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
+                // Ensure Framer wrappers don't constrain width on mobile
+                el.style.setProperty("width", "100%", "important")
+                el.style.setProperty("max-width", "none", "important")
                 el = el.parentElement
             }
         }
