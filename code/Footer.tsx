@@ -2,7 +2,7 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 interface FooterLink {
     label: string
@@ -91,13 +91,19 @@ function Footer(props: Props) {
         style,
     } = props
 
-    // Mobile detection
+    // Responsive detection based on component's own width (not viewport)
+    const footerRef = useRef<HTMLElement>(null)
     const [isMobile, setIsMobile] = useState(false)
     useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 768)
-        check()
-        window.addEventListener("resize", check)
-        return () => window.removeEventListener("resize", check)
+        const el = footerRef.current
+        if (!el) return
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setIsMobile(entry.contentRect.width < 640)
+            }
+        })
+        ro.observe(el)
+        return () => ro.disconnect()
     }, [])
 
     // Group flat navLinks by column name, preserving order
@@ -161,6 +167,7 @@ function Footer(props: Props) {
 
     return (
         <footer
+            ref={footerRef}
             style={{
                 ...style,
                 width: "100%",
