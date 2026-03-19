@@ -25,6 +25,7 @@ interface Props {
     logoImage: string
     useLogoImage: boolean
     tagline: string
+    showNavigation: boolean
     navLinks: NavLink[]
     socialLinks: SocialLink[]
     soc2Image: string
@@ -51,6 +52,7 @@ function Footer(props: Props) {
         logoImage = "",
         useLogoImage = false,
         tagline = "AI-powered video optimization for the modern enterprise.",
+        showNavigation = true,
         navLinks = [
             { column: "Solutions", label: "Media & Entertainment", url: "#" },
             { column: "Solutions", label: "Autonomous Vehicles", url: "#" },
@@ -190,7 +192,7 @@ function Footer(props: Props) {
                         display: "grid",
                         gridTemplateColumns: isMobile
                             ? "1fr"
-                            : `1.5fr ${columns.map(() => "1fr").join(" ")} ${showNewsletter ? "1.5fr" : ""}`,
+                            : `1.5fr ${showNavigation ? columns.map(() => "1fr").join(" ") : ""} ${showNewsletter ? "1.5fr" : ""}`,
                         gap: isMobile ? 32 : 48,
                         paddingBottom: isMobile ? 32 : 48,
                         borderBottom: `1px solid ${borderColor}`,
@@ -291,7 +293,7 @@ function Footer(props: Props) {
                     </div>
 
                     {/* Link Columns */}
-                    {columns.map((column, i) => (
+                    {showNavigation && columns.map((column, i) => (
                         <div
                             key={i}
                             style={{
@@ -517,6 +519,11 @@ addPropertyControls(Footer, {
             "AI-powered video optimization for the modern enterprise.",
         displayTextArea: true,
     },
+    showNavigation: {
+        type: ControlType.Boolean,
+        title: "Show Navigation",
+        defaultValue: true,
+    },
     navLinks: {
         type: ControlType.Array,
         title: "Navigation Links",
@@ -555,6 +562,7 @@ addPropertyControls(Footer, {
             { column: "Resources", label: "Case Studies", url: "#" },
             { column: "Resources", label: "Webinars", url: "#" },
         ],
+        hidden: (props) => !props.showNavigation,
     },
     socialLinks: {
         type: ControlType.Array,
