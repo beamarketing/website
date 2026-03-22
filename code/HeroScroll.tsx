@@ -5,7 +5,7 @@
 // Uses position:fixed overlay to bypass Framer's parent height/overflow constraints.
 // Animation driven by window.scrollY directly.
 
-import { addPropertyControls, ControlType, RenderTarget } from "framer"
+import { addPropertyControls, ControlType } from "framer"
 import {
     motion,
     useTransform,
@@ -805,8 +805,21 @@ function HeroScroll(props: Props) {
     // FRAMER CANVAS — compact preview (no portals, no sticky, no 180vh)
     // ========================
     // SSR or Framer canvas editor — show simple static preview
-    const renderTarget = typeof window !== "undefined" ? String(RenderTarget.current()) : null
-    if (typeof window === "undefined" || renderTarget === "CANVAS") {
+    // Detect canvas: portal-based rendering only in live contexts
+    const [isLive, setIsLive] = useState(false)
+    useEffect(() => {
+        // After mount, check if we're in a real page context (not canvas)
+        // In the canvas, the component's frame is much smaller than the window
+        const el = containerRef.current
+        if (!el) return
+        const check = () => {
+            const rect = el.getBoundingClientRect()
+            setIsLive(rect.width >= window.innerWidth * 0.7)
+        }
+        // Wait for Framer layout to settle
+        requestAnimationFrame(() => requestAnimationFrame(check))
+    }, [])
+    if (!isLive) {
         return (
             <div
                 ref={containerRef}
