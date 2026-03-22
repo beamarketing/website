@@ -33,7 +33,8 @@ interface Props {
     newsletterHeading: string
     newsletterPlaceholder: string
     newsletterButtonText: string
-    mailerliteFormCode: string
+    mailerliteAccountId: string
+    mailerliteAccountKey: string
     copyrightText: string
     bottomLinks: FooterLink[]
     bgColor: string
@@ -76,7 +77,8 @@ function Footer(props: Props) {
         newsletterHeading = "Stay Updated",
         newsletterPlaceholder = "Enter your email",
         newsletterButtonText = "Subscribe",
-        mailerliteFormCode = "j1j1z3",
+        mailerliteAccountId = "420107",
+        mailerliteAccountKey = "l1h3f3l8l9",
         copyrightText = "2026 Beamr Imaging Ltd. All rights reserved.",
         bottomLinks = [
             { label: "Privacy Policy", url: "#privacy" },
@@ -126,24 +128,39 @@ function Footer(props: Props) {
     const [email, setEmail] = useState("")
     const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle")
 
+    // Load MailerLite Universal script
+    useEffect(() => {
+        if (!showNewsletter || !mailerliteAccountId) return
+        if (typeof window !== "undefined" && (window as any).ml) return
+
+        ;(function (m: any, a: any, i: string, l: string, e: string) {
+            m["MailerLiteObject"] = e
+            function f(this: any) {
+                var c = { a: arguments, q: [] as any[] }
+                var r = this.push(c)
+                return typeof r !== "number" ? r : f.bind(c.q)
+            }
+            f.q = f.q || []
+            m[e] = m[e] || f.bind(f.q)
+            m[e].q = m[e].q || f.q
+            var r = a.createElement(i) as HTMLScriptElement
+            var _ = a.getElementsByTagName(i)[0]
+            r.async = true
+            r.src = l + "?v" + ~~(new Date().getTime() / 1000000)
+            _.parentNode.insertBefore(r, _)
+        })(window, document, "script", "https://static.mailerlite.com/js/universal.js", "ml")
+
+        ;(window as any).ml("accounts", mailerliteAccountId, mailerliteAccountKey, "load")
+    }, [showNewsletter, mailerliteAccountId, mailerliteAccountKey])
+
     const handleNewsletterSubmit = async () => {
-        if (!email || !mailerliteFormCode) return
+        if (!email || !mailerliteAccountId) return
 
         setSubmitState("loading")
         try {
-            const formData = new FormData()
-            formData.append("fields[email]", email)
-            formData.append("ml-submit", "1")
-            formData.append("anticsrf", "true")
-
-            const res = await fetch(
-                `https://static.mailerlite.com/webforms/submit/${mailerliteFormCode}`,
-                {
-                    method: "POST",
-                    body: formData,
-                }
-            )
-            if (res.ok) {
+            const ml = (window as any).ml
+            if (ml) {
+                ml("send", "subscribe", { email })
                 setSubmitState("success")
                 setEmail("")
             } else {
@@ -622,12 +639,19 @@ addPropertyControls(Footer, {
         defaultValue: "Subscribe",
         hidden: (props) => !props.showNewsletter,
     },
-    mailerliteFormCode: {
+    mailerliteAccountId: {
         type: ControlType.String,
-        title: "MailerLite Form Code",
-        defaultValue: "j1j1z3",
+        title: "MailerLite Account ID",
+        defaultValue: "420107",
         hidden: (props) => !props.showNewsletter,
-        description: "The MailerLite form code (from the embed URL)",
+        description: "Your MailerLite account ID",
+    },
+    mailerliteAccountKey: {
+        type: ControlType.String,
+        title: "MailerLite Account Key",
+        defaultValue: "l1h3f3l8l9",
+        hidden: (props) => !props.showNewsletter,
+        description: "Your MailerLite account key",
     },
     copyrightText: {
         type: ControlType.String,
