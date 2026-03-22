@@ -5,7 +5,7 @@
 // Uses position:fixed overlay to bypass Framer's parent height/overflow constraints.
 // Animation driven by window.scrollY directly.
 
-import { addPropertyControls, ControlType } from "framer"
+import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import {
     motion,
     useTransform,
@@ -144,17 +144,7 @@ function HeroScroll(props: Props) {
     const [transitionDone, setTransitionDone] = useState(false)
 
     // Detect if we're in a live context (preview/production) vs canvas
-    // In the canvas, the component frame is much smaller than the window
-    const [isLive, setIsLive] = useState(false)
-    useEffect(() => {
-        const el = containerRef.current
-        if (!el) return
-        const check = () => {
-            const rect = el.getBoundingClientRect()
-            setIsLive(rect.width >= window.innerWidth * 0.7)
-        }
-        requestAnimationFrame(() => requestAnimationFrame(check))
-    }, [])
+    const isLive = RenderTarget.current() !== RenderTarget.canvas
 
     // Inject minimal CSS reset
     useEffect(() => {
