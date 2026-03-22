@@ -20,6 +20,7 @@ interface FloatingCard {
     label: string
     image: string
     position: string
+    linkUrl: string
 }
 
 interface LogoItem {
@@ -90,9 +91,9 @@ function HeroScroll(props: Props) {
         useVideo = true,
 
         cards = [
-            { label: "M&E", image: "", position: "top-left" },
-            { label: "AV", image: "", position: "right" },
-            { label: "CABR", image: "", position: "bottom-left" },
+            { label: "M&E", image: "", position: "top-left", linkUrl: "#" },
+            { label: "AV", image: "", position: "right", linkUrl: "#" },
+            { label: "CABR", image: "", position: "bottom-left", linkUrl: "#" },
         ],
         cardWidth = 220,
 
@@ -152,6 +153,26 @@ function HeroScroll(props: Props) {
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
+            }
+            @keyframes heroCardFloat0 {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-12px) rotate(0.5deg); }
+            }
+            @keyframes heroCardFloat1 {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-16px) rotate(-0.5deg); }
+            }
+            @keyframes heroCardFloat2 {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-10px) rotate(0.3deg); }
+            }
+            @keyframes heroCardFloat3 {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-14px) rotate(-0.3deg); }
+            }
+            @keyframes heroCardFloat4 {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-11px) rotate(0.4deg); }
             }
         `
         document.head.appendChild(s)
@@ -771,8 +792,9 @@ function HeroScroll(props: Props) {
                         }}
                     >
                         {cards.map((card, i) => (
-                            <motion.div
+                            <motion.a
                                 key={i}
+                                href={card.linkUrl || "#"}
                                 style={{
                                     ...getCardStyle(card.position, i),
                                     backgroundColor: cardBgColor,
@@ -781,8 +803,17 @@ function HeroScroll(props: Props) {
                                         "0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
                                     overflow: "hidden",
                                     pointerEvents: "auto",
+                                    textDecoration: "none",
+                                    display: "block",
+                                    animation: `heroCardFloat${i % 5} ${3.5 + i * 0.7}s ease-in-out infinite`,
+                                    cursor: "pointer",
+                                    transition: "box-shadow 0.3s ease, transform 0.3s ease",
                                 }}
                                 initial={false}
+                                whileHover={{
+                                    scale: 1.04,
+                                    boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+                                }}
                             >
                                 {/* Card image */}
                                 <div
@@ -819,13 +850,10 @@ function HeroScroll(props: Props) {
                                     )}
                                 </div>
 
-                                {/* Card footer */}
+                                {/* Card label */}
                                 <div
                                     style={{
-                                        padding: "12px 16px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
+                                        padding: "12px 16px 14px",
                                     }}
                                 >
                                     <span
@@ -838,44 +866,8 @@ function HeroScroll(props: Props) {
                                     >
                                         {card.label}
                                     </span>
-                                    <div
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: "50%",
-                                            backgroundColor: accentColor,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 12 12"
-                                            fill="none"
-                                        >
-                                            <path
-                                                d="M3 1.5L10 6L3 10.5V1.5Z"
-                                                fill="white"
-                                            />
-                                        </svg>
-                                    </div>
                                 </div>
-
-                                {/* Pill placeholder */}
-                                <div style={{ padding: "0 16px 14px" }}>
-                                    <div
-                                        style={{
-                                            width: "70%",
-                                            height: 8,
-                                            borderRadius: 4,
-                                            backgroundColor: "#e5e7eb",
-                                        }}
-                                    />
-                                </div>
-                            </motion.div>
+                            </motion.a>
                         ))}
                     </motion.div>
                 </motion.div>
@@ -1034,12 +1026,17 @@ addPropertyControls(HeroScroll, {
                     ],
                     defaultValue: "top-left",
                 },
+                linkUrl: {
+                    type: ControlType.String,
+                    title: "Link URL",
+                    defaultValue: "#",
+                },
             },
         },
         defaultValue: [
-            { label: "M&E", image: "", position: "top-left" },
-            { label: "AV", image: "", position: "right" },
-            { label: "CABR", image: "", position: "bottom-left" },
+            { label: "M&E", image: "", position: "top-left", linkUrl: "#" },
+            { label: "AV", image: "", position: "right", linkUrl: "#" },
+            { label: "CABR", image: "", position: "bottom-left", linkUrl: "#" },
         ],
     },
     cardWidth: {
