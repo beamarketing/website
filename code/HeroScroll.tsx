@@ -221,7 +221,7 @@ function HeroScroll(props: Props) {
             scrollYProgress.set(progress)
 
             // Hide the animated overlay once the transition is complete
-            setTransitionDone(progress >= t1 + 0.02)
+            setTransitionDone(progress >= transitionEnd + 0.02)
         }
 
         // Listen on window scroll + any Framer scroll containers
@@ -255,7 +255,7 @@ function HeroScroll(props: Props) {
             cancelAnimationFrame(raf1)
             cancelAnimationFrame(raf2)
         }
-    }, [scrollYProgress, scrollDistance, navOverlap, isMobile, t1])
+    }, [scrollYProgress, scrollDistance, navOverlap, isMobile, transitionEnd])
 
     const smooth = useSpring(scrollYProgress, {
         stiffness: 80,
