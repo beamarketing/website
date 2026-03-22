@@ -1274,6 +1274,8 @@ function Navigation(props: Props) {
     //  RENDER — portal to document.body so position:fixed escapes
     //  all Framer parent transforms/stacking contexts
     // ===========================================================
+    if (typeof document === "undefined") return null
+
     return createPortal(
         <nav
             ref={navRef}

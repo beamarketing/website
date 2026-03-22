@@ -931,7 +931,7 @@ function HeroScroll(props: Props) {
             {/* Animated overlay — portaled to document.body.
                 Shows during the scroll transition (State 1 → State 2),
                 hides once done, revealing the static State 2 above. */}
-            {!transitionDone && RenderTarget.current() !== RenderTarget.canvas && createPortal(
+            {!transitionDone && typeof document !== "undefined" && RenderTarget.current() !== RenderTarget.canvas && createPortal(
                 <motion.div
                     style={{
                         position: "fixed",
