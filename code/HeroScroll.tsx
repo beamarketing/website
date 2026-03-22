@@ -109,9 +109,9 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 1800,
+        scrollDistance = 4000,
         transitionStart = 0.0,
-        transitionEnd = 0.35,
+        transitionEnd = 0.15,
 
         accentColor = "#4F6BED",
         cardBgColor = "#ffffff",
@@ -159,8 +159,6 @@ function HeroScroll(props: Props) {
     }, [])
 
     // Zero padding/margin/width constraints on Framer parent wrappers
-    // Also clear transform/will-change/filter so position:fixed works correctly
-    // and all elements share the root stacking context (nav z-index visible above hero)
     useEffect(() => {
         if (!containerRef.current) return
         const zeroParents = () => {
@@ -173,13 +171,6 @@ function HeroScroll(props: Props) {
                 // Ensure Framer wrappers don't constrain width on mobile
                 el.style.setProperty("width", "100%", "important")
                 el.style.setProperty("max-width", "none", "important")
-                // Clear properties that create stacking contexts, so
-                // position:fixed works relative to viewport and z-index
-                // competes in the root stacking context (nav stays visible)
-                el.style.setProperty("transform", "none", "important")
-                el.style.setProperty("will-change", "auto", "important")
-                el.style.setProperty("filter", "none", "important")
-                el.style.setProperty("contain", "none", "important")
                 el = el.parentElement
             }
         }
@@ -220,7 +211,7 @@ function HeroScroll(props: Props) {
             // Calculate how far past the hero's starting position we've scrolled
             const elRect = el.getBoundingClientRect()
             const elTopInPage = scrollY + elRect.top
-            const scrolled = scrollY - elTopInPage
+            const scrolled = scrollY - elTopInPage + navOverlap
             const totalTravel = scrollDistance - window.innerHeight
             if (totalTravel <= 0) {
                 scrollYProgress.set(0)
@@ -229,9 +220,9 @@ function HeroScroll(props: Props) {
             const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
             scrollYProgress.set(progress)
 
-            // Hide the fixed hero once the spacer scrolls out of view
+            // Hide the fixed hero once the component has scrolled well out of view
             const componentBottom = elRect.bottom
-            setHeroVisible(componentBottom > -20)
+            setHeroVisible(componentBottom > -200)
         }
 
         // Listen on window scroll + any Framer scroll containers
@@ -268,8 +259,8 @@ function HeroScroll(props: Props) {
     }, [scrollYProgress, scrollDistance, navOverlap, isMobile])
 
     const smooth = useSpring(scrollYProgress, {
-        stiffness: 50,
-        damping: 30,
+        stiffness: 80,
+        damping: 25,
         restDelta: 0.001,
     })
 
@@ -302,7 +293,6 @@ function HeroScroll(props: Props) {
     const cardsOpacity = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0, 1])
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
-
 
     // Render heading with last two words in highlight color
     const renderHeading = () => {
@@ -731,21 +721,20 @@ function HeroScroll(props: Props) {
     // ========================
     return (
         <>
-            {/* Layout spacer — just tall enough for the scroll transition,
-                keeps the gap to the next section minimal */}
+            {/* Layout spacer — takes up space in Framer's flow.
+                This is what Framer "sees" and controls. */}
             <div
                 ref={containerRef}
                 style={{
                     ...style,
                     width: "100%",
-                    height: "40vh",
+                    height: "100vh",
                     marginTop: -navOverlap,
                 }}
             />
 
-            {/* Fixed hero overlay — position:fixed bypasses Framer layout.
-                Parent transforms cleared in zeroParents so z-index works
-                globally and nav (z-index 1100) stays above hero (z-index 40). */}
+            {/* Fixed hero overlay — positioned relative to viewport,
+                completely bypasses Framer's parent height/overflow constraints */}
             {heroVisible && (
                 <motion.div
                     style={{
@@ -754,7 +743,7 @@ function HeroScroll(props: Props) {
                         left: 0,
                         width: "100vw",
                         height: "100vh",
-                        zIndex: 40,
+                        zIndex: 50,
                         overflow: "hidden",
                         backgroundColor: pageBg,
                         fontFamily,
@@ -1095,7 +1084,7 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 1800,
+        defaultValue: 4000,
         min: 400,
         max: 8000,
         step: 50,
@@ -1112,7 +1101,7 @@ addPropertyControls(HeroScroll, {
     transitionEnd: {
         type: ControlType.Number,
         title: "Transition End",
-        defaultValue: 0.35,
+        defaultValue: 0.15,
         min: 0.05,
         max: 1.0,
         step: 0.05,
