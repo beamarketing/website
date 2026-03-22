@@ -802,6 +802,64 @@ function HeroScroll(props: Props) {
     )
 
     // ========================
+    // FRAMER CANVAS — compact preview (no portals, no sticky, no 180vh)
+    // ========================
+    if (RenderTarget.current() === RenderTarget.canvas) {
+        return (
+            <div
+                ref={containerRef}
+                style={{
+                    ...style,
+                    width: "100%",
+                    height: "100vh",
+                    position: "relative",
+                    overflow: "hidden",
+                    backgroundColor: pageBgLight,
+                    fontFamily,
+                }}
+            >
+                {renderVideoContainer({
+                    top: videoContainedTop,
+                    left: videoContainedInset,
+                    right: videoContainedInset,
+                    bottom: videoContainedBottom,
+                    borderRadius: videoContainedRadius,
+                })}
+
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        zIndex: 3,
+                        width: "80%",
+                        textAlign: "center",
+                    }}
+                >
+                    <h1
+                        style={{
+                            fontSize: headingFontSize * 0.9,
+                            fontWeight: headingFontWeight,
+                            color: "#ffffff",
+                            lineHeight: `${headingLineHeight}px`,
+                            margin: 0,
+                            fontFamily,
+                            letterSpacing: "-5px",
+                            whiteSpace: "pre-line",
+                            textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                        }}
+                    >
+                        {renderHeading()}
+                    </h1>
+                </div>
+
+                {renderCards(true)}
+            </div>
+        )
+    }
+
+    // ========================
     // DESKTOP — scroll-driven transition, then normal scrollable State 2
     // ========================
     return (
