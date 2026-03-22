@@ -806,23 +806,24 @@ function HeroScroll(props: Props) {
     // ========================
     return (
         <>
-            {/* Container — holds static State 2 content that scrolls normally */}
+            {/* Container — taller than viewport so State 2 lingers while scrolling */}
             <div
                 ref={containerRef}
                 style={{
                     ...style,
                     width: "100%",
                     position: "relative",
-                    height: "100vh",
+                    height: "250vh",
                 }}
             >
-                {/* Static State 2 — visible once the animated overlay hides.
-                    Scrolls naturally with the page like any other section. */}
+                {/* Static State 2 — sticky so it stays on screen while
+                    the container scrolls, then releases naturally. */}
                 <div
                     style={{
                         width: "100%",
-                        height: "100%",
-                        position: "relative",
+                        height: "100vh",
+                        position: "sticky",
+                        top: 0,
                         overflow: "hidden",
                         backgroundColor: pageBgLight,
                         fontFamily,
