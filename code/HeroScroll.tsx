@@ -811,6 +811,7 @@ function HeroScroll(props: Props) {
                 style={{
                     ...style,
                     width: "100%",
+                    height: style?.height === "auto" || !style?.height ? 800 : style.height,
                     position: "relative",
                     overflow: "hidden",
                     backgroundColor: pageBgLight,
