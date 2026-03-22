@@ -26,6 +26,8 @@ interface Props {
     secondaryTextColor: string
     accentColor: string
     fontFamily: string
+    headingFontSize: number
+    headingFontWeight: number
     style?: React.CSSProperties
 }
 
@@ -69,6 +71,8 @@ function IndustryNews(props: Props) {
         secondaryTextColor = "#8b8ba3",
         accentColor = "#00d46a",
         fontFamily = "'Inter', sans-serif",
+        headingFontSize = 44,
+        headingFontWeight = 700,
         style,
     } = props
 
@@ -88,12 +92,12 @@ function IndustryNews(props: Props) {
                 <div
                     style={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-end",
+                        flexDirection: "column",
+                        alignItems: "center",
                         marginBottom: 48,
                     }}
                 >
-                    <div>
+                    <div style={{ textAlign: "center" }}>
                         <span
                             style={{
                                 fontSize: 13,
@@ -110,8 +114,8 @@ function IndustryNews(props: Props) {
                         </span>
                         <h2
                             style={{
-                                fontSize: 44,
-                                fontWeight: 700,
+                                fontSize: headingFontSize,
+                                fontWeight: headingFontWeight,
                                 color: textColor,
                                 margin: 0,
                                 lineHeight: 1.15,
@@ -398,6 +402,22 @@ addPropertyControls(IndustryNews, {
         type: ControlType.Color,
         title: "Accent Color",
         defaultValue: "#00d46a",
+    },
+    headingFontSize: {
+        type: ControlType.Number,
+        title: "Heading Font Size",
+        defaultValue: 44,
+        min: 16,
+        max: 120,
+        step: 1,
+    },
+    headingFontWeight: {
+        type: ControlType.Number,
+        title: "Heading Font Weight",
+        defaultValue: 700,
+        min: 100,
+        max: 900,
+        step: 100,
     },
     fontFamily: {
         type: ControlType.String,
