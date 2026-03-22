@@ -295,6 +295,9 @@ function HeroScroll(props: Props) {
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
 
+    // --- After transition: scroll the hero overlay up with the page ---
+    const heroY = useTransform(smooth, [t1, t1 + 0.35], [0, -2000])
+
     // Render heading with last two words in highlight color
     const renderHeading = () => {
         const words = heading.split(/(\s+)/)
@@ -729,7 +732,7 @@ function HeroScroll(props: Props) {
                 style={{
                     ...style,
                     width: "100%",
-                    height: "45vh",
+                    height: "75vh",
                     marginTop: 0,
                 }}
             />
@@ -750,6 +753,7 @@ function HeroScroll(props: Props) {
                         backgroundColor: pageBg,
                         fontFamily,
                         pointerEvents: "auto",
+                        y: heroY,
                     }}
                 >
                     {/* VIDEO CONTAINER */}
