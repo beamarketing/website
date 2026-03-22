@@ -154,26 +154,6 @@ function HeroScroll(props: Props) {
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            @keyframes heroCardFloat0 {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-12px) rotate(0.5deg); }
-            }
-            @keyframes heroCardFloat1 {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-16px) rotate(-0.5deg); }
-            }
-            @keyframes heroCardFloat2 {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-10px) rotate(0.3deg); }
-            }
-            @keyframes heroCardFloat3 {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-14px) rotate(-0.3deg); }
-            }
-            @keyframes heroCardFloat4 {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-11px) rotate(0.4deg); }
-            }
         `
         document.head.appendChild(s)
     }, [])
@@ -748,7 +728,7 @@ function HeroScroll(props: Props) {
                 style={{
                     ...style,
                     width: "100%",
-                    height: scrollDistance,
+                    height: "100vh",
                     marginTop: -navOverlap,
                 }}
             />
@@ -792,16 +772,11 @@ function HeroScroll(props: Props) {
                         }}
                     >
                         {cards.map((card, i) => (
-                            <div
-                                key={i}
-                                style={{
-                                    ...getCardStyle(card.position, i),
-                                    animation: `heroCardFloat${i % 5} ${3.5 + i * 0.7}s ease-in-out infinite`,
-                                }}
-                            >
                             <motion.a
+                                key={i}
                                 href={card.linkUrl || "#"}
                                 style={{
+                                    ...getCardStyle(card.position, i),
                                     display: "block",
                                     backgroundColor: cardBgColor,
                                     borderRadius: 16,
@@ -871,7 +846,6 @@ function HeroScroll(props: Props) {
                                     </span>
                                 </div>
                             </motion.a>
-                            </div>
                         ))}
                     </motion.div>
                 </motion.div>
