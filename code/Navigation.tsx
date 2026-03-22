@@ -257,7 +257,9 @@ function Navigation(props: Props) {
             const y = rect.bottom + 10
             const elements = document.elementsFromPoint(x, y)
             const behind = elements.find(
-                (el) => !navRef.current!.contains(el)
+                (el) =>
+                    !navRef.current!.contains(el) &&
+                    !el.contains(navRef.current!)
             )
             if (!behind) {
                 setForceSolid(true)
