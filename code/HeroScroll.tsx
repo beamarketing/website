@@ -109,9 +109,9 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 4000,
+        scrollDistance = 2200,
         transitionStart = 0.0,
-        transitionEnd = 0.15,
+        transitionEnd = 0.25,
 
         accentColor = "#4F6BED",
         cardBgColor = "#ffffff",
@@ -211,7 +211,7 @@ function HeroScroll(props: Props) {
             // Calculate how far past the hero's starting position we've scrolled
             const elRect = el.getBoundingClientRect()
             const elTopInPage = scrollY + elRect.top
-            const scrolled = scrollY - elTopInPage + navOverlap
+            const scrolled = scrollY - elTopInPage
             const totalTravel = scrollDistance - window.innerHeight
             if (totalTravel <= 0) {
                 scrollYProgress.set(0)
@@ -222,7 +222,7 @@ function HeroScroll(props: Props) {
 
             // Hide the fixed hero once the component has scrolled well out of view
             const componentBottom = elRect.bottom
-            setHeroVisible(componentBottom > -200)
+            setHeroVisible(componentBottom > -50)
         }
 
         // Listen on window scroll + any Framer scroll containers
@@ -728,7 +728,7 @@ function HeroScroll(props: Props) {
                 style={{
                     ...style,
                     width: "100%",
-                    height: "100vh",
+                    height: "70vh",
                     marginTop: -navOverlap,
                 }}
             />
@@ -1084,7 +1084,7 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 4000,
+        defaultValue: 2200,
         min: 400,
         max: 8000,
         step: 50,
@@ -1101,7 +1101,7 @@ addPropertyControls(HeroScroll, {
     transitionEnd: {
         type: ControlType.Number,
         title: "Transition End",
-        defaultValue: 0.15,
+        defaultValue: 0.25,
         min: 0.05,
         max: 1.0,
         step: 0.05,

@@ -171,10 +171,13 @@ function Navigation(props: Props) {
     }, [])
 
     // Zero padding/margin on nav's own Framer wrapper ancestors
+    // Also force z-index on component wrappers so nav paints above
+    // the HeroScroll's position:fixed overlay (z-index 50)
     useEffect(() => {
         if (!navRef.current) return
         const zeroParents = () => {
             let el: HTMLElement | null = navRef.current?.parentElement ?? null
+            let depth = 0
             while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
@@ -182,6 +185,14 @@ function Navigation(props: Props) {
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
                 el.style.setProperty("overflow", "visible", "important")
+                // Force nav wrappers above hero overlay (z-index 50).
+                // Only set on the first few levels (component wrappers),
+                // not on shared page-level ancestors.
+                if (depth < 4) {
+                    el.style.setProperty("position", "relative", "important")
+                    el.style.setProperty("z-index", "100", "important")
+                }
+                depth++
                 el = el.parentElement
             }
         }
