@@ -792,11 +792,17 @@ function HeroScroll(props: Props) {
                         }}
                     >
                         {cards.map((card, i) => (
-                            <motion.a
+                            <div
                                 key={i}
-                                href={card.linkUrl || "#"}
                                 style={{
                                     ...getCardStyle(card.position, i),
+                                    animation: `heroCardFloat${i % 5} ${3.5 + i * 0.7}s ease-in-out infinite`,
+                                }}
+                            >
+                            <motion.a
+                                href={card.linkUrl || "#"}
+                                style={{
+                                    display: "block",
                                     backgroundColor: cardBgColor,
                                     borderRadius: 16,
                                     boxShadow:
@@ -804,10 +810,7 @@ function HeroScroll(props: Props) {
                                     overflow: "hidden",
                                     pointerEvents: "auto",
                                     textDecoration: "none",
-                                    display: "block",
-                                    animation: `heroCardFloat${i % 5} ${3.5 + i * 0.7}s ease-in-out infinite`,
                                     cursor: "pointer",
-                                    transition: "box-shadow 0.3s ease, transform 0.3s ease",
                                 }}
                                 initial={false}
                                 whileHover={{
@@ -868,6 +871,7 @@ function HeroScroll(props: Props) {
                                     </span>
                                 </div>
                             </motion.a>
+                            </div>
                         ))}
                     </motion.div>
                 </motion.div>
