@@ -804,7 +804,8 @@ function HeroScroll(props: Props) {
     // ========================
     // FRAMER CANVAS — compact preview (no portals, no sticky, no 180vh)
     // ========================
-    if (RenderTarget.current() === RenderTarget.canvas) {
+    const isCanvas = typeof window === "undefined" || RenderTarget.current() !== RenderTarget.default
+    if (isCanvas) {
         return (
             <div
                 ref={containerRef}
@@ -931,7 +932,7 @@ function HeroScroll(props: Props) {
             {/* Animated overlay — portaled to document.body.
                 Shows during the scroll transition (State 1 → State 2),
                 hides once done, revealing the static State 2 above. */}
-            {!transitionDone && typeof document !== "undefined" && RenderTarget.current() !== RenderTarget.canvas && createPortal(
+            {!transitionDone && typeof document !== "undefined" && RenderTarget.current() === RenderTarget.default && createPortal(
                 <motion.div
                     style={{
                         position: "fixed",
