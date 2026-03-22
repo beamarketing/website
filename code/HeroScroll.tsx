@@ -13,7 +13,6 @@ import {
     useMotionValue,
 } from "framer-motion"
 import { useRef, useEffect, useState } from "react"
-import { createPortal } from "react-dom"
 
 // --- Types ---
 
@@ -160,6 +159,8 @@ function HeroScroll(props: Props) {
     }, [])
 
     // Zero padding/margin/width constraints on Framer parent wrappers
+    // Also clear transform/will-change/filter so position:fixed works correctly
+    // and all elements share the root stacking context (nav z-index visible above hero)
     useEffect(() => {
         if (!containerRef.current) return
         const zeroParents = () => {
@@ -172,6 +173,13 @@ function HeroScroll(props: Props) {
                 // Ensure Framer wrappers don't constrain width on mobile
                 el.style.setProperty("width", "100%", "important")
                 el.style.setProperty("max-width", "none", "important")
+                // Clear properties that create stacking contexts, so
+                // position:fixed works relative to viewport and z-index
+                // competes in the root stacking context (nav stays visible)
+                el.style.setProperty("transform", "none", "important")
+                el.style.setProperty("will-change", "auto", "important")
+                el.style.setProperty("filter", "none", "important")
+                el.style.setProperty("contain", "none", "important")
                 el = el.parentElement
             }
         }
@@ -295,8 +303,6 @@ function HeroScroll(props: Props) {
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
 
-    // --- Hero overlay fade-out after transition completes ---
-    const heroOverlayOpacity = useTransform(smooth, [t1 + 0.1, t1 + 0.35], [1, 0])
 
     // Render heading with last two words in highlight color
     const renderHeading = () => {
@@ -725,21 +731,22 @@ function HeroScroll(props: Props) {
     // ========================
     return (
         <>
-            {/* Layout spacer — takes up space in Framer's flow.
-                This is what Framer "sees" and controls. */}
+            {/* Layout spacer — just tall enough for the scroll transition,
+                keeps the gap to the next section minimal */}
             <div
                 ref={containerRef}
                 style={{
                     ...style,
                     width: "100%",
-                    height: "100vh",
+                    height: "50vh",
                     marginTop: -navOverlap,
                 }}
             />
 
-            {/* Fixed hero overlay — rendered via portal to escape Framer's
-                stacking contexts, ensuring nav renders above the hero */}
-            {heroVisible && createPortal(
+            {/* Fixed hero overlay — position:fixed bypasses Framer layout.
+                Parent transforms cleared in zeroParents so z-index works
+                globally and nav (z-index 1100) stays above hero (z-index 40). */}
+            {heroVisible && (
                 <motion.div
                     style={{
                         position: "fixed",
@@ -750,7 +757,6 @@ function HeroScroll(props: Props) {
                         zIndex: 40,
                         overflow: "hidden",
                         backgroundColor: pageBg,
-                        opacity: heroOverlayOpacity,
                         fontFamily,
                         pointerEvents: "auto",
                     }}
@@ -853,8 +859,7 @@ function HeroScroll(props: Props) {
                             </motion.a>
                         ))}
                     </motion.div>
-                </motion.div>,
-                document.body
+                </motion.div>
             )}
         </>
     )
