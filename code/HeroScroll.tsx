@@ -211,7 +211,7 @@ function HeroScroll(props: Props) {
             // Calculate how far past the hero's starting position we've scrolled
             const elRect = el.getBoundingClientRect()
             const elTopInPage = scrollY + elRect.top
-            const scrolled = scrollY - elTopInPage + navOverlap
+            const scrolled = scrollY - elTopInPage
             const totalTravel = scrollDistance - window.innerHeight
             if (totalTravel <= 0) {
                 scrollYProgress.set(0)
