@@ -109,9 +109,9 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 1200,
+        scrollDistance = 1800,
         transitionStart = 0.0,
-        transitionEnd = 0.55,
+        transitionEnd = 0.35,
 
         accentColor = "#4F6BED",
         cardBgColor = "#ffffff",
@@ -268,8 +268,8 @@ function HeroScroll(props: Props) {
     }, [scrollYProgress, scrollDistance, navOverlap, isMobile])
 
     const smooth = useSpring(scrollYProgress, {
-        stiffness: 80,
-        damping: 25,
+        stiffness: 50,
+        damping: 30,
         restDelta: 0.001,
     })
 
@@ -738,7 +738,7 @@ function HeroScroll(props: Props) {
                 style={{
                     ...style,
                     width: "100%",
-                    height: "15vh",
+                    height: "40vh",
                     marginTop: -navOverlap,
                 }}
             />
@@ -1095,7 +1095,7 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 1200,
+        defaultValue: 1800,
         min: 400,
         max: 8000,
         step: 50,
@@ -1112,7 +1112,7 @@ addPropertyControls(HeroScroll, {
     transitionEnd: {
         type: ControlType.Number,
         title: "Transition End",
-        defaultValue: 0.55,
+        defaultValue: 0.35,
         min: 0.05,
         max: 1.0,
         step: 0.05,
