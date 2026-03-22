@@ -143,6 +143,19 @@ function HeroScroll(props: Props) {
     // Track whether the animated overlay should show (hides once transition is done)
     const [transitionDone, setTransitionDone] = useState(false)
 
+    // Detect if we're in a live context (preview/production) vs canvas
+    // In the canvas, the component frame is much smaller than the window
+    const [isLive, setIsLive] = useState(false)
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+        const check = () => {
+            const rect = el.getBoundingClientRect()
+            setIsLive(rect.width >= window.innerWidth * 0.7)
+        }
+        requestAnimationFrame(() => requestAnimationFrame(check))
+    }, [])
+
     // Inject minimal CSS reset
     useEffect(() => {
         const id = "__hero-reset-css"
@@ -804,21 +817,6 @@ function HeroScroll(props: Props) {
     // ========================
     // FRAMER CANVAS — compact preview (no portals, no sticky, no 180vh)
     // ========================
-    // SSR or Framer canvas editor — show simple static preview
-    // Detect canvas: portal-based rendering only in live contexts
-    const [isLive, setIsLive] = useState(false)
-    useEffect(() => {
-        // After mount, check if we're in a real page context (not canvas)
-        // In the canvas, the component's frame is much smaller than the window
-        const el = containerRef.current
-        if (!el) return
-        const check = () => {
-            const rect = el.getBoundingClientRect()
-            setIsLive(rect.width >= window.innerWidth * 0.7)
-        }
-        // Wait for Framer layout to settle
-        requestAnimationFrame(() => requestAnimationFrame(check))
-    }, [])
     if (!isLive) {
         return (
             <div
