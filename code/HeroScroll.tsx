@@ -804,8 +804,9 @@ function HeroScroll(props: Props) {
     // ========================
     // FRAMER CANVAS — compact preview (no portals, no sticky, no 180vh)
     // ========================
-    // SSR or Framer canvas — show a simple static preview
-    if (typeof window === "undefined") {
+    // SSR or non-default render target (canvas, thumbnail, export)
+    const renderTarget = typeof window !== "undefined" ? RenderTarget.current() : null
+    if (typeof window === "undefined" || (renderTarget && renderTarget !== "DEFAULT")) {
         return (
             <div
                 ref={containerRef}
