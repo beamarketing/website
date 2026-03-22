@@ -875,58 +875,61 @@ function HeroScroll(props: Props) {
                     height: "180vh",
                 }}
             >
-                {/* Static State 2 — sticky so it stays on screen while
-                    the container scrolls, then releases naturally. */}
-                <div
-                    style={{
-                        width: "100%",
-                        height: "100vh",
-                        position: "sticky",
-                        top: 0,
-                        overflow: "hidden",
-                        backgroundColor: pageBgLight,
-                        fontFamily,
-                    }}
-                >
-                    {renderVideoContainer({
-                        top: videoContainedTop,
-                        left: videoContainedInset,
-                        right: videoContainedInset,
-                        bottom: videoContainedBottom,
-                        borderRadius: videoContainedRadius,
-                    })}
-
-                    {/* Centered heading */}
+                {/* Static State 2 — only renders after the animated overlay
+                    hides, so there's no double-content. Sticky so it stays
+                    on screen while the container scrolls, then releases. */}
+                {transitionDone && (
                     <div
                         style={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            zIndex: 3,
-                            width: "80%",
-                            textAlign: "center",
+                            width: "100%",
+                            height: "100vh",
+                            position: "sticky",
+                            top: 0,
+                            overflow: "hidden",
+                            backgroundColor: pageBgLight,
+                            fontFamily,
                         }}
                     >
-                        <h1
+                        {renderVideoContainer({
+                            top: videoContainedTop,
+                            left: videoContainedInset,
+                            right: videoContainedInset,
+                            bottom: videoContainedBottom,
+                            borderRadius: videoContainedRadius,
+                        })}
+
+                        {/* Centered heading */}
+                        <div
                             style={{
-                                fontSize: headingFontSize * 0.9,
-                                fontWeight: headingFontWeight,
-                                color: "#ffffff",
-                                lineHeight: `${headingLineHeight}px`,
-                                margin: 0,
-                                fontFamily,
-                                letterSpacing: "-5px",
-                                whiteSpace: "pre-line",
-                                textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                zIndex: 3,
+                                width: "80%",
+                                textAlign: "center",
                             }}
                         >
-                            {renderHeading()}
-                        </h1>
-                    </div>
+                            <h1
+                                style={{
+                                    fontSize: headingFontSize * 0.9,
+                                    fontWeight: headingFontWeight,
+                                    color: "#ffffff",
+                                    lineHeight: `${headingLineHeight}px`,
+                                    margin: 0,
+                                    fontFamily,
+                                    letterSpacing: "-5px",
+                                    whiteSpace: "pre-line",
+                                    textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                                }}
+                            >
+                                {renderHeading()}
+                            </h1>
+                        </div>
 
-                    {renderCards(true)}
-                </div>
+                        {renderCards(true)}
+                    </div>
+                )}
             </div>
 
             {/* Animated overlay — portaled to document.body.
