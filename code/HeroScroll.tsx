@@ -813,7 +813,7 @@ function HeroScroll(props: Props) {
                     ...style,
                     width: "100%",
                     position: "relative",
-                    height: "250vh",
+                    height: "180vh",
                 }}
             >
                 {/* Static State 2 — sticky so it stays on screen while
