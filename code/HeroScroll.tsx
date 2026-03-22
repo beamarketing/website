@@ -13,6 +13,7 @@ import {
     useMotionValue,
 } from "framer-motion"
 import { useRef, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 // --- Types ---
 
@@ -109,7 +110,7 @@ function HeroScroll(props: Props) {
 
         navOverlap = 58,
 
-        scrollDistance = 4000,
+        scrollDistance = 1800,
         transitionStart = 0.0,
         transitionEnd = 0.15,
 
@@ -293,6 +294,9 @@ function HeroScroll(props: Props) {
     const cardsOpacity = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0, 1])
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
+
+    // --- Hero overlay fade-out after transition completes ---
+    const heroOverlayOpacity = useTransform(smooth, [t1 + 0.1, t1 + 0.35], [1, 0])
 
     // Render heading with last two words in highlight color
     const renderHeading = () => {
@@ -733,9 +737,9 @@ function HeroScroll(props: Props) {
                 }}
             />
 
-            {/* Fixed hero overlay — positioned relative to viewport,
-                completely bypasses Framer's parent height/overflow constraints */}
-            {heroVisible && (
+            {/* Fixed hero overlay — rendered via portal to escape Framer's
+                stacking contexts, ensuring nav renders above the hero */}
+            {heroVisible && createPortal(
                 <motion.div
                     style={{
                         position: "fixed",
@@ -743,9 +747,10 @@ function HeroScroll(props: Props) {
                         left: 0,
                         width: "100vw",
                         height: "100vh",
-                        zIndex: 50,
+                        zIndex: 40,
                         overflow: "hidden",
                         backgroundColor: pageBg,
+                        opacity: heroOverlayOpacity,
                         fontFamily,
                         pointerEvents: "auto",
                     }}
@@ -848,7 +853,8 @@ function HeroScroll(props: Props) {
                             </motion.a>
                         ))}
                     </motion.div>
-                </motion.div>
+                </motion.div>,
+                document.body
             )}
         </>
     )
@@ -1084,7 +1090,7 @@ addPropertyControls(HeroScroll, {
     scrollDistance: {
         type: ControlType.Number,
         title: "Scroll Height",
-        defaultValue: 4000,
+        defaultValue: 1800,
         min: 400,
         max: 8000,
         step: 50,
