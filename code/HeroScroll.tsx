@@ -158,16 +158,11 @@ function HeroScroll(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // Zero padding/margin/width constraints on Framer parent wrappers.
-    // Also create a stacking context on the first few wrapper levels
-    // (z-index: 1) so the hero overlay's z-index 50 is contained
-    // within this wrapper, allowing the nav wrapper (z-index 100)
-    // to paint above it.
+    // Zero padding/margin/width constraints on Framer parent wrappers
     useEffect(() => {
         if (!containerRef.current) return
         const zeroParents = () => {
             let el = containerRef.current?.parentElement
-            let depth = 0
             while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
@@ -176,13 +171,6 @@ function HeroScroll(props: Props) {
                 // Ensure Framer wrappers don't constrain width on mobile
                 el.style.setProperty("width", "100%", "important")
                 el.style.setProperty("max-width", "none", "important")
-                // Create stacking context on component wrappers so
-                // the hero's z-index 50 stays local, not root-level
-                if (depth < 4) {
-                    el.style.setProperty("position", "relative", "important")
-                    el.style.setProperty("z-index", "1", "important")
-                }
-                depth++
                 el = el.parentElement
             }
         }
