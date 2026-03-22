@@ -33,8 +33,7 @@ interface Props {
     newsletterHeading: string
     newsletterPlaceholder: string
     newsletterButtonText: string
-    hubspotPortalId: string
-    hubspotFormId: string
+    mailerliteFormCode: string
     copyrightText: string
     bottomLinks: FooterLink[]
     bgColor: string
@@ -77,8 +76,7 @@ function Footer(props: Props) {
         newsletterHeading = "Stay Updated",
         newsletterPlaceholder = "Enter your email",
         newsletterButtonText = "Subscribe",
-        hubspotPortalId = "",
-        hubspotFormId = "",
+        mailerliteFormCode = "j1j1z3",
         copyrightText = "2026 Beamr Imaging Ltd. All rights reserved.",
         bottomLinks = [
             { label: "Privacy Policy", url: "#privacy" },
@@ -129,35 +127,30 @@ function Footer(props: Props) {
     const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle")
 
     const handleNewsletterSubmit = async () => {
-        if (!email) return
+        if (!email || !mailerliteFormCode) return
 
-        // If HubSpot is configured, submit to HubSpot
-        if (hubspotPortalId && hubspotFormId) {
-            setSubmitState("loading")
-            try {
-                const res = await fetch(
-                    `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormId}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            fields: [{ name: "email", value: email }],
-                            context: {
-                                pageUri: typeof window !== "undefined" ? window.location.href : "",
-                                pageName: typeof document !== "undefined" ? document.title : "",
-                            },
-                        }),
-                    }
-                )
-                if (res.ok) {
-                    setSubmitState("success")
-                    setEmail("")
-                } else {
-                    setSubmitState("error")
+        setSubmitState("loading")
+        try {
+            const formData = new FormData()
+            formData.append("fields[email]", email)
+            formData.append("ml-submit", "1")
+            formData.append("anticsrf", "true")
+
+            const res = await fetch(
+                `https://static.mailerlite.com/webforms/submit/${mailerliteFormCode}`,
+                {
+                    method: "POST",
+                    body: formData,
                 }
-            } catch {
+            )
+            if (res.ok) {
+                setSubmitState("success")
+                setEmail("")
+            } else {
                 setSubmitState("error")
             }
+        } catch {
+            setSubmitState("error")
         }
     }
 
@@ -629,19 +622,12 @@ addPropertyControls(Footer, {
         defaultValue: "Subscribe",
         hidden: (props) => !props.showNewsletter,
     },
-    hubspotPortalId: {
+    mailerliteFormCode: {
         type: ControlType.String,
-        title: "HubSpot Portal ID",
-        defaultValue: "",
+        title: "MailerLite Form Code",
+        defaultValue: "j1j1z3",
         hidden: (props) => !props.showNewsletter,
-        description: "Your HubSpot portal ID (e.g. 12345678)",
-    },
-    hubspotFormId: {
-        type: ControlType.String,
-        title: "HubSpot Form ID",
-        defaultValue: "",
-        hidden: (props) => !props.showNewsletter,
-        description: "The HubSpot form GUID for newsletter signup",
+        description: "The MailerLite form code (from the embed URL)",
     },
     copyrightText: {
         type: ControlType.String,
