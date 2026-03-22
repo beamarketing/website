@@ -131,14 +131,29 @@ function HeroScroll(props: Props) {
     const containerRef = useRef<HTMLDivElement>(null)
     const scrollYProgress = useMotionValue(0)
 
-    // Mobile detection
+    // Mobile detection — in live mode use window width; in canvas use container width
     const [isMobile, setIsMobile] = useState(false)
+    const [containerWidth, setContainerWidth] = useState(0)
     useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < mobileBreakpoint)
-        check()
-        window.addEventListener("resize", check)
-        return () => window.removeEventListener("resize", check)
-    }, [mobileBreakpoint])
+        if (isLive) {
+            const check = () => setIsMobile(window.innerWidth < mobileBreakpoint)
+            check()
+            window.addEventListener("resize", check)
+            return () => window.removeEventListener("resize", check)
+        }
+        // Canvas: measure the actual component frame width via ResizeObserver
+        const el = containerRef.current
+        if (!el) return
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const w = entry.contentRect.width
+                setContainerWidth(w)
+                setIsMobile(w > 0 && w < mobileBreakpoint)
+            }
+        })
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [mobileBreakpoint, isLive])
 
     // Track whether the animated overlay should show (hides once transition is done)
     const [transitionDone, setTransitionDone] = useState(false)
@@ -146,8 +161,9 @@ function HeroScroll(props: Props) {
     // Detect if we're in a live context (preview/production) vs canvas
     const isLive = RenderTarget.current() !== RenderTarget.canvas
 
-    // Inject minimal CSS reset
+    // Inject minimal CSS reset (live only — must not touch canvas editor)
     useEffect(() => {
+        if (!isLive) return
         const id = "__hero-reset-css"
         if (document.getElementById(id)) return
         const s = document.createElement("style")
@@ -159,10 +175,11 @@ function HeroScroll(props: Props) {
             }
         `
         document.head.appendChild(s)
-    }, [])
+    }, [isLive])
 
-    // Zero padding/margin/width constraints on Framer parent wrappers
+    // Zero padding/margin/width constraints on Framer parent wrappers (live only)
     useEffect(() => {
+        if (!isLive) return
         if (!containerRef.current) return
         const zeroParents = () => {
             let el = containerRef.current?.parentElement
@@ -196,7 +213,7 @@ function HeroScroll(props: Props) {
             cancelAnimationFrame(raf2)
             observer.disconnect()
         }
-    }, [])
+    }, [isLive])
 
     // Scroll-driven animation using window.scrollY directly.
     // The animation distance = scrollDistance * transitionEnd (e.g. 4000 * 0.15 = 600px).
@@ -805,9 +822,108 @@ function HeroScroll(props: Props) {
     )
 
     // ========================
-    // FRAMER CANVAS — compact preview (no portals, no sticky, no 180vh)
+    // FRAMER CANVAS — responsive preview (no portals, no sticky, no 180vh)
+    // Mirrors the live layout at each breakpoint so layers match at any zoom.
     // ========================
     if (!isLive) {
+        const canvasMobile = isMobile
+
+        // Shared video/image background for canvas (no motion values)
+        const canvasMedia = useVideo && videoSrc ? (
+            <video
+                autoPlay muted loop playsInline
+                src={videoSrc}
+                poster={posterImage || undefined}
+                style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0 }}
+            />
+        ) : posterImage ? (
+            <img
+                src={posterImage} alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0 }}
+            />
+        ) : (
+            <div style={{ width: "100%", height: "100%", position: "absolute", top: 0, left: 0, background: "linear-gradient(135deg, #1a1b35 0%, #2d2d6a 50%, #1a2a4a 100%)" }} />
+        )
+
+        const canvasOverlay = (
+            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity + 0.3}) 0%, rgba(0,0,0,${overlayOpacity * 0.2}) 50%, rgba(0,0,0,${overlayOpacity * 0.15}) 100%)`, zIndex: 2 }} />
+        )
+
+        if (canvasMobile) {
+            // ---- Mobile canvas preview ----
+            return (
+                <div
+                    ref={containerRef}
+                    style={{
+                        ...style,
+                        position: "relative",
+                        width: "100%",
+                        height: style?.height === "auto" || !style?.height ? "100vh" : style.height,
+                        overflow: "hidden",
+                        fontFamily,
+                    }}
+                >
+                    {canvasMedia}
+                    {canvasOverlay}
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 3,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0 24px",
+                            textAlign: "center",
+                        }}
+                    >
+                        <h1
+                            style={{
+                                fontSize: mobileHeadingFontSize,
+                                fontWeight: headingFontWeight,
+                                color: "#ffffff",
+                                lineHeight: `${mobileHeadingLineHeight}px`,
+                                margin: 0,
+                                fontFamily,
+                                letterSpacing: "-2px",
+                                whiteSpace: "pre-line",
+                                textShadow: "0 2px 40px rgba(0,0,0,0.3)",
+                            }}
+                        >
+                            {renderHeading()}
+                        </h1>
+                    </div>
+                    {showLogos && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                bottom: 24,
+                                left: 0,
+                                right: 0,
+                                zIndex: 3,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                gap: 24,
+                                flexWrap: "wrap",
+                                padding: "0 16px",
+                            }}
+                        >
+                            {logos.map((logo, i) =>
+                                logo.image ? (
+                                    <img key={i} src={logo.image} alt={logo.name} style={{ height: Math.min(logo.height || 20, 16), objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.8 }} />
+                                ) : (
+                                    <span key={i} style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "0.04em", fontFamily }}>{logo.name}</span>
+                                )
+                            )}
+                        </div>
+                    )}
+                </div>
+            )
+        }
+
+        // ---- Desktop canvas preview (State 2 — contained video with cards) ----
         return (
             <div
                 ref={containerRef}
@@ -821,40 +937,50 @@ function HeroScroll(props: Props) {
                     fontFamily,
                 }}
             >
-                {renderVideoContainer({
-                    top: videoContainedTop,
-                    left: videoContainedInset,
-                    right: videoContainedInset,
-                    bottom: videoContainedBottom,
-                    borderRadius: videoContainedRadius,
-                })}
-
+                {/* Contained video area */}
                 <div
                     style={{
                         position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        zIndex: 3,
-                        width: "80%",
-                        textAlign: "center",
+                        top: videoContainedTop,
+                        left: videoContainedInset,
+                        right: videoContainedInset,
+                        bottom: videoContainedBottom,
+                        borderRadius: videoContainedRadius,
+                        overflow: "hidden",
+                        zIndex: 1,
                     }}
                 >
-                    <h1
+                    {canvasMedia}
+                    {canvasOverlay}
+
+                    {/* Centered heading */}
+                    <div
                         style={{
-                            fontSize: headingFontSize * 0.9,
-                            fontWeight: headingFontWeight,
-                            color: "#ffffff",
-                            lineHeight: `${headingLineHeight}px`,
-                            margin: 0,
-                            fontFamily,
-                            letterSpacing: "-5px",
-                            whiteSpace: "pre-line",
-                            textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            zIndex: 3,
+                            width: "80%",
+                            textAlign: "center",
                         }}
                     >
-                        {renderHeading()}
-                    </h1>
+                        <h1
+                            style={{
+                                fontSize: headingFontSize * 0.9,
+                                fontWeight: headingFontWeight,
+                                color: "#ffffff",
+                                lineHeight: `${headingLineHeight}px`,
+                                margin: 0,
+                                fontFamily,
+                                letterSpacing: "-5px",
+                                whiteSpace: "pre-line",
+                                textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                            }}
+                        >
+                            {renderHeading()}
+                        </h1>
+                    </div>
                 </div>
 
                 {renderCards(true)}
