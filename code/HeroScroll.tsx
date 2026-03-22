@@ -5,7 +5,7 @@
 // Uses position:fixed overlay to bypass Framer's parent height/overflow constraints.
 // Animation driven by window.scrollY directly.
 
-import { addPropertyControls, ControlType } from "framer"
+import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import {
     motion,
     useTransform,
@@ -873,7 +873,7 @@ function HeroScroll(props: Props) {
             {/* Animated overlay — portaled to document.body.
                 Shows during the scroll transition (State 1 → State 2),
                 hides once done, revealing the static State 2 above. */}
-            {!transitionDone && createPortal(
+            {!transitionDone && RenderTarget.current() !== RenderTarget.canvas && createPortal(
                 <motion.div
                     style={{
                         position: "fixed",
