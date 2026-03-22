@@ -729,7 +729,7 @@ function HeroScroll(props: Props) {
                     ...style,
                     width: "100%",
                     height: "70vh",
-                    marginTop: -navOverlap,
+                    marginTop: 0,
                 }}
             />
 

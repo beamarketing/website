@@ -182,6 +182,12 @@ function Navigation(props: Props) {
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
                 el.style.setProperty("overflow", "visible", "important")
+                // Clear properties that create containing blocks for
+                // position:fixed, so the nav escapes Framer wrappers
+                el.style.setProperty("transform", "none", "important")
+                el.style.setProperty("will-change", "auto", "important")
+                el.style.setProperty("filter", "none", "important")
+                el.style.setProperty("contain", "none", "important")
                 el = el.parentElement
             }
         }
