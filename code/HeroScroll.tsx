@@ -729,7 +729,7 @@ function HeroScroll(props: Props) {
                 style={{
                     ...style,
                     width: "100%",
-                    height: "70vh",
+                    height: "45vh",
                     marginTop: 0,
                 }}
             />
