@@ -140,9 +140,8 @@ function HeroScroll(props: Props) {
         return () => window.removeEventListener("resize", check)
     }, [mobileBreakpoint])
 
-    // Track whether the hero overlay should be visible
-    // (hidden once the component's layout space has scrolled fully out of view)
-    const [heroVisible, setHeroVisible] = useState(true)
+    // Track whether the animated overlay should show (hides once transition is done)
+    const [transitionDone, setTransitionDone] = useState(false)
 
     // Inject minimal CSS reset
     useEffect(() => {
@@ -221,9 +220,8 @@ function HeroScroll(props: Props) {
             const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
             scrollYProgress.set(progress)
 
-            // Hide the fixed hero once the component has scrolled well out of view
-            const componentBottom = elRect.bottom
-            setHeroVisible(componentBottom > -50)
+            // Hide the animated overlay once the transition is complete
+            setTransitionDone(progress >= t1 + 0.02)
         }
 
         // Listen on window scroll + any Framer scroll containers
@@ -257,7 +255,7 @@ function HeroScroll(props: Props) {
             cancelAnimationFrame(raf1)
             cancelAnimationFrame(raf2)
         }
-    }, [scrollYProgress, scrollDistance, navOverlap, isMobile])
+    }, [scrollYProgress, scrollDistance, navOverlap, isMobile, t1])
 
     const smooth = useSpring(scrollYProgress, {
         stiffness: 80,
@@ -295,8 +293,6 @@ function HeroScroll(props: Props) {
     const cardsScale = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [0.9, 1])
     const cardsY = useTransform(smooth, [t0 + (t1 - t0) * 0.5, t1], [40, 0])
 
-    // --- After transition: scroll the hero overlay up with the page ---
-    const heroY = useTransform(smooth, [t1, t1 + 0.35], [0, -2000])
 
     // Render heading with last two words in highlight color
     const renderHeading = () => {
@@ -720,27 +716,163 @@ function HeroScroll(props: Props) {
         )
     }
 
+    // Helper: render floating cards (used in both overlay and static State 2)
+    const renderCards = (isStatic = false) => (
+        <motion.div
+            style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 5,
+                ...(isStatic
+                    ? { opacity: 1, scale: 1 }
+                    : { opacity: cardsOpacity, scale: cardsScale, y: cardsY }),
+                pointerEvents: "none",
+            }}
+        >
+            {cards.map((card, i) => (
+                <motion.a
+                    key={i}
+                    href={card.linkUrl || "#"}
+                    style={{
+                        ...getCardStyle(card.position, i),
+                        display: "block",
+                        backgroundColor: cardBgColor,
+                        borderRadius: 16,
+                        boxShadow:
+                            "0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
+                        overflow: "hidden",
+                        pointerEvents: "auto",
+                        textDecoration: "none",
+                        cursor: "pointer",
+                    }}
+                    initial={false}
+                    whileHover={{
+                        scale: 1.04,
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+                    }}
+                >
+                    <div
+                        style={{
+                            width: "100%",
+                            height: cardWidth * 0.55,
+                            backgroundColor: "#f3f4f6",
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        {card.image ? (
+                            <img
+                                src={card.image}
+                                alt={card.label}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                }}
+                            />
+                        ) : (
+                            <span
+                                style={{
+                                    fontSize: 12,
+                                    color: "#9ca3af",
+                                    fontFamily,
+                                }}
+                            >
+                                Blog Post Image
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ padding: "12px 16px 14px" }}>
+                        <span
+                            style={{
+                                fontSize: 14,
+                                fontWeight: 600,
+                                color: "#1a1a2e",
+                                fontFamily,
+                            }}
+                        >
+                            {card.label}
+                        </span>
+                    </div>
+                </motion.a>
+            ))}
+        </motion.div>
+    )
+
     // ========================
-    // DESKTOP — scroll-driven transition using position:fixed overlay
+    // DESKTOP — scroll-driven transition, then normal scrollable State 2
     // ========================
     return (
         <>
-            {/* Layout spacer — takes up space in Framer's flow.
-                This is what Framer "sees" and controls. */}
+            {/* Container — holds static State 2 content that scrolls normally */}
             <div
                 ref={containerRef}
                 style={{
                     ...style,
                     width: "100%",
-                    height: "75vh",
-                    marginTop: 0,
+                    position: "relative",
+                    height: "100vh",
                 }}
-            />
+            >
+                {/* Static State 2 — visible once the animated overlay hides.
+                    Scrolls naturally with the page like any other section. */}
+                <div
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        position: "relative",
+                        overflow: "hidden",
+                        backgroundColor: pageBgLight,
+                        fontFamily,
+                    }}
+                >
+                    {renderVideoContainer({
+                        top: videoContainedTop,
+                        left: videoContainedInset,
+                        right: videoContainedInset,
+                        bottom: videoContainedBottom,
+                        borderRadius: videoContainedRadius,
+                    })}
 
-            {/* Fixed hero overlay — portaled to document.body so it
-                escapes all Framer parent transforms/stacking contexts.
-                Nav (z-index 1100) renders above hero (z-index 50). */}
-            {heroVisible && createPortal(
+                    {/* Centered heading */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            zIndex: 3,
+                            width: "80%",
+                            textAlign: "center",
+                        }}
+                    >
+                        <h1
+                            style={{
+                                fontSize: headingFontSize * 0.9,
+                                fontWeight: headingFontWeight,
+                                color: "#ffffff",
+                                lineHeight: `${headingLineHeight}px`,
+                                margin: 0,
+                                fontFamily,
+                                letterSpacing: "-5px",
+                                whiteSpace: "pre-line",
+                                textShadow: "0 4px 40px rgba(0,0,0,0.4)",
+                            }}
+                        >
+                            {renderHeading()}
+                        </h1>
+                    </div>
+
+                    {renderCards(true)}
+                </div>
+            </div>
+
+            {/* Animated overlay — portaled to document.body.
+                Shows during the scroll transition (State 1 → State 2),
+                hides once done, revealing the static State 2 above. */}
+            {!transitionDone && createPortal(
                 <motion.div
                     style={{
                         position: "fixed",
@@ -753,10 +885,8 @@ function HeroScroll(props: Props) {
                         backgroundColor: pageBg,
                         fontFamily,
                         pointerEvents: "auto",
-                        y: heroY,
                     }}
                 >
-                    {/* VIDEO CONTAINER */}
                     {renderVideoContainer({
                         top: videoInsetTop,
                         left: videoInsetLeft,
@@ -765,95 +895,8 @@ function HeroScroll(props: Props) {
                         borderRadius: videoBorderRadius,
                     })}
 
-                    {/* FLOATING CARDS — State 2 */}
-                    <motion.div
-                        style={{
-                            position: "absolute",
-                            inset: 0,
-                            zIndex: 5,
-                            opacity: cardsOpacity,
-                            scale: cardsScale,
-                            y: cardsY,
-                            pointerEvents: "none",
-                        }}
-                    >
-                        {cards.map((card, i) => (
-                            <motion.a
-                                key={i}
-                                href={card.linkUrl || "#"}
-                                style={{
-                                    ...getCardStyle(card.position, i),
-                                    display: "block",
-                                    backgroundColor: cardBgColor,
-                                    borderRadius: 16,
-                                    boxShadow:
-                                        "0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
-                                    overflow: "hidden",
-                                    pointerEvents: "auto",
-                                    textDecoration: "none",
-                                    cursor: "pointer",
-                                }}
-                                initial={false}
-                                whileHover={{
-                                    scale: 1.04,
-                                    boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
-                                }}
-                            >
-                                {/* Card image */}
-                                <div
-                                    style={{
-                                        width: "100%",
-                                        height: cardWidth * 0.55,
-                                        backgroundColor: "#f3f4f6",
-                                        overflow: "hidden",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    {card.image ? (
-                                        <img
-                                            src={card.image}
-                                            alt={card.label}
-                                            style={{
-                                                width: "100%",
-                                                height: "100%",
-                                                objectFit: "cover",
-                                            }}
-                                        />
-                                    ) : (
-                                        <span
-                                            style={{
-                                                fontSize: 12,
-                                                color: "#9ca3af",
-                                                fontFamily,
-                                            }}
-                                        >
-                                            Blog Post Image
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Card label */}
-                                <div
-                                    style={{
-                                        padding: "12px 16px 14px",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontSize: 14,
-                                            fontWeight: 600,
-                                            color: "#1a1a2e",
-                                            fontFamily,
-                                        }}
-                                    >
-                                        {card.label}
-                                    </span>
-                                </div>
-                            </motion.a>
-                        ))}
-                    </motion.div>
+                    {/* FLOATING CARDS — animated */}
+                    {renderCards(false)}
                 </motion.div>,
                 document.body
             )}
