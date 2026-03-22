@@ -13,6 +13,7 @@ import {
     useMotionValue,
 } from "framer-motion"
 import { useRef, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 // --- Types ---
 
@@ -733,9 +734,10 @@ function HeroScroll(props: Props) {
                 }}
             />
 
-            {/* Fixed hero overlay — positioned relative to viewport,
-                completely bypasses Framer's parent height/overflow constraints */}
-            {heroVisible && (
+            {/* Fixed hero overlay — portaled to document.body so it
+                escapes all Framer parent transforms/stacking contexts.
+                Nav (z-index 1100) renders above hero (z-index 50). */}
+            {heroVisible && createPortal(
                 <motion.div
                     style={{
                         position: "fixed",
@@ -848,7 +850,8 @@ function HeroScroll(props: Props) {
                             </motion.a>
                         ))}
                     </motion.div>
-                </motion.div>
+                </motion.div>,
+                document.body
             )}
         </>
     )
