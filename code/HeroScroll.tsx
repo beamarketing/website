@@ -131,6 +131,9 @@ function HeroScroll(props: Props) {
     const containerRef = useRef<HTMLDivElement>(null)
     const scrollYProgress = useMotionValue(0)
 
+    // Detect if we're in a live context (preview/production) vs canvas
+    const isLive = RenderTarget.current() !== RenderTarget.canvas
+
     // Mobile detection — in live mode use window width; in canvas use container width
     const [isMobile, setIsMobile] = useState(false)
     const [containerWidth, setContainerWidth] = useState(0)
@@ -157,9 +160,6 @@ function HeroScroll(props: Props) {
 
     // Track whether the animated overlay should show (hides once transition is done)
     const [transitionDone, setTransitionDone] = useState(false)
-
-    // Detect if we're in a live context (preview/production) vs canvas
-    const isLive = RenderTarget.current() !== RenderTarget.canvas
 
     // Inject minimal CSS reset (live only — must not touch canvas editor)
     useEffect(() => {
