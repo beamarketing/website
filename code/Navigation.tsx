@@ -170,11 +170,15 @@ function Navigation(props: Props) {
         document.head.appendChild(s)
     }, [])
 
-    // Zero padding/margin on nav's own Framer wrapper ancestors
+    // Zero padding/margin on nav's own Framer wrapper ancestors.
+    // Clear transforms only on the nav's immediate wrappers (first 3 levels)
+    // to free position:fixed, without touching shared page-level ancestors
+    // that other components (like HeroScroll) depend on.
     useEffect(() => {
         if (!navRef.current) return
         const zeroParents = () => {
             let el: HTMLElement | null = navRef.current?.parentElement ?? null
+            let depth = 0
             while (el && el !== document.body) {
                 el.style.setProperty("padding-top", "0px", "important")
                 el.style.setProperty("margin-top", "0px", "important")
@@ -182,12 +186,15 @@ function Navigation(props: Props) {
                 el.style.setProperty("gap", "0px", "important")
                 el.style.setProperty("row-gap", "0px", "important")
                 el.style.setProperty("overflow", "visible", "important")
-                // Clear properties that create containing blocks for
-                // position:fixed, so the nav escapes Framer wrappers
-                el.style.setProperty("transform", "none", "important")
-                el.style.setProperty("will-change", "auto", "important")
-                el.style.setProperty("filter", "none", "important")
-                el.style.setProperty("contain", "none", "important")
+                // Clear containing-block properties only on the nav's own
+                // component wrappers (not shared page ancestors)
+                if (depth < 3) {
+                    el.style.setProperty("transform", "none", "important")
+                    el.style.setProperty("will-change", "auto", "important")
+                    el.style.setProperty("filter", "none", "important")
+                    el.style.setProperty("contain", "none", "important")
+                }
+                depth++
                 el = el.parentElement
             }
         }
