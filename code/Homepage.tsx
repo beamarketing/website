@@ -17,6 +17,7 @@ import NewsSection from "./NewsSection"
 import FAQSection from "./FAQSection"
 import CTASection from "./CTASection"
 import Footer from "./Footer"
+import ContactPopup from "./ContactPopup"
 
 interface Props {
     accentColor: string
@@ -404,6 +405,14 @@ function Homepage(props: Props) {
                     ]}
                 />
             )}
+
+            {/* Contact popup — intercepts all href="#contact" clicks */}
+            <ContactPopup
+                accentColor={accentColor}
+                fontFamily={fontFamily}
+                bgColor="#0a0a2e"
+                textColor="#ffffff"
+            />
         </div>
     )
 }

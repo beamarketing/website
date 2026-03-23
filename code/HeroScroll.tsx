@@ -232,11 +232,10 @@ function HeroScroll(props: Props) {
             const elRect = el.getBoundingClientRect()
             const elTopInPage = scrollY + elRect.top
             const scrolled = scrollY - elTopInPage
-            const totalTravel = scrollDistance - window.innerHeight
-            if (totalTravel <= 0) {
-                scrollYProgress.set(0)
-                return
-            }
+            // Use at least half the scrollDistance so the animation still works
+            // on very tall viewports (e.g. large desktop monitors where
+            // innerHeight >= scrollDistance)
+            const totalTravel = Math.max(scrollDistance - window.innerHeight, scrollDistance * 0.4)
             const progress = Math.min(Math.max(scrolled / totalTravel, 0), 1)
             scrollYProgress.set(progress)
 
