@@ -129,6 +129,7 @@ function Navigation(props: Props) {
     const [expandedMobileItem, setExpandedMobileItem] = useState<
         string | null
     >(null)
+    const [hoveredLink, setHoveredLink] = useState<string | null>(null)
 
     // --- Responsive detection ---
     useEffect(() => {
@@ -1358,10 +1359,15 @@ function Navigation(props: Props) {
                                         display: "flex",
                                         alignItems: "center",
                                     }}
-                                    onMouseEnter={() =>
-                                        link.hasDropdown
-                                            ? setActiveDropdown(link.label)
-                                            : setActiveDropdown(null)
+                                    onMouseEnter={() => {
+                                        setHoveredLink(link.label)
+                                        if (link.hasDropdown)
+                                            setActiveDropdown(link.label)
+                                        else
+                                            setActiveDropdown(null)
+                                    }}
+                                    onMouseLeave={() =>
+                                        setHoveredLink(null)
                                     }
                                 >
                                     <a
@@ -1372,7 +1378,7 @@ function Navigation(props: Props) {
                                         }
                                         style={{
                                             color:
-                                                activeDropdown === link.label
+                                                activeDropdown === link.label || hoveredLink === link.label
                                                     ? currentHover
                                                     : currentText,
                                             textDecoration: "none",
