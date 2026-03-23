@@ -33,8 +33,8 @@ interface Props {
     newsletterHeading: string
     newsletterPlaceholder: string
     newsletterButtonText: string
-    mailerliteAccountId: string
-    mailerliteAccountKey: string
+    mailerliteApiKey: string
+    mailerliteGroupId: string
     copyrightText: string
     bottomLinks: FooterLink[]
     bgColor: string
@@ -77,8 +77,8 @@ function Footer(props: Props) {
         newsletterHeading = "Stay Updated",
         newsletterPlaceholder = "Enter your email",
         newsletterButtonText = "Subscribe",
-        mailerliteAccountId = "420107",
-        mailerliteAccountKey = "l1h3f3l8l9",
+        mailerliteApiKey = "84d734a2a44275c3fc53f6c755162285",
+        mailerliteGroupId = "106165528",
         copyrightText = "2026 Beamr Imaging Ltd. All rights reserved.",
         bottomLinks = [
             { label: "Privacy Policy", url: "#privacy" },
@@ -128,39 +128,23 @@ function Footer(props: Props) {
     const [email, setEmail] = useState("")
     const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle")
 
-    // Load MailerLite Universal script
-    useEffect(() => {
-        if (!showNewsletter || !mailerliteAccountId) return
-        if (typeof window !== "undefined" && (window as any).ml) return
-
-        ;(function (m: any, a: any, i: string, l: string, e: string) {
-            m["MailerLiteObject"] = e
-            function f(this: any) {
-                var c = { a: arguments, q: [] as any[] }
-                var r = this.push(c)
-                return typeof r !== "number" ? r : f.bind(c.q)
-            }
-            f.q = f.q || []
-            m[e] = m[e] || f.bind(f.q)
-            m[e].q = m[e].q || f.q
-            var r = a.createElement(i) as HTMLScriptElement
-            var _ = a.getElementsByTagName(i)[0]
-            r.async = true
-            r.src = l + "?v" + ~~(new Date().getTime() / 1000000)
-            _.parentNode.insertBefore(r, _)
-        })(window, document, "script", "https://static.mailerlite.com/js/universal.js", "ml")
-
-        ;(window as any).ml("accounts", mailerliteAccountId, mailerliteAccountKey, "load")
-    }, [showNewsletter, mailerliteAccountId, mailerliteAccountKey])
-
     const handleNewsletterSubmit = async () => {
-        if (!email || !mailerliteAccountId) return
+        if (!email || !mailerliteApiKey) return
 
         setSubmitState("loading")
         try {
-            const ml = (window as any).ml
-            if (ml) {
-                ml("send", "subscribe", { email })
+            const res = await fetch(
+                `https://api.mailerlite.com/api/v2/groups/${mailerliteGroupId}/subscribers`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-MailerLite-ApiKey": mailerliteApiKey,
+                    },
+                    body: JSON.stringify({ email }),
+                }
+            )
+            if (res.ok) {
                 setSubmitState("success")
                 setEmail("")
             } else {
@@ -639,19 +623,19 @@ addPropertyControls(Footer, {
         defaultValue: "Subscribe",
         hidden: (props) => !props.showNewsletter,
     },
-    mailerliteAccountId: {
+    mailerliteApiKey: {
         type: ControlType.String,
-        title: "MailerLite Account ID",
-        defaultValue: "420107",
+        title: "MailerLite API Key",
+        defaultValue: "84d734a2a44275c3fc53f6c755162285",
         hidden: (props) => !props.showNewsletter,
-        description: "Your MailerLite account ID",
+        description: "Your MailerLite API key (Integrations > API)",
     },
-    mailerliteAccountKey: {
+    mailerliteGroupId: {
         type: ControlType.String,
-        title: "MailerLite Account Key",
-        defaultValue: "l1h3f3l8l9",
+        title: "MailerLite Group ID",
+        defaultValue: "106165528",
         hidden: (props) => !props.showNewsletter,
-        description: "Your MailerLite account key",
+        description: "The group ID subscribers will be added to",
     },
     copyrightText: {
         type: ControlType.String,
