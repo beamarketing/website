@@ -758,7 +758,7 @@ function HeroScroll(props: Props) {
                         backgroundColor: cardBgColor,
                         borderRadius: 16,
                         boxShadow:
-                            "0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
+                            "0 16px 48px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)",
                         overflow: "hidden",
                         pointerEvents: "auto",
                         textDecoration: "none",
@@ -767,7 +767,7 @@ function HeroScroll(props: Props) {
                     initial={false}
                     whileHover={{
                         scale: 1.04,
-                        boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+                        boxShadow: "0 24px 64px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.12)",
                     }}
                 >
                     <div
