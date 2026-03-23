@@ -33,8 +33,7 @@ interface Props {
     newsletterHeading: string
     newsletterPlaceholder: string
     newsletterButtonText: string
-    mailerliteApiKey: string
-    mailerliteGroupId: string
+    mailerliteFormCode: string
     copyrightText: string
     bottomLinks: FooterLink[]
     bgColor: string
@@ -77,8 +76,7 @@ function Footer(props: Props) {
         newsletterHeading = "Stay Updated",
         newsletterPlaceholder = "Enter your email",
         newsletterButtonText = "Subscribe",
-        mailerliteApiKey = "84d734a2a44275c3fc53f6c755162285",
-        mailerliteGroupId = "106165528",
+        mailerliteFormCode = "c9l8l2",
         copyrightText = "2026 Beamr Imaging Ltd. All rights reserved.",
         bottomLinks = [
             { label: "Privacy Policy", url: "#privacy" },
@@ -129,19 +127,20 @@ function Footer(props: Props) {
     const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle")
 
     const handleNewsletterSubmit = async () => {
-        if (!email || !mailerliteApiKey) return
+        if (!email || !mailerliteFormCode) return
 
         setSubmitState("loading")
         try {
+            const formData = new FormData()
+            formData.append("fields[email]", email)
+            formData.append("ml-submit", "1")
+            formData.append("anticsrf", "true")
+
             const res = await fetch(
-                `https://api.mailerlite.com/api/v2/groups/${mailerliteGroupId}/subscribers`,
+                `https://static.mailerlite.com/webforms/submit/${mailerliteFormCode}`,
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-MailerLite-ApiKey": mailerliteApiKey,
-                    },
-                    body: JSON.stringify({ email }),
+                    body: formData,
                 }
             )
             if (res.ok) {
@@ -623,19 +622,12 @@ addPropertyControls(Footer, {
         defaultValue: "Subscribe",
         hidden: (props) => !props.showNewsletter,
     },
-    mailerliteApiKey: {
+    mailerliteFormCode: {
         type: ControlType.String,
-        title: "MailerLite API Key",
-        defaultValue: "84d734a2a44275c3fc53f6c755162285",
+        title: "MailerLite Form Code",
+        defaultValue: "c9l8l2",
         hidden: (props) => !props.showNewsletter,
-        description: "Your MailerLite API key (Integrations > API)",
-    },
-    mailerliteGroupId: {
-        type: ControlType.String,
-        title: "MailerLite Group ID",
-        defaultValue: "106165528",
-        hidden: (props) => !props.showNewsletter,
-        description: "The group ID subscribers will be added to",
+        description: "Form code from your MailerLite embedded form URL",
     },
     copyrightText: {
         type: ControlType.String,
