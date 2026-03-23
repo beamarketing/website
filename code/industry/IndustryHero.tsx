@@ -94,7 +94,7 @@ function IndustryHero(props: Props) {
                 width: "100%",
                 minHeight,
                 backgroundColor: bgColor,
-                padding: "100px 48px 80px",
+                padding: "100px 48px 100px",
                 boxSizing: "border-box",
                 fontFamily,
                 position: "relative",
@@ -140,7 +140,7 @@ function IndustryHero(props: Props) {
                     alignItems: "center",
                     position: "relative",
                     zIndex: 1,
-                    minHeight: minHeight - 180,
+                    minHeight: minHeight - 200,
                 }}
             >
                 {/* Left: Text content */}
