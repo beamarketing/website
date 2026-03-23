@@ -41,6 +41,7 @@ interface Props {
     useLogoImage: boolean
     logoIconColor: string
     showLogoIcon: boolean
+    logoUrl: string
 
     // Nav links — fully controlled from the Framer property panel
     navLinks: NavLink[]
@@ -85,6 +86,7 @@ function Navigation(props: Props) {
         useLogoImage = false,
         logoIconColor = "#6C5CE7",
         showLogoIcon = true,
+        logoUrl = "/",
 
         navLinks = [],
 
@@ -522,15 +524,18 @@ function Navigation(props: Props) {
                         flexShrink: 0,
                     }}
                 >
-                    <div
+                    <a
+                        href={logoUrl}
                         style={{
                             display: "flex",
                             alignItems: "center",
                             gap: 8,
+                            textDecoration: "none",
+                            color: "inherit",
                         }}
                     >
                         {renderLogo()}
-                    </div>
+                    </a>
                     <button
                         onClick={() => setMobileMenuOpen(false)}
                         aria-label="Close menu"
@@ -1318,16 +1323,19 @@ function Navigation(props: Props) {
                 }}
             >
                 {/* Logo */}
-                <div
+                <a
+                    href={logoUrl}
                     style={{
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
                         flexShrink: 0,
+                        textDecoration: "none",
+                        color: "inherit",
                     }}
                 >
                     {renderLogo()}
-                </div>
+                </a>
 
                 {isMobile ? (
                     /* Hamburger */
@@ -1504,6 +1512,12 @@ addPropertyControls(Navigation, {
         title: "Icon Color",
         defaultValue: "#6C5CE7",
         hidden: (props) => props.useLogoImage || !props.showLogoIcon,
+    },
+    logoUrl: {
+        type: ControlType.String,
+        title: "Logo URL",
+        defaultValue: "/",
+        description: "URL the logo links to",
     },
 
     // --- Nav Links ---
