@@ -1,8 +1,8 @@
 // Product Page - Hero Section
-// Two-column layout with A/B video comparison and floating pills
+// Two-column layout with side-by-side A/B video comparison and floating pills
 // Framer Code Component with full property controls
 
-import React, { useState, useRef, useCallback, useEffect } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
 interface PillItem {
@@ -22,7 +22,8 @@ interface Props {
     useVideo: boolean
     labelA: string
     labelB: string
-    sliderColor: string
+    bitrateA: string
+    bitrateB: string
     pills: PillItem[]
     showPills: boolean
     showStatCard: boolean
@@ -37,11 +38,14 @@ interface Props {
     cardOverlayColor: string
     pillBgColor: string
     pillTextColor: string
+    labelBgColor: string
     fontFamily: string
     headingFontFamily: string
     minHeight: number
     floatIntensity: number
     floatSpeed: number
+    comparisonGap: number
+    comparisonRadius: number
     style?: React.CSSProperties
 }
 
@@ -59,7 +63,8 @@ function ProductHero(props: Props) {
         useVideo = false,
         labelA = "Original",
         labelB = "Beamr Optimized",
-        sliderColor = "#ffffff",
+        bitrateA = "15 Mbps",
+        bitrateB = "7.5 Mbps",
         pills = [
             { label: "Frame Analysis" },
             { label: "CABR\u2122 Active" },
@@ -78,11 +83,14 @@ function ProductHero(props: Props) {
         cardOverlayColor = "rgba(196, 198, 214, 0.9)",
         pillBgColor = "#C3C5D4",
         pillTextColor = "#F5F5F5",
+        labelBgColor = "rgba(0, 0, 0, 0.6)",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
         minHeight = 500,
         floatIntensity = 8,
         floatSpeed = 5,
+        comparisonGap = 4,
+        comparisonRadius = 12,
         style,
     } = props
 
@@ -104,53 +112,14 @@ function ProductHero(props: Props) {
     }, [])
 
     const isCompact = isMobile || isTablet
-
-    // A/B comparison slider state
-    const [sliderPos, setSliderPos] = useState(50)
-    const compRef = useRef<HTMLDivElement>(null)
-    const dragging = useRef(false)
-
-    const updateSlider = useCallback((clientX: number) => {
-        const rect = compRef.current?.getBoundingClientRect()
-        if (!rect) return
-        const x = clientX - rect.left
-        const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
-        setSliderPos(pct)
-    }, [])
-
-    const onPointerDown = useCallback(
-        (e: React.PointerEvent) => {
-            dragging.current = true
-            ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-            updateSlider(e.clientX)
-        },
-        [updateSlider]
-    )
-
-    const onPointerMove = useCallback(
-        (e: React.PointerEvent) => {
-            if (!dragging.current) return
-            updateSlider(e.clientX)
-        },
-        [updateSlider]
-    )
-
-    const onPointerUp = useCallback(() => {
-        dragging.current = false
-    }, [])
-
     const animId = "prod-hero-float"
 
-    // Pill positions — percentage-based for responsiveness within comparison area
+    // Pill positions — percentage-based for responsiveness
     const pillConfigs = [
         { top: "71%", left: "20%", delay: 0 },
         { top: "94%", left: "29%", delay: 1.2 },
         { top: "78%", left: "39%", delay: 0.6 },
     ]
-
-    const hasMediaA = useVideo ? !!videoA : !!imageA
-    const hasMediaB = useVideo ? !!videoB : !!imageB
-    const hasComparison = hasMediaA || hasMediaB
 
     // Responsive values
     const sectionPadding = isMobile
@@ -164,6 +133,110 @@ function ProductHero(props: Props) {
         : isTablet
           ? Math.min(headingFontSize, 52)
           : headingFontSize
+
+    // Renders one side of the A/B comparison
+    const renderPanel = (
+        side: "a" | "b",
+        video: string,
+        image: string,
+        label: string,
+        bitrate: string
+    ) => {
+        const hasVideo = useVideo && !!video
+        const hasImage = !useVideo && !!image
+
+        return (
+            <div
+                style={{
+                    flex: 1,
+                    borderRadius: comparisonRadius,
+                    overflow: "hidden",
+                    position: "relative",
+                    background: cardOverlayColor,
+                    aspectRatio: "16 / 10",
+                }}
+            >
+                {/* Media */}
+                {hasVideo ? (
+                    <video
+                        src={video}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                        }}
+                    />
+                ) : hasImage ? (
+                    <img
+                        src={image}
+                        alt={label}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                        }}
+                    />
+                ) : (
+                    <div
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            background:
+                                side === "a"
+                                    ? "linear-gradient(135deg, #c4c6d6 0%, #aaacbf 100%)"
+                                    : "linear-gradient(135deg, #d0d1de 0%, #b8bad0 100%)",
+                        }}
+                    />
+                )}
+
+                {/* Label badge */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: isMobile ? 8 : 12,
+                        left: isMobile ? 8 : 12,
+                        padding: isMobile ? "3px 8px" : "4px 10px",
+                        background: labelBgColor,
+                        borderRadius: 6,
+                        fontSize: isMobile ? 9 : 11,
+                        fontWeight: 600,
+                        color: "#fff",
+                        fontFamily,
+                        letterSpacing: "0.3px",
+                    }}
+                >
+                    {label}
+                </div>
+
+                {/* Bitrate badge */}
+                {bitrate && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: isMobile ? 8 : 12,
+                            left: isMobile ? 8 : 12,
+                            padding: isMobile ? "3px 8px" : "4px 10px",
+                            background: labelBgColor,
+                            borderRadius: 6,
+                            fontSize: isMobile ? 9 : 10,
+                            fontWeight: 500,
+                            color: "rgba(255,255,255,0.85)",
+                            fontFamily,
+                            fontVariantNumeric: "tabular-nums",
+                        }}
+                    >
+                        {bitrate}
+                    </div>
+                )}
+            </div>
+        )
+    }
 
     return (
         <section
@@ -280,7 +353,7 @@ function ProductHero(props: Props) {
                     </a>
                 </div>
 
-                {/* Right: A/B Video Comparison with floating elements */}
+                {/* Right: Side-by-side A/B comparison with floating elements */}
                 <div
                     style={{
                         position: "relative",
@@ -307,335 +380,21 @@ function ProductHero(props: Props) {
                         />
                     )}
 
-                    {/* A/B Comparison Container */}
+                    {/* A/B panels wrapper */}
                     <div
-                        ref={compRef}
-                        onPointerDown={onPointerDown}
-                        onPointerMove={onPointerMove}
-                        onPointerUp={onPointerUp}
                         style={{
                             position: "relative",
-                            width: isCompact ? "100%" : "94%",
-                            aspectRatio: "16 / 10",
-                            borderRadius: 12,
+                            display: "flex",
+                            gap: comparisonGap,
+                            borderRadius: comparisonRadius,
                             overflow: "hidden",
-                            cursor: hasComparison ? "col-resize" : "default",
-                            background: cardOverlayColor,
-                            userSelect: "none",
-                            touchAction: "none",
+                            background: cardBgColor,
+                            padding: comparisonGap,
                             zIndex: 1,
                         }}
                     >
-                        {/* Side B (full, underneath) */}
-                        {hasComparison && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                }}
-                            >
-                                {useVideo && videoB ? (
-                                    <video
-                                        src={videoB}
-                                        autoPlay
-                                        muted
-                                        loop
-                                        playsInline
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                        }}
-                                    />
-                                ) : imageB ? (
-                                    <img
-                                        src={imageB}
-                                        alt={labelB}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            display: "block",
-                                        }}
-                                    />
-                                ) : (
-                                    <div
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            background:
-                                                "linear-gradient(135deg, #d0d1de 0%, #b8bad0 100%)",
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        )}
-
-                        {/* Side A (clipped by slider) */}
-                        {hasComparison && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
-                                }}
-                            >
-                                {useVideo && videoA ? (
-                                    <video
-                                        src={videoA}
-                                        autoPlay
-                                        muted
-                                        loop
-                                        playsInline
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                        }}
-                                    />
-                                ) : imageA ? (
-                                    <img
-                                        src={imageA}
-                                        alt={labelA}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            display: "block",
-                                        }}
-                                    />
-                                ) : (
-                                    <div
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            background:
-                                                "linear-gradient(135deg, #c4c6d6 0%, #aaacbf 100%)",
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        )}
-
-                        {/* Slider line + handle */}
-                        {hasComparison && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    bottom: 0,
-                                    left: `${sliderPos}%`,
-                                    transform: "translateX(-50%)",
-                                    width: 2,
-                                    background: sliderColor,
-                                    zIndex: 4,
-                                    pointerEvents: "none",
-                                }}
-                            >
-                                {/* Handle */}
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: "50%",
-                                        left: "50%",
-                                        transform: "translate(-50%, -50%)",
-                                        width: 40,
-                                        height: 40,
-                                        borderRadius: "50%",
-                                        background: sliderColor,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        boxShadow:
-                                            "0 2px 12px rgba(0,0,0,0.25)",
-                                        pointerEvents: "none",
-                                    }}
-                                >
-                                    <svg
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 20 20"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M7 4L3 10L7 16"
-                                            stroke="#333"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                        <path
-                                            d="M13 4L17 10L13 16"
-                                            stroke="#333"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* A/B Labels */}
-                        {hasComparison && (
-                            <>
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: 12,
-                                        left: 12,
-                                        padding: "4px 10px",
-                                        background: "rgba(0,0,0,0.55)",
-                                        borderRadius: 6,
-                                        fontSize: 11,
-                                        fontWeight: 600,
-                                        color: "#fff",
-                                        fontFamily,
-                                        letterSpacing: "0.3px",
-                                        zIndex: 5,
-                                        pointerEvents: "none",
-                                    }}
-                                >
-                                    {labelA}
-                                </div>
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: 12,
-                                        right: 12,
-                                        padding: "4px 10px",
-                                        background: "rgba(0,0,0,0.55)",
-                                        borderRadius: 6,
-                                        fontSize: 11,
-                                        fontWeight: 600,
-                                        color: "#fff",
-                                        fontFamily,
-                                        letterSpacing: "0.3px",
-                                        zIndex: 5,
-                                        pointerEvents: "none",
-                                    }}
-                                >
-                                    {labelB}
-                                </div>
-                            </>
-                        )}
-
-                        {/* Placeholder when no media */}
-                        {!hasComparison && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 0,
-                                }}
-                            >
-                                {/* Left placeholder */}
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        height: "100%",
-                                        background:
-                                            "linear-gradient(135deg, #c4c6d6 0%, #aaacbf 100%)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontSize: 11,
-                                            fontWeight: 600,
-                                            color: "#fff",
-                                            background: "rgba(0,0,0,0.35)",
-                                            padding: "4px 10px",
-                                            borderRadius: 6,
-                                            fontFamily,
-                                        }}
-                                    >
-                                        {labelA}
-                                    </span>
-                                </div>
-                                {/* Divider */}
-                                <div
-                                    style={{
-                                        width: 2,
-                                        height: "100%",
-                                        background: sliderColor,
-                                        position: "relative",
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            top: "50%",
-                                            left: "50%",
-                                            transform:
-                                                "translate(-50%, -50%)",
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: "50%",
-                                            background: sliderColor,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            boxShadow:
-                                                "0 2px 8px rgba(0,0,0,0.15)",
-                                        }}
-                                    >
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 20 20"
-                                            fill="none"
-                                        >
-                                            <path
-                                                d="M7 4L3 10L7 16"
-                                                stroke="#333"
-                                                strokeWidth="1.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                            <path
-                                                d="M13 4L17 10L13 16"
-                                                stroke="#333"
-                                                strokeWidth="1.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-                                {/* Right placeholder */}
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        height: "100%",
-                                        background:
-                                            "linear-gradient(135deg, #d0d1de 0%, #b8bad0 100%)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontSize: 11,
-                                            fontWeight: 600,
-                                            color: "#fff",
-                                            background: "rgba(0,0,0,0.35)",
-                                            padding: "4px 10px",
-                                            borderRadius: 6,
-                                            fontFamily,
-                                        }}
-                                    >
-                                        {labelB}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
+                        {renderPanel("a", videoA, imageA, labelA, bitrateA)}
+                        {renderPanel("b", videoB, imageB, labelB, bitrateB)}
                     </div>
 
                     {/* Floating Pills — positioned over comparison area */}
@@ -874,10 +633,15 @@ addPropertyControls(ProductHero, {
         title: "Label B",
         defaultValue: "Beamr Optimized",
     },
-    sliderColor: {
-        type: ControlType.Color,
-        title: "Slider Color",
-        defaultValue: "#ffffff",
+    bitrateA: {
+        type: ControlType.String,
+        title: "Bitrate A",
+        defaultValue: "15 Mbps",
+    },
+    bitrateB: {
+        type: ControlType.String,
+        title: "Bitrate B",
+        defaultValue: "7.5 Mbps",
     },
     showPills: {
         type: ControlType.Boolean,
@@ -938,6 +702,22 @@ addPropertyControls(ProductHero, {
         max: 16,
         step: 0.5,
     },
+    comparisonGap: {
+        type: ControlType.Number,
+        title: "Panel Gap",
+        defaultValue: 4,
+        min: 0,
+        max: 16,
+        step: 1,
+    },
+    comparisonRadius: {
+        type: ControlType.Number,
+        title: "Panel Radius",
+        defaultValue: 12,
+        min: 0,
+        max: 24,
+        step: 2,
+    },
     minHeight: {
         type: ControlType.Number,
         title: "Min Height",
@@ -973,13 +753,18 @@ addPropertyControls(ProductHero, {
     },
     cardBgColor: {
         type: ControlType.Color,
-        title: "Accent Card BG",
+        title: "Panel Frame BG",
         defaultValue: "#EBECF6",
     },
     cardOverlayColor: {
         type: ControlType.String,
-        title: "Comparison BG",
+        title: "Panel Placeholder BG",
         defaultValue: "rgba(196, 198, 214, 0.9)",
+    },
+    labelBgColor: {
+        type: ControlType.String,
+        title: "Label BG",
+        defaultValue: "rgba(0, 0, 0, 0.6)",
     },
     pillBgColor: {
         type: ControlType.Color,
