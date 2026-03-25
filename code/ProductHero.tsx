@@ -38,6 +38,7 @@ interface Props {
     floatIntensity: number
     floatSpeed: number
     mediaRadius: number
+    paddingTop: number
     style?: React.CSSProperties
 }
 
@@ -75,6 +76,7 @@ function ProductHero(props: Props) {
         floatIntensity = 8,
         floatSpeed = 5,
         mediaRadius = 12,
+        paddingTop = 64,
         style,
     } = props
 
@@ -107,10 +109,10 @@ function ProductHero(props: Props) {
 
     // Responsive values
     const sectionPadding = isMobile
-        ? "48px 20px"
+        ? `${paddingTop}px 20px 48px`
         : isTablet
-          ? "56px 32px"
-          : "64px 80px"
+          ? `${paddingTop}px 32px 56px`
+          : `${paddingTop}px 80px 64px`
 
     const headingSizeResp = isMobile
         ? Math.min(headingFontSize, 40)
@@ -584,6 +586,14 @@ addPropertyControls(ProductHero, {
         min: 0,
         max: 24,
         step: 2,
+    },
+    paddingTop: {
+        type: ControlType.Number,
+        title: "Padding Top",
+        defaultValue: 64,
+        min: 0,
+        max: 300,
+        step: 4,
     },
     minHeight: {
         type: ControlType.Number,
