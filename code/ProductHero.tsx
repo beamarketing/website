@@ -1,5 +1,5 @@
 // Product Page - Hero Section
-// Two-column layout with side-by-side A/B video comparison and floating pills
+// Two-column layout with media container and floating pills
 // Framer Code Component with full property controls
 
 import React, { useRef, useState, useEffect } from "react"
@@ -15,15 +15,9 @@ interface Props {
     subheading: string
     ctaText: string
     ctaUrl: string
-    videoA: string
-    videoB: string
-    imageA: string
-    imageB: string
+    heroImage: string
+    heroVideo: string
     useVideo: boolean
-    labelA: string
-    labelB: string
-    bitrateA: string
-    bitrateB: string
     pills: PillItem[]
     showPills: boolean
     showStatCard: boolean
@@ -38,14 +32,12 @@ interface Props {
     cardOverlayColor: string
     pillBgColor: string
     pillTextColor: string
-    labelBgColor: string
     fontFamily: string
     headingFontFamily: string
     minHeight: number
     floatIntensity: number
     floatSpeed: number
-    comparisonGap: number
-    comparisonRadius: number
+    mediaRadius: number
     style?: React.CSSProperties
 }
 
@@ -56,15 +48,9 @@ function ProductHero(props: Props) {
         subheading = "Beamr 5 is the fastest, best-of-class HEVC encoder trusted by streaming giants",
         ctaText = "Book a Demo",
         ctaUrl = "#",
-        videoA = "",
-        videoB = "",
-        imageA = "",
-        imageB = "",
+        heroImage = "",
+        heroVideo = "",
         useVideo = false,
-        labelA = "Original",
-        labelB = "Beamr Optimized",
-        bitrateA = "15 Mbps",
-        bitrateB = "7.5 Mbps",
         pills = [
             { label: "Frame Analysis" },
             { label: "CABR\u2122 Active" },
@@ -83,14 +69,12 @@ function ProductHero(props: Props) {
         cardOverlayColor = "rgba(196, 198, 214, 0.9)",
         pillBgColor = "#C3C5D4",
         pillTextColor = "#F5F5F5",
-        labelBgColor = "rgba(0, 0, 0, 0.6)",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
         minHeight = 500,
         floatIntensity = 8,
         floatSpeed = 5,
-        comparisonGap = 4,
-        comparisonRadius = 12,
+        mediaRadius = 12,
         style,
     } = props
 
@@ -114,7 +98,7 @@ function ProductHero(props: Props) {
     const isCompact = isMobile || isTablet
     const animId = "prod-hero-float"
 
-    // Pill positions — percentage-based for responsiveness
+    // Pill positions — percentage-based relative to right-side wrapper
     const pillConfigs = [
         { top: "71%", left: "20%", delay: 0 },
         { top: "94%", left: "29%", delay: 1.2 },
@@ -134,109 +118,8 @@ function ProductHero(props: Props) {
           ? Math.min(headingFontSize, 52)
           : headingFontSize
 
-    // Renders one side of the A/B comparison
-    const renderPanel = (
-        side: "a" | "b",
-        video: string,
-        image: string,
-        label: string,
-        bitrate: string
-    ) => {
-        const hasVideo = useVideo && !!video
-        const hasImage = !useVideo && !!image
-
-        return (
-            <div
-                style={{
-                    flex: 1,
-                    borderRadius: comparisonRadius,
-                    overflow: "hidden",
-                    position: "relative",
-                    background: cardOverlayColor,
-                    aspectRatio: "16 / 10",
-                }}
-            >
-                {/* Media */}
-                {hasVideo ? (
-                    <video
-                        src={video}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                        }}
-                    />
-                ) : hasImage ? (
-                    <img
-                        src={image}
-                        alt={label}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                        }}
-                    />
-                ) : (
-                    <div
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            background:
-                                side === "a"
-                                    ? "linear-gradient(135deg, #c4c6d6 0%, #aaacbf 100%)"
-                                    : "linear-gradient(135deg, #d0d1de 0%, #b8bad0 100%)",
-                        }}
-                    />
-                )}
-
-                {/* Label badge */}
-                <div
-                    style={{
-                        position: "absolute",
-                        top: isMobile ? 8 : 12,
-                        left: isMobile ? 8 : 12,
-                        padding: isMobile ? "3px 8px" : "4px 10px",
-                        background: labelBgColor,
-                        borderRadius: 6,
-                        fontSize: isMobile ? 9 : 11,
-                        fontWeight: 600,
-                        color: "#fff",
-                        fontFamily,
-                        letterSpacing: "0.3px",
-                    }}
-                >
-                    {label}
-                </div>
-
-                {/* Bitrate badge */}
-                {bitrate && (
-                    <div
-                        style={{
-                            position: "absolute",
-                            bottom: isMobile ? 8 : 12,
-                            left: isMobile ? 8 : 12,
-                            padding: isMobile ? "3px 8px" : "4px 10px",
-                            background: labelBgColor,
-                            borderRadius: 6,
-                            fontSize: isMobile ? 9 : 10,
-                            fontWeight: 500,
-                            color: "rgba(255,255,255,0.85)",
-                            fontFamily,
-                            fontVariantNumeric: "tabular-nums",
-                        }}
-                    >
-                        {bitrate}
-                    </div>
-                )}
-            </div>
-        )
-    }
+    const hasVideo = useVideo && !!heroVideo
+    const hasImage = !useVideo && !!heroImage
 
     return (
         <section
@@ -353,7 +236,7 @@ function ProductHero(props: Props) {
                     </a>
                 </div>
 
-                {/* Right: Side-by-side A/B comparison with floating elements */}
+                {/* Right: Media container with floating elements */}
                 <div
                     style={{
                         position: "relative",
@@ -380,24 +263,47 @@ function ProductHero(props: Props) {
                         />
                     )}
 
-                    {/* A/B panels wrapper */}
+                    {/* Main media container */}
                     <div
                         style={{
                             position: "relative",
-                            display: "flex",
-                            gap: comparisonGap,
-                            borderRadius: comparisonRadius,
+                            width: isCompact ? "100%" : "94%",
+                            aspectRatio: "16 / 10",
+                            borderRadius: mediaRadius,
                             overflow: "hidden",
-                            background: cardBgColor,
-                            padding: comparisonGap,
+                            background: cardOverlayColor,
                             zIndex: 1,
                         }}
                     >
-                        {renderPanel("a", videoA, imageA, labelA, bitrateA)}
-                        {renderPanel("b", videoB, imageB, labelB, bitrateB)}
+                        {hasVideo ? (
+                            <video
+                                src={heroVideo}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                }}
+                            />
+                        ) : hasImage ? (
+                            <img
+                                src={heroImage}
+                                alt=""
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                }}
+                            />
+                        ) : null}
                     </div>
 
-                    {/* Floating Pills — positioned over comparison area */}
+                    {/* Floating Pills */}
                     {showPills &&
                         !isMobile &&
                         pills.map((pill, i) => {
@@ -601,47 +507,16 @@ addPropertyControls(ProductHero, {
         title: "Use Video",
         defaultValue: false,
     },
-    videoA: {
+    heroVideo: {
         type: ControlType.File,
-        title: "Video A (Original)",
+        title: "Video",
         allowedFileTypes: ["mp4", "webm"],
         hidden: (props) => !props.useVideo,
     },
-    videoB: {
-        type: ControlType.File,
-        title: "Video B (Optimized)",
-        allowedFileTypes: ["mp4", "webm"],
-        hidden: (props) => !props.useVideo,
-    },
-    imageA: {
+    heroImage: {
         type: ControlType.Image,
-        title: "Image A (Original)",
+        title: "Image",
         hidden: (props) => props.useVideo,
-    },
-    imageB: {
-        type: ControlType.Image,
-        title: "Image B (Optimized)",
-        hidden: (props) => props.useVideo,
-    },
-    labelA: {
-        type: ControlType.String,
-        title: "Label A",
-        defaultValue: "Original",
-    },
-    labelB: {
-        type: ControlType.String,
-        title: "Label B",
-        defaultValue: "Beamr Optimized",
-    },
-    bitrateA: {
-        type: ControlType.String,
-        title: "Bitrate A",
-        defaultValue: "15 Mbps",
-    },
-    bitrateB: {
-        type: ControlType.String,
-        title: "Bitrate B",
-        defaultValue: "7.5 Mbps",
     },
     showPills: {
         type: ControlType.Boolean,
@@ -702,17 +577,9 @@ addPropertyControls(ProductHero, {
         max: 16,
         step: 0.5,
     },
-    comparisonGap: {
+    mediaRadius: {
         type: ControlType.Number,
-        title: "Panel Gap",
-        defaultValue: 4,
-        min: 0,
-        max: 16,
-        step: 1,
-    },
-    comparisonRadius: {
-        type: ControlType.Number,
-        title: "Panel Radius",
+        title: "Media Radius",
         defaultValue: 12,
         min: 0,
         max: 24,
@@ -753,18 +620,13 @@ addPropertyControls(ProductHero, {
     },
     cardBgColor: {
         type: ControlType.Color,
-        title: "Panel Frame BG",
+        title: "Accent Card BG",
         defaultValue: "#EBECF6",
     },
     cardOverlayColor: {
         type: ControlType.String,
-        title: "Panel Placeholder BG",
+        title: "Media Placeholder BG",
         defaultValue: "rgba(196, 198, 214, 0.9)",
-    },
-    labelBgColor: {
-        type: ControlType.String,
-        title: "Label BG",
-        defaultValue: "rgba(0, 0, 0, 0.6)",
     },
     pillBgColor: {
         type: ControlType.Color,
