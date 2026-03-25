@@ -73,11 +73,11 @@ function ProductHero(props: Props) {
 
     const animId = "prod-hero-float"
 
-    // Pill positions relative to the card
+    // Pill positions — exact pixel values relative to the 730x410 outer frame
     const pillConfigs = [
-        { top: "62%", left: "12%", delay: 0 },
-        { top: "85%", left: "28%", delay: 1.2 },
-        { top: "72%", left: "42%", delay: 0.6 },
+        { top: 292, left: 145, delay: 0 },
+        { top: 385, left: 209, delay: 1.2 },
+        { top: 321, left: 286, delay: 0.6 },
     ]
 
     return (
@@ -207,46 +207,58 @@ function ProductHero(props: Props) {
                         background: bgColor,
                     }}
                 >
-                    {/* Small accent card (top-right) */}
+                    {/* Small accent card (top-right area) */}
                     <div
                         style={{
                             position: "absolute",
                             width: 172,
                             height: 102,
-                            right: 0,
-                            top: "52%",
+                            left: 598,
+                            top: 239,
                             background: cardBgColor,
                             boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.08)",
                             borderRadius: 8,
                         }}
                     />
 
-                    {/* Main card with image/overlay */}
+                    {/* Outer frame (730x410) — pills & stat card positioned relative to this */}
                     <div
                         style={{
                             position: "absolute",
-                            width: "74.5%",
-                            height: "77%",
-                            left: 42,
-                            top: 14,
+                            width: 730,
+                            height: 410,
+                            left: 24,
+                            top: 24,
                             borderRadius: 12,
-                            overflow: "hidden",
-                            background: heroImage
-                                ? `url(${heroImage}) center/cover no-repeat`
-                                : cardOverlayColor,
                         }}
                     >
-                        {heroImage && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    background: cardOverlayColor,
-                                }}
-                            />
-                        )}
+                        {/* Inner card with image/overlay */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                width: 578,
+                                height: 353,
+                                left: 42,
+                                top: 14,
+                                borderRadius: 12,
+                                background: heroImage
+                                    ? `url(${heroImage}) center/cover no-repeat`
+                                    : cardOverlayColor,
+                            }}
+                        >
+                            {heroImage && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        background: cardOverlayColor,
+                                        borderRadius: 12,
+                                    }}
+                                />
+                            )}
+                        </div>
 
-                        {/* Floating Pills */}
+                        {/* Floating Pills — positioned relative to 730x410 frame */}
                         {showPills &&
                             pills.map((pill, i) => {
                                 const config =
@@ -289,13 +301,13 @@ function ProductHero(props: Props) {
                                 )
                             })}
 
-                        {/* Stat card (bottom-left, overlapping) */}
+                        {/* Stat card (overlapping left edge) */}
                         {showStatCard && (
                             <div
                                 style={{
                                     position: "absolute",
-                                    left: -56,
-                                    top: "27%",
+                                    left: -55.63,
+                                    top: 124,
                                     padding: "14px 18px",
                                     background: "#ECEDF2",
                                     borderRadius: 12,
