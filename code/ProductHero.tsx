@@ -1,7 +1,8 @@
 // Product Page - Hero Section
-// Two-column layout with floating pills and encoder UI preview
+// Two-column layout with A/B video comparison and floating pills
 // Framer Code Component with full property controls
 
+import React, { useState, useRef, useCallback, useEffect } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
 interface PillItem {
@@ -14,7 +15,14 @@ interface Props {
     subheading: string
     ctaText: string
     ctaUrl: string
-    heroImage: string
+    videoA: string
+    videoB: string
+    imageA: string
+    imageB: string
+    useVideo: boolean
+    labelA: string
+    labelB: string
+    sliderColor: string
     pills: PillItem[]
     showPills: boolean
     showStatCard: boolean
@@ -44,7 +52,14 @@ function ProductHero(props: Props) {
         subheading = "Beamr 5 is the fastest, best-of-class HEVC encoder trusted by streaming giants",
         ctaText = "Book a Demo",
         ctaUrl = "#",
-        heroImage = "",
+        videoA = "",
+        videoB = "",
+        imageA = "",
+        imageB = "",
+        useVideo = false,
+        labelA = "Original",
+        labelB = "Beamr Optimized",
+        sliderColor = "#ffffff",
         pills = [
             { label: "Frame Analysis" },
             { label: "CABR\u2122 Active" },
@@ -71,23 +86,94 @@ function ProductHero(props: Props) {
         style,
     } = props
 
+    // Responsive detection via ResizeObserver
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [isMobile, setIsMobile] = useState(false)
+    const [isTablet, setIsTablet] = useState(false)
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+        const ro = new ResizeObserver((entries) => {
+            const w = entries[0]?.contentRect.width ?? 0
+            setIsMobile(w < 480)
+            setIsTablet(w >= 480 && w < 900)
+        })
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
+    const isCompact = isMobile || isTablet
+
+    // A/B comparison slider state
+    const [sliderPos, setSliderPos] = useState(50)
+    const compRef = useRef<HTMLDivElement>(null)
+    const dragging = useRef(false)
+
+    const updateSlider = useCallback((clientX: number) => {
+        const rect = compRef.current?.getBoundingClientRect()
+        if (!rect) return
+        const x = clientX - rect.left
+        const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
+        setSliderPos(pct)
+    }, [])
+
+    const onPointerDown = useCallback(
+        (e: React.PointerEvent) => {
+            dragging.current = true
+            ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+            updateSlider(e.clientX)
+        },
+        [updateSlider]
+    )
+
+    const onPointerMove = useCallback(
+        (e: React.PointerEvent) => {
+            if (!dragging.current) return
+            updateSlider(e.clientX)
+        },
+        [updateSlider]
+    )
+
+    const onPointerUp = useCallback(() => {
+        dragging.current = false
+    }, [])
+
     const animId = "prod-hero-float"
 
-    // Pill positions — exact pixel values relative to the 730x410 outer frame
+    // Pill positions — percentage-based for responsiveness within comparison area
     const pillConfigs = [
-        { top: 292, left: 145, delay: 0 },
-        { top: 385, left: 209, delay: 1.2 },
-        { top: 321, left: 286, delay: 0.6 },
+        { top: "71%", left: "20%", delay: 0 },
+        { top: "94%", left: "29%", delay: 1.2 },
+        { top: "78%", left: "39%", delay: 0.6 },
     ]
+
+    const hasMediaA = useVideo ? !!videoA : !!imageA
+    const hasMediaB = useVideo ? !!videoB : !!imageB
+    const hasComparison = hasMediaA || hasMediaB
+
+    // Responsive values
+    const sectionPadding = isMobile
+        ? "48px 20px"
+        : isTablet
+          ? "56px 32px"
+          : "64px 80px"
+
+    const headingSizeResp = isMobile
+        ? Math.min(headingFontSize, 40)
+        : isTablet
+          ? Math.min(headingFontSize, 52)
+          : headingFontSize
 
     return (
         <section
+            ref={containerRef}
             style={{
                 ...style,
                 width: "100%",
-                minHeight,
+                minHeight: isCompact ? "auto" : minHeight,
                 backgroundColor: bgColor,
-                padding: "64px 160px",
+                padding: sectionPadding,
                 boxSizing: "border-box",
                 fontFamily,
                 overflow: "hidden",
@@ -112,12 +198,12 @@ function ProductHero(props: Props) {
             <div
                 style={{
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: isCompact ? "column" : "row",
+                    alignItems: isCompact ? "stretch" : "center",
                     justifyContent: "space-between",
-                    gap: 48,
+                    gap: isMobile ? 32 : isTablet ? 40 : 48,
                     maxWidth: 1280,
                     margin: "0 auto",
-                    minHeight: Math.max(minHeight - 128, 400),
                 }}
             >
                 {/* Left: Text Content */}
@@ -126,15 +212,13 @@ function ProductHero(props: Props) {
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "flex-start",
-                        gap: 0,
-                        maxWidth: 500,
+                        maxWidth: isCompact ? "100%" : 500,
                         flexShrink: 0,
                     }}
                 >
-                    {/* Heading */}
                     <h1
                         style={{
-                            fontSize: headingFontSize,
+                            fontSize: headingSizeResp,
                             fontWeight: 500,
                             color: textColor,
                             margin: "0 0 20px",
@@ -146,27 +230,26 @@ function ProductHero(props: Props) {
                         {heading}
                     </h1>
 
-                    {/* Subheading */}
                     <p
                         style={{
-                            fontSize: 18,
+                            fontSize: isMobile ? 16 : 18,
                             fontWeight: 500,
                             color: secondaryTextColor,
                             margin: "0 0 32px",
                             lineHeight: "28px",
                             fontFamily: headingFontFamily,
+                            maxWidth: isCompact ? 520 : undefined,
                         }}
                     >
                         {subheading}
                     </p>
 
-                    {/* CTA Button */}
                     <a
                         href={ctaUrl}
                         style={{
                             backgroundColor: ctaBgColor,
                             color: ctaTextColor,
-                            padding: "16px 24px",
+                            padding: isMobile ? "14px 20px" : "16px 24px",
                             borderRadius: 8,
                             fontSize: 16,
                             fontWeight: 400,
@@ -197,151 +280,525 @@ function ProductHero(props: Props) {
                     </a>
                 </div>
 
-                {/* Right: Floating Cards / Encoder Preview */}
+                {/* Right: A/B Video Comparison with floating elements */}
                 <div
                     style={{
                         position: "relative",
-                        width: 778,
-                        height: 458,
-                        flexShrink: 0,
-                        background: bgColor,
+                        width: isCompact ? "100%" : "55%",
+                        flexShrink: 1,
+                        flexGrow: 1,
                     }}
                 >
-                    {/* Small accent card (top-right area) */}
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: 172,
-                            height: 102,
-                            left: 598,
-                            top: 239,
-                            background: cardBgColor,
-                            boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.08)",
-                            borderRadius: 8,
-                        }}
-                    />
-
-                    {/* Outer frame (730x410) — pills & stat card positioned relative to this */}
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: 730,
-                            height: 410,
-                            left: 24,
-                            top: 24,
-                            borderRadius: 12,
-                        }}
-                    >
-                        {/* Inner card with image/overlay */}
+                    {/* Small accent card (behind, offset) */}
+                    {!isMobile && (
                         <div
                             style={{
                                 position: "absolute",
-                                width: 578,
-                                height: 353,
-                                left: 42,
-                                top: 14,
-                                borderRadius: 12,
-                                background: heroImage
-                                    ? `url(${heroImage}) center/cover no-repeat`
-                                    : cardOverlayColor,
+                                width: "23%",
+                                height: "22%",
+                                right: 0,
+                                bottom: "-4%",
+                                background: cardBgColor,
+                                boxShadow:
+                                    "0px 4px 24px rgba(0, 0, 0, 0.08)",
+                                borderRadius: 8,
+                                zIndex: 0,
                             }}
-                        >
-                            {heroImage && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        background: cardOverlayColor,
-                                        borderRadius: 12,
-                                    }}
-                                />
-                            )}
-                        </div>
+                        />
+                    )}
 
-                        {/* Floating Pills — positioned relative to 730x410 frame */}
-                        {showPills &&
-                            pills.map((pill, i) => {
-                                const config =
-                                    pillConfigs[i % pillConfigs.length]
-                                return (
-                                    <div
-                                        key={i}
-                                        style={{
-                                            position: "absolute",
-                                            top: config.top,
-                                            left: config.left,
-                                            height: 24,
-                                            paddingLeft: 12,
-                                            paddingRight: 12,
-                                            paddingTop: 5,
-                                            paddingBottom: 5,
-                                            background: pillBgColor,
-                                            borderRadius: 50,
-                                            backdropFilter: "blur(20px)",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            animation: `${animId}-${i % 3} ${floatSpeed + i * 0.8}s ease-in-out infinite`,
-                                            animationDelay: `${config.delay}s`,
-                                            zIndex: 2,
-                                        }}
-                                    >
-                                        <span
-                                            style={{
-                                                color: pillTextColor,
-                                                fontSize: 10,
-                                                fontWeight: 600,
-                                                letterSpacing: "0.3px",
-                                                fontFamily,
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {pill.label}
-                                        </span>
-                                    </div>
-                                )
-                            })}
-
-                        {/* Stat card (overlapping left edge) */}
-                        {showStatCard && (
+                    {/* A/B Comparison Container */}
+                    <div
+                        ref={compRef}
+                        onPointerDown={onPointerDown}
+                        onPointerMove={onPointerMove}
+                        onPointerUp={onPointerUp}
+                        style={{
+                            position: "relative",
+                            width: isCompact ? "100%" : "94%",
+                            aspectRatio: "16 / 10",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                            cursor: hasComparison ? "col-resize" : "default",
+                            background: cardOverlayColor,
+                            userSelect: "none",
+                            touchAction: "none",
+                            zIndex: 1,
+                        }}
+                    >
+                        {/* Side B (full, underneath) */}
+                        {hasComparison && (
                             <div
                                 style={{
                                     position: "absolute",
-                                    left: -55.63,
-                                    top: 124,
-                                    padding: "14px 18px",
-                                    background: "#ECEDF2",
-                                    borderRadius: 12,
-                                    display: "inline-flex",
-                                    flexDirection: "column",
-                                    gap: 4,
-                                    zIndex: 3,
-                                    animation: `${animId}-1 ${floatSpeed + 1.5}s ease-in-out infinite`,
+                                    inset: 0,
                                 }}
                             >
-                                <span
+                                {useVideo && videoB ? (
+                                    <video
+                                        src={videoB}
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : imageB ? (
+                                    <img
+                                        src={imageB}
+                                        alt={labelB}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block",
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            background:
+                                                "linear-gradient(135deg, #d0d1de 0%, #b8bad0 100%)",
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        )}
+
+                        {/* Side A (clipped by slider) */}
+                        {hasComparison && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
+                                }}
+                            >
+                                {useVideo && videoA ? (
+                                    <video
+                                        src={videoA}
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : imageA ? (
+                                    <img
+                                        src={imageA}
+                                        alt={labelA}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block",
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            background:
+                                                "linear-gradient(135deg, #c4c6d6 0%, #aaacbf 100%)",
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        )}
+
+                        {/* Slider line + handle */}
+                        {hasComparison && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    bottom: 0,
+                                    left: `${sliderPos}%`,
+                                    transform: "translateX(-50%)",
+                                    width: 2,
+                                    background: sliderColor,
+                                    zIndex: 4,
+                                    pointerEvents: "none",
+                                }}
+                            >
+                                {/* Handle */}
+                                <div
                                     style={{
-                                        fontSize: 24,
-                                        fontWeight: 700,
-                                        color: textColor,
-                                        fontFamily,
-                                        lineHeight: 1.2,
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        transform: "translate(-50%, -50%)",
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: "50%",
+                                        background: sliderColor,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        boxShadow:
+                                            "0 2px 12px rgba(0,0,0,0.25)",
+                                        pointerEvents: "none",
                                     }}
                                 >
-                                    {statCardValue}
-                                </span>
-                                <span
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 20 20"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M7 4L3 10L7 16"
+                                            stroke="#333"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <path
+                                            d="M13 4L17 10L13 16"
+                                            stroke="#333"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* A/B Labels */}
+                        {hasComparison && (
+                            <>
+                                <div
                                     style={{
+                                        position: "absolute",
+                                        top: 12,
+                                        left: 12,
+                                        padding: "4px 10px",
+                                        background: "rgba(0,0,0,0.55)",
+                                        borderRadius: 6,
                                         fontSize: 11,
-                                        fontWeight: 500,
-                                        color: secondaryTextColor,
+                                        fontWeight: 600,
+                                        color: "#fff",
                                         fontFamily,
+                                        letterSpacing: "0.3px",
+                                        zIndex: 5,
+                                        pointerEvents: "none",
                                     }}
                                 >
-                                    {statCardLabel}
-                                </span>
+                                    {labelA}
+                                </div>
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: 12,
+                                        right: 12,
+                                        padding: "4px 10px",
+                                        background: "rgba(0,0,0,0.55)",
+                                        borderRadius: 6,
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                        color: "#fff",
+                                        fontFamily,
+                                        letterSpacing: "0.3px",
+                                        zIndex: 5,
+                                        pointerEvents: "none",
+                                    }}
+                                >
+                                    {labelB}
+                                </div>
+                            </>
+                        )}
+
+                        {/* Placeholder when no media */}
+                        {!hasComparison && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 0,
+                                }}
+                            >
+                                {/* Left placeholder */}
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100%",
+                                        background:
+                                            "linear-gradient(135deg, #c4c6d6 0%, #aaacbf 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: 11,
+                                            fontWeight: 600,
+                                            color: "#fff",
+                                            background: "rgba(0,0,0,0.35)",
+                                            padding: "4px 10px",
+                                            borderRadius: 6,
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {labelA}
+                                    </span>
+                                </div>
+                                {/* Divider */}
+                                <div
+                                    style={{
+                                        width: 2,
+                                        height: "100%",
+                                        background: sliderColor,
+                                        position: "relative",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            top: "50%",
+                                            left: "50%",
+                                            transform:
+                                                "translate(-50%, -50%)",
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: "50%",
+                                            background: sliderColor,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            boxShadow:
+                                                "0 2px 8px rgba(0,0,0,0.15)",
+                                        }}
+                                    >
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 20 20"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M7 4L3 10L7 16"
+                                                stroke="#333"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                            <path
+                                                d="M13 4L17 10L13 16"
+                                                stroke="#333"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                                {/* Right placeholder */}
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100%",
+                                        background:
+                                            "linear-gradient(135deg, #d0d1de 0%, #b8bad0 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: 11,
+                                            fontWeight: 600,
+                                            color: "#fff",
+                                            background: "rgba(0,0,0,0.35)",
+                                            padding: "4px 10px",
+                                            borderRadius: 6,
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {labelB}
+                                    </span>
+                                </div>
                             </div>
                         )}
                     </div>
+
+                    {/* Floating Pills — positioned over comparison area */}
+                    {showPills &&
+                        !isMobile &&
+                        pills.map((pill, i) => {
+                            const config =
+                                pillConfigs[i % pillConfigs.length]
+                            return (
+                                <div
+                                    key={i}
+                                    style={{
+                                        position: "absolute",
+                                        top: config.top,
+                                        left: config.left,
+                                        height: 24,
+                                        paddingLeft: 12,
+                                        paddingRight: 12,
+                                        paddingTop: 5,
+                                        paddingBottom: 5,
+                                        background: pillBgColor,
+                                        borderRadius: 50,
+                                        backdropFilter: "blur(20px)",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        animation: `${animId}-${i % 3} ${floatSpeed + i * 0.8}s ease-in-out infinite`,
+                                        animationDelay: `${config.delay}s`,
+                                        zIndex: 6,
+                                        pointerEvents: "none",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            color: pillTextColor,
+                                            fontSize: 10,
+                                            fontWeight: 600,
+                                            letterSpacing: "0.3px",
+                                            fontFamily,
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {pill.label}
+                                    </span>
+                                </div>
+                            )
+                        })}
+
+                    {/* Stat card (overlapping left edge) */}
+                    {showStatCard && !isMobile && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: isTablet ? -20 : -40,
+                                top: "27%",
+                                padding: "14px 18px",
+                                background: "#ECEDF2",
+                                borderRadius: 12,
+                                display: "inline-flex",
+                                flexDirection: "column",
+                                gap: 4,
+                                zIndex: 7,
+                                animation: `${animId}-1 ${floatSpeed + 1.5}s ease-in-out infinite`,
+                                pointerEvents: "none",
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontSize: 24,
+                                    fontWeight: 700,
+                                    color: textColor,
+                                    fontFamily,
+                                    lineHeight: 1.2,
+                                }}
+                            >
+                                {statCardValue}
+                            </span>
+                            <span
+                                style={{
+                                    fontSize: 11,
+                                    fontWeight: 500,
+                                    color: secondaryTextColor,
+                                    fontFamily,
+                                }}
+                            >
+                                {statCardLabel}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Mobile: inline pills row */}
+                    {showPills && isMobile && (
+                        <div
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 8,
+                                marginTop: 12,
+                            }}
+                        >
+                            {pills.map((pill, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        height: 24,
+                                        paddingLeft: 12,
+                                        paddingRight: 12,
+                                        paddingTop: 5,
+                                        paddingBottom: 5,
+                                        background: pillBgColor,
+                                        borderRadius: 50,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            color: pillTextColor,
+                                            fontSize: 10,
+                                            fontWeight: 600,
+                                            letterSpacing: "0.3px",
+                                            fontFamily,
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {pill.label}
+                                    </span>
+                                </div>
+                            ))}
+                            {showStatCard && (
+                                <div
+                                    style={{
+                                        padding: "5px 12px",
+                                        background: "#ECEDF2",
+                                        borderRadius: 50,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            color: textColor,
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {statCardValue}
+                                    </span>
+                                    <span
+                                        style={{
+                                            fontSize: 10,
+                                            fontWeight: 500,
+                                            color: secondaryTextColor,
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {statCardLabel}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </section>
@@ -380,9 +837,47 @@ addPropertyControls(ProductHero, {
         title: "CTA URL",
         defaultValue: "#",
     },
-    heroImage: {
+    useVideo: {
+        type: ControlType.Boolean,
+        title: "Use Video",
+        defaultValue: false,
+    },
+    videoA: {
+        type: ControlType.File,
+        title: "Video A (Original)",
+        allowedFileTypes: ["mp4", "webm"],
+        hidden: (props) => !props.useVideo,
+    },
+    videoB: {
+        type: ControlType.File,
+        title: "Video B (Optimized)",
+        allowedFileTypes: ["mp4", "webm"],
+        hidden: (props) => !props.useVideo,
+    },
+    imageA: {
         type: ControlType.Image,
-        title: "Hero Image",
+        title: "Image A (Original)",
+        hidden: (props) => props.useVideo,
+    },
+    imageB: {
+        type: ControlType.Image,
+        title: "Image B (Optimized)",
+        hidden: (props) => props.useVideo,
+    },
+    labelA: {
+        type: ControlType.String,
+        title: "Label A",
+        defaultValue: "Original",
+    },
+    labelB: {
+        type: ControlType.String,
+        title: "Label B",
+        defaultValue: "Beamr Optimized",
+    },
+    sliderColor: {
+        type: ControlType.Color,
+        title: "Slider Color",
+        defaultValue: "#ffffff",
     },
     showPills: {
         type: ControlType.Boolean,
@@ -478,12 +973,12 @@ addPropertyControls(ProductHero, {
     },
     cardBgColor: {
         type: ControlType.Color,
-        title: "Card Background",
+        title: "Accent Card BG",
         defaultValue: "#EBECF6",
     },
     cardOverlayColor: {
         type: ControlType.String,
-        title: "Card Overlay",
+        title: "Comparison BG",
         defaultValue: "rgba(196, 198, 214, 0.9)",
     },
     pillBgColor: {
