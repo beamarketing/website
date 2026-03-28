@@ -10,46 +10,66 @@ interface CapabilityCard {
     description: string
 }
 
-// Inject hover-only animation keyframes once
+// Hover animations injected once
 const animStyleId = "cap-icon-anims"
 function ensureAnimStyles() {
     if (typeof document === "undefined") return
     if (document.getElementById(animStyleId)) return
-    const style = document.createElement("style")
-    style.id = animStyleId
-    style.textContent = `
+    const s = document.createElement("style")
+    s.id = animStyleId
+    s.textContent = `
+        .cap-card {
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .cap-card:hover {
+            box-shadow: 0 0 0 1px var(--cap-accent), 0 8px 24px rgba(79,62,245,0.08) !important;
+            border-color: var(--cap-accent) !important;
+        }
         .cap-card:hover .cap-icon-compression {
             animation: capSqueeze 0.8s ease-in-out;
         }
         .cap-card:hover .cap-icon-ai .cap-star-main {
-            animation: capPulse 0.7s ease-in-out;
+            animation: capShine 0.7s ease-in-out;
         }
         .cap-card:hover .cap-icon-ai .cap-star-sm1 {
-            animation: capPulse 0.7s ease-in-out 0.1s;
+            animation: capShine 0.7s ease-in-out 0.12s;
         }
         .cap-card:hover .cap-icon-ai .cap-star-sm2 {
-            animation: capPulse 0.7s ease-in-out 0.2s;
+            animation: capShine 0.7s ease-in-out 0.24s;
         }
-        .cap-card:hover .cap-icon-pipeline {
-            animation: capSpin 1.2s ease-in-out;
+        .cap-card:hover .cap-icon-pipeline .cap-pipe-flow {
+            animation: capFlowDash 1s ease-in-out;
         }
-        .cap-card { transition: border-color 0.25s ease; }
-        .cap-card:hover { border-color: var(--cap-accent) !important; }
+        .cap-card:hover .cap-icon-pipeline .cap-pipe-node {
+            animation: capNodePop 0.5s ease-out;
+        }
+        .cap-card:hover .cap-icon-pipeline .cap-pipe-node-2 {
+            animation: capNodePop 0.5s ease-out 0.15s;
+        }
+        .cap-card:hover .cap-icon-pipeline .cap-pipe-node-3 {
+            animation: capNodePop 0.5s ease-out 0.3s;
+        }
         @keyframes capSqueeze {
             0%, 100% { transform: scaleX(1); }
             40% { transform: scaleX(0.72); }
             70% { transform: scaleX(1.05); }
         }
-        @keyframes capPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.75); }
+        @keyframes capShine {
+            0% { opacity: 1; transform: scale(1); }
+            30% { opacity: 0.3; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
         }
-        @keyframes capSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(120deg); }
+        @keyframes capFlowDash {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes capNodePop {
+            0% { transform: scale(0.5); opacity: 0.3; }
+            60% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
         }
     `
-    document.head.appendChild(style)
+    document.head.appendChild(s)
 }
 
 // 4-pointed star path
@@ -63,10 +83,9 @@ function star4(cx: number, cy: number, outer: number, inner: number) {
     return `M${p.join("L")}Z`
 }
 
-// Icon renderers — no constant animations, just clean SVGs
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg className="cap-icon-compression" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="cap-icon-compression" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="1" y1="12" x2="8" y2="12" />
             <polyline points="6 9.5 8 12 6 14.5" />
             <line x1="23" y1="12" x2="16" y2="12" />
@@ -76,16 +95,29 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
         </svg>
     ),
     ai: (color) => (
-        <svg className="cap-icon-ai" width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <svg className="cap-icon-ai" width="30" height="30" viewBox="0 0 24 24" fill="none">
             <path className="cap-star-main" d={star4(11, 13, 9.5, 3.2)} fill={color} />
-            <path className="cap-star-sm1" d={star4(19, 5.5, 3.2, 1.1)} fill={color} opacity="0.7" />
-            <path className="cap-star-sm2" d={star4(4.5, 6, 2.4, 0.8)} fill={color} opacity="0.5" />
+            <path className="cap-star-sm1" d={star4(19, 5.5, 3.2, 1.1)} fill={color} opacity="0.65" style={{ transformOrigin: "19px 5.5px" }} />
+            <path className="cap-star-sm2" d={star4(4.5, 6, 2.4, 0.8)} fill={color} opacity="0.4" style={{ transformOrigin: "4.5px 6px" }} />
         </svg>
     ),
     pipeline: (color) => (
-        <svg className="cap-icon-pipeline" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        <svg className="cap-icon-pipeline" width="30" height="30" viewBox="0 0 24 24" fill="none">
+            {/* Flow lines connecting the 3 nodes */}
+            <path className="cap-pipe-flow" d="M5 12 L10.5 12" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
+            <path className="cap-pipe-flow" d="M13.5 12 L19 12" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
+            {/* Branch lines going up and down from center */}
+            <path className="cap-pipe-flow" d="M12 9.5 L12 6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
+            <path className="cap-pipe-flow" d="M12 14.5 L12 18" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
+            {/* Input node */}
+            <circle className="cap-pipe-node" cx="3.5" cy="12" r="2.5" fill={color} opacity="0.25" stroke={color} strokeWidth="1.5" style={{ transformOrigin: "3.5px 12px" }} />
+            {/* Center node (larger, process) */}
+            <circle className="cap-pipe-node-2" cx="12" cy="12" r="2.8" fill={color} opacity="0.35" stroke={color} strokeWidth="1.5" style={{ transformOrigin: "12px 12px" }} />
+            {/* Output node */}
+            <circle className="cap-pipe-node-3" cx="20.5" cy="12" r="2.5" fill={color} opacity="0.25" stroke={color} strokeWidth="1.5" style={{ transformOrigin: "20.5px 12px" }} />
+            {/* Branch endpoints */}
+            <circle cx="12" cy="4.5" r="1.5" fill={color} opacity="0.4" style={{ transformOrigin: "12px 4.5px" }} />
+            <circle cx="12" cy="19.5" r="1.5" fill={color} opacity="0.4" style={{ transformOrigin: "12px 19.5px" }} />
         </svg>
     ),
 }
@@ -171,10 +203,10 @@ function ProductCapabilities(props: Props) {
             },
         ],
         accentColor = "#4f3ef5",
-        bgColor = "#fafaff",
+        bgColor = "#ffffff",
         textColor = "#1a1a2e",
-        secondaryTextColor = "#666",
-        cardBgColor = "#fff",
+        secondaryTextColor = "#555",
+        cardBgColor = "#f8f7ff",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
         headingFontWeight = 700,
@@ -204,7 +236,7 @@ function ProductCapabilities(props: Props) {
 
     const gridColumns = isMobile ? "1fr" : isTablet ? "1fr 1fr" : "1fr 1fr 1fr"
     const sectionPadding = isMobile
-        ? `${paddingTop}px 16px 80px`
+        ? `${paddingTop}px 20px 64px`
         : isTablet
           ? `${paddingTop}px 32px 80px`
           : `${paddingTop}px 48px 100px`
@@ -219,13 +251,12 @@ function ProductCapabilities(props: Props) {
                 padding: sectionPadding,
                 boxSizing: "border-box",
                 fontFamily,
-                // @ts-ignore CSS variable for hover accent
                 "--cap-accent": accentColor,
             } as React.CSSProperties}
         >
-            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-                {/* Header */}
-                <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 56 }}>
+            <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+                {/* Header — left-aligned for a less template look */}
+                <div style={{ marginBottom: isMobile ? 36 : 52, maxWidth: 600 }}>
                     <span
                         style={{
                             fontSize: 13,
@@ -234,17 +265,19 @@ function ProductCapabilities(props: Props) {
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
                             fontFamily,
+                            display: "block",
+                            marginBottom: 14,
                         }}
                     >
                         {sectionLabel}
                     </span>
                     <h2
                         style={{
-                            fontSize: isMobile ? 28 : isTablet ? 36 : 44,
+                            fontSize: isMobile ? 28 : isTablet ? 34 : 40,
                             fontWeight: headingFontWeight,
                             color: textColor,
-                            margin: "16px 0 0",
-                            lineHeight: 1.15,
+                            margin: 0,
+                            lineHeight: 1.2,
                             fontFamily: headingFontFamily,
                             letterSpacing: "-0.02em",
                         }}
@@ -253,10 +286,9 @@ function ProductCapabilities(props: Props) {
                     </h2>
                     <p
                         style={{
-                            fontSize: isMobile ? 15 : 17,
+                            fontSize: isMobile ? 15 : 16,
                             color: secondaryTextColor,
-                            margin: "16px auto 0",
-                            maxWidth: 640,
+                            margin: "14px 0 0",
                             lineHeight: 1.6,
                             fontFamily,
                         }}
@@ -265,12 +297,12 @@ function ProductCapabilities(props: Props) {
                     </p>
                 </div>
 
-                {/* Capability Cards */}
+                {/* Capability Cards — accent top border, tinted bg */}
                 <div
                     style={{
                         display: "grid",
                         gridTemplateColumns: gridColumns,
-                        gap: isMobile ? 16 : 24,
+                        gap: isMobile ? 16 : 20,
                         marginBottom: isMobile ? 40 : 56,
                     }}
                 >
@@ -280,23 +312,23 @@ function ProductCapabilities(props: Props) {
                             className="cap-card"
                             style={{
                                 backgroundColor: cardBgColor,
-                                borderRadius: 14,
-                                border: `1.5px solid #e8e8ee`,
-                                padding: isMobile ? "28px 24px" : "32px 28px",
+                                borderRadius: 12,
+                                border: `1px solid ${accentColor}1A`,
+                                borderTop: `3px solid ${accentColor}`,
+                                padding: isMobile ? "24px 20px" : "28px 24px",
                                 boxSizing: "border-box",
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: 14,
+                                gap: 12,
                                 cursor: "default",
                             }}
                         >
-                            {/* Icon — clean, no box around it */}
-                            <div style={{ marginBottom: 4 }}>
+                            <div style={{ marginBottom: 2 }}>
                                 {renderCardIcon(card.icon, i, accentColor)}
                             </div>
                             <h3
                                 style={{
-                                    fontSize: isMobile ? 17 : 19,
+                                    fontSize: isMobile ? 17 : 18,
                                     fontWeight: 600,
                                     color: textColor,
                                     margin: 0,
@@ -308,10 +340,10 @@ function ProductCapabilities(props: Props) {
                             </h3>
                             <p
                                 style={{
-                                    fontSize: isMobile ? 14 : 15,
+                                    fontSize: 14,
                                     color: secondaryTextColor,
                                     margin: 0,
-                                    lineHeight: 1.65,
+                                    lineHeight: 1.7,
                                     fontFamily,
                                 }}
                             >
@@ -321,22 +353,31 @@ function ProductCapabilities(props: Props) {
                     ))}
                 </div>
 
-                {/* Sub-features */}
-                <div style={{ borderTop: "1px solid #e4e4ea", paddingTop: isMobile ? 40 : 48 }}>
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: gridColumns,
-                            gap: isMobile ? 24 : 32,
-                        }}
-                    >
-                        {subCards.map((sub, i) => (
-                            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Sub-features — inline with accent dot */}
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: gridColumns,
+                        gap: isMobile ? 20 : 40,
+                    }}
+                >
+                    {subCards.map((sub, i) => (
+                        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span
+                                    style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: "50%",
+                                        backgroundColor: accentColor,
+                                        flexShrink: 0,
+                                    }}
+                                />
                                 <h4
                                     style={{
-                                        fontSize: isMobile ? 15 : 16,
+                                        fontSize: isMobile ? 14 : 15,
                                         fontWeight: 600,
-                                        color: accentColor,
+                                        color: textColor,
                                         margin: 0,
                                         fontFamily,
                                         lineHeight: 1.3,
@@ -344,20 +385,21 @@ function ProductCapabilities(props: Props) {
                                 >
                                     {sub.title}
                                 </h4>
-                                <p
-                                    style={{
-                                        fontSize: isMobile ? 13 : 14,
-                                        color: secondaryTextColor,
-                                        margin: 0,
-                                        lineHeight: 1.65,
-                                        fontFamily,
-                                    }}
-                                >
-                                    {sub.description}
-                                </p>
                             </div>
-                        ))}
-                    </div>
+                            <p
+                                style={{
+                                    fontSize: 13,
+                                    color: secondaryTextColor,
+                                    margin: 0,
+                                    lineHeight: 1.65,
+                                    fontFamily,
+                                    paddingLeft: 14,
+                                }}
+                            >
+                                {sub.description}
+                            </p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>
@@ -474,7 +516,7 @@ addPropertyControls(ProductCapabilities, {
     bgColor: {
         type: ControlType.Color,
         title: "Background",
-        defaultValue: "#fafaff",
+        defaultValue: "#ffffff",
     },
     textColor: {
         type: ControlType.Color,
@@ -484,12 +526,12 @@ addPropertyControls(ProductCapabilities, {
     secondaryTextColor: {
         type: ControlType.Color,
         title: "Secondary Text",
-        defaultValue: "#666",
+        defaultValue: "#555",
     },
     cardBgColor: {
         type: ControlType.Color,
         title: "Card BG",
-        defaultValue: "#fff",
+        defaultValue: "#f8f7ff",
     },
     fontFamily: {
         type: ControlType.String,
