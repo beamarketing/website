@@ -10,10 +10,54 @@ interface CapabilityCard {
     description: string
 }
 
+// Keyframe animations injected once
+const animStyleId = "cap-icon-anims"
+function ensureAnimStyles() {
+    if (typeof document === "undefined") return
+    if (document.getElementById(animStyleId)) return
+    const style = document.createElement("style")
+    style.id = animStyleId
+    style.textContent = `
+        @keyframes capSqueeze {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(0.7); }
+        }
+        @keyframes capSparkle1 {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        @keyframes capSparkle2 {
+            0%, 100% { opacity: 0.5; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        @keyframes capSparkle3 {
+            0%, 100% { opacity: 0.7; transform: scale(0.9); }
+            40% { opacity: 0.3; transform: scale(0.6); }
+            80% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes capGearSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `
+    document.head.appendChild(style)
+}
+
+// 4-pointed star path helper
+function fourPointStar(cx: number, cy: number, outerR: number, innerR: number) {
+    const pts = []
+    for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI) / 4 - Math.PI / 2
+        const r = i % 2 === 0 ? outerR : innerR
+        pts.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`)
+    }
+    return `M${pts.join("L")}Z`
+}
+
 // SVG icon map keyed by identifier
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "capSqueeze 2.5s ease-in-out infinite" }}>
             {/* Left arrow */}
             <line x1="1" y1="12" x2="8" y2="12" />
             <polyline points="6 9.5 8 12 6 14.5" />
@@ -27,12 +71,17 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
         </svg>
     ),
     ai: (color) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            {/* Main large 4-pointed star */}
+            <path d={fourPointStar(11, 13, 10, 3.5)} fill={color} style={{ animation: "capSparkle1 3s ease-in-out infinite" }} />
+            {/* Top-right small star */}
+            <path d={fourPointStar(19.5, 5, 3.5, 1.2)} fill={color} style={{ animation: "capSparkle2 3s ease-in-out infinite", transformOrigin: "19.5px 5px" }} />
+            {/* Bottom-left tiny star */}
+            <path d={fourPointStar(4, 5.5, 2.5, 0.9)} fill={color} style={{ animation: "capSparkle3 3s ease-in-out infinite", transformOrigin: "4px 5.5px" }} />
         </svg>
     ),
     pipeline: (color) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "capGearSpin 6s linear infinite" }}>
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
@@ -43,21 +92,16 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
 const defaultIconKeys = ["compression", "ai", "pipeline"]
 
 function renderCardIcon(icon: string, index: number, accentColor: string) {
-    // Check if icon matches a known key
     const key = icon.toLowerCase()
     const renderer = iconMap[key]
-    if (renderer) {
-        return renderer(accentColor)
-    }
-    // For default cards using emoji, map by index
+    if (renderer) return renderer(accentColor)
+    // Legacy emoji fallback by index
     if (index < defaultIconKeys.length) {
-        const defaultKey = defaultIconKeys[index]
-        const defaultRenderer = iconMap[defaultKey]
-        if (defaultRenderer && (icon === "📦" || icon === "✨" || icon === "⚙️" || icon === "\uD83D\uDCE6" || icon === "\u2728" || icon === "\u2699\uFE0F")) {
+        const defaultRenderer = iconMap[defaultIconKeys[index]]
+        if (defaultRenderer && /^[\u{1F4E6}\u2728\u2699\uFE0F]$/u.test(icon)) {
             return defaultRenderer(accentColor)
         }
     }
-    // Fallback: render as text (for custom user icons/emoji)
     return <span style={{ fontSize: 24, lineHeight: 1 }}>{icon}</span>
 }
 
@@ -142,6 +186,9 @@ function ProductCapabilities(props: Props) {
     const [isMobile, setIsMobile] = useState(false)
     const [isTablet, setIsTablet] = useState(false)
     const [hoveredCard, setHoveredCard] = useState<number | null>(null)
+
+    // Inject animation keyframes
+    useEffect(() => { ensureAnimStyles() }, [])
 
     // Responsive detection based on component's own width
     useEffect(() => {
