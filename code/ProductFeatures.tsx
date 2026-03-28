@@ -24,6 +24,8 @@ interface Props {
     fontFamily: string
     headingFontFamily: string
     headingFontWeight: number
+    featureTitleSize: number
+    featureTitleWeight: number
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -89,6 +91,8 @@ function ProductFeatures(props: Props) {
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
         headingFontWeight = 700,
+        featureTitleSize = 28,
+        featureTitleWeight = 700,
         paddingTop = 100,
         style,
     } = props
@@ -199,8 +203,8 @@ function ProductFeatures(props: Props) {
                             >
                                 <h3
                                     style={{
-                                        fontSize: isMobile ? 24 : 28,
-                                        fontWeight: 700,
+                                        fontSize: isMobile ? Math.min(featureTitleSize, 24) : featureTitleSize,
+                                        fontWeight: featureTitleWeight,
                                         color: textColor,
                                         margin: 0,
                                         lineHeight: 1.25,
@@ -514,6 +518,22 @@ addPropertyControls(ProductFeatures, {
     headingFontWeight: {
         type: ControlType.Number,
         title: "Heading Weight",
+        defaultValue: 700,
+        min: 100,
+        max: 900,
+        step: 100,
+    },
+    featureTitleSize: {
+        type: ControlType.Number,
+        title: "Feature Title Size",
+        defaultValue: 28,
+        min: 16,
+        max: 48,
+        step: 1,
+    },
+    featureTitleWeight: {
+        type: ControlType.Number,
+        title: "Feature Title Weight",
         defaultValue: 700,
         min: 100,
         max: 900,
