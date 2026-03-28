@@ -27,7 +27,6 @@ interface Props {
     trustLogoHeight: number
     trustLogoOpacity: number
     // Scale metric
-    scaleValue: string
     scaleLabel: string
     scaleDescription: string
     // Colors
@@ -58,7 +57,6 @@ function ProductAuthority(props: Props) {
         trustLogos = [],
         trustLogoHeight = 28,
         trustLogoOpacity = 0.7,
-        scaleValue = "∞",
         scaleLabel = "Scales With Your Needs",
         scaleDescription = "From a single pair comparison to dozens of configurations across hundreds of viewers \u2014 VISTA handles growing test complexity without growing your team.",
         accentColor = "#8b7cf5",
@@ -314,26 +312,43 @@ function ProductAuthority(props: Props) {
                         <div
                             style={{
                                 display: "flex",
-                                alignItems: "baseline",
-                                gap: 12,
+                                alignItems: "center",
+                                gap: 14,
                                 marginBottom: 12,
                             }}
                         >
-                            <span
-                                style={{
-                                    fontSize: isMobile ? 40 : 52,
-                                    fontWeight: 800,
-                                    color: accentColor,
-                                    lineHeight: 1,
-                                    fontFamily: headingFontFamily,
-                                    letterSpacing: "-0.02em",
-                                }}
+                            {/* Rising graph icon */}
+                            <svg
+                                width={isMobile ? 32 : 40}
+                                height={isMobile ? 32 : 40}
+                                viewBox="0 0 40 40"
+                                fill="none"
+                                style={{ flexShrink: 0 }}
                             >
-                                {scaleValue}
-                            </span>
+                                <rect
+                                    width="40"
+                                    height="40"
+                                    rx="10"
+                                    fill={`${accentColor}20`}
+                                />
+                                <path
+                                    d="M10 28L17 21L22 24L30 14"
+                                    stroke={accentColor}
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                                <path
+                                    d="M25 14H30V19"
+                                    stroke={accentColor}
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
                             <span
                                 style={{
-                                    fontSize: isMobile ? 15 : 17,
+                                    fontSize: isMobile ? 17 : 19,
                                     fontWeight: 600,
                                     color: textColor,
                                     lineHeight: 1.3,
@@ -569,9 +584,6 @@ addPropertyControls(ProductAuthority, {
     },
     scaleValue: {
         type: ControlType.String,
-        title: "Scale Value",
-        defaultValue: "\u221e",
-    },
     scaleLabel: {
         type: ControlType.String,
         title: "Scale Label",
