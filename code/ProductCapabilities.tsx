@@ -27,6 +27,7 @@ interface Props {
     secondaryTextColor: string
     cardBgColor: string
     fontFamily: string
+    headingFontFamily: string
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -79,6 +80,7 @@ function ProductCapabilities(props: Props) {
         secondaryTextColor = "#666",
         cardBgColor = "#fff",
         fontFamily = "'Inter', sans-serif",
+        headingFontFamily = "'Poppins', sans-serif",
         paddingTop = 100,
         style,
     } = props
@@ -154,7 +156,7 @@ function ProductCapabilities(props: Props) {
                             color: textColor,
                             margin: "16px 0 0",
                             lineHeight: 1.15,
-                            fontFamily,
+                            fontFamily: headingFontFamily,
                             letterSpacing: "-0.02em",
                         }}
                     >
@@ -431,6 +433,11 @@ addPropertyControls(ProductCapabilities, {
         type: ControlType.String,
         title: "Font Family",
         defaultValue: "'Inter', sans-serif",
+    },
+    headingFontFamily: {
+        type: ControlType.String,
+        title: "Heading Font",
+        defaultValue: "'Poppins', sans-serif",
     },
     paddingTop: {
         type: ControlType.Number,

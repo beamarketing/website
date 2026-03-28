@@ -22,6 +22,7 @@ interface Props {
     secondaryTextColor: string
     calloutBgColor: string
     fontFamily: string
+    headingFontFamily: string
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -85,6 +86,7 @@ function ProductFeatures(props: Props) {
         secondaryTextColor = "#555",
         calloutBgColor = "#f5f3ff",
         fontFamily = "'Inter', sans-serif",
+        headingFontFamily = "'Poppins', sans-serif",
         paddingTop = 100,
         style,
     } = props
@@ -160,7 +162,7 @@ function ProductFeatures(props: Props) {
                             color: textColor,
                             margin: "16px 0 0",
                             lineHeight: 1.15,
-                            fontFamily,
+                            fontFamily: headingFontFamily,
                             letterSpacing: "-0.02em",
                             maxWidth: 720,
                             marginLeft: "auto",
@@ -501,6 +503,11 @@ addPropertyControls(ProductFeatures, {
         type: ControlType.String,
         title: "Font Family",
         defaultValue: "'Inter', sans-serif",
+    },
+    headingFontFamily: {
+        type: ControlType.String,
+        title: "Heading Font",
+        defaultValue: "'Poppins', sans-serif",
     },
     paddingTop: {
         type: ControlType.Number,

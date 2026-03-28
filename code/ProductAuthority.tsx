@@ -25,6 +25,7 @@ interface Props {
     quoteBgColor: string
     cardBgColor: string
     fontFamily: string
+    headingFontFamily: string
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -63,6 +64,7 @@ function ProductAuthority(props: Props) {
         quoteBgColor = "rgba(79,62,245,0.1)",
         cardBgColor = "rgba(255,255,255,0.04)",
         fontFamily = "'Inter', sans-serif",
+        headingFontFamily = "'Poppins', sans-serif",
         paddingTop = 100,
         style,
     } = props
@@ -133,7 +135,7 @@ function ProductAuthority(props: Props) {
                         margin: "0 0 48px",
                         lineHeight: 1.15,
                         letterSpacing: "-0.02em",
-                        fontFamily,
+                        fontFamily: headingFontFamily,
                         maxWidth: 700,
                     }}
                 >
@@ -402,6 +404,11 @@ addPropertyControls(ProductAuthority, {
         type: ControlType.String,
         title: "Font Family",
         defaultValue: "'Inter', sans-serif",
+    },
+    headingFontFamily: {
+        type: ControlType.String,
+        title: "Heading Font",
+        defaultValue: "'Poppins', sans-serif",
     },
     paddingTop: {
         type: ControlType.Number,

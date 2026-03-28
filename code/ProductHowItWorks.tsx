@@ -23,6 +23,7 @@ interface Props {
     textColor: string
     secondaryTextColor: string
     fontFamily: string
+    headingFontFamily: string
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -57,6 +58,7 @@ function ProductHowItWorks(props: Props) {
         textColor = "#1a1a2e",
         secondaryTextColor = "#666666",
         fontFamily = "'Inter', sans-serif",
+        headingFontFamily = "'Poppins', sans-serif",
         paddingTop = 100,
         style,
     } = props
@@ -137,7 +139,7 @@ function ProductHowItWorks(props: Props) {
                             color: textColor,
                             margin: "16px 0 0",
                             lineHeight: 1.15,
-                            fontFamily,
+                            fontFamily: headingFontFamily,
                             letterSpacing: "-0.02em",
                         }}
                     >
@@ -384,6 +386,11 @@ addPropertyControls(ProductHowItWorks, {
         type: ControlType.String,
         title: "Font Family",
         defaultValue: "'Inter', sans-serif",
+    },
+    headingFontFamily: {
+        type: ControlType.String,
+        title: "Heading Font",
+        defaultValue: "'Poppins', sans-serif",
     },
     paddingTop: {
         type: ControlType.Number,
