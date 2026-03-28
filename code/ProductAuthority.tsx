@@ -582,8 +582,6 @@ addPropertyControls(ProductAuthority, {
         max: 1,
         step: 0.05,
     },
-    scaleValue: {
-        type: ControlType.String,
     scaleLabel: {
         type: ControlType.String,
         title: "Scale Label",
