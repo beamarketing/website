@@ -1,14 +1,14 @@
 // Product Page - Why Beamr Authority/Trust Section
-// Dark section with quote card and proof cards grid
+// Dark section with quote, award highlight, trust logos, and scale metric
 // Framer Code Component with full property controls
 
 import React, { useRef, useState, useEffect } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
-interface ProofCard {
-    icon: string
-    title: string
-    description: string
+interface TrustLogo {
+    image: string
+    name: string
+    height: number
 }
 
 interface Props {
@@ -17,7 +17,20 @@ interface Props {
     bodyText: string
     quote: string
     quoteAttribution: string
-    proofCards: ProofCard[]
+    // Emmy / Award
+    awardTitle: string
+    awardDescription: string
+    awardImage: string
+    // Trust logos
+    trustTitle: string
+    trustLogos: TrustLogo[]
+    trustLogoHeight: number
+    trustLogoOpacity: number
+    // Scale metric
+    scaleValue: string
+    scaleLabel: string
+    scaleDescription: string
+    // Colors
     accentColor: string
     bgColor: string
     textColor: string
@@ -35,29 +48,19 @@ function ProductAuthority(props: Props) {
     const {
         sectionLabel = "Why Beamr",
         sectionTitle = "A Decade of Perceptual Science, Productized",
-        bodyText = "VISTA isn't a startup experiment. It's the same subjective testing methodology Beamr has used internally for over 10 years — the foundation behind an Emmy Award, 53 patents, and quality-critical deployments at the world's most demanding video platforms.\n\nNow it's yours.",
-        quote = "Viewers don't watch metrics, they watch video. VISTA makes human judgment scalable — giving teams a clear answer on whether their video is good enough before they ship.",
-        quoteAttribution = "— Sharon Carmel, Founder & CEO, Beamr",
-        proofCards = [
-            {
-                icon: "🏆",
-                title: "Emmy Award-Winning Science",
-                description:
-                    "Beamr's perceptual quality discipline earned a Technology & Engineering Emmy Award — the gold standard of recognition in the video industry.",
-            },
-            {
-                icon: "🛡️",
-                title: "Trusted by the Best",
-                description:
-                    "Netflix, Paramount, NVIDIA, and other leading platforms rely on Beamr technology for quality-critical video workflows at massive scale.",
-            },
-            {
-                icon: "📈",
-                title: "Scales With Your Needs",
-                description:
-                    "From quick A/B comparisons to complex multi-variant studies with thousands of viewers, VISTA grows with your testing complexity.",
-            },
-        ],
+        bodyText = "VISTA isn\u2019t a startup experiment. It\u2019s the same subjective testing methodology Beamr has used internally for over 10 years \u2014 the foundation behind an Emmy Award, 53 patents, and quality-critical deployments at the world\u2019s most demanding video platforms.\n\nNow it\u2019s yours.",
+        quote = "Viewers don\u2019t watch metrics, they watch video. VISTA makes human judgment scalable \u2014 giving teams a clear answer on whether their video is good enough before they ship.",
+        quoteAttribution = "\u2014 Sharon Carmel, Founder & CEO, Beamr",
+        awardTitle = "Emmy Award-Winning Science",
+        awardDescription = "Beamr\u2019s perceptual quality discipline earned a Technology & Engineering Emmy Award \u2014 the gold standard of recognition in the video industry.",
+        awardImage = "",
+        trustTitle = "Trusted by the Best",
+        trustLogos = [],
+        trustLogoHeight = 28,
+        trustLogoOpacity = 0.7,
+        scaleValue = "10+",
+        scaleLabel = "Years of Perceptual Science",
+        scaleDescription = "From quick A/B comparisons to complex multi-variant studies with thousands of viewers, VISTA grows with your testing complexity.",
         accentColor = "#8b7cf5",
         bgColor = "#1a1a2e",
         textColor = "#ffffff",
@@ -71,7 +74,6 @@ function ProductAuthority(props: Props) {
         style,
     } = props
 
-    // Responsive detection via ResizeObserver
     const containerRef = useRef<HTMLDivElement>(null)
     const [isMobile, setIsMobile] = useState(false)
     const [isTablet, setIsTablet] = useState(false)
@@ -88,7 +90,9 @@ function ProductAuthority(props: Props) {
         return () => ro.disconnect()
     }, [])
 
+    const isCompact = isMobile || isTablet
     const bodyParagraphs = bodyText.split("\n\n").filter(Boolean)
+    const placeholderLogos = ["Netflix", "Paramount+", "NVIDIA", "Dolby"]
 
     return (
         <section
@@ -106,12 +110,7 @@ function ProductAuthority(props: Props) {
                 fontFamily,
             }}
         >
-            <div
-                style={{
-                    maxWidth: 1280,
-                    margin: "0 auto",
-                }}
-            >
+            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
                 {/* Section Label */}
                 <span
                     style={{
@@ -148,13 +147,11 @@ function ProductAuthority(props: Props) {
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns:
-                            isMobile || isTablet ? "1fr" : "1fr 1fr",
+                        gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr",
                         gap: isMobile ? 32 : 40,
                         marginBottom: isMobile ? 48 : 64,
                     }}
                 >
-                    {/* Left: Body Text */}
                     <div>
                         {bodyParagraphs.map((paragraph, i) => (
                             <p
@@ -175,7 +172,6 @@ function ProductAuthority(props: Props) {
                         ))}
                     </div>
 
-                    {/* Right: Quote Card */}
                     <div
                         style={{
                             backgroundColor: quoteBgColor,
@@ -187,7 +183,6 @@ function ProductAuthority(props: Props) {
                             justifyContent: "center",
                         }}
                     >
-                        {/* Quote mark */}
                         <div
                             style={{
                                 fontSize: 48,
@@ -199,7 +194,6 @@ function ProductAuthority(props: Props) {
                         >
                             &ldquo;
                         </div>
-
                         <p
                             style={{
                                 fontSize: isMobile ? 15 : 17,
@@ -213,7 +207,6 @@ function ProductAuthority(props: Props) {
                         >
                             {quote}
                         </p>
-
                         <span
                             style={{
                                 fontSize: 14,
@@ -227,55 +220,71 @@ function ProductAuthority(props: Props) {
                     </div>
                 </div>
 
-                {/* Proof Cards Grid */}
+                {/* Bottom proof area — 3 distinct sections */}
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: isMobile
-                            ? "1fr"
-                            : isTablet
-                              ? "1fr 1fr"
-                              : "1fr 1fr 1fr",
+                        gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr",
                         gap: isMobile ? 20 : 24,
                     }}
                 >
-                    {proofCards.map((card, i) => (
+                    {/* Emmy Award — horizontal: image + text */}
+                    <div
+                        style={{
+                            backgroundColor: cardBgColor,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 14,
+                            padding: isMobile ? "28px 24px" : "32px 28px",
+                            display: "flex",
+                            flexDirection: isMobile ? "column" : "row",
+                            alignItems: isMobile ? "flex-start" : "center",
+                            gap: isMobile ? 20 : 24,
+                        }}
+                    >
+                        {/* Award image or fallback */}
                         <div
-                            key={i}
                             style={{
-                                backgroundColor: cardBgColor,
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                borderRadius: 14,
-                                padding: isMobile
-                                    ? "28px 24px"
-                                    : "32px 28px",
+                                flexShrink: 0,
+                                width: isMobile ? 64 : 80,
+                                height: isMobile ? 64 : 80,
+                                borderRadius: 12,
+                                background: awardImage
+                                    ? "transparent"
+                                    : `${accentColor}20`,
                                 display: "flex",
-                                flexDirection: "column",
-                                gap: 12,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                overflow: "hidden",
                             }}
                         >
-                            <div
-                                style={{
-                                    fontSize: 32,
-                                    lineHeight: 1,
-                                }}
-                            >
-                                {card.icon}
-                            </div>
+                            {awardImage ? (
+                                <img
+                                    src={awardImage}
+                                    alt={awardTitle}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "contain",
+                                    }}
+                                />
+                            ) : (
+                                <span style={{ fontSize: 36 }}>🏆</span>
+                            )}
+                        </div>
 
+                        <div style={{ flex: 1 }}>
                             <h3
                                 style={{
                                     fontSize: isMobile ? 17 : 19,
                                     fontWeight: 600,
                                     color: textColor,
-                                    margin: "4px 0 0",
+                                    margin: "0 0 8px",
                                     lineHeight: 1.3,
                                     fontFamily,
                                 }}
                             >
-                                {card.title}
+                                {awardTitle}
                             </h3>
-
                             <p
                                 style={{
                                     fontSize: isMobile ? 14 : 15,
@@ -285,10 +294,179 @@ function ProductAuthority(props: Props) {
                                     fontFamily,
                                 }}
                             >
-                                {card.description}
+                                {awardDescription}
                             </p>
                         </div>
-                    ))}
+                    </div>
+
+                    {/* Scale metric — large number + label */}
+                    <div
+                        style={{
+                            backgroundColor: cardBgColor,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 14,
+                            padding: isMobile ? "28px 24px" : "32px 28px",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "baseline",
+                                gap: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontSize: isMobile ? 40 : 52,
+                                    fontWeight: 800,
+                                    color: accentColor,
+                                    lineHeight: 1,
+                                    fontFamily: headingFontFamily,
+                                    letterSpacing: "-0.02em",
+                                }}
+                            >
+                                {scaleValue}
+                            </span>
+                            <span
+                                style={{
+                                    fontSize: isMobile ? 15 : 17,
+                                    fontWeight: 600,
+                                    color: textColor,
+                                    lineHeight: 1.3,
+                                    fontFamily,
+                                }}
+                            >
+                                {scaleLabel}
+                            </span>
+                        </div>
+                        <p
+                            style={{
+                                fontSize: isMobile ? 14 : 15,
+                                color: secondaryTextColor,
+                                lineHeight: 1.65,
+                                margin: 0,
+                                fontFamily,
+                            }}
+                        >
+                            {scaleDescription}
+                        </p>
+                    </div>
+
+                    {/* Trusted by — full-width logo row */}
+                    <div
+                        style={{
+                            gridColumn: isCompact ? "1" : "1 / -1",
+                            backgroundColor: cardBgColor,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 14,
+                            padding: isMobile ? "24px" : "28px 32px",
+                            display: "flex",
+                            flexDirection: isMobile ? "column" : "row",
+                            alignItems: "center",
+                            gap: isMobile ? 20 : 40,
+                        }}
+                    >
+                        <h3
+                            style={{
+                                fontSize: isMobile ? 15 : 16,
+                                fontWeight: 600,
+                                color: textColor,
+                                margin: 0,
+                                whiteSpace: "nowrap",
+                                fontFamily,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {trustTitle}
+                        </h3>
+
+                        {/* Separator */}
+                        {!isMobile && (
+                            <div
+                                style={{
+                                    width: 1,
+                                    height: 32,
+                                    backgroundColor: "rgba(255,255,255,0.12)",
+                                    flexShrink: 0,
+                                }}
+                            />
+                        )}
+
+                        {/* Logos */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: isMobile ? 24 : 40,
+                                flexWrap: "wrap",
+                                justifyContent: isMobile
+                                    ? "center"
+                                    : "flex-start",
+                                flex: 1,
+                            }}
+                        >
+                            {trustLogos.length > 0
+                                ? trustLogos.map((logo, i) => (
+                                      <div
+                                          key={i}
+                                          style={{
+                                              opacity: trustLogoOpacity,
+                                              display: "flex",
+                                              alignItems: "center",
+                                              flexShrink: 0,
+                                          }}
+                                      >
+                                          {logo.image ? (
+                                              <img
+                                                  src={logo.image}
+                                                  alt={logo.name}
+                                                  style={{
+                                                      height:
+                                                          logo.height ||
+                                                          trustLogoHeight,
+                                                      objectFit: "contain",
+                                                      filter: "brightness(0) invert(1)",
+                                                  }}
+                                              />
+                                          ) : (
+                                              <span
+                                                  style={{
+                                                      fontSize: 14,
+                                                      fontWeight: 700,
+                                                      color: textColor,
+                                                      letterSpacing: "0.05em",
+                                                      textTransform:
+                                                          "uppercase",
+                                                      fontFamily,
+                                                  }}
+                                              >
+                                                  {logo.name}
+                                              </span>
+                                          )}
+                                      </div>
+                                  ))
+                                : placeholderLogos.map((name, i) => (
+                                      <span
+                                          key={i}
+                                          style={{
+                                              fontSize: 14,
+                                              fontWeight: 700,
+                                              color: textColor,
+                                              opacity: trustLogoOpacity,
+                                              letterSpacing: "0.05em",
+                                              textTransform: "uppercase",
+                                              fontFamily,
+                                          }}
+                                      >
+                                          {name}
+                                      </span>
+                                  ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -311,66 +489,101 @@ addPropertyControls(ProductAuthority, {
         type: ControlType.String,
         title: "Body Text",
         defaultValue:
-            "VISTA isn't a startup experiment. It's the same subjective testing methodology Beamr has used internally for over 10 years — the foundation behind an Emmy Award, 53 patents, and quality-critical deployments at the world's most demanding video platforms.\n\nNow it's yours.",
+            "VISTA isn\u2019t a startup experiment. It\u2019s the same subjective testing methodology Beamr has used internally for over 10 years \u2014 the foundation behind an Emmy Award, 53 patents, and quality-critical deployments at the world\u2019s most demanding video platforms.\n\nNow it\u2019s yours.",
         displayTextArea: true,
     },
     quote: {
         type: ControlType.String,
         title: "Quote",
         defaultValue:
-            "Viewers don't watch metrics, they watch video. VISTA makes human judgment scalable — giving teams a clear answer on whether their video is good enough before they ship.",
+            "Viewers don\u2019t watch metrics, they watch video. VISTA makes human judgment scalable \u2014 giving teams a clear answer on whether their video is good enough before they ship.",
         displayTextArea: true,
     },
     quoteAttribution: {
         type: ControlType.String,
         title: "Quote Attribution",
-        defaultValue: "— Sharon Carmel, Founder & CEO, Beamr",
+        defaultValue: "\u2014 Sharon Carmel, Founder & CEO, Beamr",
     },
-    proofCards: {
+    awardTitle: {
+        type: ControlType.String,
+        title: "Award Title",
+        defaultValue: "Emmy Award-Winning Science",
+    },
+    awardDescription: {
+        type: ControlType.String,
+        title: "Award Description",
+        defaultValue:
+            "Beamr\u2019s perceptual quality discipline earned a Technology & Engineering Emmy Award \u2014 the gold standard of recognition in the video industry.",
+        displayTextArea: true,
+    },
+    awardImage: {
+        type: ControlType.Image,
+        title: "Award Image",
+    },
+    trustTitle: {
+        type: ControlType.String,
+        title: "Trust Title",
+        defaultValue: "Trusted by the Best",
+    },
+    trustLogos: {
         type: ControlType.Array,
-        title: "Proof Cards",
-        maxCount: 6,
+        title: "Trust Logos",
+        maxCount: 8,
         control: {
             type: ControlType.Object,
             controls: {
-                icon: {
+                name: {
                     type: ControlType.String,
-                    title: "Icon",
-                    defaultValue: "🏆",
+                    title: "Name",
+                    defaultValue: "Company",
                 },
-                title: {
-                    type: ControlType.String,
-                    title: "Title",
-                    defaultValue: "Card Title",
+                image: {
+                    type: ControlType.Image,
+                    title: "Logo",
                 },
-                description: {
-                    type: ControlType.String,
-                    title: "Description",
-                    defaultValue: "Card description text.",
-                    displayTextArea: true,
+                height: {
+                    type: ControlType.Number,
+                    title: "Height",
+                    defaultValue: 28,
+                    min: 12,
+                    max: 60,
                 },
             },
         },
-        defaultValue: [
-            {
-                icon: "🏆",
-                title: "Emmy Award-Winning Science",
-                description:
-                    "Beamr's perceptual quality discipline earned a Technology & Engineering Emmy Award — the gold standard of recognition in the video industry.",
-            },
-            {
-                icon: "🛡️",
-                title: "Trusted by the Best",
-                description:
-                    "Netflix, Paramount, NVIDIA, and other leading platforms rely on Beamr technology for quality-critical video workflows at massive scale.",
-            },
-            {
-                icon: "📈",
-                title: "Scales With Your Needs",
-                description:
-                    "From quick A/B comparisons to complex multi-variant studies with thousands of viewers, VISTA grows with your testing complexity.",
-            },
-        ],
+        defaultValue: [],
+    },
+    trustLogoHeight: {
+        type: ControlType.Number,
+        title: "Logo Height",
+        defaultValue: 28,
+        min: 12,
+        max: 60,
+        step: 2,
+    },
+    trustLogoOpacity: {
+        type: ControlType.Number,
+        title: "Logo Opacity",
+        defaultValue: 0.7,
+        min: 0.1,
+        max: 1,
+        step: 0.05,
+    },
+    scaleValue: {
+        type: ControlType.String,
+        title: "Scale Value",
+        defaultValue: "10+",
+    },
+    scaleLabel: {
+        type: ControlType.String,
+        title: "Scale Label",
+        defaultValue: "Years of Perceptual Science",
+    },
+    scaleDescription: {
+        type: ControlType.String,
+        title: "Scale Description",
+        defaultValue:
+            "From quick A/B comparisons to complex multi-variant studies with thousands of viewers, VISTA grows with your testing complexity.",
+        displayTextArea: true,
     },
     accentColor: {
         type: ControlType.Color,
