@@ -15,6 +15,7 @@ interface Props {
     sectionTitle: string
     steps: StepItem[]
     closingQuote: string
+    showClosingQuote: boolean
     ctaText: string
     ctaUrl: string
     accentColor: string
@@ -48,6 +49,7 @@ function ProductHowItWorks(props: Props) {
             },
         ],
         closingQuote = "Run the hard part of subjective testing, easily.",
+        showClosingQuote = false,
         ctaText = "Try VISTA \u2192",
         ctaUrl = "#",
         accentColor = "#4f3ef5",
@@ -245,20 +247,22 @@ function ProductHowItWorks(props: Props) {
                         gap: 24,
                     }}
                 >
-                    <p
-                        style={{
-                            fontSize: isMobile ? 18 : 22,
-                            fontStyle: "italic",
-                            color: textColor,
-                            margin: 0,
-                            lineHeight: 1.5,
-                            fontFamily,
-                            maxWidth: 560,
-                            fontWeight: 400,
-                        }}
-                    >
-                        "{closingQuote}"
-                    </p>
+                    {showClosingQuote && (
+                        <p
+                            style={{
+                                fontSize: isMobile ? 18 : 22,
+                                fontStyle: "italic",
+                                color: textColor,
+                                margin: 0,
+                                lineHeight: 1.5,
+                                fontFamily,
+                                maxWidth: 560,
+                                fontWeight: 400,
+                            }}
+                        >
+                            "{closingQuote}"
+                        </p>
+                    )}
                     <a
                         href={ctaUrl}
                         style={{
@@ -334,11 +338,17 @@ addPropertyControls(ProductHowItWorks, {
             },
         ],
     },
+    showClosingQuote: {
+        type: ControlType.Boolean,
+        title: "Show Quote",
+        defaultValue: false,
+    },
     closingQuote: {
         type: ControlType.String,
         title: "Closing Quote",
         defaultValue: "Run the hard part of subjective testing, easily.",
         displayTextArea: true,
+        hidden: (props) => !props.showClosingQuote,
     },
     ctaText: {
         type: ControlType.String,
