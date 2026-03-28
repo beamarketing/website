@@ -13,10 +13,17 @@ interface CapabilityCard {
 // SVG icon map keyed by identifier
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
-            <polyline points="7 10 12 15 17 10" />
-            <polyline points="7 14 12 9 17 14" />
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {/* Left arrow */}
+            <line x1="1" y1="12" x2="8" y2="12" />
+            <polyline points="6 9.5 8 12 6 14.5" />
+            {/* Right arrow */}
+            <line x1="23" y1="12" x2="16" y2="12" />
+            <polyline points="18 9.5 16 12 18 14.5" />
+            {/* Left curved bracket */}
+            <path d="M10 4C8 4 8 8 8 12C8 16 8 20 10 20" fill="none" />
+            {/* Right curved bracket */}
+            <path d="M14 4C16 4 16 8 16 12C16 16 16 20 14 20" fill="none" />
         </svg>
     ),
     ai: (color) => (
