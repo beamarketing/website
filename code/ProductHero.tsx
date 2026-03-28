@@ -10,6 +10,9 @@ interface PillItem {
 }
 
 interface Props {
+    categoryTitle: string
+    showCategoryTitle: boolean
+    categoryColor: string
     heading: string
     headingFontSize: number
     subheading: string
@@ -44,6 +47,9 @@ interface Props {
 
 function ProductHero(props: Props) {
     const {
+        categoryTitle = "Beamr VISTA",
+        showCategoryTitle = true,
+        categoryColor = "#4f3ef5",
         heading = "As Seen on a Big\nScreen Near You.",
         headingFontSize = 72,
         subheading = "Beamr 5 is the fastest, best-of-class HEVC encoder trusted by streaming giants",
@@ -174,6 +180,22 @@ function ProductHero(props: Props) {
                         flexShrink: 0,
                     }}
                 >
+                    {showCategoryTitle && (
+                        <span
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: categoryColor,
+                                textTransform: "uppercase",
+                                letterSpacing: "2px",
+                                marginBottom: 12,
+                                fontFamily,
+                            }}
+                        >
+                            {categoryTitle}
+                        </span>
+                    )}
+
                     <h1
                         style={{
                             fontSize: headingSizeResp,
@@ -473,6 +495,23 @@ function ProductHero(props: Props) {
 }
 
 addPropertyControls(ProductHero, {
+    showCategoryTitle: {
+        type: ControlType.Boolean,
+        title: "Show Category",
+        defaultValue: true,
+    },
+    categoryTitle: {
+        type: ControlType.String,
+        title: "Category Title",
+        defaultValue: "Beamr VISTA",
+        hidden: (props) => !props.showCategoryTitle,
+    },
+    categoryColor: {
+        type: ControlType.Color,
+        title: "Category Color",
+        defaultValue: "#4f3ef5",
+        hidden: (props) => !props.showCategoryTitle,
+    },
     heading: {
         type: ControlType.String,
         title: "Heading",
