@@ -25,49 +25,6 @@ function ensureAnimStyles() {
             box-shadow: 0 0 0 1px var(--cap-accent), 0 8px 24px rgba(79,62,245,0.08) !important;
             border-color: var(--cap-accent) !important;
         }
-        .cap-card:hover .cap-icon-compression {
-            animation: capSqueeze 0.8s ease-in-out;
-        }
-        .cap-card:hover .cap-icon-ai .cap-star-main {
-            animation: capShine 0.7s ease-in-out;
-        }
-        .cap-card:hover .cap-icon-ai .cap-star-sm1 {
-            animation: capShine 0.7s ease-in-out 0.12s;
-        }
-        .cap-card:hover .cap-icon-ai .cap-star-sm2 {
-            animation: capShine 0.7s ease-in-out 0.24s;
-        }
-        .cap-card:hover .cap-icon-pipeline .cap-pipe-flow {
-            animation: capFlowDash 1s ease-in-out;
-        }
-        .cap-card:hover .cap-icon-pipeline .cap-pipe-node {
-            animation: capNodePop 0.5s ease-out;
-        }
-        .cap-card:hover .cap-icon-pipeline .cap-pipe-node-2 {
-            animation: capNodePop 0.5s ease-out 0.15s;
-        }
-        .cap-card:hover .cap-icon-pipeline .cap-pipe-node-3 {
-            animation: capNodePop 0.5s ease-out 0.3s;
-        }
-        @keyframes capSqueeze {
-            0%, 100% { transform: scaleX(1); }
-            40% { transform: scaleX(0.72); }
-            70% { transform: scaleX(1.05); }
-        }
-        @keyframes capShine {
-            0% { opacity: 1; transform: scale(1); }
-            30% { opacity: 0.3; transform: scale(0.6); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes capFlowDash {
-            0% { stroke-dashoffset: 20; }
-            100% { stroke-dashoffset: 0; }
-        }
-        @keyframes capNodePop {
-            0% { transform: scale(0.5); opacity: 0.3; }
-            60% { transform: scale(1.15); }
-            100% { transform: scale(1); opacity: 1; }
-        }
     `
     document.head.appendChild(s)
 }
@@ -102,22 +59,11 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
         </svg>
     ),
     pipeline: (color) => (
-        <svg className="cap-icon-pipeline" width="30" height="30" viewBox="0 0 24 24" fill="none">
-            {/* Flow lines connecting the 3 nodes */}
-            <path className="cap-pipe-flow" d="M5 12 L10.5 12" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
-            <path className="cap-pipe-flow" d="M13.5 12 L19 12" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
-            {/* Branch lines going up and down from center */}
-            <path className="cap-pipe-flow" d="M12 9.5 L12 6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
-            <path className="cap-pipe-flow" d="M12 14.5 L12 18" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="20" strokeDashoffset="0" />
-            {/* Input node */}
-            <circle className="cap-pipe-node" cx="3.5" cy="12" r="2.5" fill={color} opacity="0.25" stroke={color} strokeWidth="1.5" style={{ transformOrigin: "3.5px 12px" }} />
-            {/* Center node (larger, process) */}
-            <circle className="cap-pipe-node-2" cx="12" cy="12" r="2.8" fill={color} opacity="0.35" stroke={color} strokeWidth="1.5" style={{ transformOrigin: "12px 12px" }} />
-            {/* Output node */}
-            <circle className="cap-pipe-node-3" cx="20.5" cy="12" r="2.5" fill={color} opacity="0.25" stroke={color} strokeWidth="1.5" style={{ transformOrigin: "20.5px 12px" }} />
-            {/* Branch endpoints */}
-            <circle cx="12" cy="4.5" r="1.5" fill={color} opacity="0.4" style={{ transformOrigin: "12px 4.5px" }} />
-            <circle cx="12" cy="19.5" r="1.5" fill={color} opacity="0.4" style={{ transformOrigin: "12px 19.5px" }} />
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            {/* Shield outline */}
+            <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z" fill="none" />
+            {/* Checkmark */}
+            <polyline points="8.5 12.5 11 15 16 9.5" fill="none" />
         </svg>
     ),
 }
