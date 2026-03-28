@@ -181,17 +181,18 @@ function ProductAuthority(props: Props) {
                             justifyContent: "center",
                         }}
                     >
-                        <div
-                            style={{
-                                fontSize: 48,
-                                color: accentColor,
-                                lineHeight: 1,
-                                marginBottom: 12,
-                                opacity: 0.6,
-                            }}
+                        <svg
+                            width="36"
+                            height="28"
+                            viewBox="0 0 36 28"
+                            fill="none"
+                            style={{ marginBottom: 16, opacity: 0.4 }}
                         >
-                            &ldquo;
-                        </div>
+                            <path
+                                d="M0 17.6C0 10.08 4.32 3.84 12.48 0L14.4 3.36C9.12 6.24 6.72 9.84 6.24 13.44H12V28H0V17.6ZM22 17.6C22 10.08 26.32 3.84 34.48 0L36.4 3.36C31.12 6.24 28.72 9.84 28.24 13.44H34V28H22V17.6Z"
+                                fill={accentColor}
+                            />
+                        </svg>
                         <p
                             style={{
                                 fontSize: isMobile ? 15 : 17,
