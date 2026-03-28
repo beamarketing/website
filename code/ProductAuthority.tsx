@@ -58,9 +58,9 @@ function ProductAuthority(props: Props) {
         trustLogos = [],
         trustLogoHeight = 28,
         trustLogoOpacity = 0.7,
-        scaleValue = "53",
-        scaleLabel = "Patents Granted",
-        scaleDescription = "A deep portfolio of intellectual property in perceptual quality, content-adaptive encoding, and subjective testing methodology.",
+        scaleValue = "∞",
+        scaleLabel = "Scales With Your Needs",
+        scaleDescription = "From a single pair comparison to dozens of configurations across hundreds of viewers \u2014 VISTA handles growing test complexity without growing your team.",
         accentColor = "#8b7cf5",
         bgColor = "#1a1a2e",
         textColor = "#ffffff",
@@ -401,11 +401,10 @@ function ProductAuthority(props: Props) {
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: isMobile ? 24 : 40,
                                 flexWrap: "wrap",
                                 justifyContent: isMobile
                                     ? "center"
-                                    : "flex-start",
+                                    : "space-between",
                                 flex: 1,
                             }}
                         >
@@ -571,18 +570,18 @@ addPropertyControls(ProductAuthority, {
     scaleValue: {
         type: ControlType.String,
         title: "Scale Value",
-        defaultValue: "53",
+        defaultValue: "\u221e",
     },
     scaleLabel: {
         type: ControlType.String,
         title: "Scale Label",
-        defaultValue: "Patents Granted",
+        defaultValue: "Scales With Your Needs",
     },
     scaleDescription: {
         type: ControlType.String,
         title: "Scale Description",
         defaultValue:
-            "A deep portfolio of intellectual property in perceptual quality, content-adaptive encoding, and subjective testing methodology.",
+            "From a single pair comparison to dozens of configurations across hundreds of viewers \u2014 VISTA handles growing test complexity without growing your team.",
         displayTextArea: true,
     },
     accentColor: {
