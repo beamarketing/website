@@ -26,6 +26,7 @@ interface Props {
     cardBgColor: string
     fontFamily: string
     headingFontFamily: string
+    headingFontWeight: number
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -65,6 +66,7 @@ function ProductAuthority(props: Props) {
         cardBgColor = "rgba(255,255,255,0.04)",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
+        headingFontWeight = 700,
         paddingTop = 100,
         style,
     } = props
@@ -130,7 +132,7 @@ function ProductAuthority(props: Props) {
                 <h2
                     style={{
                         fontSize: isMobile ? 28 : isTablet ? 34 : 44,
-                        fontWeight: 700,
+                        fontWeight: headingFontWeight,
                         color: textColor,
                         margin: "0 0 48px",
                         lineHeight: 1.15,
@@ -409,6 +411,14 @@ addPropertyControls(ProductAuthority, {
         type: ControlType.String,
         title: "Heading Font",
         defaultValue: "'Poppins', sans-serif",
+    },
+    headingFontWeight: {
+        type: ControlType.Number,
+        title: "Heading Weight",
+        defaultValue: 700,
+        min: 100,
+        max: 900,
+        step: 100,
     },
     paddingTop: {
         type: ControlType.Number,

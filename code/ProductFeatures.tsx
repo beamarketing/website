@@ -23,6 +23,7 @@ interface Props {
     calloutBgColor: string
     fontFamily: string
     headingFontFamily: string
+    headingFontWeight: number
     paddingTop: number
     style?: React.CSSProperties
 }
@@ -87,6 +88,7 @@ function ProductFeatures(props: Props) {
         calloutBgColor = "#f5f3ff",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
+        headingFontWeight = 700,
         paddingTop = 100,
         style,
     } = props
@@ -158,7 +160,7 @@ function ProductFeatures(props: Props) {
                     <h2
                         style={{
                             fontSize: titleFontSize,
-                            fontWeight: 700,
+                            fontWeight: headingFontWeight,
                             color: textColor,
                             margin: "16px 0 0",
                             lineHeight: 1.15,
@@ -508,6 +510,14 @@ addPropertyControls(ProductFeatures, {
         type: ControlType.String,
         title: "Heading Font",
         defaultValue: "'Poppins', sans-serif",
+    },
+    headingFontWeight: {
+        type: ControlType.Number,
+        title: "Heading Weight",
+        defaultValue: 700,
+        min: 100,
+        max: 900,
+        step: 100,
     },
     paddingTop: {
         type: ControlType.Number,
