@@ -10,6 +10,25 @@ interface CapabilityCard {
     description: string
 }
 
+// Inject card hover styles once
+const hoverStyleId = "cap-hover"
+function ensureHoverStyles() {
+    if (typeof document === "undefined") return
+    if (document.getElementById(hoverStyleId)) return
+    const s = document.createElement("style")
+    s.id = hoverStyleId
+    s.textContent = `
+        .cap-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .cap-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(79,62,245,0.10), 0 0 0 1px rgba(79,62,245,0.15) !important;
+        }
+    `
+    document.head.appendChild(s)
+}
+
 // 4-pointed star path
 function star4(cx: number, cy: number, outer: number, inner: number) {
     const p = []
@@ -41,10 +60,13 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
     ),
     pipeline: (color) => (
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            {/* Shield outline */}
-            <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z" fill="none" />
-            {/* Checkmark */}
-            <polyline points="8.5 12.5 11 15 16 9.5" fill="none" />
+            {/* Three horizontal lines with adjustment dots — representing pipeline tuning/validation */}
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="4" y1="12" x2="20" y2="12" />
+            <line x1="4" y1="18" x2="20" y2="18" />
+            <circle cx="9" cy="6" r="2.2" fill={color} stroke={color} />
+            <circle cx="15" cy="12" r="2.2" fill={color} stroke={color} />
+            <circle cx="11" cy="18" r="2.2" fill={color} stroke={color} />
         </svg>
     ),
 }
@@ -55,11 +77,10 @@ function renderCardIcon(icon: string, index: number, accentColor: string) {
     const key = icon.toLowerCase()
     const renderer = iconMap[key]
     if (renderer) return renderer(accentColor)
-    if (index < defaultIconKeys.length) {
+    // Fallback: any emoji or unknown string — map by card index if within range
+    if (index < defaultIconKeys.length && icon !== key) {
         const fallback = iconMap[defaultIconKeys[index]]
-        if (fallback && /^[\u{1F4E6}\u2728\u2699\uFE0F]$/u.test(icon)) {
-            return fallback(accentColor)
-        }
+        if (fallback) return fallback(accentColor)
     }
     return <span style={{ fontSize: 24, lineHeight: 1 }}>{icon}</span>
 }
@@ -144,6 +165,8 @@ function ProductCapabilities(props: Props) {
     const sectionRef = useRef<HTMLDivElement>(null)
     const [isMobile, setIsMobile] = useState(false)
     const [isTablet, setIsTablet] = useState(false)
+
+    useEffect(() => { ensureHoverStyles() }, [])
 
     useEffect(() => {
         const el = sectionRef.current
@@ -233,7 +256,8 @@ function ProductCapabilities(props: Props) {
                     {cards.map((card, i) => (
                         <div
                             key={i}
-                                                        style={{
+                            className="cap-card"
+                            style={{
                                 backgroundColor: cardBgColor,
                                 borderRadius: 12,
                                 border: `1px solid ${accentColor}1A`,
