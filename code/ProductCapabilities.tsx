@@ -10,7 +10,7 @@ interface CapabilityCard {
     description: string
 }
 
-// Keyframe animations injected once
+// Inject hover-only animation keyframes once
 const animStyleId = "cap-icon-anims"
 function ensureAnimStyles() {
     if (typeof document === "undefined") return
@@ -18,88 +18,88 @@ function ensureAnimStyles() {
     const style = document.createElement("style")
     style.id = animStyleId
     style.textContent = `
+        .cap-card:hover .cap-icon-compression {
+            animation: capSqueeze 0.8s ease-in-out;
+        }
+        .cap-card:hover .cap-icon-ai .cap-star-main {
+            animation: capPulse 0.7s ease-in-out;
+        }
+        .cap-card:hover .cap-icon-ai .cap-star-sm1 {
+            animation: capPulse 0.7s ease-in-out 0.1s;
+        }
+        .cap-card:hover .cap-icon-ai .cap-star-sm2 {
+            animation: capPulse 0.7s ease-in-out 0.2s;
+        }
+        .cap-card:hover .cap-icon-pipeline {
+            animation: capSpin 1.2s ease-in-out;
+        }
+        .cap-card { transition: border-color 0.25s ease; }
+        .cap-card:hover { border-color: var(--cap-accent) !important; }
         @keyframes capSqueeze {
             0%, 100% { transform: scaleX(1); }
-            50% { transform: scaleX(0.7); }
+            40% { transform: scaleX(0.72); }
+            70% { transform: scaleX(1.05); }
         }
-        @keyframes capSparkle1 {
+        @keyframes capPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.7); }
+            50% { opacity: 0.5; transform: scale(0.75); }
         }
-        @keyframes capSparkle2 {
-            0%, 100% { opacity: 0.5; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.1); }
-        }
-        @keyframes capSparkle3 {
-            0%, 100% { opacity: 0.7; transform: scale(0.9); }
-            40% { opacity: 0.3; transform: scale(0.6); }
-            80% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes capGearSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        @keyframes capSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(120deg); }
         }
     `
     document.head.appendChild(style)
 }
 
-// 4-pointed star path helper
-function fourPointStar(cx: number, cy: number, outerR: number, innerR: number) {
-    const pts = []
+// 4-pointed star path
+function star4(cx: number, cy: number, outer: number, inner: number) {
+    const p = []
     for (let i = 0; i < 8; i++) {
-        const angle = (i * Math.PI) / 4 - Math.PI / 2
-        const r = i % 2 === 0 ? outerR : innerR
-        pts.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`)
+        const a = (i * Math.PI) / 4 - Math.PI / 2
+        const r = i % 2 === 0 ? outer : inner
+        p.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`)
     }
-    return `M${pts.join("L")}Z`
+    return `M${p.join("L")}Z`
 }
 
-// SVG icon map keyed by identifier
+// Icon renderers — no constant animations, just clean SVGs
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "capSqueeze 2.5s ease-in-out infinite" }}>
-            {/* Left arrow */}
+        <svg className="cap-icon-compression" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="1" y1="12" x2="8" y2="12" />
             <polyline points="6 9.5 8 12 6 14.5" />
-            {/* Right arrow */}
             <line x1="23" y1="12" x2="16" y2="12" />
             <polyline points="18 9.5 16 12 18 14.5" />
-            {/* Left curved bracket */}
             <path d="M10 4C8 4 8 8 8 12C8 16 8 20 10 20" fill="none" />
-            {/* Right curved bracket */}
             <path d="M14 4C16 4 16 8 16 12C16 16 16 20 14 20" fill="none" />
         </svg>
     ),
     ai: (color) => (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-            {/* Main large 4-pointed star */}
-            <path d={fourPointStar(11, 13, 10, 3.5)} fill={color} style={{ animation: "capSparkle1 3s ease-in-out infinite" }} />
-            {/* Top-right small star */}
-            <path d={fourPointStar(19.5, 5, 3.5, 1.2)} fill={color} style={{ animation: "capSparkle2 3s ease-in-out infinite", transformOrigin: "19.5px 5px" }} />
-            {/* Bottom-left tiny star */}
-            <path d={fourPointStar(4, 5.5, 2.5, 0.9)} fill={color} style={{ animation: "capSparkle3 3s ease-in-out infinite", transformOrigin: "4px 5.5px" }} />
+        <svg className="cap-icon-ai" width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path className="cap-star-main" d={star4(11, 13, 9.5, 3.2)} fill={color} />
+            <path className="cap-star-sm1" d={star4(19, 5.5, 3.2, 1.1)} fill={color} opacity="0.7" />
+            <path className="cap-star-sm2" d={star4(4.5, 6, 2.4, 0.8)} fill={color} opacity="0.5" />
         </svg>
     ),
     pipeline: (color) => (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "capGearSpin 6s linear infinite" }}>
+        <svg className="cap-icon-pipeline" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
     ),
 }
 
-// Default icon identifiers for the 3 default cards
 const defaultIconKeys = ["compression", "ai", "pipeline"]
 
 function renderCardIcon(icon: string, index: number, accentColor: string) {
     const key = icon.toLowerCase()
     const renderer = iconMap[key]
     if (renderer) return renderer(accentColor)
-    // Legacy emoji fallback by index
     if (index < defaultIconKeys.length) {
-        const defaultRenderer = iconMap[defaultIconKeys[index]]
-        if (defaultRenderer && /^[\u{1F4E6}\u2728\u2699\uFE0F]$/u.test(icon)) {
-            return defaultRenderer(accentColor)
+        const fallback = iconMap[defaultIconKeys[index]]
+        if (fallback && /^[\u{1F4E6}\u2728\u2699\uFE0F]$/u.test(icon)) {
+            return fallback(accentColor)
         }
     }
     return <span style={{ fontSize: 24, lineHeight: 1 }}>{icon}</span>
@@ -185,12 +185,9 @@ function ProductCapabilities(props: Props) {
     const sectionRef = useRef<HTMLDivElement>(null)
     const [isMobile, setIsMobile] = useState(false)
     const [isTablet, setIsTablet] = useState(false)
-    const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
-    // Inject animation keyframes
     useEffect(() => { ensureAnimStyles() }, [])
 
-    // Responsive detection based on component's own width
     useEffect(() => {
         const el = sectionRef.current
         if (!el) return
@@ -222,21 +219,13 @@ function ProductCapabilities(props: Props) {
                 padding: sectionPadding,
                 boxSizing: "border-box",
                 fontFamily,
-            }}
+                // @ts-ignore CSS variable for hover accent
+                "--cap-accent": accentColor,
+            } as React.CSSProperties}
         >
-            <div
-                style={{
-                    maxWidth: 1280,
-                    margin: "0 auto",
-                }}
-            >
-                {/* Section Header */}
-                <div
-                    style={{
-                        textAlign: "center",
-                        marginBottom: isMobile ? 40 : 56,
-                    }}
-                >
+            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+                {/* Header */}
+                <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 56 }}>
                     <span
                         style={{
                             fontSize: 13,
@@ -276,7 +265,7 @@ function ProductCapabilities(props: Props) {
                     </p>
                 </div>
 
-                {/* Main Capability Cards Grid */}
+                {/* Capability Cards */}
                 <div
                     style={{
                         display: "grid",
@@ -288,47 +277,26 @@ function ProductCapabilities(props: Props) {
                     {cards.map((card, i) => (
                         <div
                             key={i}
-                            onMouseEnter={() => setHoveredCard(i)}
-                            onMouseLeave={() => setHoveredCard(null)}
+                            className="cap-card"
                             style={{
                                 backgroundColor: cardBgColor,
                                 borderRadius: 14,
-                                border: "1px solid #eee",
-                                padding: isMobile ? "28px 20px" : "36px 32px",
+                                border: `1.5px solid #e8e8ee`,
+                                padding: isMobile ? "28px 24px" : "32px 28px",
                                 boxSizing: "border-box",
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: 16,
-                                transition:
-                                    "box-shadow 0.3s ease, transform 0.3s ease",
-                                boxShadow:
-                                    hoveredCard === i
-                                        ? "0 8px 30px rgba(0,0,0,0.10)"
-                                        : "0 1px 3px rgba(0,0,0,0.04)",
-                                transform:
-                                    hoveredCard === i
-                                        ? "translateY(-3px)"
-                                        : "translateY(0)",
+                                gap: 14,
                                 cursor: "default",
                             }}
                         >
-                            <div
-                                style={{
-                                    width: 44,
-                                    height: 44,
-                                    borderRadius: 12,
-                                    backgroundColor: `${accentColor}12`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flexShrink: 0,
-                                }}
-                            >
+                            {/* Icon — clean, no box around it */}
+                            <div style={{ marginBottom: 4 }}>
                                 {renderCardIcon(card.icon, i, accentColor)}
                             </div>
                             <h3
                                 style={{
-                                    fontSize: isMobile ? 18 : 20,
+                                    fontSize: isMobile ? 17 : 19,
                                     fontWeight: 600,
                                     color: textColor,
                                     margin: 0,
@@ -353,13 +321,8 @@ function ProductCapabilities(props: Props) {
                     ))}
                 </div>
 
-                {/* Sub-Cards Section */}
-                <div
-                    style={{
-                        borderTop: "1px solid #e0e0e0",
-                        paddingTop: isMobile ? 40 : 56,
-                    }}
-                >
+                {/* Sub-features */}
+                <div style={{ borderTop: "1px solid #e4e4ea", paddingTop: isMobile ? 40 : 48 }}>
                     <div
                         style={{
                             display: "grid",
@@ -368,17 +331,10 @@ function ProductCapabilities(props: Props) {
                         }}
                     >
                         {subCards.map((sub, i) => (
-                            <div
-                                key={i}
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 8,
-                                }}
-                            >
+                            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                 <h4
                                     style={{
-                                        fontSize: isMobile ? 16 : 18,
+                                        fontSize: isMobile ? 15 : 16,
                                         fontWeight: 600,
                                         color: accentColor,
                                         margin: 0,
@@ -390,7 +346,7 @@ function ProductCapabilities(props: Props) {
                                 </h4>
                                 <p
                                     style={{
-                                        fontSize: isMobile ? 14 : 15,
+                                        fontSize: isMobile ? 13 : 14,
                                         color: secondaryTextColor,
                                         margin: 0,
                                         lineHeight: 1.65,
