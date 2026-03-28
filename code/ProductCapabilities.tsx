@@ -10,25 +10,6 @@ interface CapabilityCard {
     description: string
 }
 
-// Hover animations injected once
-const animStyleId = "cap-icon-anims"
-function ensureAnimStyles() {
-    if (typeof document === "undefined") return
-    if (document.getElementById(animStyleId)) return
-    const s = document.createElement("style")
-    s.id = animStyleId
-    s.textContent = `
-        .cap-card {
-            transition: box-shadow 0.3s ease, border-color 0.3s ease;
-        }
-        .cap-card:hover {
-            box-shadow: 0 0 0 1px var(--cap-accent), 0 8px 24px rgba(79,62,245,0.08) !important;
-            border-color: var(--cap-accent) !important;
-        }
-    `
-    document.head.appendChild(s)
-}
-
 // 4-pointed star path
 function star4(cx: number, cy: number, outer: number, inner: number) {
     const p = []
@@ -42,7 +23,7 @@ function star4(cx: number, cy: number, outer: number, inner: number) {
 
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg className="cap-icon-compression" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="1" y1="12" x2="8" y2="12" />
             <polyline points="6 9.5 8 12 6 14.5" />
             <line x1="23" y1="12" x2="16" y2="12" />
@@ -52,10 +33,10 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
         </svg>
     ),
     ai: (color) => (
-        <svg className="cap-icon-ai" width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <path className="cap-star-main" d={star4(11, 13, 9.5, 3.2)} fill={color} />
-            <path className="cap-star-sm1" d={star4(19, 5.5, 3.2, 1.1)} fill={color} opacity="0.65" style={{ transformOrigin: "19px 5.5px" }} />
-            <path className="cap-star-sm2" d={star4(4.5, 6, 2.4, 0.8)} fill={color} opacity="0.4" style={{ transformOrigin: "4.5px 6px" }} />
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d={star4(11, 13, 9.5, 3.2)} fill={color} />
+            <path d={star4(19, 5.5, 3.2, 1.1)} fill={color} opacity="0.65" />
+            <path d={star4(4.5, 6, 2.4, 0.8)} fill={color} opacity="0.4" />
         </svg>
     ),
     pipeline: (color) => (
@@ -164,8 +145,6 @@ function ProductCapabilities(props: Props) {
     const [isMobile, setIsMobile] = useState(false)
     const [isTablet, setIsTablet] = useState(false)
 
-    useEffect(() => { ensureAnimStyles() }, [])
-
     useEffect(() => {
         const el = sectionRef.current
         if (!el) return
@@ -197,8 +176,7 @@ function ProductCapabilities(props: Props) {
                 padding: sectionPadding,
                 boxSizing: "border-box",
                 fontFamily,
-                "--cap-accent": accentColor,
-            } as React.CSSProperties}
+            }}
         >
             <div style={{ maxWidth: 1180, margin: "0 auto" }}>
                 {/* Header — left-aligned for a less template look */}
@@ -255,8 +233,7 @@ function ProductCapabilities(props: Props) {
                     {cards.map((card, i) => (
                         <div
                             key={i}
-                            className="cap-card"
-                            style={{
+                                                        style={{
                                 backgroundColor: cardBgColor,
                                 borderRadius: 12,
                                 border: `1px solid ${accentColor}1A`,
