@@ -2,12 +2,56 @@
 // Framer Code Component with full property controls
 
 import { addPropertyControls, ControlType } from "framer"
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 interface CapabilityCard {
     icon: string
     title: string
     description: string
+}
+
+// SVG icon map keyed by identifier
+const iconMap: Record<string, (color: string) => React.ReactNode> = {
+    compression: (color) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
+            <polyline points="7 10 12 15 17 10" />
+            <polyline points="7 14 12 9 17 14" />
+        </svg>
+    ),
+    ai: (color) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+        </svg>
+    ),
+    pipeline: (color) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+    ),
+}
+
+// Default icon identifiers for the 3 default cards
+const defaultIconKeys = ["compression", "ai", "pipeline"]
+
+function renderCardIcon(icon: string, index: number, accentColor: string) {
+    // Check if icon matches a known key
+    const key = icon.toLowerCase()
+    const renderer = iconMap[key]
+    if (renderer) {
+        return renderer(accentColor)
+    }
+    // For default cards using emoji, map by index
+    if (index < defaultIconKeys.length) {
+        const defaultKey = defaultIconKeys[index]
+        const defaultRenderer = iconMap[defaultKey]
+        if (defaultRenderer && (icon === "📦" || icon === "✨" || icon === "⚙️" || icon === "\uD83D\uDCE6" || icon === "\u2728" || icon === "\u2699\uFE0F")) {
+            return defaultRenderer(accentColor)
+        }
+    }
+    // Fallback: render as text (for custom user icons/emoji)
+    return <span style={{ fontSize: 24, lineHeight: 1 }}>{icon}</span>
 }
 
 interface SubCard {
@@ -40,19 +84,19 @@ function ProductCapabilities(props: Props) {
         subtitle = "Whether you're validating compression, testing upscaling, or evaluating AI-generated content \u2014 VISTA gives you the human judgment layer that metrics can't.",
         cards = [
             {
-                icon: "\uD83D\uDCE6",
+                icon: "compression",
                 title: "Compression Validation",
                 description:
                     "Validate encoder updates and bitrate changes with real human perception. Ensure every compression decision maintains the quality your viewers expect.",
             },
             {
-                icon: "\u2728",
+                icon: "ai",
                 title: "AI & Enhancement Testing",
                 description:
                     "Test upscaling algorithms, frame interpolation, and AI-generated enhancements against ground truth with statistically rigorous viewer studies.",
             },
             {
-                icon: "\u2699\uFE0F",
+                icon: "pipeline",
                 title: "Pipeline Change Validation",
                 description:
                     "Catch regressions before they ship. Validate any change to your video pipeline \u2014 from color grading to HDR tone mapping \u2014 with crowd-sourced human judgment.",
@@ -214,14 +258,20 @@ function ProductCapabilities(props: Props) {
                                 cursor: "default",
                             }}
                         >
-                            <span
+                            <div
                                 style={{
-                                    fontSize: 36,
-                                    lineHeight: 1,
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 12,
+                                    backgroundColor: `${accentColor}12`,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
                                 }}
                             >
-                                {card.icon}
-                            </span>
+                                {renderCardIcon(card.icon, i, accentColor)}
+                            </div>
                             <h3
                                 style={{
                                     fontSize: isMobile ? 18 : 20,
@@ -331,8 +381,8 @@ addPropertyControls(ProductCapabilities, {
             controls: {
                 icon: {
                     type: ControlType.String,
-                    title: "Icon/Emoji",
-                    defaultValue: "\uD83D\uDCE6",
+                    title: "Icon",
+                    defaultValue: "compression",
                 },
                 title: {
                     type: ControlType.String,
@@ -349,19 +399,19 @@ addPropertyControls(ProductCapabilities, {
         },
         defaultValue: [
             {
-                icon: "\uD83D\uDCE6",
+                icon: "compression",
                 title: "Compression Validation",
                 description:
                     "Validate encoder updates and bitrate changes with real human perception. Ensure every compression decision maintains the quality your viewers expect.",
             },
             {
-                icon: "\u2728",
+                icon: "ai",
                 title: "AI & Enhancement Testing",
                 description:
                     "Test upscaling algorithms, frame interpolation, and AI-generated enhancements against ground truth with statistically rigorous viewer studies.",
             },
             {
-                icon: "\u2699\uFE0F",
+                icon: "pipeline",
                 title: "Pipeline Change Validation",
                 description:
                     "Catch regressions before they ship. Validate any change to your video pipeline \u2014 from color grading to HDR tone mapping \u2014 with crowd-sourced human judgment.",
