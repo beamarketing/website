@@ -74,13 +74,12 @@ const iconMap: Record<string, (color: string) => React.ReactNode> = {
 const defaultIconKeys = ["compression", "ai", "pipeline"]
 
 function renderCardIcon(icon: string, index: number, accentColor: string) {
-    const key = icon.toLowerCase()
-    const renderer = iconMap[key]
+    // Check if icon matches a known key
+    const renderer = iconMap[icon.toLowerCase()]
     if (renderer) return renderer(accentColor)
-    // Fallback: any emoji or unknown string — map by card index if within range
-    if (index < defaultIconKeys.length && icon !== key) {
-        const fallback = iconMap[defaultIconKeys[index]]
-        if (fallback) return fallback(accentColor)
+    // Any unknown string (including old emojis) — use SVG by card index
+    if (index < defaultIconKeys.length) {
+        return iconMap[defaultIconKeys[index]](accentColor)
     }
     return <span style={{ fontSize: 24, lineHeight: 1 }}>{icon}</span>
 }
