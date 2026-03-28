@@ -1,5 +1,5 @@
-// Product Page - Why Beamr Authority/Trust Section
-// Dark section with quote, award highlight, trust logos, and scale metric
+// Product Page - Trust & Conviction Section
+// "Why should I trust the results VISTA gives me?"
 // Framer Code Component with full property controls
 
 import React, { useRef, useState, useEffect } from "react"
@@ -12,29 +12,31 @@ interface TrustLogo {
 }
 
 interface Props {
+    // Copy
     sectionLabel: string
-    sectionTitle: string
-    bodyText: string
+    headline: string
+    body: string
+    boldStatement: string
     quote: string
     quoteAttribution: string
-    // Emmy / Award
-    awardTitle: string
-    awardDescription: string
-    awardImage: string
+    // Emmy
+    emmyTitle: string
+    emmyCaption: string
+    emmyImage: string
     // Trust logos
     trustTitle: string
     trustLogos: TrustLogo[]
     trustLogoHeight: number
     trustLogoOpacity: number
-    // Scale metric
-    scaleLabel: string
-    scaleDescription: string
+    // CTA
+    showCta: boolean
+    ctaText: string
+    ctaUrl: string
     // Colors
     accentColor: string
     bgColor: string
     textColor: string
     secondaryTextColor: string
-    quoteBgColor: string
     cardBgColor: string
     fontFamily: string
     headingFontFamily: string
@@ -45,25 +47,26 @@ interface Props {
 
 function ProductAuthority(props: Props) {
     const {
-        sectionLabel = "Why Beamr",
-        sectionTitle = "A Decade of Perceptual Science, Productized",
-        bodyText = "VISTA isn\u2019t a startup experiment. It\u2019s the same subjective testing methodology Beamr has used internally for over 10 years \u2014 the foundation behind an Emmy Award, 53 patents, and quality-critical deployments at the world\u2019s most demanding video platforms.\n\nNow it\u2019s yours.",
+        sectionLabel = "Why trust VISTA",
+        headline = "You\u2019re Not Guessing Anymore",
+        body = "Every VISTA result is grounded in the same perceptual science Beamr has refined over a decade \u2014 tested across billions of frames, validated by the video industry\u2019s highest standard of recognition, and deployed where quality failures aren\u2019t an option.\n\nVISTA doesn\u2019t approximate how viewers see your video. It measures it \u2014 with real people, under real conditions, at statistical confidence levels you can defend in any review.",
+        boldStatement = "Metrics estimate. Humans decide.",
         quote = "Viewers don\u2019t watch metrics, they watch video. VISTA makes human judgment scalable \u2014 giving teams a clear answer on whether their video is good enough before they ship.",
         quoteAttribution = "\u2014 Sharon Carmel, Founder & CEO, Beamr",
-        awardTitle = "Emmy Award-Winning Science",
-        awardDescription = "Beamr\u2019s perceptual quality discipline earned a Technology & Engineering Emmy Award \u2014 the gold standard of recognition in the video industry.",
-        awardImage = "",
-        trustTitle = "Trusted by the Best",
+        emmyTitle = "Technology & Engineering Emmy\u00AE Award",
+        emmyCaption = "Awarded for pioneering perceptual quality measurement in video compression \u2014 the science that powers every VISTA test.",
+        emmyImage = "",
+        trustTitle = "Trusted by",
         trustLogos = [],
         trustLogoHeight = 28,
         trustLogoOpacity = 0.7,
-        scaleLabel = "Scales With Your Needs",
-        scaleDescription = "From a single pair comparison to dozens of configurations across hundreds of viewers \u2014 VISTA handles growing test complexity without growing your team.",
+        showCta = true,
+        ctaText = "Run your first test",
+        ctaUrl = "#",
         accentColor = "#8b7cf5",
         bgColor = "#1a1a2e",
         textColor = "#ffffff",
-        secondaryTextColor = "#aaaaaa",
-        quoteBgColor = "rgba(79,62,245,0.1)",
+        secondaryTextColor = "#999",
         cardBgColor = "rgba(255,255,255,0.04)",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
@@ -89,7 +92,7 @@ function ProductAuthority(props: Props) {
     }, [])
 
     const isCompact = isMobile || isTablet
-    const bodyParagraphs = bodyText.split("\n\n").filter(Boolean)
+    const bodyParagraphs = body.split("\n\n").filter(Boolean)
     const placeholderLogos = ["Netflix", "Paramount+", "NVIDIA", "Dolby"]
 
     return (
@@ -108,8 +111,9 @@ function ProductAuthority(props: Props) {
                 fontFamily,
             }}
         >
-            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-                {/* Section Label */}
+            <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+
+                {/* ── SECTION LABEL ── */}
                 <span
                     style={{
                         display: "block",
@@ -118,371 +122,294 @@ function ProductAuthority(props: Props) {
                         color: accentColor,
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        marginBottom: 16,
+                        marginBottom: 20,
                         fontFamily,
                     }}
                 >
                     {sectionLabel}
                 </span>
 
-                {/* Section Title */}
+                {/* ── HEADLINE ── */}
                 <h2
                     style={{
-                        fontSize: isMobile ? 28 : isTablet ? 34 : 44,
+                        fontSize: isMobile ? 30 : isTablet ? 38 : 48,
                         fontWeight: headingFontWeight,
                         color: textColor,
-                        margin: "0 0 48px",
-                        lineHeight: 1.15,
-                        letterSpacing: "-0.02em",
+                        margin: 0,
+                        lineHeight: 1.1,
+                        letterSpacing: "-0.025em",
                         fontFamily: headingFontFamily,
                         maxWidth: 700,
                     }}
                 >
-                    {sectionTitle}
+                    {headline}
                 </h2>
 
-                {/* 2-column: Body Text + Quote Card */}
+                {/* ── BODY TEXT ── */}
+                <div style={{ maxWidth: 660, marginTop: isMobile ? 24 : 32 }}>
+                    {bodyParagraphs.map((p, i) => (
+                        <p
+                            key={i}
+                            style={{
+                                fontSize: isMobile ? 15 : 16,
+                                color: secondaryTextColor,
+                                lineHeight: 1.75,
+                                margin: i < bodyParagraphs.length - 1 ? "0 0 18px" : "0",
+                                fontFamily,
+                            }}
+                        >
+                            {p}
+                        </p>
+                    ))}
+                </div>
+
+                {/* ── BOLD STATEMENT — divider line ── */}
                 <div
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr",
-                        gap: isMobile ? 32 : 40,
+                        marginTop: isMobile ? 36 : 48,
+                        marginBottom: isMobile ? 36 : 48,
+                        paddingTop: isMobile ? 32 : 40,
+                        borderTop: `1px solid rgba(255,255,255,0.1)`,
+                    }}
+                >
+                    <p
+                        style={{
+                            fontSize: isMobile ? 22 : isTablet ? 26 : 30,
+                            fontWeight: 600,
+                            color: textColor,
+                            fontFamily: headingFontFamily,
+                            letterSpacing: "-0.01em",
+                            lineHeight: 1.3,
+                            margin: 0,
+                        }}
+                    >
+                        {boldStatement}
+                    </p>
+                </div>
+
+                {/* ── QUOTE ── */}
+                <div
+                    style={{
+                        borderLeft: `3px solid ${accentColor}`,
+                        paddingLeft: isMobile ? 20 : 28,
                         marginBottom: isMobile ? 48 : 64,
                     }}
                 >
-                    <div>
-                        {bodyParagraphs.map((paragraph, i) => (
-                            <p
-                                key={i}
-                                style={{
-                                    fontSize: isMobile ? 15 : 17,
-                                    color: secondaryTextColor,
-                                    lineHeight: 1.7,
-                                    margin:
-                                        i < bodyParagraphs.length - 1
-                                            ? "0 0 20px"
-                                            : "0",
-                                    fontFamily,
-                                }}
-                            >
-                                {paragraph}
-                            </p>
-                        ))}
-                    </div>
-
-                    <div
+                    <p
                         style={{
-                            backgroundColor: quoteBgColor,
-                            border: `1px solid ${accentColor}33`,
-                            borderRadius: 16,
-                            padding: isMobile ? "28px 24px" : "36px 40px",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
+                            fontSize: isMobile ? 15 : 17,
+                            color: `${textColor}CC`,
+                            lineHeight: 1.7,
+                            margin: "0 0 16px",
+                            fontFamily,
+                            fontStyle: "italic",
+                            maxWidth: 600,
                         }}
                     >
-                        <svg
-                            width="36"
-                            height="28"
-                            viewBox="0 0 36 28"
-                            fill="none"
-                            style={{ marginBottom: 16, opacity: 0.4 }}
-                        >
-                            <path
-                                d="M0 17.6C0 10.08 4.32 3.84 12.48 0L14.4 3.36C9.12 6.24 6.72 9.84 6.24 13.44H12V28H0V17.6ZM22 17.6C22 10.08 26.32 3.84 34.48 0L36.4 3.36C31.12 6.24 28.72 9.84 28.24 13.44H34V28H22V17.6Z"
-                                fill={accentColor}
-                            />
-                        </svg>
-                        <p
-                            style={{
-                                fontSize: isMobile ? 15 : 17,
-                                color: textColor,
-                                lineHeight: 1.7,
-                                margin: "0 0 24px",
-                                fontFamily,
-                                fontStyle: "italic",
-                                opacity: 0.9,
-                            }}
-                        >
-                            {quote}
-                        </p>
-                        <span
-                            style={{
-                                fontSize: 14,
-                                color: accentColor,
-                                fontWeight: 600,
-                                fontFamily,
-                            }}
-                        >
-                            {quoteAttribution}
-                        </span>
-                    </div>
+                        {quote}
+                    </p>
+                    <span
+                        style={{
+                            fontSize: 13,
+                            color: accentColor,
+                            fontWeight: 600,
+                            fontFamily,
+                        }}
+                    >
+                        {quoteAttribution}
+                    </span>
                 </div>
 
-                {/* Bottom proof area — 3 distinct sections */}
+                {/* ── PROOF STRIP: Emmy + Logos side by side ── */}
                 <div
                     style={{
                         display: "grid",
                         gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr",
                         gap: isMobile ? 20 : 24,
+                        alignItems: "stretch",
                     }}
                 >
-                    {/* Emmy Award — horizontal: image + text */}
+                    {/* Emmy Card */}
                     <div
                         style={{
                             backgroundColor: cardBgColor,
                             border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: 14,
-                            padding: isMobile ? "28px 24px" : "32px 28px",
+                            borderRadius: 12,
+                            padding: isMobile ? "24px 20px" : "28px 24px",
                             display: "flex",
-                            flexDirection: isMobile ? "column" : "row",
-                            alignItems: isMobile ? "flex-start" : "center",
-                            gap: isMobile ? 20 : 24,
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            gap: 20,
                         }}
                     >
-                        {/* Award image or fallback */}
                         <div
                             style={{
                                 flexShrink: 0,
-                                width: isMobile ? 64 : 80,
-                                height: isMobile ? 64 : 80,
-                                borderRadius: 12,
-                                background: awardImage
-                                    ? "transparent"
-                                    : `${accentColor}20`,
+                                width: 56,
+                                height: 56,
+                                borderRadius: 10,
+                                background: emmyImage ? "transparent" : `${accentColor}18`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 overflow: "hidden",
                             }}
                         >
-                            {awardImage ? (
+                            {emmyImage ? (
                                 <img
-                                    src={awardImage}
-                                    alt={awardTitle}
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "contain",
-                                    }}
+                                    src={emmyImage}
+                                    alt={emmyTitle}
+                                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
                                 />
                             ) : (
-                                <span style={{ fontSize: 36 }}>🏆</span>
+                                // Fallback: trophy SVG in accent color
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 2h12v6a6 6 0 0 1-12 0V2z" />
+                                    <path d="M6 4H3a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4" />
+                                    <path d="M18 4h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4" />
+                                    <line x1="12" y1="14" x2="12" y2="18" />
+                                    <path d="M8 18h8a1 1 0 0 1 1 1v1H7v-1a1 1 0 0 1 1-1z" />
+                                </svg>
                             )}
                         </div>
-
                         <div style={{ flex: 1 }}>
-                            <h3
+                            <h4
                                 style={{
-                                    fontSize: isMobile ? 17 : 19,
+                                    fontSize: 15,
                                     fontWeight: 600,
                                     color: textColor,
-                                    margin: "0 0 8px",
+                                    margin: "0 0 6px",
                                     lineHeight: 1.3,
                                     fontFamily,
                                 }}
                             >
-                                {awardTitle}
-                            </h3>
+                                {emmyTitle}
+                            </h4>
                             <p
                                 style={{
-                                    fontSize: isMobile ? 14 : 15,
+                                    fontSize: 13,
                                     color: secondaryTextColor,
-                                    lineHeight: 1.65,
+                                    lineHeight: 1.6,
                                     margin: 0,
                                     fontFamily,
                                 }}
                             >
-                                {awardDescription}
+                                {emmyCaption}
                             </p>
                         </div>
                     </div>
 
-                    {/* Scale metric — large number + label */}
+                    {/* Trust Logos Card */}
                     <div
                         style={{
                             backgroundColor: cardBgColor,
                             border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: 14,
-                            padding: isMobile ? "28px 24px" : "32px 28px",
+                            borderRadius: 12,
+                            padding: isMobile ? "24px 20px" : "28px 24px",
                             display: "flex",
                             flexDirection: "column",
                             justifyContent: "center",
                         }}
                     >
-                        <div
+                        <span
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 14,
-                                marginBottom: 12,
-                            }}
-                        >
-                            {/* Rising graph icon */}
-                            <svg
-                                width={isMobile ? 32 : 40}
-                                height={isMobile ? 32 : 40}
-                                viewBox="0 0 40 40"
-                                fill="none"
-                                style={{ flexShrink: 0 }}
-                            >
-                                <rect
-                                    width="40"
-                                    height="40"
-                                    rx="10"
-                                    fill={`${accentColor}20`}
-                                />
-                                <path
-                                    d="M10 28L17 21L22 24L30 14"
-                                    stroke={accentColor}
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                                <path
-                                    d="M25 14H30V19"
-                                    stroke={accentColor}
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                            <span
-                                style={{
-                                    fontSize: isMobile ? 17 : 19,
-                                    fontWeight: 600,
-                                    color: textColor,
-                                    lineHeight: 1.3,
-                                    fontFamily,
-                                }}
-                            >
-                                {scaleLabel}
-                            </span>
-                        </div>
-                        <p
-                            style={{
-                                fontSize: isMobile ? 14 : 15,
-                                color: secondaryTextColor,
-                                lineHeight: 1.65,
-                                margin: 0,
-                                fontFamily,
-                            }}
-                        >
-                            {scaleDescription}
-                        </p>
-                    </div>
-
-                    {/* Trusted by — full-width logo row */}
-                    <div
-                        style={{
-                            gridColumn: isCompact ? "1" : "1 / -1",
-                            backgroundColor: cardBgColor,
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: 14,
-                            padding: isMobile ? "24px" : "28px 32px",
-                            display: "flex",
-                            flexDirection: isMobile ? "column" : "row",
-                            alignItems: "center",
-                            gap: isMobile ? 20 : 40,
-                        }}
-                    >
-                        <h3
-                            style={{
-                                fontSize: isMobile ? 15 : 16,
+                                fontSize: 12,
                                 fontWeight: 600,
-                                color: textColor,
-                                margin: 0,
-                                whiteSpace: "nowrap",
+                                color: secondaryTextColor,
+                                letterSpacing: "0.08em",
+                                textTransform: "uppercase",
+                                marginBottom: 16,
                                 fontFamily,
-                                flexShrink: 0,
                             }}
                         >
                             {trustTitle}
-                        </h3>
-
-                        {/* Separator */}
-                        {!isMobile && (
-                            <div
-                                style={{
-                                    width: 1,
-                                    height: 32,
-                                    backgroundColor: "rgba(255,255,255,0.12)",
-                                    flexShrink: 0,
-                                }}
-                            />
-                        )}
-
-                        {/* Logos */}
+                        </span>
                         <div
                             style={{
                                 display: "flex",
                                 alignItems: "center",
                                 flexWrap: "wrap",
-                                justifyContent: isMobile
-                                    ? "center"
-                                    : "space-between",
-                                flex: 1,
+                                gap: isMobile ? 20 : 28,
                             }}
                         >
                             {trustLogos.length > 0
                                 ? trustLogos.map((logo, i) => (
-                                      <div
-                                          key={i}
-                                          style={{
-                                              opacity: trustLogoOpacity,
-                                              display: "flex",
-                                              alignItems: "center",
-                                              flexShrink: 0,
-                                          }}
-                                      >
-                                          {logo.image ? (
-                                              <img
-                                                  src={logo.image}
-                                                  alt={logo.name}
-                                                  style={{
-                                                      height:
-                                                          logo.height ||
-                                                          trustLogoHeight,
-                                                      objectFit: "contain",
-                                                      filter: "brightness(0) invert(1)",
-                                                  }}
-                                              />
-                                          ) : (
-                                              <span
-                                                  style={{
-                                                      fontSize: 14,
-                                                      fontWeight: 700,
-                                                      color: textColor,
-                                                      letterSpacing: "0.05em",
-                                                      textTransform:
-                                                          "uppercase",
-                                                      fontFamily,
-                                                  }}
-                                              >
-                                                  {logo.name}
-                                              </span>
-                                          )}
-                                      </div>
-                                  ))
+                                    <div
+                                        key={i}
+                                        style={{
+                                            opacity: trustLogoOpacity,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        {logo.image ? (
+                                            <img
+                                                src={logo.image}
+                                                alt={logo.name}
+                                                style={{
+                                                    height: logo.height || trustLogoHeight,
+                                                    objectFit: "contain",
+                                                    filter: "brightness(0) invert(1)",
+                                                }}
+                                            />
+                                        ) : (
+                                            <span
+                                                style={{
+                                                    fontSize: 13,
+                                                    fontWeight: 700,
+                                                    color: textColor,
+                                                    letterSpacing: "0.05em",
+                                                    textTransform: "uppercase",
+                                                    fontFamily,
+                                                }}
+                                            >
+                                                {logo.name}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))
                                 : placeholderLogos.map((name, i) => (
-                                      <span
-                                          key={i}
-                                          style={{
-                                              fontSize: 14,
-                                              fontWeight: 700,
-                                              color: textColor,
-                                              opacity: trustLogoOpacity,
-                                              letterSpacing: "0.05em",
-                                              textTransform: "uppercase",
-                                              fontFamily,
-                                          }}
-                                      >
-                                          {name}
-                                      </span>
-                                  ))}
+                                    <span
+                                        key={i}
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: 700,
+                                            color: textColor,
+                                            opacity: trustLogoOpacity,
+                                            letterSpacing: "0.05em",
+                                            textTransform: "uppercase",
+                                            fontFamily,
+                                        }}
+                                    >
+                                        {name}
+                                    </span>
+                                ))}
                         </div>
                     </div>
                 </div>
+
+                {/* ── OPTIONAL CTA ── */}
+                {showCta && (
+                    <div style={{ marginTop: isMobile ? 48 : 64, textAlign: "center" }}>
+                        <a
+                            href={ctaUrl}
+                            style={{
+                                display: "inline-block",
+                                fontSize: 15,
+                                fontWeight: 600,
+                                color: accentColor,
+                                fontFamily,
+                                textDecoration: "none",
+                                letterSpacing: "0.01em",
+                                borderBottom: `1px solid ${accentColor}66`,
+                                paddingBottom: 2,
+                            }}
+                        >
+                            {ctaText} &rarr;
+                        </a>
+                    </div>
+                )}
             </div>
         </section>
     )
@@ -492,20 +419,25 @@ addPropertyControls(ProductAuthority, {
     sectionLabel: {
         type: ControlType.String,
         title: "Section Label",
-        defaultValue: "Why Beamr",
+        defaultValue: "Why trust VISTA",
     },
-    sectionTitle: {
+    headline: {
         type: ControlType.String,
-        title: "Section Title",
-        defaultValue: "A Decade of Perceptual Science, Productized",
+        title: "Headline",
+        defaultValue: "You\u2019re Not Guessing Anymore",
         displayTextArea: true,
     },
-    bodyText: {
+    body: {
         type: ControlType.String,
         title: "Body Text",
         defaultValue:
-            "VISTA isn\u2019t a startup experiment. It\u2019s the same subjective testing methodology Beamr has used internally for over 10 years \u2014 the foundation behind an Emmy Award, 53 patents, and quality-critical deployments at the world\u2019s most demanding video platforms.\n\nNow it\u2019s yours.",
+            "Every VISTA result is grounded in the same perceptual science Beamr has refined over a decade \u2014 tested across billions of frames, validated by the video industry\u2019s highest standard of recognition, and deployed where quality failures aren\u2019t an option.\n\nVISTA doesn\u2019t approximate how viewers see your video. It measures it \u2014 with real people, under real conditions, at statistical confidence levels you can defend in any review.",
         displayTextArea: true,
+    },
+    boldStatement: {
+        type: ControlType.String,
+        title: "Bold Statement",
+        defaultValue: "Metrics estimate. Humans decide.",
     },
     quote: {
         type: ControlType.String,
@@ -516,29 +448,29 @@ addPropertyControls(ProductAuthority, {
     },
     quoteAttribution: {
         type: ControlType.String,
-        title: "Quote Attribution",
+        title: "Attribution",
         defaultValue: "\u2014 Sharon Carmel, Founder & CEO, Beamr",
     },
-    awardTitle: {
+    emmyTitle: {
         type: ControlType.String,
-        title: "Award Title",
-        defaultValue: "Emmy Award-Winning Science",
+        title: "Emmy Title",
+        defaultValue: "Technology & Engineering Emmy\u00AE Award",
     },
-    awardDescription: {
+    emmyCaption: {
         type: ControlType.String,
-        title: "Award Description",
+        title: "Emmy Caption",
         defaultValue:
-            "Beamr\u2019s perceptual quality discipline earned a Technology & Engineering Emmy Award \u2014 the gold standard of recognition in the video industry.",
+            "Awarded for pioneering perceptual quality measurement in video compression \u2014 the science that powers every VISTA test.",
         displayTextArea: true,
     },
-    awardImage: {
+    emmyImage: {
         type: ControlType.Image,
-        title: "Award Image",
+        title: "Emmy Image",
     },
     trustTitle: {
         type: ControlType.String,
         title: "Trust Title",
-        defaultValue: "Trusted by the Best",
+        defaultValue: "Trusted by",
     },
     trustLogos: {
         type: ControlType.Array,
@@ -583,17 +515,22 @@ addPropertyControls(ProductAuthority, {
         max: 1,
         step: 0.05,
     },
-    scaleLabel: {
-        type: ControlType.String,
-        title: "Scale Label",
-        defaultValue: "Scales With Your Needs",
+    showCta: {
+        type: ControlType.Boolean,
+        title: "Show CTA",
+        defaultValue: true,
     },
-    scaleDescription: {
+    ctaText: {
         type: ControlType.String,
-        title: "Scale Description",
-        defaultValue:
-            "From a single pair comparison to dozens of configurations across hundreds of viewers \u2014 VISTA handles growing test complexity without growing your team.",
-        displayTextArea: true,
+        title: "CTA Text",
+        defaultValue: "Run your first test",
+        hidden: (props) => !props.showCta,
+    },
+    ctaUrl: {
+        type: ControlType.String,
+        title: "CTA URL",
+        defaultValue: "#",
+        hidden: (props) => !props.showCta,
     },
     accentColor: {
         type: ControlType.Color,
@@ -613,12 +550,7 @@ addPropertyControls(ProductAuthority, {
     secondaryTextColor: {
         type: ControlType.Color,
         title: "Secondary Text",
-        defaultValue: "#aaaaaa",
-    },
-    quoteBgColor: {
-        type: ControlType.Color,
-        title: "Quote Card BG",
-        defaultValue: "rgba(79,62,245,0.1)",
+        defaultValue: "#999",
     },
     cardBgColor: {
         type: ControlType.Color,
