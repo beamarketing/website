@@ -58,9 +58,9 @@ function ProductAuthority(props: Props) {
         trustLogos = [],
         trustLogoHeight = 28,
         trustLogoOpacity = 0.7,
-        scaleValue = "10+",
-        scaleLabel = "Years of Perceptual Science",
-        scaleDescription = "From quick A/B comparisons to complex multi-variant studies with thousands of viewers, VISTA grows with your testing complexity.",
+        scaleValue = "53",
+        scaleLabel = "Patents Granted",
+        scaleDescription = "A deep portfolio of intellectual property in perceptual quality, content-adaptive encoding, and subjective testing methodology.",
         accentColor = "#8b7cf5",
         bgColor = "#1a1a2e",
         textColor = "#ffffff",
@@ -571,18 +571,18 @@ addPropertyControls(ProductAuthority, {
     scaleValue: {
         type: ControlType.String,
         title: "Scale Value",
-        defaultValue: "10+",
+        defaultValue: "53",
     },
     scaleLabel: {
         type: ControlType.String,
         title: "Scale Label",
-        defaultValue: "Years of Perceptual Science",
+        defaultValue: "Patents Granted",
     },
     scaleDescription: {
         type: ControlType.String,
         title: "Scale Description",
         defaultValue:
-            "From quick A/B comparisons to complex multi-variant studies with thousands of viewers, VISTA grows with your testing complexity.",
+            "A deep portfolio of intellectual property in perceptual quality, content-adaptive encoding, and subjective testing methodology.",
         displayTextArea: true,
     },
     accentColor: {
