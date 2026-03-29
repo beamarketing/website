@@ -37,6 +37,7 @@ interface Props {
     bgColor: string
     textColor: string
     secondaryTextColor: string
+    quoteColor: string
     cardBgColor: string
     fontFamily: string
     headingFontFamily: string
@@ -67,6 +68,7 @@ function ProductAuthority(props: Props) {
         bgColor = "#1a1a2e",
         textColor = "#ffffff",
         secondaryTextColor = "#999",
+        quoteColor = "rgba(255,255,255,0.8)",
         cardBgColor = "rgba(255,255,255,0.04)",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
@@ -198,7 +200,7 @@ function ProductAuthority(props: Props) {
                     <p
                         style={{
                             fontSize: isMobile ? 15 : 17,
-                            color: `${textColor}CC`,
+                            color: quoteColor,
                             lineHeight: 1.7,
                             margin: "0 0 16px",
                             fontFamily,
@@ -551,6 +553,11 @@ addPropertyControls(ProductAuthority, {
         type: ControlType.Color,
         title: "Secondary Text",
         defaultValue: "#999",
+    },
+    quoteColor: {
+        type: ControlType.Color,
+        title: "Quote Color",
+        defaultValue: "rgba(255,255,255,0.8)",
     },
     cardBgColor: {
         type: ControlType.Color,
