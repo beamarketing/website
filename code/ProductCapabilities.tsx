@@ -42,11 +42,23 @@ function star4(cx: number, cy: number, outer: number, inner: number) {
 
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            {/* Stacked layers being compressed */}
-            <rect x="4" y="4" width="16" height="4" rx="1" />
-            <rect x="6" y="10" width="12" height="4" rx="1" />
-            <rect x="8" y="16" width="8" height="4" rx="1" />
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            {/* Top press plate */}
+            <line x1="4" y1="5" x2="20" y2="5" strokeWidth="2" />
+            {/* Top funnel */}
+            <path d="M8 2.5L12 5L16 2.5" />
+            {/* Bottom press plate */}
+            <line x1="4" y1="19" x2="20" y2="19" strokeWidth="2" />
+            {/* Bottom funnel */}
+            <path d="M8 21.5L12 19L16 21.5" />
+            {/* File/folder in the middle */}
+            <rect x="5" y="8" width="9" height="8" rx="1" />
+            <polyline points="5 11 8 11 8 8" />
+            {/* Squeeze arrows on the right */}
+            <line x1="18" y1="8" x2="18" y2="11" />
+            <polyline points="16.5 9.5 18 8 19.5 9.5" />
+            <line x1="18" y1="16" x2="18" y2="13" />
+            <polyline points="16.5 14.5 18 16 19.5 14.5" />
         </svg>
     ),
     ai: (color) => (
