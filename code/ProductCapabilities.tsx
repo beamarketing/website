@@ -42,13 +42,11 @@ function star4(cx: number, cy: number, outer: number, inner: number) {
 
 const iconMap: Record<string, (color: string) => React.ReactNode> = {
     compression: (color) => (
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="1" y1="12" x2="8" y2="12" />
-            <polyline points="6 9.5 8 12 6 14.5" />
-            <line x1="23" y1="12" x2="16" y2="12" />
-            <polyline points="18 9.5 16 12 18 14.5" />
-            <path d="M10 4C8 4 8 8 8 12C8 16 8 20 10 20" fill="none" />
-            <path d="M14 4C16 4 16 8 16 12C16 16 16 20 14 20" fill="none" />
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            {/* Stacked layers being compressed */}
+            <rect x="4" y="4" width="16" height="4" rx="1" />
+            <rect x="6" y="10" width="12" height="4" rx="1" />
+            <rect x="8" y="16" width="8" height="4" rx="1" />
         </svg>
     ),
     ai: (color) => (
