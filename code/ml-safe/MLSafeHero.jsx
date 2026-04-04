@@ -123,6 +123,8 @@ function Orb({ size = 300, color = "#3751FF", opacity = 0.3, top = 0, left = 0, 
 // ─────────────────────────────────────────────────────────────
 
 export default function MLSafeHero({
+  logo = "",
+  logoLink = "/",
   videoUrl = "",
   headline = "Half the storage.",
   headlineAccent = "Zero risk to your models.",
@@ -152,6 +154,30 @@ export default function MLSafeHero({
         justifyContent: "center",
       }}
     >
+      {/* LOGO */}
+      {logo && (
+        <a
+          href={logoLink}
+          style={{
+            position: "absolute",
+            top: "24px",
+            left: "32px",
+            zIndex: 10,
+            textDecoration: "none",
+          }}
+        >
+          <img
+            src={logo}
+            alt="Logo"
+            style={{
+              height: "32px",
+              width: "auto",
+              display: "block",
+            }}
+          />
+        </a>
+      )}
+
       {/* ANIMATED ORBS */}
       <Orb
         size={400}
@@ -507,6 +533,15 @@ export default function MLSafeHero({
 // ─────────────────────────────────────────────────────────────
 
 addPropertyControls(MLSafeHero, {
+  logo: {
+    type: ControlType.Image,
+    title: "Logo",
+  },
+  logoLink: {
+    type: ControlType.String,
+    title: "Logo Link",
+    defaultValue: "/",
+  },
   videoUrl: {
     type: ControlType.File,
     title: "Hero Video",
