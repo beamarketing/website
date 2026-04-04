@@ -203,6 +203,8 @@ export default function MLSafeContactCTA({
   subtitle = "Tell us about your data and we'll provide compression estimates, ML accuracy validation approach, and integration roadmap tailored to your needs.",
   formTitle = "Tell us about your data",
   buttonText = "Let's explore →",
+  hubspotPortalId = "",
+  hubspotFormId = "",
   style
 }) {
   const [containerRef, width] = useSectionWidth()
@@ -235,17 +237,54 @@ export default function MLSafeContactCTA({
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const [errorMsg, setErrorMsg] = useState("")
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setErrorMsg("")
 
-    // Simulate form submission
-    setTimeout(() => {
-      setSubmitted(true)
+    if (!hubspotPortalId || !hubspotFormId) {
+      setErrorMsg("HubSpot Portal ID and Form ID are required.")
       setIsSubmitting(false)
-      setFormData({ fullName: "", workEmail: "", company: "", source: "" })
-      setTimeout(() => setSubmitted(false), 3000)
-    }, 800)
+      return
+    }
+
+    try {
+      const res = await fetch(
+        `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fields: [
+              { name: "firstname", value: formData.fullName.split(" ")[0] || "" },
+              { name: "lastname", value: formData.fullName.split(" ").slice(1).join(" ") || "" },
+              { name: "email", value: formData.workEmail },
+              { name: "company", value: formData.company },
+              { name: "how_did_you_hear_about_us", value: formData.source },
+            ],
+            context: {
+              pageUri: typeof window !== "undefined" ? window.location.href : "",
+              pageName: "ML-Safe Landing Page",
+            },
+          }),
+        }
+      )
+
+      if (res.ok) {
+        setSubmitted(true)
+        setFormData({ fullName: "", workEmail: "", company: "", source: "" })
+        setTimeout(() => setSubmitted(false), 4000)
+      } else {
+        const data = await res.json().catch(() => null)
+        setErrorMsg(data?.message || "Submission failed. Please try again.")
+      }
+    } catch (err) {
+      setErrorMsg("Network error. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const sourceOptions = [
@@ -373,6 +412,24 @@ export default function MLSafeContactCTA({
             >
               We'll get back within one business day.
             </p>
+
+            {/* Error Message */}
+            {errorMsg && (
+              <div
+                style={{
+                  marginBottom: "20px",
+                  padding: "12px 16px",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid #EF4444",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  color: "#EF4444",
+                  fontWeight: 500,
+                }}
+              >
+                {errorMsg}
+              </div>
+            )}
 
             {/* Success Message */}
             {submitted && (
@@ -677,5 +734,17 @@ addPropertyControls(MLSafeContactCTA, {
     type: ControlType.String,
     title: "Button Text",
     defaultValue: "Let's explore →"
+  },
+  hubspotPortalId: {
+    type: ControlType.String,
+    title: "HubSpot Portal ID",
+    defaultValue: "",
+    description: "Your HubSpot portal/account ID"
+  },
+  hubspotFormId: {
+    type: ControlType.String,
+    title: "HubSpot Form ID",
+    defaultValue: "",
+    description: "The HubSpot form GUID"
   }
 })
