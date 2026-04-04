@@ -370,10 +370,9 @@ export default function MLSafeHero({
               /* VIDEO PLAYER */
               <video
                 src={videoUrl}
-                autoPlay
-                muted
-                loop
+                controls
                 playsInline
+                preload="metadata"
                 style={{
                   width: "100%",
                   height: "100%",
