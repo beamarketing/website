@@ -72,6 +72,7 @@ export default function MLSafeTrustStrip(props) {
     item2 = "🔧 Co-developed with NVIDIA",
     item3 = "📑 53+ granted patents",
     item4 = "🎬 Netflix · BMW · Wayve · Bosch",
+    style,
   } = props
 
   const { width, ref: containerRef } = useSectionWidth()
@@ -87,6 +88,7 @@ export default function MLSafeTrustStrip(props) {
         width: "100%",
         background: C.white,
         padding: isMobile ? "40px 24px" : "52px 60px",
+        ...style,
       }}
     >
       <div
@@ -112,6 +114,9 @@ export default function MLSafeTrustStrip(props) {
 
 function TrustBadge({ text, delay }) {
   const { isVisible, ref } = useReveal(delay * 1000)
+  const firstSpace = text.indexOf(" ")
+  const emoji = firstSpace > 0 ? text.substring(0, firstSpace) : ""
+  const label = firstSpace > 0 ? text.substring(firstSpace + 1) : text
 
   return (
     <div
@@ -134,10 +139,8 @@ function TrustBadge({ text, delay }) {
         transition: "opacity 0.6s ease-out, transform 0.6s ease-out",
       }}
     >
-      <span style={{ fontSize: "16px" }}>
-        {text.split(" ")[0]}
-      </span>
-      <span>{text.substring(2)}</span>
+      <span style={{ fontSize: "16px" }}>{emoji}</span>
+      <span>{label}</span>
     </div>
   )
 }

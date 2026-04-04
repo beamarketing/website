@@ -8,25 +8,24 @@ const R = { sm: 8, pill: 9999 }
 
 // Hook: Detect section width for responsive behavior
 function useSectionWidth() {
-  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024)
-  const containerRef = useRef(null)
+  const [width, setWidth] = useState(1200)
+  const ref = useRef(null)
 
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        setWidth(rect.width || window.innerWidth)
-      } else {
-        setWidth(window.innerWidth)
-      }
-    }
+    const node = ref.current
+    if (!node) return
 
-    window.addEventListener("resize", handleResize)
-    handleResize()
-    return () => window.removeEventListener("resize", handleResize)
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width > 0) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+
+    ro.observe(node)
+    return () => ro.disconnect()
   }, [])
 
-  return { width, ref: containerRef }
+  return { width, ref }
 }
 
 // Hook: Scroll reveal animation
@@ -71,6 +70,7 @@ export default function MLSafeStatStrip(props) {
     stat4Value = "53+",
     stat4Label = "Format Support",
     floatingOffset = -48,
+    style,
   } = props
 
   const { width, ref: containerRef } = useSectionWidth()
@@ -96,6 +96,7 @@ export default function MLSafeStatStrip(props) {
         position: "relative",
         zIndex: 3,
         marginTop: isMobile ? `-28px` : `${floatingOffset}px`,
+        ...style,
       }}
     >
       <div

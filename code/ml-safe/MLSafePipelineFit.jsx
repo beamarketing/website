@@ -50,7 +50,7 @@ function useReveal() {
 }
 
 // RevealDiv component
-function RevealDiv({ children, ...props }) {
+function RevealDiv({ children, delay, style }) {
   const { ref, isVisible } = useReveal()
   return (
     <div
@@ -58,10 +58,9 @@ function RevealDiv({ children, ...props }) {
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(20px)",
-        transition: "opacity 0.6s ease-out, transform 0.6s ease-out",
-        ...props.style
+        transition: `opacity 0.6s ease-out${delay ? ` ${delay}s` : ""}, transform 0.6s ease-out${delay ? ` ${delay}s` : ""}`,
+        ...style
       }}
-      {...props}
     >
       {children}
     </div>
@@ -69,7 +68,7 @@ function RevealDiv({ children, ...props }) {
 }
 
 // ImgSlot component
-function ImgSlot({ image, ...props }) {
+function ImgSlot({ image, style }) {
   return (
     <div
       style={{
@@ -79,9 +78,8 @@ function ImgSlot({ image, ...props }) {
         backgroundSize: "cover",
         backgroundPosition: "center",
         borderRadius: R.lg,
-        ...props.style
+        ...style
       }}
-      {...props}
     />
   )
 }
@@ -224,6 +222,7 @@ export default function MLSafePipelineFit(props) {
 
   const {
     image,
+    style,
     tagText = "Zero disruption",
     title = "Fits your existing pipeline",
     description = "CABR integrates seamlessly into your H.264 or HEVC encoding pipeline without disruption. Sit between encode and storage stages to optimize bitrate while maintaining compatibility with existing workflows."
@@ -236,7 +235,8 @@ export default function MLSafePipelineFit(props) {
         width: "100%",
         backgroundColor: C.white,
         padding: isMobile ? "48px 20px" : "80px 60px",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        ...style
       }}
     >
       {/* Container */}

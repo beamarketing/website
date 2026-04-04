@@ -173,6 +173,7 @@ export default function MLSafeBenchmarks(props) {
     linkText = "Read the full benchmark results →",
     linkUrl = "https://blog.beamr.com",
     background = C.lightGray,
+    style,
   } = props
 
   const [sectionRef, sectionWidth] = useSectionWidth()
@@ -186,6 +187,7 @@ export default function MLSafeBenchmarks(props) {
         padding: isMobile ? "48px 24px" : "80px 40px",
         fontFamily: F.b,
         color: C.text,
+        ...style,
       }}
     >
       <div

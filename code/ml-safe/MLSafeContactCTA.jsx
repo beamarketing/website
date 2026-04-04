@@ -86,14 +86,15 @@ function useInjectKeyframes(keyframes) {
 /**
  * useSectionWidth: Get container width for responsive logic
  */
-function useSectionWidth(ref) {
-  const [width, setWidth] = useState(window.innerWidth)
+function useSectionWidth() {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(1200)
 
   useEffect(() => {
-    if (!ref?.current) return
+    if (!ref.current) return
 
     const updateWidth = () => {
-      setWidth(ref.current.offsetWidth || window.innerWidth)
+      setWidth(ref.current.offsetWidth)
     }
 
     updateWidth()
@@ -101,15 +102,12 @@ function useSectionWidth(ref) {
     const resizeObserver = new ResizeObserver(updateWidth)
     resizeObserver.observe(ref.current)
 
-    window.addEventListener("resize", updateWidth)
-
     return () => {
       resizeObserver.disconnect()
-      window.removeEventListener("resize", updateWidth)
     }
-  }, [ref])
+  }, [])
 
-  return width
+  return [ref, width]
 }
 
 /**
@@ -204,10 +202,10 @@ export default function MLSafeContactCTA({
   headlineAccent = "Let's explore yours.",
   subtitle = "Tell us about your data and we'll provide compression estimates, ML accuracy validation approach, and integration roadmap tailored to your needs.",
   formTitle = "Tell us about your data",
-  buttonText = "Let's explore →"
+  buttonText = "Let's explore →",
+  style
 }) {
-  const containerRef = useRef(null)
-  const width = useSectionWidth(containerRef)
+  const [containerRef, width] = useSectionWidth()
   const isMobile = width < 900
 
   const [formData, setFormData] = useState({
@@ -268,7 +266,8 @@ export default function MLSafeContactCTA({
         width: "100%",
         padding: isMobile ? "60px 24px" : "80px 60px",
         background: `linear-gradient(165deg, #000a3d 0%, ${C.darkBg} 50%, #080b2e 100%)`,
-        overflow: "hidden"
+        overflow: "hidden",
+        ...style
       }}
     >
       {/* Floating Orbs for depth */}

@@ -89,6 +89,7 @@ export default function MLSafeQuote(props) {
     quote = "We don't ask you to trade quality for cost. We eliminate the trade-off entirely.",
     attribution = "Sharon Carmel, Founder & CEO — Beamr",
     background = "linear-gradient(180deg, #FFFFFF 0%, #F7F8FC 100%)",
+    style,
   } = props
 
   const { width, ref: containerRef } = useSectionWidth()
@@ -107,6 +108,7 @@ export default function MLSafeQuote(props) {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        ...style,
       }}
     >
       <RevealDiv delay={0}>

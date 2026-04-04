@@ -242,6 +242,7 @@ export default function MLSafeHowItWorks({
   title = "Compress smarter, not harder",
   description = "Beamr's CABR compression uses dual encoding passes to preserve the video quality metrics that matter most to machine learning models. While other codecs optimize for human perception, CABR preserves temporal consistency and spatial detail that AI systems depend on for accurate inference.",
   background = "#FFFFFF",
+  style,
 }) {
   const [sectionRef, sectionWidth] = useSectionWidth()
   const isMobile = sectionWidth < 768
@@ -253,6 +254,7 @@ export default function MLSafeHowItWorks({
         width: "100%",
         backgroundColor: background,
         padding: isMobile ? "40px 20px" : "80px 40px",
+        ...style,
       }}
     >
       <div

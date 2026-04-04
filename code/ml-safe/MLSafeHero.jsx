@@ -131,16 +131,17 @@ export default function MLSafeHero({
   ctaPrimaryLink = "#contact",
   ctaSecondaryText = "See how it works",
   ctaSecondaryLink = "#how-it-works",
+  style,
 }) {
   useInjectKeyframes()
   const [sectionRef, sectionWidth] = useSectionWidth()
   const isMobile = sectionWidth < 900
-  const isTablet = sectionWidth < 640
 
   return (
     <section
       ref={sectionRef}
       style={{
+        ...style,
         position: "relative",
         width: "100%",
         minHeight: "100vh",
@@ -375,8 +376,7 @@ export default function MLSafeHero({
         </div>
 
         {/* RIGHT CONTENT - VIDEO PLAYER */}
-        {!isTablet && (
-          <div
+        <div
             style={{
               position: "relative",
               aspectRatio: "16/9",
@@ -495,7 +495,6 @@ export default function MLSafeHero({
               </div>
             )}
           </div>
-        )}
       </div>
     </section>
   )
