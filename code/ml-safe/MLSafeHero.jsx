@@ -388,16 +388,18 @@ export default function MLSafeHero({
             }}
           >
             {videoUrl ? (
-              /* VIDEO IFRAME */
-              <iframe
+              /* VIDEO PLAYER */
+              <video
                 src={videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
                 style={{
                   width: "100%",
                   height: "100%",
-                  border: "none",
+                  objectFit: "cover",
                 }}
-                allow="autoplay; fullscreen"
-                allowFullScreen
               />
             ) : (
               /* PLACEHOLDER */
@@ -506,9 +508,9 @@ export default function MLSafeHero({
 
 addPropertyControls(MLSafeHero, {
   videoUrl: {
-    type: ControlType.String,
-    title: "Hero Video URL",
-    defaultValue: "",
+    type: ControlType.File,
+    title: "Hero Video",
+    allowedFileTypes: ["mp4", "webm", "mov"],
   },
   headline: {
     type: ControlType.String,
