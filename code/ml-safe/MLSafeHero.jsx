@@ -253,40 +253,6 @@ export default function MLSafeHero({
       >
         {/* LEFT CONTENT */}
         <div>
-          {/* BADGE */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "rgba(16, 185, 129, 0.1)",
-              border: `1px solid rgba(16, 185, 129, 0.3)`,
-              borderRadius: R.pill,
-              padding: "8px 16px",
-              marginBottom: "32px",
-            }}
-          >
-            <div
-              style={{
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                backgroundColor: C.success,
-                animation: "pulse-ring 2s infinite",
-              }}
-            />
-            <span
-              style={{
-                fontSize: "12px",
-                fontFamily: F.b,
-                color: C.white,
-                fontWeight: 500,
-              }}
-            >
-              ML-Safe Video Compression
-            </span>
-          </div>
-
           {/* HEADLINE */}
           <h1
             style={{
