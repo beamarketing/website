@@ -238,6 +238,7 @@ function CheckItem({ text }) {
 
 export default function MLSafeHowItWorks({
   image = null,
+  video = null,
   tagText = "How it works",
   title = "Compress smarter, not harder",
   description = "Beamr's CABR compression uses dual encoding passes to preserve the video quality metrics that matter most to machine learning models. While other codecs optimize for human perception, CABR preserves temporal consistency and spatial detail that AI systems depend on for accurate inference.",
@@ -267,9 +268,36 @@ export default function MLSafeHowItWorks({
           alignItems: "center",
         }}
       >
-        {/* LEFT COLUMN - IMAGE */}
+        {/* LEFT COLUMN - MEDIA */}
         <RevealDiv delay={0}>
-          <ImgSlot image={image} alt="How CABR preserves ML-critical detail" />
+          {video ? (
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "16/10",
+                borderRadius: 16,
+                overflow: "hidden",
+                backgroundColor: C.lightGray,
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+              }}
+            >
+              <video
+                src={video}
+                autoPlay
+                muted
+                loop
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+          ) : (
+            <ImgSlot image={image} alt="How CABR preserves ML-critical detail" />
+          )}
         </RevealDiv>
 
         {/* RIGHT COLUMN - CONTENT */}
@@ -330,9 +358,14 @@ export default function MLSafeHowItWorks({
 // ─────────────────────────────────────────────────────────────
 
 addPropertyControls(MLSafeHowItWorks, {
+  video: {
+    type: ControlType.File,
+    title: "Video",
+    allowedFileTypes: ["mp4", "webm", "mov"],
+  },
   image: {
     type: ControlType.Image,
-    title: "Image",
+    title: "Image (fallback)",
   },
   tagText: {
     type: ControlType.String,

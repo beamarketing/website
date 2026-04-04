@@ -105,8 +105,8 @@ export default function MLSafeStatStrip(props) {
           width: "100%",
           maxWidth: "1200px",
           padding: `0 ${isMobile ? "20px" : "60px"}`,
-          opacity: isVisible ? 1 : 0.8,
-          transform: isVisible ? "translateY(0)" : "translateY(16px)",
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? "translateY(0)" : "translateY(30px)",
           transition: "opacity 0.6s ease-out, transform 0.6s ease-out",
         }}
       >
