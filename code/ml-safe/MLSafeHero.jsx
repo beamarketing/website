@@ -129,8 +129,8 @@ export default function MLSafeHero({
   logoLeft = 32,
   logoHeight = 32,
   videoUrl = "",
-  headline = "Half the storage.",
-  headlineAccent = "Zero risk to your models.",
+  headline = "Half the storage.\nZero risk to your models.",
+  headlineWeight = 700,
   subtitle = "Cut storage costs without compromising video quality or AI/ML model safety with ML-Safe compression.",
   ctaPrimaryText = "Talk to our team",
   ctaPrimaryLink = "#contact",
@@ -258,30 +258,14 @@ export default function MLSafeHero({
             style={{
               fontSize: isMobile ? "36px" : "52px",
               fontFamily: F.h,
-              fontWeight: 700,
+              fontWeight: headlineWeight,
               lineHeight: "1.2",
               color: C.white,
-              margin: "0 0 16px 0",
+              margin: "0 0 24px 0",
+              whiteSpace: "pre-line",
             }}
           >
             {headline}
-          </h1>
-
-          {/* ACCENT TEXT (GRADIENT) */}
-          <h1
-            style={{
-              fontSize: isMobile ? "36px" : "52px",
-              fontFamily: F.h,
-              fontWeight: 700,
-              lineHeight: "1.2",
-              margin: "0 0 24px 0",
-              background: `linear-gradient(135deg, ${C.accent} 0%, ${C.primary} 100%)`,
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            {headlineAccent}
           </h1>
 
           {/* SUBTITLE */}
@@ -546,12 +530,17 @@ addPropertyControls(MLSafeHero, {
   headline: {
     type: ControlType.String,
     title: "Headline",
-    defaultValue: "Half the storage.",
+    displayTextArea: true,
+    defaultValue: "Half the storage.\nZero risk to your models.",
   },
-  headlineAccent: {
-    type: ControlType.String,
-    title: "Headline Accent",
-    defaultValue: "Zero risk to your models.",
+  headlineWeight: {
+    type: ControlType.Number,
+    title: "Headline Weight",
+    defaultValue: 700,
+    min: 100,
+    max: 900,
+    step: 100,
+    displayStepper: true,
   },
   subtitle: {
     type: ControlType.String,
