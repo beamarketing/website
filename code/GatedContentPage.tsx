@@ -1,46 +1,42 @@
 // Beamr - Gated Content Landing Page
+// Lead magnet for NVIDIA Cosmos Curator benchmark research
 // Framer Code Component with HubSpot form integration
-// Campaign landing page for gated benchmark research downloads
 
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect, useRef } from "react"
 
-interface KeyFinding {
-    stat: string
+interface StatItem {
+    value: string
     label: string
 }
 
 interface Props {
-    badge: string
-    showBadge: boolean
+    // Logos
+    beamrLogo: string
+    nvidiaLogo: string
+
+    // Content
     heading: string
     subheading: string
-    contentType: string
-    keyFindings: KeyFinding[]
-    showKeyFindings: boolean
-    showSocialProof: boolean
-    downloadCount: string
-    socialProofText: string
+    stats: StatItem[]
 
+    // Form
     formHeading: string
-    formSubheading: string
+    submitButtonText: string
     hubspotPortalId: string
     hubspotFormId: string
     useEmbeddedHubspot: boolean
-    submitButtonText: string
-    firstNameLabel: string
-    lastNameLabel: string
-    emailLabel: string
-    companyLabel: string
     showCompanyField: boolean
     consentText: string
     showConsent: boolean
 
+    // Thank you
     thankYouHeading: string
     thankYouMessage: string
     thankYouCtaText: string
     thankYouCtaUrl: string
 
+    // Appearance
     bgColor: string
     cardBgColor: string
     textColor: string
@@ -52,43 +48,27 @@ interface Props {
 
 function GatedContentPage(props: Props) {
     const {
-        badge = "NVIDIA Cosmos Curator Benchmark",
-        showBadge = true,
-        heading = "Beamr CABR Validated on\nNVIDIA Cosmos Curator",
-        subheading = "41-57% bitrate reduction with zero measurable impact on AI model fidelity. Full methodology, embedding analysis, and VRI results across 9 AV pipeline test videos.",
-        contentType = "Research Report",
-
-        keyFindings = [
-            { stat: "41–57%", label: "Bitrate reduction while preserving model fidelity" },
-            { stat: "~95%", label: "VRI scene classification agreement across all videos" },
-            { stat: ">0.98", label: "K-means ARI — compression invisible to clustering" },
-            { stat: "<0.25", label: "Compression SNR — well below model noise floor" },
+        beamrLogo = "",
+        nvidiaLogo = "",
+        heading = "Optimized Compression\nValidated on Cosmos Curator",
+        subheading = "41–57% smaller files. Zero impact on AI model fidelity.",
+        stats = [
+            { value: "41–57%", label: "Bitrate reduction" },
+            { value: "~95%", label: "VRI agreement" },
+            { value: ">0.98", label: "Cluster accuracy" },
         ],
-        showKeyFindings = true,
-
-        showSocialProof = true,
-        downloadCount = "Beamr + NVIDIA",
-        socialProofText = "Joint validation research",
-
         formHeading = "Get the Full Research",
-        formSubheading = "We'll send the complete benchmark report to your inbox.",
+        submitButtonText = "Download Free Report",
         hubspotPortalId = "",
         hubspotFormId = "",
         useEmbeddedHubspot = false,
-        submitButtonText = "Download the Report",
-        firstNameLabel = "First Name",
-        lastNameLabel = "Last Name",
-        emailLabel = "Work Email",
-        companyLabel = "Company",
         showCompanyField = true,
-        consentText = "I agree to receive communications from Beamr. You can unsubscribe at any time.",
+        consentText = "I agree to receive communications from Beamr. Unsubscribe anytime.",
         showConsent = true,
-
         thankYouHeading = "Check Your Inbox",
-        thankYouMessage = "We've sent the full benchmark report to your email. If you don't see it in a few minutes, check your spam folder.",
-        thankYouCtaText = "Back to Homepage",
+        thankYouMessage = "The full benchmark report is on its way to your email.",
+        thankYouCtaText = "Visit Beamr.com",
         thankYouCtaUrl = "/",
-
         bgColor = "#07071c",
         cardBgColor = "#0f1029",
         textColor = "#ffffff",
@@ -103,7 +83,6 @@ function GatedContentPage(props: Props) {
     const [formError, setFormError] = useState("")
     const [isMobile, setIsMobile] = useState(false)
     const hubspotRef = useRef<HTMLDivElement>(null)
-    const borderAlpha = "rgba(255,255,255,0.06)"
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 860)
@@ -136,7 +115,6 @@ function GatedContentPage(props: Props) {
         e.preventDefault()
         setFormError("")
         setIsSubmitting(true)
-
         const fd = new FormData(e.currentTarget)
         const fields: { name: string; value: string }[] = [
             { name: "firstname", value: fd.get("firstname") as string },
@@ -144,37 +122,46 @@ function GatedContentPage(props: Props) {
             { name: "email", value: fd.get("email") as string },
         ]
         if (showCompanyField) fields.push({ name: "company", value: fd.get("company") as string })
-
         if (!hubspotPortalId || !hubspotFormId) {
             setTimeout(() => { setIsSubmitting(false); setSubmitted(true) }, 800)
             return
         }
-
         try {
             const res = await fetch(
                 `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormId}`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        fields,
-                        context: { pageUri: window.location.href, pageName: document.title },
-                    }),
+                    body: JSON.stringify({ fields, context: { pageUri: window.location.href, pageName: document.title } }),
                 }
             )
             if (res.ok) setSubmitted(true)
             else setFormError("Something went wrong. Please try again.")
         } catch {
-            setFormError("Network error. Please check your connection.")
+            setFormError("Connection error. Please retry.")
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    const inputStyle: React.CSSProperties = {
+    // Inline SVG logos as fallbacks
+    const BeamrWordmark = () => (
+        <svg viewBox="0 0 120 28" fill="none" style={{ height: isMobile ? 22 : 28 }}>
+            <text x="0" y="22" fill={textColor} fontFamily={fontFamily} fontWeight="800" fontSize="24" letterSpacing="-0.5">BEAMR</text>
+        </svg>
+    )
+
+    const NvidiaWordmark = () => (
+        <svg viewBox="0 0 140 32" fill="none" style={{ height: isMobile ? 22 : 28 }}>
+            <path d="M44.5 8.2h4.3l5.8 12.9h.1L60.5 8.2h4.2V25h-3V13.3h-.1L55.9 25h-2.5l-5.7-11.7h-.1V25h-3V8.2zM26 8.2l-7.7 16.8h3.4l1.7-3.9h8.1l1.7 3.9H37L29.2 8.2H26zm1.6 4.3l2.8 6.2h-5.5l2.7-6.2zM14.5 8.2h3.1V25h-3.1V8.2zm-4.8 0h-3v16.8h9.6v-2.8H9.7V8.2zM2 8.2h5.2c3.6 0 5.4 2.2 5.4 5.1 0 2.2-1 4-3 4.8L13 25h-3.6l-3-6.2H5V25H2V8.2zm5 8c1.8 0 2.8-1.2 2.8-2.9 0-1.7-1-2.8-2.8-2.8H5v5.7h2z" fill={textColor} opacity="0.5"/>
+            <text x="44" y="23" fill={textColor} fontFamily={fontFamily} fontWeight="700" fontSize="22" letterSpacing="0.5" opacity="0.5">NVIDIA</text>
+        </svg>
+    )
+
+    const inputCss: React.CSSProperties = {
         width: "100%",
-        padding: "14px 16px",
-        backgroundColor: "rgba(255,255,255,0.04)",
+        padding: "13px 16px",
+        backgroundColor: "rgba(255,255,255,0.05)",
         border: "1px solid rgba(255,255,255,0.1)",
         borderRadius: 10,
         color: textColor,
@@ -183,15 +170,6 @@ function GatedContentPage(props: Props) {
         outline: "none",
         boxSizing: "border-box",
         transition: "border-color 0.2s",
-    }
-
-    const labelStyle: React.CSSProperties = {
-        fontSize: 13,
-        fontWeight: 500,
-        color: secondaryTextColor,
-        marginBottom: 6,
-        display: "block",
-        fontFamily,
     }
 
     return (
@@ -205,35 +183,30 @@ function GatedContentPage(props: Props) {
                 boxSizing: "border-box",
                 position: "relative",
                 overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
             }}
         >
-            <div
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: 1000,
-                    height: 800,
-                    borderRadius: "50%",
-                    background: `radial-gradient(circle, ${accentColor}08 0%, transparent 70%)`,
-                    pointerEvents: "none",
-                    zIndex: 0,
-                }}
-            />
+            {/* Background glows */}
+            <div style={{ position: "absolute", top: "-20%", left: "30%", width: 600, height: 600, borderRadius: "50%", background: `radial-gradient(circle, ${accentColor}06 0%, transparent 70%)`, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: "-10%", right: "20%", width: 500, height: 500, borderRadius: "50%", background: `radial-gradient(circle, #6366f106 0%, transparent 70%)`, pointerEvents: "none" }} />
 
             <style>{`
                 .gc-input:focus { border-color: ${accentColor} !important; }
                 .gc-input::placeholder { color: ${secondaryTextColor}; opacity: 0.5; }
-                .gc-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+                .gc-submit:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 32px ${accentColor}30; }
                 .gc-submit:active { transform: translateY(0); }
-                .gc-finding:hover { border-color: ${accentColor}44 !important; }
+                .gc-stat { transition: transform 0.2s, border-color 0.2s; }
+                .gc-stat:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12) !important; }
+                .gc-form-card { background: linear-gradient(135deg, ${cardBgColor} 0%, #0d0e28 100%); }
                 .gc-hs-embed .hs-form input[type="text"],
                 .gc-hs-embed .hs-form input[type="email"],
                 .gc-hs-embed .hs-form select,
                 .gc-hs-embed .hs-form textarea {
-                    width: 100% !important; padding: 14px 16px !important;
-                    background-color: rgba(255,255,255,0.04) !important;
+                    width: 100% !important; padding: 13px 16px !important;
+                    background: rgba(255,255,255,0.05) !important;
                     border: 1px solid rgba(255,255,255,0.1) !important;
                     border-radius: 10px !important; color: ${textColor} !important;
                     font-size: 15px !important; font-family: ${fontFamily} !important;
@@ -241,63 +214,59 @@ function GatedContentPage(props: Props) {
                 }
                 .gc-hs-embed .hs-form input:focus { border-color: ${accentColor} !important; outline: none !important; }
                 .gc-hs-embed .hs-form .hs-button {
-                    width: 100% !important; padding: 16px 32px !important;
-                    background-color: ${accentColor} !important; color: #07071c !important;
+                    width: 100% !important; padding: 16px !important;
+                    background: ${accentColor} !important; color: #07071c !important;
                     border: none !important; border-radius: 10px !important;
                     font-size: 16px !important; font-weight: 600 !important;
-                    font-family: ${fontFamily} !important; cursor: pointer !important;
+                    cursor: pointer !important;
                 }
                 .gc-hs-embed .hs-form label { color: ${secondaryTextColor} !important; font-size: 13px !important; }
-                .gc-hs-embed .hs-form .hs-error-msgs label { color: #ff4d4d !important; }
             `}</style>
 
-            {/* Two-column layout — stats left, form right */}
             <div
                 style={{
                     position: "relative",
                     zIndex: 1,
-                    maxWidth: 1120,
-                    margin: "0 auto",
-                    padding: isMobile ? "80px 20px 60px" : "120px 48px 100px",
+                    width: "100%",
+                    maxWidth: 1080,
+                    padding: isMobile ? "70px 20px 50px" : "80px 48px",
                     boxSizing: "border-box",
                     display: "flex",
                     flexDirection: isMobile ? "column" : "row",
-                    gap: isMobile ? 40 : 56,
-                    alignItems: "flex-start",
+                    gap: isMobile ? 36 : 56,
+                    alignItems: isMobile ? "stretch" : "center",
                 }}
             >
-                {/* Left — Hero + Key Findings */}
+                {/* ── Left: Content ── */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    {showBadge && (
-                        <div
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                                padding: "8px 20px",
-                                borderRadius: 100,
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                backgroundColor: "rgba(255,255,255,0.04)",
-                                fontSize: 14,
-                                color: textColor,
-                                opacity: 0.8,
-                                fontFamily,
-                                marginBottom: 24,
-                            }}
-                        >
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: accentColor }} />
-                            {badge}
-                        </div>
-                    )}
 
+                    {/* Logo lockup */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
+                        {beamrLogo ? (
+                            <img src={beamrLogo} alt="Beamr" style={{ height: isMobile ? 22 : 28, objectFit: "contain" }} />
+                        ) : (
+                            <BeamrWordmark />
+                        )}
+                        <span style={{ fontSize: 18, color: secondaryTextColor, opacity: 0.4, fontWeight: 300 }}>&times;</span>
+                        {nvidiaLogo ? (
+                            <img src={nvidiaLogo} alt="NVIDIA" style={{ height: isMobile ? 22 : 28, objectFit: "contain" }} />
+                        ) : (
+                            <NvidiaWordmark />
+                        )}
+                    </div>
+
+                    {/* Accent line */}
+                    <div style={{ width: 48, height: 3, borderRadius: 2, backgroundColor: accentColor, marginBottom: 28, opacity: 0.8 }} />
+
+                    {/* Heading */}
                     <h1
                         style={{
-                            fontSize: isMobile ? 32 : 48,
+                            fontSize: isMobile ? 30 : 44,
                             fontWeight: 700,
                             color: textColor,
                             margin: 0,
-                            lineHeight: 1.1,
-                            letterSpacing: "-0.02em",
+                            lineHeight: 1.12,
+                            letterSpacing: "-0.025em",
                             fontFamily,
                             whiteSpace: "pre-line",
                         }}
@@ -305,283 +274,178 @@ function GatedContentPage(props: Props) {
                         {heading}
                     </h1>
 
+                    {/* Subheading */}
                     <p
                         style={{
                             fontSize: isMobile ? 15 : 17,
                             color: textColor,
-                            opacity: 0.65,
-                            lineHeight: 1.6,
-                            margin: "16px 0 0",
+                            opacity: 0.55,
+                            lineHeight: 1.55,
+                            margin: "14px 0 0",
                             fontFamily,
-                            maxWidth: 540,
+                            maxWidth: 460,
                         }}
                     >
                         {subheading}
                     </p>
 
-                    {showSocialProof && (
+                    {/* Stats row */}
+                    {stats.length > 0 && (
                         <div
                             style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                                marginTop: 20,
-                                padding: "6px 14px",
-                                borderRadius: 8,
-                                backgroundColor: "rgba(255,255,255,0.03)",
+                                display: "flex",
+                                gap: 12,
+                                marginTop: 32,
+                                flexWrap: "wrap",
                             }}
                         >
-                            <span style={{ fontSize: 13, color: accentColor, fontWeight: 700, fontFamily }}>
-                                {downloadCount}
-                            </span>
-                            <span style={{ fontSize: 13, color: secondaryTextColor, fontFamily }}>
-                                {socialProofText}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Key Findings */}
-                    {showKeyFindings && keyFindings.length > 0 && (
-                        <div style={{ marginTop: 40 }}>
-                            <span
-                                style={{
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    color: accentColor,
-                                    letterSpacing: "0.1em",
-                                    textTransform: "uppercase",
-                                    fontFamily,
-                                }}
-                            >
-                                KEY FINDINGS
-                            </span>
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                                    gap: 14,
-                                    marginTop: 16,
-                                }}
-                            >
-                                {keyFindings.map((f, i) => (
+                            {stats.map((s, i) => (
+                                <div
+                                    key={i}
+                                    className="gc-stat"
+                                    style={{
+                                        flex: isMobile ? "1 1 calc(50% - 6px)" : "1 1 0",
+                                        padding: "18px 16px",
+                                        borderRadius: 12,
+                                        border: "1px solid rgba(255,255,255,0.06)",
+                                        backgroundColor: "rgba(255,255,255,0.02)",
+                                        textAlign: "center",
+                                    }}
+                                >
                                     <div
-                                        key={i}
-                                        className="gc-finding"
                                         style={{
-                                            backgroundColor: cardBgColor,
-                                            borderRadius: 12,
-                                            border: `1px solid ${borderAlpha}`,
-                                            padding: "20px",
-                                            transition: "border-color 0.2s",
+                                            fontSize: isMobile ? 24 : 28,
+                                            fontWeight: 800,
+                                            color: accentColor,
+                                            fontFamily,
+                                            lineHeight: 1,
+                                            letterSpacing: "-0.02em",
                                         }}
                                     >
-                                        <div
-                                            style={{
-                                                fontSize: isMobile ? 26 : 30,
-                                                fontWeight: 800,
-                                                color: accentColor,
-                                                fontFamily,
-                                                lineHeight: 1,
-                                                marginBottom: 6,
-                                            }}
-                                        >
-                                            {f.stat}
-                                        </div>
-                                        <div
-                                            style={{
-                                                fontSize: 13,
-                                                color: secondaryTextColor,
-                                                lineHeight: 1.45,
-                                                fontFamily,
-                                            }}
-                                        >
-                                            {f.label}
-                                        </div>
+                                        {s.value}
                                     </div>
-                                ))}
-                            </div>
+                                    <div
+                                        style={{
+                                            fontSize: 12,
+                                            color: secondaryTextColor,
+                                            marginTop: 6,
+                                            fontFamily,
+                                            lineHeight: 1.3,
+                                        }}
+                                    >
+                                        {s.label}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
 
-                {/* Right — Form Card */}
-                <div
-                    style={{
-                        width: isMobile ? "100%" : 400,
-                        flexShrink: 0,
-                        position: isMobile ? "relative" : "sticky",
-                        top: isMobile ? undefined : 32,
-                    }}
-                >
+                {/* ── Right: Form ── */}
+                <div style={{ width: isMobile ? "100%" : 380, flexShrink: 0 }}>
+                    {/* Gradient border wrapper */}
                     <div
                         style={{
-                            backgroundColor: cardBgColor,
-                            borderRadius: 20,
-                            border: `1px solid ${borderAlpha}`,
-                            padding: isMobile ? "32px 24px" : "36px 32px",
-                            boxSizing: "border-box",
-                            position: "relative",
-                            overflow: "hidden",
-                            boxShadow: "0 32px 64px rgba(0,0,0,0.3)",
+                            borderRadius: 22,
+                            padding: 1,
+                            background: `linear-gradient(135deg, ${accentColor}30, rgba(255,255,255,0.06), ${accentColor}15)`,
                         }}
                     >
                         <div
+                            className="gc-form-card"
                             style={{
-                                position: "absolute",
-                                top: -60,
-                                right: -60,
-                                width: 200,
-                                height: 200,
-                                borderRadius: "50%",
-                                background: `radial-gradient(circle, ${accentColor}12 0%, transparent 70%)`,
-                                pointerEvents: "none",
+                                borderRadius: 21,
+                                padding: isMobile ? "28px 22px" : "32px 28px",
+                                boxSizing: "border-box",
+                                position: "relative",
+                                overflow: "hidden",
                             }}
-                        />
+                        >
+                            {/* Corner glow */}
+                            <div style={{ position: "absolute", top: -50, right: -50, width: 160, height: 160, borderRadius: "50%", background: `radial-gradient(circle, ${accentColor}10 0%, transparent 70%)`, pointerEvents: "none" }} />
 
-                        {submitted ? (
-                            <div
-                                style={{
-                                    textAlign: "center",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    gap: 16,
-                                    padding: "16px 0",
-                                    position: "relative",
-                                    zIndex: 1,
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        width: 56,
-                                        height: 56,
-                                        borderRadius: "50%",
-                                        backgroundColor: `${accentColor}18`,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontSize: 24,
-                                        color: accentColor,
-                                    }}
-                                >
-                                    &#10003;
-                                </div>
-                                <h3 style={{ fontSize: 22, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>
-                                    {thankYouHeading}
-                                </h3>
-                                <p style={{ fontSize: 14, color: secondaryTextColor, margin: 0, lineHeight: 1.6, fontFamily }}>
-                                    {thankYouMessage}
-                                </p>
-                                <a
-                                    href={thankYouCtaUrl}
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                        marginTop: 8,
-                                        padding: "14px 32px",
-                                        backgroundColor: accentColor,
-                                        color: "#07071c",
-                                        borderRadius: 10,
-                                        fontSize: 16,
-                                        fontWeight: 600,
-                                        textDecoration: "none",
-                                        fontFamily,
-                                    }}
-                                >
-                                    {thankYouCtaText}
-                                    <span style={{ fontSize: 18 }}>&#8594;</span>
-                                </a>
-                            </div>
-                        ) : useEmbeddedHubspot && hubspotPortalId && hubspotFormId ? (
-                            <div style={{ position: "relative", zIndex: 1 }}>
-                                <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: "0 0 6px", fontFamily }}>
-                                    {formHeading}
-                                </h3>
-                                <p style={{ fontSize: 14, color: secondaryTextColor, margin: "0 0 20px", lineHeight: 1.5, fontFamily }}>
-                                    {formSubheading}
-                                </p>
-                                <div ref={hubspotRef} className="gc-hs-embed" />
-                            </div>
-                        ) : (
-                            <form
-                                onSubmit={handleSubmit}
-                                style={{ display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}
-                            >
-                                <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: "0 0 6px", fontFamily }}>
-                                    {formHeading}
-                                </h3>
-                                <p style={{ fontSize: 14, color: secondaryTextColor, margin: "0 0 24px", lineHeight: 1.5, fontFamily }}>
-                                    {formSubheading}
-                                </p>
-
-                                <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={labelStyle}>{firstNameLabel} *</label>
-                                        <input className="gc-input" type="text" name="firstname" required placeholder="John" style={inputStyle} />
+                            {submitted ? (
+                                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "12px 0", position: "relative", zIndex: 1 }}>
+                                    <div style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: `${accentColor}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: accentColor }}>
+                                        &#10003;
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={labelStyle}>{lastNameLabel} *</label>
-                                        <input className="gc-input" type="text" name="lastname" required placeholder="Doe" style={inputStyle} />
-                                    </div>
+                                    <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>{thankYouHeading}</h3>
+                                    <p style={{ fontSize: 14, color: secondaryTextColor, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
+                                    <a
+                                        href={thankYouCtaUrl}
+                                        style={{
+                                            display: "inline-flex", alignItems: "center", gap: 8,
+                                            marginTop: 6, padding: "13px 28px",
+                                            backgroundColor: accentColor, color: "#07071c",
+                                            borderRadius: 10, fontSize: 15, fontWeight: 600,
+                                            textDecoration: "none", fontFamily,
+                                        }}
+                                    >
+                                        {thankYouCtaText} <span style={{ fontSize: 17 }}>&#8594;</span>
+                                    </a>
                                 </div>
-
-                                <div style={{ marginBottom: 14 }}>
-                                    <label style={labelStyle}>{emailLabel} *</label>
-                                    <input className="gc-input" type="email" name="email" required placeholder="john@company.com" style={inputStyle} />
+                            ) : useEmbeddedHubspot && hubspotPortalId && hubspotFormId ? (
+                                <div style={{ position: "relative", zIndex: 1 }}>
+                                    <h3 style={{ fontSize: 19, fontWeight: 700, color: textColor, margin: "0 0 16px", fontFamily }}>{formHeading}</h3>
+                                    <div ref={hubspotRef} className="gc-hs-embed" />
                                 </div>
+                            ) : (
+                                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, position: "relative", zIndex: 1 }}>
+                                    <h3 style={{ fontSize: 19, fontWeight: 700, color: textColor, margin: "0 0 4px", fontFamily }}>{formHeading}</h3>
 
-                                {showCompanyField && (
-                                    <div style={{ marginBottom: 14 }}>
-                                        <label style={labelStyle}>{companyLabel}</label>
-                                        <input className="gc-input" type="text" name="company" placeholder="Acme Inc." style={inputStyle} />
+                                    <div style={{ display: "flex", gap: 10 }}>
+                                        <input className="gc-input" type="text" name="firstname" required placeholder="First name" style={inputCss} />
+                                        <input className="gc-input" type="text" name="lastname" required placeholder="Last name" style={inputCss} />
                                     </div>
-                                )}
 
-                                {showConsent && (
-                                    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 20, marginTop: 4, cursor: "pointer" }}>
-                                        <input type="checkbox" required style={{ marginTop: 3, accentColor, flexShrink: 0 }} />
-                                        <span style={{ fontSize: 12, color: secondaryTextColor, lineHeight: 1.5, fontFamily }}>
-                                            {consentText}
-                                        </span>
-                                    </label>
-                                )}
+                                    <input className="gc-input" type="email" name="email" required placeholder="Work email *" style={inputCss} />
 
-                                {formError && (
-                                    <p style={{ fontSize: 13, color: "#ff4d4d", margin: "0 0 12px", fontFamily }}>{formError}</p>
-                                )}
+                                    {showCompanyField && (
+                                        <input className="gc-input" type="text" name="company" placeholder="Company" style={inputCss} />
+                                    )}
 
-                                <button
-                                    type="submit"
-                                    className="gc-submit"
-                                    disabled={isSubmitting}
-                                    style={{
-                                        width: "100%",
-                                        padding: "16px 32px",
-                                        backgroundColor: isSubmitting ? `${accentColor}88` : accentColor,
-                                        color: "#07071c",
-                                        border: "none",
-                                        borderRadius: 10,
-                                        fontSize: 16,
-                                        fontWeight: 600,
-                                        fontFamily,
-                                        cursor: isSubmitting ? "not-allowed" : "pointer",
-                                        transition: "all 0.2s",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 8,
-                                    }}
-                                >
-                                    {isSubmitting ? "Sending..." : submitButtonText}
-                                    {!isSubmitting && <span style={{ fontSize: 18 }}>&#8594;</span>}
-                                </button>
+                                    {showConsent && (
+                                        <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", marginTop: 2 }}>
+                                            <input type="checkbox" required style={{ marginTop: 3, accentColor, flexShrink: 0 }} />
+                                            <span style={{ fontSize: 11, color: secondaryTextColor, lineHeight: 1.4, fontFamily, opacity: 0.8 }}>{consentText}</span>
+                                        </label>
+                                    )}
 
-                                <p style={{ fontSize: 11, color: secondaryTextColor, margin: "14px 0 0", textAlign: "center", fontFamily, opacity: 0.6 }}>
-                                    PDF &middot; Free &middot; No credit card required
-                                </p>
-                            </form>
-                        )}
+                                    {formError && <p style={{ fontSize: 12, color: "#ff4d4d", margin: 0, fontFamily }}>{formError}</p>}
+
+                                    <button
+                                        type="submit"
+                                        className="gc-submit"
+                                        disabled={isSubmitting}
+                                        style={{
+                                            width: "100%",
+                                            padding: "15px 24px",
+                                            backgroundColor: isSubmitting ? `${accentColor}88` : accentColor,
+                                            color: "#07071c",
+                                            border: "none",
+                                            borderRadius: 10,
+                                            fontSize: 15,
+                                            fontWeight: 600,
+                                            fontFamily,
+                                            cursor: isSubmitting ? "not-allowed" : "pointer",
+                                            transition: "all 0.2s",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 8,
+                                            marginTop: 2,
+                                        }}
+                                    >
+                                        {isSubmitting ? "Sending..." : submitButtonText}
+                                        {!isSubmitting && <span style={{ fontSize: 17 }}>&#8594;</span>}
+                                    </button>
+
+                                    <p style={{ fontSize: 11, color: secondaryTextColor, margin: 0, textAlign: "center", fontFamily, opacity: 0.5 }}>
+                                        Free PDF &middot; No credit card
+                                    </p>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -590,67 +454,48 @@ function GatedContentPage(props: Props) {
 }
 
 addPropertyControls(GatedContentPage, {
-    showBadge: { type: ControlType.Boolean, title: "Show Badge", defaultValue: true },
-    badge: { type: ControlType.String, title: "Badge Text", defaultValue: "NVIDIA Cosmos Curator Benchmark", hidden: (props) => !props.showBadge },
-    contentType: {
-        type: ControlType.Enum,
-        title: "Content Type",
-        options: ["Research Report", "Whitepaper", "Benchmark Study", "eBook", "Guide", "Case Study"],
-        defaultValue: "Research Report",
-    },
-    heading: { type: ControlType.String, title: "Heading", defaultValue: "Beamr CABR Validated on\nNVIDIA Cosmos Curator", displayTextArea: true },
-    subheading: { type: ControlType.String, title: "Subheading", defaultValue: "41-57% bitrate reduction with zero measurable impact on AI model fidelity. Full methodology, embedding analysis, and VRI results across 9 AV pipeline test videos.", displayTextArea: true },
-
-    showKeyFindings: { type: ControlType.Boolean, title: "Key Findings", defaultValue: true },
-    keyFindings: {
+    beamrLogo: { type: ControlType.Image, title: "Beamr Logo" },
+    nvidiaLogo: { type: ControlType.Image, title: "NVIDIA Logo" },
+    heading: { type: ControlType.String, title: "Heading", defaultValue: "Optimized Compression\nValidated on Cosmos Curator", displayTextArea: true },
+    subheading: { type: ControlType.String, title: "Subheading", defaultValue: "41–57% smaller files. Zero impact on AI model fidelity.", displayTextArea: true },
+    stats: {
         type: ControlType.Array,
-        title: "Findings",
-        maxCount: 6,
-        hidden: (props) => !props.showKeyFindings,
+        title: "Stats",
+        maxCount: 4,
         control: {
             type: ControlType.Object,
             controls: {
-                stat: { type: ControlType.String, title: "Stat", defaultValue: "50%" },
+                value: { type: ControlType.String, title: "Value", defaultValue: "50%" },
                 label: { type: ControlType.String, title: "Label", defaultValue: "Description" },
             },
         },
         defaultValue: [
-            { stat: "41–57%", label: "Bitrate reduction while preserving model fidelity" },
-            { stat: "~95%", label: "VRI scene classification agreement across all videos" },
-            { stat: ">0.98", label: "K-means ARI — compression invisible to clustering" },
-            { stat: "<0.25", label: "Compression SNR — well below model noise floor" },
+            { value: "41–57%", label: "Bitrate reduction" },
+            { value: "~95%", label: "VRI agreement" },
+            { value: ">0.98", label: "Cluster accuracy" },
         ],
     },
 
-    showSocialProof: { type: ControlType.Boolean, title: "Social Proof", defaultValue: true },
-    downloadCount: { type: ControlType.String, title: "Proof Bold", defaultValue: "Beamr + NVIDIA", hidden: (props) => !props.showSocialProof },
-    socialProofText: { type: ControlType.String, title: "Proof Text", defaultValue: "Joint validation research", hidden: (props) => !props.showSocialProof },
-
     formHeading: { type: ControlType.String, title: "Form Heading", defaultValue: "Get the Full Research" },
-    formSubheading: { type: ControlType.String, title: "Form Subhead", defaultValue: "We'll send the complete benchmark report to your inbox.", displayTextArea: true },
+    submitButtonText: { type: ControlType.String, title: "Submit Text", defaultValue: "Download Free Report", hidden: (props) => props.useEmbeddedHubspot },
     useEmbeddedHubspot: { type: ControlType.Boolean, title: "Embed HubSpot", defaultValue: false },
     hubspotPortalId: { type: ControlType.String, title: "Portal ID", defaultValue: "" },
     hubspotFormId: { type: ControlType.String, title: "Form ID", defaultValue: "" },
-    submitButtonText: { type: ControlType.String, title: "Submit Text", defaultValue: "Download the Report", hidden: (props) => props.useEmbeddedHubspot },
-    firstNameLabel: { type: ControlType.String, title: "First Name", defaultValue: "First Name", hidden: (props) => props.useEmbeddedHubspot },
-    lastNameLabel: { type: ControlType.String, title: "Last Name", defaultValue: "Last Name", hidden: (props) => props.useEmbeddedHubspot },
-    emailLabel: { type: ControlType.String, title: "Email Label", defaultValue: "Work Email", hidden: (props) => props.useEmbeddedHubspot },
     showCompanyField: { type: ControlType.Boolean, title: "Company Field", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
-    companyLabel: { type: ControlType.String, title: "Company Label", defaultValue: "Company", hidden: (props) => props.useEmbeddedHubspot || !props.showCompanyField },
-    showConsent: { type: ControlType.Boolean, title: "Consent Box", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
-    consentText: { type: ControlType.String, title: "Consent Text", defaultValue: "I agree to receive communications from Beamr. You can unsubscribe at any time.", displayTextArea: true, hidden: (props) => props.useEmbeddedHubspot || !props.showConsent },
+    showConsent: { type: ControlType.Boolean, title: "Consent", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
+    consentText: { type: ControlType.String, title: "Consent Text", defaultValue: "I agree to receive communications from Beamr. Unsubscribe anytime.", displayTextArea: true, hidden: (props) => props.useEmbeddedHubspot || !props.showConsent },
 
     thankYouHeading: { type: ControlType.String, title: "TY Heading", defaultValue: "Check Your Inbox" },
-    thankYouMessage: { type: ControlType.String, title: "TY Message", defaultValue: "We've sent the full benchmark report to your email. If you don't see it in a few minutes, check your spam folder.", displayTextArea: true },
-    thankYouCtaText: { type: ControlType.String, title: "TY CTA Text", defaultValue: "Back to Homepage" },
-    thankYouCtaUrl: { type: ControlType.String, title: "TY CTA URL", defaultValue: "/" },
+    thankYouMessage: { type: ControlType.String, title: "TY Message", defaultValue: "The full benchmark report is on its way to your email.", displayTextArea: true },
+    thankYouCtaText: { type: ControlType.String, title: "TY CTA", defaultValue: "Visit Beamr.com" },
+    thankYouCtaUrl: { type: ControlType.String, title: "TY URL", defaultValue: "/" },
 
     bgColor: { type: ControlType.Color, title: "Background", defaultValue: "#07071c" },
     cardBgColor: { type: ControlType.Color, title: "Card BG", defaultValue: "#0f1029" },
     textColor: { type: ControlType.Color, title: "Text", defaultValue: "#ffffff" },
-    secondaryTextColor: { type: ControlType.Color, title: "Secondary Text", defaultValue: "#8b8ba3" },
+    secondaryTextColor: { type: ControlType.Color, title: "Secondary", defaultValue: "#8b8ba3" },
     accentColor: { type: ControlType.Color, title: "Accent", defaultValue: "#00d46a" },
-    fontFamily: { type: ControlType.String, title: "Font Family", defaultValue: "'Inter', sans-serif" },
+    fontFamily: { type: ControlType.String, title: "Font", defaultValue: "'Inter', sans-serif" },
 })
 
 export default GatedContentPage
