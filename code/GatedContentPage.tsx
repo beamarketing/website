@@ -32,6 +32,7 @@ interface Props {
 
     reportPdf: string
     reportUrl: string
+    reportFileName: string
     downloadButtonText: string
 
     thankYouHeading: string
@@ -77,6 +78,7 @@ function GatedContentPage(props: Props) {
         showCompanyField = true,
         reportPdf = "",
         reportUrl = "",
+        reportFileName = "beamr-cosmos-curator-benchmark.pdf",
         downloadButtonText = "Download Full Report (PDF)",
         thankYouHeading = "Check Your Inbox",
         thankYouMessage = "The full benchmark report is on its way to your email.",
@@ -97,6 +99,7 @@ function GatedContentPage(props: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formError, setFormError] = useState("")
     const [isMobile, setIsMobile] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
     const hubspotRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -157,6 +160,28 @@ function GatedContentPage(props: Props) {
             setSubmitted(true)
         } finally {
             setIsSubmitting(false)
+        }
+    }
+
+    const handleDownload = async () => {
+        const url = reportUrl || reportPdf
+        if (!url) return
+        setIsDownloading(true)
+        try {
+            const res = await fetch(url)
+            const blob = await res.blob()
+            const blobUrl = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = blobUrl
+            a.download = reportFileName || "beamr-report.pdf"
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(blobUrl)
+        } catch {
+            window.open(url, "_blank")
+        } finally {
+            setIsDownloading(false)
         }
     }
 
@@ -405,22 +430,21 @@ function GatedContentPage(props: Props) {
                                 <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>{thankYouHeading}</h3>
                                 <p style={{ fontSize: 14, color: textColor, opacity: 0.6, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
                                 {(reportUrl || reportPdf) && (
-                                    <a
-                                        href={reportUrl || reportPdf}
-                                        download
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <button
+                                        onClick={handleDownload}
+                                        disabled={isDownloading}
                                         style={{
                                             display: "inline-flex", alignItems: "center", gap: 8,
                                             marginTop: 6, padding: "14px 28px",
                                             backgroundColor: textColor, color: bgColor,
                                             borderRadius: 10, fontSize: 15, fontWeight: 700,
-                                            textDecoration: "none", fontFamily,
+                                            fontFamily, border: "none",
+                                            cursor: isDownloading ? "wait" : "pointer",
                                             transition: "opacity 0.2s",
                                         }}
                                     >
-                                        <span style={{ fontSize: 16 }}>&#8595;</span> {downloadButtonText}
-                                    </a>
+                                        <span style={{ fontSize: 16 }}>&#8595;</span> {isDownloading ? "Downloading..." : downloadButtonText}
+                                    </button>
                                 )}
                                 <a
                                     href={thankYouCtaUrl}
@@ -523,7 +547,8 @@ addPropertyControls(GatedContentPage, {
     showCompanyField: { type: ControlType.Boolean, title: "Company Field", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
 
     reportPdf: { type: ControlType.File, title: "Report PDF", allowedFileTypes: ["pdf"] },
-    reportUrl: { type: ControlType.String, title: "Report URL", defaultValue: "", description: "Use a beamr.com URL (takes priority over uploaded PDF)" },
+    reportUrl: { type: ControlType.String, title: "Report URL", defaultValue: "", description: "Manual URL (takes priority over uploaded PDF)" },
+    reportFileName: { type: ControlType.String, title: "Download Filename", defaultValue: "beamr-cosmos-curator-benchmark.pdf" },
     downloadButtonText: { type: ControlType.String, title: "Download Text", defaultValue: "Download Full Report (PDF)" },
 
     thankYouHeading: { type: ControlType.String, title: "TY Heading", defaultValue: "Check Your Inbox" },
