@@ -33,6 +33,11 @@ interface Props {
     thankYouCtaText: string
     thankYouCtaUrl: string
 
+    headingFontSize: number
+    headingFontWeight: number
+    statFontSize: number
+    statFontWeight: number
+
     bgColor: string
     textColor: string
     accentColor: string
@@ -66,6 +71,10 @@ function GatedContentPage(props: Props) {
         thankYouMessage = "The full benchmark report is on its way to your email.",
         thankYouCtaText = "Visit Beamr.com",
         thankYouCtaUrl = "/",
+        headingFontSize = 52,
+        headingFontWeight = 800,
+        statFontSize = 44,
+        statFontWeight = 900,
         bgColor = "#1a2478",
         textColor = "#ffffff",
         accentColor = "#4a8eff",
@@ -244,8 +253,8 @@ function GatedContentPage(props: Props) {
                 {/* ── Heading ── */}
                 <h1
                     style={{
-                        fontSize: isMobile ? 34 : 52,
-                        fontWeight: 800,
+                        fontSize: isMobile ? Math.round(headingFontSize * 0.65) : headingFontSize,
+                        fontWeight: headingFontWeight,
                         color: textColor,
                         margin: 0,
                         lineHeight: 1.06,
@@ -309,8 +318,8 @@ function GatedContentPage(props: Props) {
                         >
                             <div
                                 style={{
-                                    fontSize: isMobile ? 36 : 44,
-                                    fontWeight: 900,
+                                    fontSize: isMobile ? Math.round(statFontSize * 0.82) : statFontSize,
+                                    fontWeight: statFontWeight,
                                     color: textColor,
                                     fontFamily,
                                     lineHeight: 1,
@@ -457,6 +466,11 @@ addPropertyControls(GatedContentPage, {
     thankYouMessage: { type: ControlType.String, title: "TY Message", defaultValue: "The full benchmark report is on its way to your email.", displayTextArea: true },
     thankYouCtaText: { type: ControlType.String, title: "TY CTA", defaultValue: "Visit Beamr.com" },
     thankYouCtaUrl: { type: ControlType.String, title: "TY URL", defaultValue: "/" },
+
+    headingFontSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 52, min: 24, max: 80, step: 1 },
+    headingFontWeight: { type: ControlType.Enum, title: "Heading Weight", options: [400, 500, 600, 700, 800, 900], optionTitles: ["400", "500", "600", "700", "800", "900"], defaultValue: 800 },
+    statFontSize: { type: ControlType.Number, title: "Stat Size", defaultValue: 44, min: 20, max: 80, step: 1 },
+    statFontWeight: { type: ControlType.Enum, title: "Stat Weight", options: [400, 500, 600, 700, 800, 900], optionTitles: ["400", "500", "600", "700", "800", "900"], defaultValue: 900 },
 
     bgColor: { type: ControlType.Color, title: "Background", defaultValue: "#1a2478" },
     textColor: { type: ControlType.Color, title: "Text", defaultValue: "#ffffff" },
