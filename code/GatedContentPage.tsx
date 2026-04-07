@@ -5,17 +5,18 @@
 import { addPropertyControls, ControlType } from "framer"
 import { useState, useEffect, useRef } from "react"
 
-interface StatBlock {
-    label: string
-    rangeStart: string
-    rangeEnd: string
-}
-
 interface Props {
     beamrLogo: string
     nvidiaLogo: string
     heading: string
-    stats: StatBlock[]
+
+    stat1Value: string
+    stat1Label: string
+    stat2Value: string
+    stat2Label: string
+    stat3Value: string
+    stat3Label: string
+
     backgroundImage: string
 
     formHeading: string
@@ -44,10 +45,14 @@ function GatedContentPage(props: Props) {
         beamrLogo = "",
         nvidiaLogo = "",
         heading = "Cosmos Curator\nBenchmark Testing",
-        stats = [
-            { label: "Video Size Reduced By", rangeStart: "41", rangeEnd: "57" },
-            { label: "Visual Realism Index (VRI)", rangeStart: "93", rangeEnd: "98" },
-        ],
+
+        stat1Value = "41–57%",
+        stat1Label = "Video Size Reduced",
+        stat2Value = "93–98%",
+        stat2Label = "Visual Realism Index",
+        stat3Value = ">0.98",
+        stat3Label = "Clustering Accuracy",
+
         backgroundImage = "",
         formHeading = "Get the Full Research",
         submitButtonText = "Download Free Report",
@@ -148,31 +153,11 @@ function GatedContentPage(props: Props) {
         transition: "border-color 0.2s",
     }
 
-    // Stat range renderer — big numbers with small % signs
-    const StatRange = ({ stat }: { stat: StatBlock }) => (
-        <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: isMobile ? 15 : 17, color: textColor, opacity: 0.7, fontFamily, fontWeight: 500, marginBottom: 8 }}>
-                {stat.label}
-            </div>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: isMobile ? 8 : 12 }}>
-                <span style={{ fontSize: isMobile ? 56 : 80, fontWeight: 900, color: textColor, fontFamily, lineHeight: 1, letterSpacing: "-0.03em" }}>
-                    {stat.rangeStart}
-                </span>
-                <span style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: textColor, opacity: 0.5, fontFamily }}>
-                    %
-                </span>
-                <span style={{ fontSize: isMobile ? 28 : 40, fontWeight: 300, color: textColor, opacity: 0.35, fontFamily, margin: `0 ${isMobile ? 2 : 4}px` }}>
-                    –
-                </span>
-                <span style={{ fontSize: isMobile ? 56 : 80, fontWeight: 900, color: textColor, fontFamily, lineHeight: 1, letterSpacing: "-0.03em" }}>
-                    {stat.rangeEnd}
-                </span>
-                <span style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: textColor, opacity: 0.5, fontFamily }}>
-                    %
-                </span>
-            </div>
-        </div>
-    )
+    const statItems = [
+        { value: stat1Value, label: stat1Label },
+        { value: stat2Value, label: stat2Label },
+        { value: stat3Value, label: stat3Label },
+    ]
 
     return (
         <section
@@ -190,22 +175,21 @@ function GatedContentPage(props: Props) {
                 justifyContent: "center",
             }}
         >
-            {/* Background image (blueprint pattern) */}
             {backgroundImage && (
-                <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.3, pointerEvents: "none" }} />
+                <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.25, pointerEvents: "none" }} />
             )}
 
-            {/* Grid pattern overlay */}
+            {/* Blueprint grid */}
             <div style={{
-                position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.04,
+                position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.035,
                 backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
                 backgroundSize: "60px 60px",
             }} />
 
             <style>{`
                 .gc-input:focus { border-color: ${accentColor} !important; }
-                .gc-input::placeholder { color: rgba(255,255,255,0.4); }
-                .gc-submit:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(255,255,255,0.15); }
+                .gc-input::placeholder { color: rgba(255,255,255,0.35); }
+                .gc-submit:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
                 .gc-submit:active { transform: translateY(0); }
                 .gc-hs-embed .hs-form input[type="text"],
                 .gc-hs-embed .hs-form input[type="email"],
@@ -234,74 +218,104 @@ function GatedContentPage(props: Props) {
                     position: "relative",
                     zIndex: 1,
                     width: "100%",
-                    maxWidth: 1120,
-                    padding: isMobile ? "70px 20px 50px" : "60px 48px",
+                    maxWidth: 900,
+                    padding: isMobile ? "70px 20px 50px" : "60px 32px",
                     boxSizing: "border-box",
                     display: "flex",
-                    flexDirection: isMobile ? "column" : "row",
-                    gap: isMobile ? 40 : 60,
-                    alignItems: isMobile ? "stretch" : "center",
+                    flexDirection: "column",
+                    alignItems: "center",
                 }}
             >
-                {/* ── Left: Hero + Stats ── */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-
-                    {/* Logo lockup */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: isMobile ? 28 : 36 }}>
-                        {beamrLogo ? (
-                            <img src={beamrLogo} alt="Beamr" style={{ height: isMobile ? 20 : 26, objectFit: "contain" }} />
-                        ) : (
-                            <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 800, color: textColor, fontFamily, letterSpacing: "0.02em" }}>BEAMR</span>
-                        )}
-                        <span style={{ fontSize: 16, color: textColor, opacity: 0.25, fontWeight: 300 }}>&times;</span>
-                        {nvidiaLogo ? (
-                            <img src={nvidiaLogo} alt="NVIDIA" style={{ height: isMobile ? 20 : 26, objectFit: "contain" }} />
-                        ) : (
-                            <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 700, color: textColor, fontFamily, letterSpacing: "0.04em", opacity: 0.6 }}>NVIDIA</span>
-                        )}
-                    </div>
-
-                    {/* Heading */}
-                    <h1
-                        style={{
-                            fontSize: isMobile ? 32 : 48,
-                            fontWeight: 800,
-                            color: textColor,
-                            margin: "0 0 36px",
-                            lineHeight: 1.08,
-                            letterSpacing: "-0.025em",
-                            fontFamily,
-                            whiteSpace: "pre-line",
-                        }}
-                    >
-                        {heading}
-                    </h1>
-
-                    {/* Stats */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                        {stats.map((stat, i) => (
-                            <div key={i}>
-                                {i > 0 && (
-                                    <div style={{
-                                        width: isMobile ? 200 : 280,
-                                        height: 1,
-                                        backgroundColor: "rgba(255,255,255,0.15)",
-                                        margin: `${isMobile ? 16 : 20}px auto`,
-                                    }} />
-                                )}
-                                <StatRange stat={stat} />
-                            </div>
-                        ))}
-                    </div>
+                {/* ── Logo lockup ── */}
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+                    {beamrLogo ? (
+                        <img src={beamrLogo} alt="Beamr" style={{ height: isMobile ? 20 : 24, objectFit: "contain" }} />
+                    ) : (
+                        <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: textColor, fontFamily, letterSpacing: "0.03em" }}>BEAMR</span>
+                    )}
+                    <span style={{ fontSize: 15, color: textColor, opacity: 0.25, fontWeight: 300 }}>&times;</span>
+                    {nvidiaLogo ? (
+                        <img src={nvidiaLogo} alt="NVIDIA" style={{ height: isMobile ? 20 : 24, objectFit: "contain" }} />
+                    ) : (
+                        <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: textColor, fontFamily, letterSpacing: "0.04em", opacity: 0.55 }}>NVIDIA</span>
+                    )}
                 </div>
 
-                {/* ── Right: Form ── */}
-                <div style={{ width: isMobile ? "100%" : 380, flexShrink: 0 }}>
+                {/* ── Heading ── */}
+                <h1
+                    style={{
+                        fontSize: isMobile ? 34 : 52,
+                        fontWeight: 800,
+                        color: textColor,
+                        margin: 0,
+                        lineHeight: 1.06,
+                        letterSpacing: "-0.03em",
+                        fontFamily,
+                        whiteSpace: "pre-line",
+                        textAlign: "center",
+                    }}
+                >
+                    {heading}
+                </h1>
+
+                {/* ── Stats row ── */}
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: isMobile ? "column" : "row",
+                        width: "100%",
+                        marginTop: isMobile ? 32 : 44,
+                        borderTop: "1px solid rgba(255,255,255,0.12)",
+                        borderBottom: "1px solid rgba(255,255,255,0.12)",
+                    }}
+                >
+                    {statItems.map((s, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                flex: 1,
+                                padding: isMobile ? "24px 0" : "28px 16px",
+                                textAlign: "center",
+                                borderLeft: !isMobile && i > 0 ? "1px solid rgba(255,255,255,0.12)" : "none",
+                                borderTop: isMobile && i > 0 ? "1px solid rgba(255,255,255,0.12)" : "none",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontSize: isMobile ? 36 : 44,
+                                    fontWeight: 900,
+                                    color: textColor,
+                                    fontFamily,
+                                    lineHeight: 1,
+                                    letterSpacing: "-0.02em",
+                                }}
+                            >
+                                {s.value}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 13,
+                                    color: textColor,
+                                    opacity: 0.5,
+                                    fontFamily,
+                                    marginTop: 8,
+                                    fontWeight: 500,
+                                    letterSpacing: "0.02em",
+                                }}
+                            >
+                                {s.label}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ── Form ── */}
+                <div style={{ width: "100%", maxWidth: 440, marginTop: isMobile ? 32 : 44 }}>
                     <div
                         style={{
                             backgroundColor: "rgba(255,255,255,0.07)",
-                            backdropFilter: "blur(20px)",
-                            WebkitBackdropFilter: "blur(20px)",
+                            backdropFilter: "blur(24px)",
+                            WebkitBackdropFilter: "blur(24px)",
                             borderRadius: 20,
                             border: "1px solid rgba(255,255,255,0.12)",
                             padding: isMobile ? "28px 22px" : "32px 28px",
@@ -309,12 +323,12 @@ function GatedContentPage(props: Props) {
                         }}
                     >
                         {submitted ? (
-                            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "12px 0" }}>
+                            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "8px 0" }}>
                                 <div style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: textColor }}>
                                     &#10003;
                                 </div>
                                 <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>{thankYouHeading}</h3>
-                                <p style={{ fontSize: 14, color: textColor, opacity: 0.65, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
+                                <p style={{ fontSize: 14, color: textColor, opacity: 0.6, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
                                 <a
                                     href={thankYouCtaUrl}
                                     style={{
@@ -330,12 +344,12 @@ function GatedContentPage(props: Props) {
                             </div>
                         ) : useEmbeddedHubspot && hubspotPortalId && hubspotFormId ? (
                             <div>
-                                <h3 style={{ fontSize: 19, fontWeight: 700, color: textColor, margin: "0 0 16px", fontFamily }}>{formHeading}</h3>
+                                <h3 style={{ fontSize: 18, fontWeight: 700, color: textColor, margin: "0 0 16px", fontFamily, textAlign: "center" }}>{formHeading}</h3>
                                 <div ref={hubspotRef} className="gc-hs-embed" />
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                <h3 style={{ fontSize: 19, fontWeight: 700, color: textColor, margin: "0 0 4px", fontFamily }}>{formHeading}</h3>
+                                <h3 style={{ fontSize: 18, fontWeight: 700, color: textColor, margin: "0 0 4px", fontFamily, textAlign: "center" }}>{formHeading}</h3>
 
                                 <div style={{ display: "flex", gap: 10 }}>
                                     <input className="gc-input" type="text" name="firstname" required placeholder="First name" style={inputCss} />
@@ -351,7 +365,7 @@ function GatedContentPage(props: Props) {
                                 {showConsent && (
                                     <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", marginTop: 2 }}>
                                         <input type="checkbox" required style={{ marginTop: 3, flexShrink: 0 }} />
-                                        <span style={{ fontSize: 11, color: textColor, lineHeight: 1.4, fontFamily, opacity: 0.5 }}>{consentText}</span>
+                                        <span style={{ fontSize: 11, color: textColor, lineHeight: 1.4, fontFamily, opacity: 0.45 }}>{consentText}</span>
                                     </label>
                                 )}
 
@@ -384,7 +398,7 @@ function GatedContentPage(props: Props) {
                                     {!isSubmitting && <span style={{ fontSize: 17 }}>&#8594;</span>}
                                 </button>
 
-                                <p style={{ fontSize: 11, color: textColor, margin: 0, textAlign: "center", fontFamily, opacity: 0.35 }}>
+                                <p style={{ fontSize: 11, color: textColor, margin: 0, textAlign: "center", fontFamily, opacity: 0.3 }}>
                                     Free PDF &middot; No credit card
                                 </p>
                             </form>
@@ -400,24 +414,14 @@ addPropertyControls(GatedContentPage, {
     beamrLogo: { type: ControlType.Image, title: "Beamr Logo" },
     nvidiaLogo: { type: ControlType.Image, title: "NVIDIA Logo" },
     heading: { type: ControlType.String, title: "Heading", defaultValue: "Cosmos Curator\nBenchmark Testing", displayTextArea: true },
-    stats: {
-        type: ControlType.Array,
-        title: "Stats",
-        maxCount: 4,
-        control: {
-            type: ControlType.Object,
-            controls: {
-                label: { type: ControlType.String, title: "Label", defaultValue: "Metric Name" },
-                rangeStart: { type: ControlType.String, title: "From", defaultValue: "41" },
-                rangeEnd: { type: ControlType.String, title: "To", defaultValue: "57" },
-            },
-        },
-        defaultValue: [
-            { label: "Video Size Reduced By", rangeStart: "41", rangeEnd: "57" },
-            { label: "Visual Realism Index (VRI)", rangeStart: "93", rangeEnd: "98" },
-        ],
-    },
     backgroundImage: { type: ControlType.Image, title: "BG Image" },
+
+    stat1Value: { type: ControlType.String, title: "Stat 1 Value", defaultValue: "41–57%" },
+    stat1Label: { type: ControlType.String, title: "Stat 1 Label", defaultValue: "Video Size Reduced" },
+    stat2Value: { type: ControlType.String, title: "Stat 2 Value", defaultValue: "93–98%" },
+    stat2Label: { type: ControlType.String, title: "Stat 2 Label", defaultValue: "Visual Realism Index" },
+    stat3Value: { type: ControlType.String, title: "Stat 3 Value", defaultValue: ">0.98" },
+    stat3Label: { type: ControlType.String, title: "Stat 3 Label", defaultValue: "Clustering Accuracy" },
 
     formHeading: { type: ControlType.String, title: "Form Heading", defaultValue: "Get the Full Research" },
     submitButtonText: { type: ControlType.String, title: "Submit Text", defaultValue: "Download Free Report", hidden: (props) => props.useEmbeddedHubspot },
