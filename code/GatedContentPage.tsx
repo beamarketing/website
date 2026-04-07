@@ -18,6 +18,8 @@ interface Props {
     stat3Label: string
 
     backgroundImage: string
+    bannerImage: string
+    showBanner: boolean
 
     formHeading: string
     submitButtonText: string
@@ -54,6 +56,8 @@ function GatedContentPage(props: Props) {
         stat3Label = "Clustering Accuracy",
 
         backgroundImage = "",
+        bannerImage = "",
+        showBanner = true,
         formHeading = "Get the Full Research",
         submitButtonText = "Download Free Report",
         hubspotPortalId = "",
@@ -258,13 +262,40 @@ function GatedContentPage(props: Props) {
                     {heading}
                 </h1>
 
+                {/* ── Road signs banner ── */}
+                {showBanner && bannerImage && (
+                    <div
+                        style={{
+                            width: "calc(100% + 64px)",
+                            margin: `${isMobile ? 24 : 36}px -32px 0`,
+                            overflow: "hidden",
+                            position: "relative",
+                            height: isMobile ? 60 : 90,
+                            maskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+                            WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        }}
+                    >
+                        <img
+                            src={bannerImage}
+                            alt=""
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                objectPosition: "center",
+                                display: "block",
+                            }}
+                        />
+                    </div>
+                )}
+
                 {/* ── Stats row ── */}
                 <div
                     style={{
                         display: "flex",
                         flexDirection: isMobile ? "column" : "row",
                         width: "100%",
-                        marginTop: isMobile ? 32 : 44,
+                        marginTop: showBanner && bannerImage ? (isMobile ? 24 : 32) : (isMobile ? 32 : 44),
                         borderTop: "1px solid rgba(255,255,255,0.12)",
                         borderBottom: "1px solid rgba(255,255,255,0.12)",
                     }}
@@ -415,6 +446,8 @@ addPropertyControls(GatedContentPage, {
     nvidiaLogo: { type: ControlType.Image, title: "NVIDIA Logo" },
     heading: { type: ControlType.String, title: "Heading", defaultValue: "Cosmos Curator\nBenchmark Testing", displayTextArea: true },
     backgroundImage: { type: ControlType.Image, title: "BG Image" },
+    showBanner: { type: ControlType.Boolean, title: "Show Banner", defaultValue: true },
+    bannerImage: { type: ControlType.Image, title: "Banner Image", hidden: (props) => !props.showBanner },
 
     stat1Value: { type: ControlType.String, title: "Stat 1 Value", defaultValue: "41–57%" },
     stat1Label: { type: ControlType.String, title: "Stat 1 Label", defaultValue: "Video Size Reduced" },
