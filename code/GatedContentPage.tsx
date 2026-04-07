@@ -8,6 +8,8 @@ import { useState, useEffect, useRef } from "react"
 interface Props {
     beamrLogo: string
     nvidiaLogo: string
+    nvidiaLabel: string
+    eyebrow: string
     heading: string
 
     stat1Value: string
@@ -49,7 +51,9 @@ function GatedContentPage(props: Props) {
     const {
         beamrLogo = "",
         nvidiaLogo = "",
-        heading = "Cosmos Curator\nBenchmark Testing",
+        nvidiaLabel = "Tested on NVIDIA Cosmos Curator",
+        eyebrow = "INSIDE THE BENCHMARK",
+        heading = "How Beamr Validated\nCompression on Cosmos Curator",
 
         stat1Value = "41–57%",
         stat1Label = "Video Size Reduced",
@@ -62,7 +66,7 @@ function GatedContentPage(props: Props) {
         bannerImage = "",
         showBanner = true,
         formHeading = "Get the Full Research",
-        submitButtonText = "Download Free Report",
+        submitButtonText = "Read the Full Methodology",
         hubspotPortalId = "",
         hubspotFormId = "",
         useEmbeddedHubspot = false,
@@ -235,19 +239,29 @@ function GatedContentPage(props: Props) {
                     alignItems: "center",
                 }}
             >
-                {/* ── Logo lockup ── */}
-                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+                {/* ── Beamr logo (author) ── */}
+                <div style={{ marginBottom: 28 }}>
                     {beamrLogo ? (
-                        <img src={beamrLogo} alt="Beamr" style={{ height: isMobile ? 20 : 24, objectFit: "contain" }} />
+                        <img src={beamrLogo} alt="Beamr" style={{ height: isMobile ? 22 : 28, objectFit: "contain" }} />
                     ) : (
-                        <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: textColor, fontFamily, letterSpacing: "0.03em" }}>BEAMR</span>
+                        <span style={{ fontSize: isMobile ? 17 : 20, fontWeight: 800, color: textColor, fontFamily, letterSpacing: "0.03em" }}>BEAMR</span>
                     )}
-                    <span style={{ fontSize: 15, color: textColor, opacity: 0.25, fontWeight: 300 }}>&times;</span>
-                    {nvidiaLogo ? (
-                        <img src={nvidiaLogo} alt="NVIDIA" style={{ height: isMobile ? 20 : 24, objectFit: "contain" }} />
-                    ) : (
-                        <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: textColor, fontFamily, letterSpacing: "0.04em", opacity: 0.55 }}>NVIDIA</span>
-                    )}
+                </div>
+
+                {/* ── Eyebrow ── */}
+                <div
+                    style={{
+                        fontSize: isMobile ? 11 : 13,
+                        fontWeight: 600,
+                        color: textColor,
+                        opacity: 0.45,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        fontFamily,
+                        marginBottom: 14,
+                    }}
+                >
+                    {eyebrow}
                 </div>
 
                 {/* ── Heading ── */}
@@ -294,13 +308,30 @@ function GatedContentPage(props: Props) {
                     </div>
                 )}
 
+                {/* ── NVIDIA context line ── */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        marginTop: showBanner && bannerImage ? (isMobile ? 24 : 32) : (isMobile ? 32 : 44),
+                    }}
+                >
+                    {nvidiaLogo ? (
+                        <img src={nvidiaLogo} alt="NVIDIA" style={{ height: isMobile ? 16 : 20, objectFit: "contain", opacity: 0.7 }} />
+                    ) : (
+                        <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: textColor, fontFamily, letterSpacing: "0.04em", opacity: 0.5 }}>NVIDIA</span>
+                    )}
+                    <span style={{ fontSize: isMobile ? 12 : 13, color: textColor, opacity: 0.4, fontFamily, fontWeight: 500 }}>{nvidiaLabel}</span>
+                </div>
+
                 {/* ── Stats row ── */}
                 <div
                     style={{
                         display: "flex",
                         flexDirection: isMobile ? "column" : "row",
                         width: "100%",
-                        marginTop: showBanner && bannerImage ? (isMobile ? 24 : 32) : (isMobile ? 32 : 44),
+                        marginTop: 16,
                         borderTop: "1px solid rgba(255,255,255,0.12)",
                         borderBottom: "1px solid rgba(255,255,255,0.12)",
                     }}
@@ -441,8 +472,10 @@ function GatedContentPage(props: Props) {
 
 addPropertyControls(GatedContentPage, {
     beamrLogo: { type: ControlType.Image, title: "Beamr Logo" },
+    eyebrow: { type: ControlType.String, title: "Eyebrow", defaultValue: "INSIDE THE BENCHMARK" },
+    heading: { type: ControlType.String, title: "Heading", defaultValue: "How Beamr Validated\nCompression on Cosmos Curator", displayTextArea: true },
     nvidiaLogo: { type: ControlType.Image, title: "NVIDIA Logo" },
-    heading: { type: ControlType.String, title: "Heading", defaultValue: "Cosmos Curator\nBenchmark Testing", displayTextArea: true },
+    nvidiaLabel: { type: ControlType.String, title: "NVIDIA Label", defaultValue: "Tested on NVIDIA Cosmos Curator" },
     backgroundImage: { type: ControlType.Image, title: "BG Image" },
     showBanner: { type: ControlType.Boolean, title: "Show Banner", defaultValue: true },
     bannerImage: { type: ControlType.Image, title: "Banner Image", hidden: (props) => !props.showBanner },
@@ -455,7 +488,7 @@ addPropertyControls(GatedContentPage, {
     stat3Label: { type: ControlType.String, title: "Stat 3 Label", defaultValue: "Clustering Accuracy" },
 
     formHeading: { type: ControlType.String, title: "Form Heading", defaultValue: "Get the Full Research" },
-    submitButtonText: { type: ControlType.String, title: "Submit Text", defaultValue: "Download Free Report", hidden: (props) => props.useEmbeddedHubspot },
+    submitButtonText: { type: ControlType.String, title: "Submit Text", defaultValue: "Read the Full Methodology", hidden: (props) => props.useEmbeddedHubspot },
     useEmbeddedHubspot: { type: ControlType.Boolean, title: "Embed HubSpot", defaultValue: false },
     hubspotPortalId: { type: ControlType.String, title: "Portal ID", defaultValue: "" },
     hubspotFormId: { type: ControlType.String, title: "Form ID", defaultValue: "" },
