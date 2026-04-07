@@ -404,16 +404,16 @@ function GatedContentPage(props: Props) {
                                 </div>
                                 <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>{thankYouHeading}</h3>
                                 <p style={{ fontSize: 14, color: textColor, opacity: 0.6, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
-                                {(reportPdf || reportUrl) && (
+                                {(reportUrl || reportPdf) && (
                                     <a
-                                        href={reportPdf || reportUrl}
+                                        href={reportUrl || reportPdf}
                                         download
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{
                                             display: "inline-flex", alignItems: "center", gap: 8,
                                             marginTop: 6, padding: "14px 28px",
-                                            backgroundColor: accentColor, color: "#ffffff",
+                                            backgroundColor: textColor, color: bgColor,
                                             borderRadius: 10, fontSize: 15, fontWeight: 700,
                                             textDecoration: "none", fontFamily,
                                             transition: "opacity 0.2s",
@@ -426,12 +426,12 @@ function GatedContentPage(props: Props) {
                                     href={thankYouCtaUrl}
                                     style={{
                                         display: "inline-flex", alignItems: "center", gap: 8,
-                                        marginTop: (reportPdf || reportUrl) ? 2 : 6, padding: "13px 28px",
-                                        backgroundColor: (reportPdf || reportUrl) ? "rgba(255,255,255,0.08)" : textColor,
-                                        color: (reportPdf || reportUrl) ? textColor : bgColor,
+                                        marginTop: (reportUrl || reportPdf) ? 2 : 6, padding: "13px 28px",
+                                        backgroundColor: (reportUrl || reportPdf) ? "rgba(255,255,255,0.08)" : textColor,
+                                        color: (reportUrl || reportPdf) ? textColor : bgColor,
                                         borderRadius: 10, fontSize: 15, fontWeight: 600,
                                         textDecoration: "none", fontFamily,
-                                        border: (reportPdf || reportUrl) ? "1px solid rgba(255,255,255,0.15)" : "none",
+                                        border: (reportUrl || reportPdf) ? "1px solid rgba(255,255,255,0.15)" : "none",
                                     }}
                                 >
                                     {thankYouCtaText} <span style={{ fontSize: 17 }}>&#8594;</span>
@@ -523,7 +523,7 @@ addPropertyControls(GatedContentPage, {
     showCompanyField: { type: ControlType.Boolean, title: "Company Field", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
 
     reportPdf: { type: ControlType.File, title: "Report PDF", allowedFileTypes: ["pdf"] },
-    reportUrl: { type: ControlType.String, title: "Report URL", defaultValue: "", description: "Fallback URL if no PDF uploaded" },
+    reportUrl: { type: ControlType.String, title: "Report URL", defaultValue: "", description: "Use a beamr.com URL (takes priority over uploaded PDF)" },
     downloadButtonText: { type: ControlType.String, title: "Download Text", defaultValue: "Download Full Report (PDF)" },
 
     thankYouHeading: { type: ControlType.String, title: "TY Heading", defaultValue: "Check Your Inbox" },
