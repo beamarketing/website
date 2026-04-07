@@ -30,6 +30,10 @@ interface Props {
     useEmbeddedHubspot: boolean
     showCompanyField: boolean
 
+    reportPdf: string
+    reportUrl: string
+    downloadButtonText: string
+
     thankYouHeading: string
     thankYouMessage: string
     thankYouCtaText: string
@@ -71,6 +75,9 @@ function GatedContentPage(props: Props) {
         hubspotFormId = "",
         useEmbeddedHubspot = false,
         showCompanyField = true,
+        reportPdf = "",
+        reportUrl = "",
+        downloadButtonText = "Download Full Report (PDF)",
         thankYouHeading = "Check Your Inbox",
         thankYouMessage = "The full benchmark report is on its way to your email.",
         thankYouCtaText = "Visit Beamr.com",
@@ -396,14 +403,34 @@ function GatedContentPage(props: Props) {
                                 </div>
                                 <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>{thankYouHeading}</h3>
                                 <p style={{ fontSize: 14, color: textColor, opacity: 0.6, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
+                                {(reportPdf || reportUrl) && (
+                                    <a
+                                        href={reportPdf || reportUrl}
+                                        download
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: "inline-flex", alignItems: "center", gap: 8,
+                                            marginTop: 6, padding: "14px 28px",
+                                            backgroundColor: accentColor, color: "#ffffff",
+                                            borderRadius: 10, fontSize: 15, fontWeight: 700,
+                                            textDecoration: "none", fontFamily,
+                                            transition: "opacity 0.2s",
+                                        }}
+                                    >
+                                        <span style={{ fontSize: 16 }}>&#8595;</span> {downloadButtonText}
+                                    </a>
+                                )}
                                 <a
                                     href={thankYouCtaUrl}
                                     style={{
                                         display: "inline-flex", alignItems: "center", gap: 8,
-                                        marginTop: 6, padding: "13px 28px",
-                                        backgroundColor: textColor, color: bgColor,
+                                        marginTop: (reportPdf || reportUrl) ? 2 : 6, padding: "13px 28px",
+                                        backgroundColor: (reportPdf || reportUrl) ? "rgba(255,255,255,0.08)" : textColor,
+                                        color: (reportPdf || reportUrl) ? textColor : bgColor,
                                         borderRadius: 10, fontSize: 15, fontWeight: 600,
                                         textDecoration: "none", fontFamily,
+                                        border: (reportPdf || reportUrl) ? "1px solid rgba(255,255,255,0.15)" : "none",
                                     }}
                                 >
                                     {thankYouCtaText} <span style={{ fontSize: 17 }}>&#8594;</span>
@@ -494,6 +521,9 @@ addPropertyControls(GatedContentPage, {
     hubspotFormId: { type: ControlType.String, title: "Form ID", defaultValue: "" },
     showCompanyField: { type: ControlType.Boolean, title: "Company Field", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
 
+    reportPdf: { type: ControlType.File, title: "Report PDF", allowedFileTypes: ["pdf"] },
+    reportUrl: { type: ControlType.String, title: "Report URL", defaultValue: "", description: "Fallback URL if no PDF uploaded" },
+    downloadButtonText: { type: ControlType.String, title: "Download Text", defaultValue: "Download Full Report (PDF)" },
 
     thankYouHeading: { type: ControlType.String, title: "TY Heading", defaultValue: "Check Your Inbox" },
     thankYouMessage: { type: ControlType.String, title: "TY Message", defaultValue: "The full benchmark report is on its way to your email.", displayTextArea: true },
