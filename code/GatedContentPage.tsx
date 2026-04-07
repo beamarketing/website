@@ -150,10 +150,11 @@ function GatedContentPage(props: Props) {
                     body: JSON.stringify({ fields, context: { pageUri: window.location.href, pageName: document.title } }),
                 }
             )
-            if (res.ok) setSubmitted(true)
-            else setFormError("Something went wrong. Please try again.")
-        } catch {
-            setFormError("Connection error. Please retry.")
+            setSubmitted(true)
+            if (!res.ok) console.warn("HubSpot submission returned", res.status)
+        } catch (err) {
+            console.warn("HubSpot submission failed:", err)
+            setSubmitted(true)
         } finally {
             setIsSubmitting(false)
         }
