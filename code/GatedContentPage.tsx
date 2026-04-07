@@ -27,8 +27,6 @@ interface Props {
     hubspotFormId: string
     useEmbeddedHubspot: boolean
     showCompanyField: boolean
-    consentText: string
-    showConsent: boolean
 
     thankYouHeading: string
     thankYouMessage: string
@@ -64,8 +62,6 @@ function GatedContentPage(props: Props) {
         hubspotFormId = "",
         useEmbeddedHubspot = false,
         showCompanyField = true,
-        consentText = "I agree to receive communications from Beamr. Unsubscribe anytime.",
-        showConsent = true,
         thankYouHeading = "Check Your Inbox",
         thankYouMessage = "The full benchmark report is on its way to your email.",
         thankYouCtaText = "Visit Beamr.com",
@@ -393,13 +389,6 @@ function GatedContentPage(props: Props) {
                                     <input className="gc-input" type="text" name="company" placeholder="Company" style={inputCss} />
                                 )}
 
-                                {showConsent && (
-                                    <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", marginTop: 2 }}>
-                                        <input type="checkbox" required style={{ marginTop: 3, flexShrink: 0 }} />
-                                        <span style={{ fontSize: 11, color: textColor, lineHeight: 1.4, fontFamily, opacity: 0.45 }}>{consentText}</span>
-                                    </label>
-                                )}
-
                                 {formError && <p style={{ fontSize: 12, color: "#ff6b6b", margin: 0, fontFamily }}>{formError}</p>}
 
                                 <button
@@ -429,8 +418,8 @@ function GatedContentPage(props: Props) {
                                     {!isSubmitting && <span style={{ fontSize: 17 }}>&#8594;</span>}
                                 </button>
 
-                                <p style={{ fontSize: 11, color: textColor, margin: 0, textAlign: "center", fontFamily, opacity: 0.3 }}>
-                                    Free PDF &middot; No credit card
+                                <p style={{ fontSize: 11, color: textColor, margin: 0, textAlign: "center", fontFamily, opacity: 0.3, lineHeight: 1.4 }}>
+                                    Free PDF &middot; By downloading you agree to receive updates from Beamr
                                 </p>
                             </form>
                         )}
@@ -462,8 +451,7 @@ addPropertyControls(GatedContentPage, {
     hubspotPortalId: { type: ControlType.String, title: "Portal ID", defaultValue: "" },
     hubspotFormId: { type: ControlType.String, title: "Form ID", defaultValue: "" },
     showCompanyField: { type: ControlType.Boolean, title: "Company Field", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
-    showConsent: { type: ControlType.Boolean, title: "Consent", defaultValue: true, hidden: (props) => props.useEmbeddedHubspot },
-    consentText: { type: ControlType.String, title: "Consent Text", defaultValue: "I agree to receive communications from Beamr. Unsubscribe anytime.", displayTextArea: true, hidden: (props) => props.useEmbeddedHubspot || !props.showConsent },
+
 
     thankYouHeading: { type: ControlType.String, title: "TY Heading", defaultValue: "Check Your Inbox" },
     thankYouMessage: { type: ControlType.String, title: "TY Message", defaultValue: "The full benchmark report is on its way to your email.", displayTextArea: true },
