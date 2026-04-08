@@ -1,5 +1,5 @@
 // Beamr - Gated Content Landing Page
-// Lead magnet for NVIDIA Cosmos Curator benchmark research
+// Lead magnet for benchmark research
 // Framer Code Component with HubSpot form integration
 
 import { addPropertyControls, ControlType } from "framer"
@@ -7,8 +7,6 @@ import { useState, useEffect, useRef } from "react"
 
 interface Props {
     beamrLogo: string
-    nvidiaLogo: string
-    nvidiaLabel: string
     eyebrow: string
     heading: string
 
@@ -55,8 +53,6 @@ interface Props {
 function GatedContentPage(props: Props) {
     const {
         beamrLogo = "",
-        nvidiaLogo = "",
-        nvidiaLabel = "Tested on NVIDIA Cosmos Curator",
         eyebrow = "INSIDE THE BENCHMARK",
         heading = "How Beamr Validated\nCompression on Cosmos Curator",
 
@@ -358,30 +354,13 @@ function GatedContentPage(props: Props) {
                     </div>
                 )}
 
-                {/* ── NVIDIA context line ── */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        marginTop: showBanner && bannerImage ? (isMobile ? 24 : 32) : (isMobile ? 32 : 44),
-                    }}
-                >
-                    {nvidiaLogo ? (
-                        <img src={nvidiaLogo} alt="NVIDIA" style={{ height: isMobile ? 16 : 20, objectFit: "contain", opacity: 0.7 }} />
-                    ) : (
-                        <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: textColor, fontFamily, letterSpacing: "0.04em", opacity: 0.5 }}>NVIDIA</span>
-                    )}
-                    <span style={{ fontSize: isMobile ? 12 : 13, color: textColor, opacity: 0.4, fontFamily, fontWeight: 500 }}>{nvidiaLabel}</span>
-                </div>
-
                 {/* ── Stats row ── */}
                 <div
                     style={{
                         display: "flex",
                         flexDirection: isMobile ? "column" : "row",
                         width: "100%",
-                        marginTop: 16,
+                        marginTop: showBanner && bannerImage ? (isMobile ? 24 : 32) : (isMobile ? 32 : 44),
                         borderTop: "1px solid rgba(255,255,255,0.12)",
                         borderBottom: "1px solid rgba(255,255,255,0.12)",
                     }}
@@ -553,8 +532,6 @@ addPropertyControls(GatedContentPage, {
     beamrLogo: { type: ControlType.Image, title: "Beamr Logo" },
     eyebrow: { type: ControlType.String, title: "Eyebrow", defaultValue: "INSIDE THE BENCHMARK" },
     heading: { type: ControlType.String, title: "Heading", defaultValue: "How Beamr Validated\nCompression on Cosmos Curator", displayTextArea: true },
-    nvidiaLogo: { type: ControlType.Image, title: "NVIDIA Logo" },
-    nvidiaLabel: { type: ControlType.String, title: "NVIDIA Label", defaultValue: "Tested on NVIDIA Cosmos Curator" },
     backgroundImage: { type: ControlType.Image, title: "BG Image" },
     showBanner: { type: ControlType.Boolean, title: "Show Banner", defaultValue: true },
     bannerImage: { type: ControlType.Image, title: "Banner Image", hidden: (props) => !props.showBanner },
