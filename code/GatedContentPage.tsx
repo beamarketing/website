@@ -94,7 +94,6 @@ function GatedContentPage(props: Props) {
     const [submitted, setSubmitted] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formError, setFormError] = useState("")
-    const [hubspotStatus, setHubspotStatus] = useState("")
     const [isMobile, setIsMobile] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
     const hubspotRef = useRef<HTMLDivElement>(null)
@@ -138,7 +137,6 @@ function GatedContentPage(props: Props) {
         ]
         if (showCompanyField) fields.push({ name: "company", value: fd.get("company") as string })
         if (!hubspotPortalId || !hubspotFormId) {
-            setHubspotStatus("⚠ No Portal ID or Form ID configured")
             setTimeout(() => { setIsSubmitting(false); setSubmitted(true) }, 800)
             return
         }
@@ -159,16 +157,9 @@ function GatedContentPage(props: Props) {
                     body: JSON.stringify(payload),
                 }
             )
-            if (res.ok) {
-                setHubspotStatus("✓ Contact pushed to HubSpot")
-            } else {
-                const body = await res.text()
-                setHubspotStatus(`✗ HubSpot error ${res.status}: ${body}`)
-                console.warn("HubSpot submission failed:", res.status, body)
-            }
+            if (!res.ok) console.warn("HubSpot submission failed:", res.status)
             setSubmitted(true)
         } catch (err) {
-            setHubspotStatus(`✗ Network error: ${err}`)
             console.warn("HubSpot submission failed:", err)
             setSubmitted(true)
         } finally {
@@ -425,16 +416,6 @@ function GatedContentPage(props: Props) {
                                 </div>
                                 <h3 style={{ fontSize: 20, fontWeight: 700, color: textColor, margin: 0, fontFamily }}>{thankYouHeading}</h3>
                                 <p style={{ fontSize: 14, color: textColor, opacity: 0.6, margin: 0, lineHeight: 1.5, fontFamily }}>{thankYouMessage}</p>
-                                {hubspotStatus && (
-                                    <p style={{
-                                        fontSize: 11, fontFamily: "monospace", margin: 0, padding: "6px 12px",
-                                        borderRadius: 6, lineHeight: 1.4, maxWidth: "100%", wordBreak: "break-all",
-                                        backgroundColor: hubspotStatus.startsWith("✓") ? "rgba(0,200,80,0.15)" : "rgba(255,80,80,0.15)",
-                                        color: hubspotStatus.startsWith("✓") ? "#4ade80" : "#ff6b6b",
-                                    }}>
-                                        {hubspotStatus}
-                                    </p>
-                                )}
                                 {(reportUrl || reportPdf) && (
                                     <button
                                         onClick={handleDownload}
