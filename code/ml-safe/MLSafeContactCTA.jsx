@@ -205,6 +205,7 @@ export default function MLSafeContactCTA({
   buttonText = "Let's explore →",
   hubspotPortalId = "",
   hubspotFormId = "",
+  consentText = "By submitting, you allow Beamr to send you occasional updates. You can unsubscribe at any time.",
   style
 }) {
   const [containerRef, width] = useSectionWidth()
@@ -650,7 +651,7 @@ export default function MLSafeContactCTA({
               </button>
             </form>
 
-            {/* Footer Note */}
+            {/* Consent Note */}
             <p
               style={{
                 fontFamily: F.b,
@@ -658,10 +659,11 @@ export default function MLSafeContactCTA({
                 fontWeight: 400,
                 color: C.gray400,
                 textAlign: "center",
-                margin: "16px 0 0 0"
+                margin: "16px 0 0 0",
+                lineHeight: 1.5
               }}
             >
-              No commitment required.
+              {consentText}
             </p>
           </div>
         </RevealDiv>
@@ -727,5 +729,11 @@ addPropertyControls(MLSafeContactCTA, {
     title: "HubSpot Form ID",
     defaultValue: "",
     description: "The HubSpot form GUID"
+  },
+  consentText: {
+    type: ControlType.String,
+    title: "Consent Text",
+    displayTextArea: true,
+    defaultValue: "By submitting, you allow Beamr to send you occasional updates. You can unsubscribe at any time."
   }
 })
