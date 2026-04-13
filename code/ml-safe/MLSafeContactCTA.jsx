@@ -366,13 +366,6 @@ export default function MLSafeContactCTA({
                 {subtitle}
               </p>
             </div>
-
-            {/* Check Items */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <Chk text="Compression estimates for your pipeline" />
-              <Chk text="ML accuracy validation approach" />
-              <Chk text="Integration roadmap" />
-            </div>
           </div>
         </RevealDiv>
 

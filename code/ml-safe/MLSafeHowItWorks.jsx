@@ -242,6 +242,12 @@ export default function MLSafeHowItWorks({
   tagText = "How it works",
   title = "Compress smarter, not harder",
   description = "Beamr's CABR compression uses dual encoding passes to preserve the video quality metrics that matter most to machine learning models. While other codecs optimize for human perception, CABR preserves temporal consistency and spatial detail that AI systems depend on for accurate inference.",
+  bullets = [
+    "Works on already-encoded video — no re-ingest",
+    "Standard output: H.264, HEVC, AV1",
+    "Runs on NVIDIA GPUs already in your stack",
+    "Deploy via Docker, API, FFmpeg, or managed cloud",
+  ],
   background = "#FFFFFF",
   style,
 }) {
@@ -334,18 +340,19 @@ export default function MLSafeHowItWorks({
             </p>
 
             {/* CHECK ITEMS */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-              }}
-            >
-              <CheckItem text="Works on already-encoded video — no re-ingest" />
-              <CheckItem text="Standard output: H.264, HEVC, AV1" />
-              <CheckItem text="Runs on NVIDIA GPUs already in your stack" />
-              <CheckItem text="Deploy via Docker, API, FFmpeg, or managed cloud" />
-            </div>
+            {bullets && bullets.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                }}
+              >
+                {bullets.map((text, idx) => (
+                  <CheckItem key={idx} text={text} />
+                ))}
+              </div>
+            )}
           </div>
         </RevealDiv>
       </div>
@@ -383,6 +390,20 @@ addPropertyControls(MLSafeHowItWorks, {
     displayTextArea: true,
     defaultValue:
       "Beamr's CABR compression uses dual encoding passes to preserve the video quality metrics that matter most to machine learning models. While other codecs optimize for human perception, CABR preserves temporal consistency and spatial detail that AI systems depend on for accurate inference.",
+  },
+  bullets: {
+    type: ControlType.Array,
+    title: "Bullets",
+    control: {
+      type: ControlType.String,
+    },
+    defaultValue: [
+      "Works on already-encoded video — no re-ingest",
+      "Standard output: H.264, HEVC, AV1",
+      "Runs on NVIDIA GPUs already in your stack",
+      "Deploy via Docker, API, FFmpeg, or managed cloud",
+    ],
+    maxCount: 10,
   },
   background: {
     type: ControlType.Color,

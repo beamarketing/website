@@ -167,6 +167,7 @@ function BenchmarkGrid() {
 export default function MLSafeBenchmarks(props) {
   const {
     image,
+    video,
     tagText = "Proven results",
     title = "Benchmarked on real-world AV data",
     description = "We validated MLSafe against PandaSet and standard YOLO-based benchmarks using the Cosmos pipeline. Real-world results prove that aggressive compression maintains object detection accuracy while dramatically reducing file sizes.",
@@ -254,8 +255,41 @@ export default function MLSafeBenchmarks(props) {
 
         {/* Right column: Benchmark visuals */}
         <RevealDiv threshold={0.2}>
-          {image ? (
-            <ImgSlot src={image} alt="Benchmark visualization" />
+          {video ? (
+            <div
+              style={{
+                width: "100%",
+                borderRadius: 20,
+                overflow: "hidden",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                backgroundColor: C.white,
+              }}
+            >
+              <video
+                src={video}
+                autoPlay
+                muted
+                loop
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </div>
+          ) : image ? (
+            <div
+              style={{
+                width: "100%",
+                borderRadius: 20,
+                overflow: "hidden",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                backgroundColor: C.white,
+              }}
+            >
+              <ImgSlot src={image} alt="Benchmark visualization" />
+            </div>
           ) : (
             <div
               style={{
@@ -277,6 +311,11 @@ export default function MLSafeBenchmarks(props) {
 
 // Property controls
 addPropertyControls(MLSafeBenchmarks, {
+  video: {
+    type: ControlType.File,
+    title: "Benchmark Video",
+    allowedFileTypes: ["mp4", "webm", "mov"],
+  },
   image: {
     type: ControlType.Image,
     title: "Benchmark Image",
