@@ -134,8 +134,6 @@ export default function MLSafeHero({
   subtitle = "Cut storage costs without compromising video quality or AI/ML model safety with ML-Safe compression.",
   ctaPrimaryText = "Talk to our team",
   ctaPrimaryLink = "#contact",
-  ctaSecondaryText = "See how it works",
-  ctaSecondaryLink = "#how-it-works",
   style,
 }) {
   useInjectKeyframes()
@@ -319,37 +317,6 @@ export default function MLSafeHero({
               }}
             >
               {ctaPrimaryText}
-            </a>
-
-            {/* SECONDARY BUTTON */}
-            <a
-              href={ctaSecondaryLink}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "12px 28px",
-                backgroundColor: "transparent",
-                color: C.white,
-                border: `1px solid rgba(255, 255, 255, 0.2)`,
-                borderRadius: R.lg,
-                fontFamily: F.b,
-                fontSize: "14px",
-                fontWeight: 600,
-                textDecoration: "none",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)"
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.4)"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent"
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)"
-              }}
-            >
-              {ctaSecondaryText}
             </a>
           </div>
         </div>
@@ -558,15 +525,5 @@ addPropertyControls(MLSafeHero, {
     type: ControlType.String,
     title: "Primary CTA Link",
     defaultValue: "#contact",
-  },
-  ctaSecondaryText: {
-    type: ControlType.String,
-    title: "Secondary CTA Text",
-    defaultValue: "See how it works",
-  },
-  ctaSecondaryLink: {
-    type: ControlType.String,
-    title: "Secondary CTA Link",
-    defaultValue: "#how-it-works",
   },
 })
