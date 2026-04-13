@@ -211,10 +211,10 @@ export default function MLSafeContactCTA({
   const isMobile = width < 900
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     workEmail: "",
-    company: "",
-    source: ""
+    company: ""
   })
 
   const [submitted, setSubmitted] = useState(false)
@@ -258,11 +258,10 @@ export default function MLSafeContactCTA({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             fields: [
-              { name: "firstname", value: formData.fullName.split(" ")[0] || "" },
-              { name: "lastname", value: formData.fullName.split(" ").slice(1).join(" ") || "" },
+              { name: "firstname", value: formData.firstName },
+              { name: "lastname", value: formData.lastName },
               { name: "email", value: formData.workEmail },
               { name: "company", value: formData.company },
-              { name: "how_did_you_hear_about_us", value: formData.source },
             ],
             context: {
               pageUri: typeof window !== "undefined" ? window.location.href : "",
@@ -274,7 +273,7 @@ export default function MLSafeContactCTA({
 
       if (res.ok) {
         setSubmitted(true)
-        setFormData({ fullName: "", workEmail: "", company: "", source: "" })
+        setFormData({ firstName: "", lastName: "", workEmail: "", company: "" })
         setTimeout(() => setSubmitted(false), 4000)
       } else {
         const data = await res.json().catch(() => null)
@@ -286,16 +285,6 @@ export default function MLSafeContactCTA({
       setIsSubmitting(false)
     }
   }
-
-  const sourceOptions = [
-    "Read an article",
-    "Training data costs",
-    "Fleet-to-cloud transfer",
-    "ADAS validation",
-    "Storage optimization",
-    "Saw us at an event",
-    "Something else"
-  ]
 
   return (
     <div
@@ -445,47 +434,96 @@ export default function MLSafeContactCTA({
 
             {/* Form */}
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              {/* Full Name */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label
-                  style={{
-                    fontFamily: F.b,
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: C.gray600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}
-                >
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  placeholder="John Doe"
-                  required
-                  style={{
-                    fontFamily: F.b,
-                    fontSize: "14px",
-                    padding: "11px 14px",
-                    border: `1.5px solid ${C.gray200}`,
-                    borderRadius: "10px",
-                    outline: "none",
-                    transition: "all 0.2s ease",
-                    backgroundColor: C.white,
-                    boxSizing: "border-box"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = C.primary
-                    e.target.style.boxShadow = `0 0 0 3px ${C.primaryGlow}`
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = C.gray200
-                    e.target.style.boxShadow = "none"
-                  }}
-                />
+              {/* First & Last Name */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label
+                    style={{
+                      fontFamily: F.b,
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: C.gray600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}
+                  >
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    placeholder="John"
+                    required
+                    style={{
+                      fontFamily: F.b,
+                      fontSize: "14px",
+                      padding: "11px 14px",
+                      border: `1.5px solid ${C.gray200}`,
+                      borderRadius: "10px",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      backgroundColor: C.white,
+                      boxSizing: "border-box"
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = C.primary
+                      e.target.style.boxShadow = `0 0 0 3px ${C.primaryGlow}`
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = C.gray200
+                      e.target.style.boxShadow = "none"
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label
+                    style={{
+                      fontFamily: F.b,
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: C.gray600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}
+                  >
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Doe"
+                    required
+                    style={{
+                      fontFamily: F.b,
+                      fontSize: "14px",
+                      padding: "11px 14px",
+                      border: `1.5px solid ${C.gray200}`,
+                      borderRadius: "10px",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      backgroundColor: C.white,
+                      boxSizing: "border-box"
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = C.primary
+                      e.target.style.boxShadow = `0 0 0 3px ${C.primaryGlow}`
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = C.gray200
+                      e.target.style.boxShadow = "none"
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Work Email */}
@@ -572,56 +610,6 @@ export default function MLSafeContactCTA({
                     e.target.style.boxShadow = "none"
                   }}
                 />
-              </div>
-
-              {/* What Brought You Here? */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label
-                  style={{
-                    fontFamily: F.b,
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: C.gray600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}
-                >
-                  What brought you here?
-                </label>
-                <select
-                  name="source"
-                  value={formData.source}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    fontFamily: F.b,
-                    fontSize: "14px",
-                    padding: "11px 14px",
-                    border: `1.5px solid ${C.gray200}`,
-                    borderRadius: "10px",
-                    outline: "none",
-                    transition: "all 0.2s ease",
-                    backgroundColor: C.white,
-                    boxSizing: "border-box",
-                    cursor: "pointer",
-                    color: C.text
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = C.primary
-                    e.target.style.boxShadow = `0 0 0 3px ${C.primaryGlow}`
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = C.gray200
-                    e.target.style.boxShadow = "none"
-                  }}
-                >
-                  <option value="">Select an option</option>
-                  {sourceOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Submit Button */}
