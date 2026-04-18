@@ -676,27 +676,6 @@ function RayBanRaffle(props: Props) {
                         {disclaimerText}
                     </p>
                 </div>
-
-                {/* Bottom tagline */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        marginTop: compact ? 28 : 40,
-                    }}
-                >
-                    <span
-                        style={{
-                            fontSize: compact ? 20 : 24,
-                            fontWeight: 800,
-                            color: textDark,
-                            fontFamily,
-                        }}
-                    >
-                        Scan. Enter. Win.
-                    </span>
-                </div>
             </div>
         </div>
     )
