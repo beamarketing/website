@@ -14,16 +14,14 @@ interface Props {
     glassesImage: string
     formHeading: string
     formSubheading: string
-    nameLabel: string
-    namePlaceholder: string
+    firstNameLabel: string
+    firstNamePlaceholder: string
+    lastNameLabel: string
+    lastNamePlaceholder: string
     emailLabel: string
     emailPlaceholder: string
     companyLabel: string
     companyPlaceholder: string
-    showCompanyField: boolean
-    phoneLabel: string
-    phonePlaceholder: string
-    showPhoneField: boolean
     buttonText: string
     successMessage: string
     disclaimerText: string
@@ -53,19 +51,17 @@ function RayBanRaffle(props: Props) {
         glassesImage = "",
         formHeading = "Enter the Raffle",
         formSubheading = "Fill out the form below for a chance to win Ray-Ban Meta smart glasses.",
-        nameLabel = "Full Name",
-        namePlaceholder = "John Doe",
+        firstNameLabel = "First Name",
+        firstNamePlaceholder = "John",
+        lastNameLabel = "Last Name",
+        lastNamePlaceholder = "Doe",
         emailLabel = "Work Email",
         emailPlaceholder = "john@company.com",
         companyLabel = "Company",
         companyPlaceholder = "Your company",
-        showCompanyField = true,
-        phoneLabel = "Phone Number",
-        phonePlaceholder = "+1 (555) 000-0000",
-        showPhoneField = false,
         buttonText = "Enter to Win",
-        successMessage = "You're in! We'll notify the winner by email. Good luck!",
-        disclaimerText = "By entering, you agree to our terms and conditions. One entry per person. Winner will be selected at random and notified via email.",
+        successMessage = "You're in! The winner will be announced via email and on Beamr's social media channels. Good luck!",
+        disclaimerText = "By entering this raffle, you agree to allow Beamr to send you updates, news, and promotional content. One entry per person. Winner will be announced via email and Beamr's social media channels.",
         hubspotPortalId = "",
         hubspotFormId = "",
         bgColor = "#ffffff",
@@ -100,10 +96,10 @@ function RayBanRaffle(props: Props) {
     }, [])
 
     const [formData, setFormData] = useState({
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         company: "",
-        phone: "",
     })
     const [submitState, setSubmitState] = useState<
         "idle" | "loading" | "success" | "error"
@@ -119,25 +115,17 @@ function RayBanRaffle(props: Props) {
     )
 
     const handleSubmit = async () => {
-        if (!formData.name || !formData.email) return
+        if (!formData.firstName || !formData.lastName || !formData.email || !formData.company) return
 
         if (hubspotPortalId && hubspotFormId) {
             setSubmitState("loading")
             try {
                 const fields: { name: string; value: string }[] = [
-                    { name: "firstname", value: formData.name.split(" ")[0] },
-                    {
-                        name: "lastname",
-                        value: formData.name.split(" ").slice(1).join(" "),
-                    },
+                    { name: "firstname", value: formData.firstName },
+                    { name: "lastname", value: formData.lastName },
                     { name: "email", value: formData.email },
+                    { name: "company", value: formData.company },
                 ]
-                if (showCompanyField && formData.company) {
-                    fields.push({ name: "company", value: formData.company })
-                }
-                if (showPhoneField && formData.phone) {
-                    fields.push({ name: "phone", value: formData.phone })
-                }
 
                 const res = await fetch(
                     `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormId}`,
@@ -158,7 +146,7 @@ function RayBanRaffle(props: Props) {
                 )
                 if (res.ok) {
                     setSubmitState("success")
-                    setFormData({ name: "", email: "", company: "", phone: "" })
+                    setFormData({ firstName: "", lastName: "", email: "", company: "" })
                 } else {
                     setSubmitState("error")
                 }
@@ -167,7 +155,7 @@ function RayBanRaffle(props: Props) {
             }
         } else {
             setSubmitState("success")
-            setFormData({ name: "", email: "", company: "", phone: "" })
+            setFormData({ firstName: "", lastName: "", email: "", company: "" })
         }
     }
 
@@ -548,23 +536,45 @@ function RayBanRaffle(props: Props) {
                             gap: 16,
                         }}
                     >
-                        {/* Name */}
-                        <div>
-                            <label style={labelStyle}>{nameLabel}</label>
-                            <input
-                                type="text"
-                                placeholder={namePlaceholder}
-                                value={formData.name}
-                                onChange={(e) =>
-                                    updateField("name", e.target.value)
-                                }
-                                onFocus={() => setFocusedField("name")}
-                                onBlur={() => setFocusedField(null)}
-                                style={inputStyle("name")}
-                            />
+                        {/* First & Last Name Row */}
+                        <div
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns: compact ? "1fr" : "1fr 1fr",
+                                gap: compact ? 16 : 12,
+                            }}
+                        >
+                            <div>
+                                <label style={labelStyle}>{firstNameLabel}</label>
+                                <input
+                                    type="text"
+                                    placeholder={firstNamePlaceholder}
+                                    value={formData.firstName}
+                                    onChange={(e) =>
+                                        updateField("firstName", e.target.value)
+                                    }
+                                    onFocus={() => setFocusedField("firstName")}
+                                    onBlur={() => setFocusedField(null)}
+                                    style={inputStyle("firstName")}
+                                />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>{lastNameLabel}</label>
+                                <input
+                                    type="text"
+                                    placeholder={lastNamePlaceholder}
+                                    value={formData.lastName}
+                                    onChange={(e) =>
+                                        updateField("lastName", e.target.value)
+                                    }
+                                    onFocus={() => setFocusedField("lastName")}
+                                    onBlur={() => setFocusedField(null)}
+                                    style={inputStyle("lastName")}
+                                />
+                            </div>
                         </div>
 
-                        {/* Email */}
+                        {/* Work Email */}
                         <div>
                             <label style={labelStyle}>{emailLabel}</label>
                             <input
@@ -576,66 +586,40 @@ function RayBanRaffle(props: Props) {
                                 }
                                 onFocus={() => setFocusedField("email")}
                                 onBlur={() => setFocusedField(null)}
-                                onKeyDown={(e) => {
-                                    if (
-                                        e.key === "Enter" &&
-                                        !showCompanyField &&
-                                        !showPhoneField
-                                    )
-                                        handleSubmit()
-                                }}
                                 style={inputStyle("email")}
                             />
                         </div>
 
                         {/* Company */}
-                        {showCompanyField && (
-                            <div>
-                                <label style={labelStyle}>
-                                    {companyLabel}
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder={companyPlaceholder}
-                                    value={formData.company}
-                                    onChange={(e) =>
-                                        updateField("company", e.target.value)
-                                    }
-                                    onFocus={() => setFocusedField("company")}
-                                    onBlur={() => setFocusedField(null)}
-                                    style={inputStyle("company")}
-                                />
-                            </div>
-                        )}
-
-                        {/* Phone */}
-                        {showPhoneField && (
-                            <div>
-                                <label style={labelStyle}>{phoneLabel}</label>
-                                <input
-                                    type="tel"
-                                    placeholder={phonePlaceholder}
-                                    value={formData.phone}
-                                    onChange={(e) =>
-                                        updateField("phone", e.target.value)
-                                    }
-                                    onFocus={() => setFocusedField("phone")}
-                                    onBlur={() => setFocusedField(null)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleSubmit()
-                                    }}
-                                    style={inputStyle("phone")}
-                                />
-                            </div>
-                        )}
+                        <div>
+                            <label style={labelStyle}>
+                                {companyLabel}
+                            </label>
+                            <input
+                                type="text"
+                                placeholder={companyPlaceholder}
+                                value={formData.company}
+                                onChange={(e) =>
+                                    updateField("company", e.target.value)
+                                }
+                                onFocus={() => setFocusedField("company")}
+                                onBlur={() => setFocusedField(null)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleSubmit()
+                                }}
+                                style={inputStyle("company")}
+                            />
+                        </div>
 
                         {/* Submit Button */}
                         <button
                             onClick={handleSubmit}
                             disabled={
                                 submitState === "loading" ||
-                                !formData.name ||
-                                !formData.email
+                                !formData.firstName ||
+                                !formData.lastName ||
+                                !formData.email ||
+                                !formData.company
                             }
                             style={{
                                 width: "100%",
@@ -652,12 +636,14 @@ function RayBanRaffle(props: Props) {
                                 fontFamily,
                                 cursor:
                                     submitState === "loading" ||
-                                    !formData.name ||
-                                    !formData.email
+                                    !formData.firstName ||
+                                    !formData.lastName ||
+                                    !formData.email ||
+                                    !formData.company
                                         ? "not-allowed"
                                         : "pointer",
                                 opacity:
-                                    !formData.name || !formData.email
+                                    !formData.firstName || !formData.lastName || !formData.email || !formData.company
                                         ? 0.5
                                         : submitState === "loading"
                                           ? 0.7
@@ -922,15 +908,25 @@ addPropertyControls(RayBanRaffle, {
             "Fill out the form below for a chance to win Ray-Ban Meta smart glasses.",
         displayTextArea: true,
     },
-    nameLabel: {
+    firstNameLabel: {
         type: ControlType.String,
-        title: "Name Label",
-        defaultValue: "Full Name",
+        title: "First Name Label",
+        defaultValue: "First Name",
     },
-    namePlaceholder: {
+    firstNamePlaceholder: {
         type: ControlType.String,
-        title: "Name Placeholder",
-        defaultValue: "John Doe",
+        title: "First Name Placeholder",
+        defaultValue: "John",
+    },
+    lastNameLabel: {
+        type: ControlType.String,
+        title: "Last Name Label",
+        defaultValue: "Last Name",
+    },
+    lastNamePlaceholder: {
+        type: ControlType.String,
+        title: "Last Name Placeholder",
+        defaultValue: "Doe",
     },
     emailLabel: {
         type: ControlType.String,
@@ -942,39 +938,15 @@ addPropertyControls(RayBanRaffle, {
         title: "Email Placeholder",
         defaultValue: "john@company.com",
     },
-    showCompanyField: {
-        type: ControlType.Boolean,
-        title: "Show Company",
-        defaultValue: true,
-    },
     companyLabel: {
         type: ControlType.String,
         title: "Company Label",
         defaultValue: "Company",
-        hidden: (props) => !props.showCompanyField,
     },
     companyPlaceholder: {
         type: ControlType.String,
         title: "Company Placeholder",
         defaultValue: "Your company",
-        hidden: (props) => !props.showCompanyField,
-    },
-    showPhoneField: {
-        type: ControlType.Boolean,
-        title: "Show Phone",
-        defaultValue: false,
-    },
-    phoneLabel: {
-        type: ControlType.String,
-        title: "Phone Label",
-        defaultValue: "Phone Number",
-        hidden: (props) => !props.showPhoneField,
-    },
-    phonePlaceholder: {
-        type: ControlType.String,
-        title: "Phone Placeholder",
-        defaultValue: "+1 (555) 000-0000",
-        hidden: (props) => !props.showPhoneField,
     },
     buttonText: {
         type: ControlType.String,
@@ -985,14 +957,14 @@ addPropertyControls(RayBanRaffle, {
         type: ControlType.String,
         title: "Success Message",
         defaultValue:
-            "You're in! We'll notify the winner by email. Good luck!",
+            "You're in! The winner will be announced via email and on Beamr's social media channels. Good luck!",
         displayTextArea: true,
     },
     disclaimerText: {
         type: ControlType.String,
         title: "Disclaimer",
         defaultValue:
-            "By entering, you agree to our terms and conditions. One entry per person. Winner will be selected at random and notified via email.",
+            "By entering this raffle, you agree to allow Beamr to send you updates, news, and promotional content. One entry per person. Winner will be announced via email and Beamr's social media channels.",
         displayTextArea: true,
     },
     hubspotPortalId: {
