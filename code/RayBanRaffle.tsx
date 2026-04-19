@@ -104,6 +104,7 @@ function RayBanRaffle(props: Props) {
     const [submitState, setSubmitState] = useState<
         "idle" | "loading" | "success" | "error"
     >("idle")
+    const [errorMessage, setErrorMessage] = useState<string>("")
     const [focusedField, setFocusedField] = useState<string | null>(null)
 
     const updateField = useCallback(
@@ -119,12 +120,13 @@ function RayBanRaffle(props: Props) {
 
         if (hubspotPortalId && hubspotFormId) {
             setSubmitState("loading")
+            setErrorMessage("")
             try {
-                const fields: { name: string; value: string }[] = [
-                    { name: "firstname", value: formData.firstName },
-                    { name: "lastname", value: formData.lastName },
-                    { name: "email", value: formData.email },
-                    { name: "company", value: formData.company },
+                const fields = [
+                    { objectTypeId: "0-1", name: "firstname", value: formData.firstName },
+                    { objectTypeId: "0-1", name: "lastname", value: formData.lastName },
+                    { objectTypeId: "0-1", name: "email", value: formData.email },
+                    { objectTypeId: "0-1", name: "company", value: formData.company },
                 ]
 
                 const res = await fetch(
@@ -133,6 +135,7 @@ function RayBanRaffle(props: Props) {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
+                            submittedAt: Date.now(),
                             fields,
                             context: {
                                 pageUri:
@@ -148,9 +151,25 @@ function RayBanRaffle(props: Props) {
                     setSubmitState("success")
                     setFormData({ firstName: "", lastName: "", email: "", company: "" })
                 } else {
+                    const body = await res.text()
+                    let message = `HubSpot error (${res.status})`
+                    try {
+                        const parsed = JSON.parse(body)
+                        if (parsed.message) message = parsed.message
+                        else if (parsed.errors && parsed.errors[0]?.message)
+                            message = parsed.errors[0].message
+                    } catch {
+                        if (body) message = body.slice(0, 200)
+                    }
+                    console.error("HubSpot submission failed:", res.status, body)
+                    setErrorMessage(message)
                     setSubmitState("error")
                 }
-            } catch {
+            } catch (e) {
+                const message =
+                    e instanceof Error ? e.message : "Network error"
+                console.error("HubSpot submission exception:", e)
+                setErrorMessage(message)
                 setSubmitState("error")
             }
         } else {
@@ -675,6 +694,21 @@ function RayBanRaffle(props: Props) {
                     >
                         {disclaimerText}
                     </p>
+
+                    {submitState === "error" && errorMessage && (
+                        <p
+                            style={{
+                                fontSize: 12,
+                                color: "#ef4444",
+                                margin: "12px 0 0",
+                                fontFamily,
+                                textAlign: "center",
+                                lineHeight: 1.5,
+                            }}
+                        >
+                            {errorMessage}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
