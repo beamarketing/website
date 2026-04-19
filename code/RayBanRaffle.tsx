@@ -62,8 +62,8 @@ function RayBanRaffle(props: Props) {
         buttonText = "Enter to Win",
         successMessage = "You're in! The winner will be announced via email and on Beamr's social media channels. Good luck!",
         disclaimerText = "By entering this raffle, you agree to allow Beamr to send you updates, news, and promotional content. One entry per person. Winner will be announced via email and Beamr's social media channels.",
-        hubspotPortalId = "",
-        hubspotFormId = "",
+        hubspotPortalId = "144465530",
+        hubspotFormId = "8ea446cd-2916-4510-a3ad-3e9fb41c78e8",
         bgColor = "#ffffff",
         accentYellow = "#FFC629",
         accentOrange = "#F27A1A",
@@ -949,13 +949,13 @@ addPropertyControls(RayBanRaffle, {
     hubspotPortalId: {
         type: ControlType.String,
         title: "HubSpot Portal ID",
-        defaultValue: "",
+        defaultValue: "144465530",
         description: "Your HubSpot portal ID",
     },
     hubspotFormId: {
         type: ControlType.String,
         title: "HubSpot Form ID",
-        defaultValue: "",
+        defaultValue: "8ea446cd-2916-4510-a3ad-3e9fb41c78e8",
         description: "The HubSpot form GUID for raffle entries",
     },
     bgColor: {
