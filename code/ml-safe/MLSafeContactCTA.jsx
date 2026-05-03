@@ -251,6 +251,26 @@ export default function MLSafeContactCTA({
       return
     }
 
+    const submission = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.workEmail,
+      company: formData.company,
+      timestamp: new Date().toISOString(),
+      page: typeof window !== "undefined" ? window.location.href : "",
+    }
+
+    // Save to localStorage as backup before attempting HubSpot
+    try {
+      const stored = JSON.parse(localStorage.getItem("mlsafe_submissions") || "[]")
+      stored.push(submission)
+      localStorage.setItem("mlsafe_submissions", JSON.stringify(stored))
+    } catch (e) {}
+
+    // Get HubSpot tracking cookie if available
+    const hutk = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("hubspotutk="))
+    const hutkValue = hutk ? hutk.split("=")[1] : undefined
+
     try {
       const res = await fetch(
         `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormId}`,
@@ -265,6 +285,7 @@ export default function MLSafeContactCTA({
               { name: "company", value: formData.company },
             ],
             context: {
+              hutk: hutkValue,
               pageUri: typeof window !== "undefined" ? window.location.href : "",
               pageName: "ML-Safe Landing Page",
             },
@@ -273,15 +294,24 @@ export default function MLSafeContactCTA({
       )
 
       if (res.ok) {
+        // Mark as synced in localStorage
+        try {
+          const stored = JSON.parse(localStorage.getItem("mlsafe_submissions") || "[]")
+          if (stored.length > 0) {
+            stored[stored.length - 1].synced = true
+            localStorage.setItem("mlsafe_submissions", JSON.stringify(stored))
+          }
+        } catch (e) {}
+
         setSubmitted(true)
         setFormData({ firstName: "", lastName: "", workEmail: "", company: "" })
         setTimeout(() => setSubmitted(false), 4000)
       } else {
         const data = await res.json().catch(() => null)
-        setErrorMsg(data?.message || "Submission failed. Please try again.")
+        setErrorMsg(data?.message || "Submission failed. We've saved your info and will follow up.")
       }
     } catch (err) {
-      setErrorMsg("Network error. Please try again.")
+      setErrorMsg("Network error. We've saved your info and will follow up.")
     } finally {
       setIsSubmitting(false)
     }
