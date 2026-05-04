@@ -1,5 +1,5 @@
 // Beamr - Thank You Page Composition
-// Drops Navigation + ThankYou + ThankYouResources + Footer onto a single page.
+// Stacks Navigation + ThankYou + ThankYouResources + Footer.
 // Mirrors the structure of ces.tech/thank-you/ in Beamr's design language.
 //
 // Use it the same way as Homepage: drag onto a Framer page, toggle sections.
@@ -111,68 +111,67 @@ function ThankYouPage(props: Props) {
                 <ThankYou
                     {...sharedProps}
                     bgColor={bgColor}
+                    layerBgColor="#0a0b1e"
+                    breadcrumbBgColor="rgba(255,255,255,0.06)"
                     textColor="#ffffff"
-                    secondaryTextColor="#8b8ba3"
-                    showCheckmark={true}
-                    showBadge={true}
-                    badge="Form submitted successfully"
-                    heading={"Thank you for\nreaching out."}
-                    subheading="Your message is on its way to the Beamr team."
-                    body="We've received your submission and a member of our team will review it shortly. If a follow-up is needed, we'll be in touch at the email address you provided."
-                    showSupportLine={true}
-                    supportLeadingText="Have a question in the meantime? Visit our"
-                    supportLinkText="support page"
-                    supportLinkUrl="/#support"
-                    supportTrailingText="or email hello@beamr.com."
-                    ctaPrimaryText="Back to Home"
-                    ctaPrimaryUrl="/"
-                    ctaSecondaryText="Explore Resources"
-                    ctaSecondaryUrl="#resources"
-                    showSecondaryButton={true}
-                    headingFontSize={56}
-                    minHeight={640}
+                    secondaryTextColor="#c2c2d6"
+                    showBreadcrumb={true}
+                    breadcrumbLabel="Form Submission"
+                    breadcrumbUrl="#"
+                    heading="Thank You"
+                    headingFontSize={112}
+                    confirmationHeading="The form was submitted successfully."
+                    confirmationLine1="Thank you for submitting your form."
+                    confirmationLine2="Your submission will be reviewed promptly. Should we require any additional details, we will reach out to you."
+                    supportLeadingText="Please review our"
+                    supportLinkText="customer support page"
+                    supportLinkUrl="#support"
+                    supportTrailingText="if you have any questions or need further assistance."
                 />
             )}
 
             {showResources && (
                 <ThankYouResources
                     {...sharedProps}
-                    bgColor="#0a0b1e"
+                    bgColor="#07071c"
                     cardBgColor="#0f1029"
+                    chipBgColor="rgba(255,255,255,0.06)"
+                    chipHoverBgColor="rgba(255,255,255,0.1)"
+                    durationBgColor="rgba(0,0,0,0.55)"
                     textColor="#ffffff"
-                    secondaryTextColor="#8b8ba3"
-                    sectionLabel="MORE FROM BEAMR"
-                    heading="While you're here"
-                    subheading="A few resources our team picked out for you."
+                    secondaryTextColor="#c2c2d6"
+                    tertiaryTextColor="#8b8ba3"
+                    borderColor="rgba(255,255,255,0.08)"
+                    heading="More From Beamr"
                     columns={3}
-                    cardBorderRadius={16}
+                    cardBorderRadius={12}
+                    showFooterButton={true}
+                    footerButtonText="See all content"
+                    footerButtonUrl="#"
                     resources={[
                         {
                             image: "",
-                            category: "Webinar",
-                            duration: "29:02",
-                            title: "The Science of Content-Adaptive Encoding",
-                            description: "How CABR analyzes every frame to cut bitrate without touching perceived quality.",
+                            duration: "40:40",
+                            type: "Podcast",
+                            title: "A Smarter Vehicle Is a Safer Vehicle",
                             url: "#",
-                            isVideo: true,
+                            topics: "Vehicle Tech and Advanced Mobility",
                         },
                         {
                             image: "",
-                            category: "Talk",
-                            duration: "41:42",
-                            title: "AI Pipelines That Don't Choke on Video",
-                            description: "Smarter compression for vision AI training data — guaranteed quality, half the storage.",
+                            duration: "11:31",
+                            type: "Video",
+                            title: "Inside the C-Space Studio with Beamr Partners",
                             url: "#",
-                            isVideo: true,
+                            topics: "Sports, Content and Entertainment, Marketing and Advertising",
                         },
                         {
                             image: "",
-                            category: "Case Study",
-                            duration: "8 min read",
-                            title: "How a Top Streamer Cut CDN Spend by 42%",
-                            description: "A look behind the scenes at one of the largest deployments of Beamr CABR to date.",
+                            duration: "41:05",
+                            type: "Video",
+                            title: "Vehicle Payments — The Road Ahead",
                             url: "#",
-                            isVideo: false,
+                            topics: "Vehicle Tech and Advanced Mobility",
                         },
                     ]}
                 />

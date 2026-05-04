@@ -1,62 +1,63 @@
-// Beamr Homepage - Thank You Confirmation Section
+// Beamr - Thank You Header + Confirmation Message
 // Framer Code Component with full property controls
 //
-// Inspired by ces.tech/thank-you/ — shown after a form submission.
+// Faithful port of the layout used on ces.tech/thank-you/:
+//   - top "header" with a small breadcrumb pill
+//   - then a very large display "Thank You" headline (left-aligned, ~7/12 cols)
+//   - below: a slightly lighter "layer" section with the confirmation copy
+//     (h2 + paragraphs + inline support link)
+//
+// Rendered in Beamr's dark palette so it sits naturally next to the rest of
+// the site, but the structure / type-scale / left alignment matches CES.
 
 import { addPropertyControls, ControlType } from "framer"
 
 interface Props {
-    showBadge: boolean
-    badge: string
-    showCheckmark: boolean
+    showBreadcrumb: boolean
+    breadcrumbLabel: string
+    breadcrumbUrl: string
     heading: string
-    subheading: string
-    body: string
-    showSupportLine: boolean
+    headingFontSize: number
+    confirmationHeading: string
+    confirmationLine1: string
+    confirmationLine2: string
     supportLeadingText: string
     supportLinkText: string
     supportLinkUrl: string
     supportTrailingText: string
-    ctaPrimaryText: string
-    ctaPrimaryUrl: string
-    ctaSecondaryText: string
-    ctaSecondaryUrl: string
-    showSecondaryButton: boolean
     bgColor: string
+    layerBgColor: string
+    breadcrumbBgColor: string
     textColor: string
     secondaryTextColor: string
     accentColor: string
     fontFamily: string
-    headingFontSize: number
-    minHeight: number
     style?: React.CSSProperties
 }
 
 function ThankYou(props: Props) {
     const {
-        badge = "Form submitted successfully",
-        showBadge = true,
-        showCheckmark = true,
-        heading = "Thank you for\nreaching out.",
-        subheading = "Your message is on its way to the Beamr team.",
-        body = "We've received your submission and a member of our team will review it shortly. If a follow-up is needed, we'll be in touch at the email address you provided.",
-        showSupportLine = true,
-        supportLeadingText = "Have a question in the meantime? Visit our",
-        supportLinkText = "support page",
+        showBreadcrumb = true,
+        breadcrumbLabel = "Form Submission",
+        breadcrumbUrl = "#",
+        heading = "Thank You",
+        headingFontSize = 112,
+        confirmationHeading = "The form was submitted successfully.",
+        confirmationLine1 = "Thank you for submitting your form.",
+        confirmationLine2 =
+            "Your submission will be reviewed promptly. Should we require any additional details, we will reach out to you.",
+        supportLeadingText = "Please review our",
+        supportLinkText = "customer support page",
         supportLinkUrl = "#support",
-        supportTrailingText = "or email hello@beamr.com.",
-        ctaPrimaryText = "Back to Home",
-        ctaPrimaryUrl = "/",
-        ctaSecondaryText = "Explore Resources",
-        ctaSecondaryUrl = "#resources",
-        showSecondaryButton = true,
+        supportTrailingText =
+            "if you have any questions or need further assistance.",
         bgColor = "#07071c",
+        layerBgColor = "#0a0b1e",
+        breadcrumbBgColor = "rgba(255,255,255,0.06)",
         textColor = "#ffffff",
-        secondaryTextColor = "#8b8ba3",
+        secondaryTextColor = "#c2c2d6",
         accentColor = "#00d46a",
         fontFamily = "'Inter', sans-serif",
-        headingFontSize = 56,
-        minHeight = 640,
         style,
     } = props
 
@@ -65,230 +66,157 @@ function ThankYou(props: Props) {
             style={{
                 ...style,
                 width: "100%",
-                minHeight,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-                overflow: "hidden",
-                backgroundColor: bgColor,
-                padding: "140px 48px 100px",
-                boxSizing: "border-box",
                 fontFamily,
-                textAlign: "center",
+                backgroundColor: bgColor,
             }}
         >
-            {/* Glow */}
+            {/* Header band */}
             <div
                 style={{
-                    position: "absolute",
-                    top: "40%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: 720,
-                    height: 720,
-                    borderRadius: "50%",
-                    background: `radial-gradient(circle, ${accentColor}10 0%, transparent 70%)`,
-                    pointerEvents: "none",
-                    zIndex: 0,
-                }}
-            />
-
-            {/* Content */}
-            <div
-                style={{
-                    position: "relative",
-                    zIndex: 1,
-                    maxWidth: 760,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 24,
+                    width: "100%",
+                    backgroundColor: bgColor,
+                    padding: "120px 48px 80px",
+                    boxSizing: "border-box",
                 }}
             >
-                {/* Checkmark medallion */}
-                {showCheckmark && (
-                    <div
-                        style={{
-                            width: 84,
-                            height: 84,
-                            borderRadius: "50%",
-                            backgroundColor: `${accentColor}1f`,
-                            border: `1px solid ${accentColor}66`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginBottom: 4,
-                            boxShadow: `0 0 60px ${accentColor}33`,
-                        }}
-                    >
-                        <svg
-                            width="36"
-                            height="36"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true"
-                        >
-                            <path
-                                d="M5 12.5L10 17.5L19 7.5"
-                                stroke={accentColor}
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                        </svg>
-                    </div>
-                )}
-
-                {/* Badge */}
-                {showBadge && (
-                    <div
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
-                            padding: "8px 20px",
-                            borderRadius: 100,
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            backgroundColor: "rgba(255,255,255,0.04)",
-                            fontSize: 14,
-                            color: textColor,
-                            opacity: 0.85,
-                            fontFamily,
-                        }}
-                    >
-                        <span
-                            style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: "50%",
-                                backgroundColor: accentColor,
-                            }}
-                        />
-                        {badge}
-                    </div>
-                )}
-
-                {/* Heading */}
-                <h1
-                    style={{
-                        fontSize: headingFontSize,
-                        fontWeight: 700,
-                        color: textColor,
-                        lineHeight: 1.1,
-                        margin: 0,
-                        fontFamily,
-                        whiteSpace: "pre-line",
-                        letterSpacing: "-0.02em",
-                    }}
-                >
-                    {heading}
-                </h1>
-
-                {/* Subheading */}
-                <p
-                    style={{
-                        fontSize: 20,
-                        color: textColor,
-                        opacity: 0.85,
-                        lineHeight: 1.5,
-                        margin: 0,
-                        maxWidth: 600,
-                        fontFamily,
-                    }}
-                >
-                    {subheading}
-                </p>
-
-                {/* Body */}
-                <p
-                    style={{
-                        fontSize: 16,
-                        color: secondaryTextColor,
-                        lineHeight: 1.7,
-                        margin: 0,
-                        maxWidth: 600,
-                        fontFamily,
-                    }}
-                >
-                    {body}
-                </p>
-
-                {/* Support line */}
-                {showSupportLine && (
-                    <p
-                        style={{
-                            fontSize: 15,
-                            color: secondaryTextColor,
-                            margin: 0,
-                            fontFamily,
-                        }}
-                    >
-                        {supportLeadingText}{" "}
-                        <a
-                            href={supportLinkUrl}
-                            style={{
-                                color: accentColor,
-                                textDecoration: "none",
-                                fontWeight: 500,
-                            }}
-                        >
-                            {supportLinkText}
-                        </a>{" "}
-                        {supportTrailingText}
-                    </p>
-                )}
-
-                {/* CTA Buttons */}
                 <div
                     style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 16,
-                        marginTop: 16,
-                        flexWrap: "wrap",
-                        justifyContent: "center",
+                        maxWidth: 1280,
+                        margin: "0 auto",
                     }}
                 >
-                    <a
-                        href={ctaPrimaryUrl}
+                    <div
                         style={{
-                            backgroundColor: accentColor,
-                            color: "#07071c",
-                            padding: "14px 32px",
-                            borderRadius: 10,
-                            fontSize: 16,
-                            fontWeight: 600,
-                            textDecoration: "none",
-                            fontFamily,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
+                            maxWidth: "58.33%",
+                            minWidth: 280,
                         }}
                     >
-                        {ctaPrimaryText}
-                        <span style={{ fontSize: 18 }}>&#8594;</span>
-                    </a>
-                    {showSecondaryButton && (
-                        <a
-                            href={ctaSecondaryUrl}
+                        {/* Breadcrumb pill */}
+                        {showBreadcrumb && (
+                            <div
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    minHeight: 48,
+                                    padding: "0 20px",
+                                    backgroundColor: breadcrumbBgColor,
+                                    borderRadius: 8,
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                }}
+                            >
+                                <a
+                                    href={breadcrumbUrl}
+                                    style={{
+                                        color: textColor,
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                        textDecoration: "none",
+                                        whiteSpace: "nowrap",
+                                        fontFamily,
+                                    }}
+                                >
+                                    {breadcrumbLabel}
+                                </a>
+                            </div>
+                        )}
+
+                        {/* Display heading */}
+                        <h1
                             style={{
-                                backgroundColor: "rgba(255,255,255,0.06)",
+                                marginTop: 96,
+                                marginBottom: 0,
+                                fontSize: headingFontSize,
+                                fontWeight: 600,
+                                lineHeight: 1.0,
+                                letterSpacing: "-0.03em",
                                 color: textColor,
-                                padding: "14px 32px",
-                                borderRadius: 10,
-                                fontSize: 16,
-                                fontWeight: 500,
-                                textDecoration: "none",
-                                border: "1px solid rgba(255,255,255,0.1)",
                                 fontFamily,
                             }}
                         >
-                            {ctaSecondaryText}
-                        </a>
-                    )}
+                            {heading}
+                        </h1>
+                    </div>
+                </div>
+            </div>
+
+            {/* Message band (slightly lighter layer) */}
+            <div
+                style={{
+                    width: "100%",
+                    backgroundColor: layerBgColor,
+                    padding: "80px 48px 120px",
+                    boxSizing: "border-box",
+                }}
+            >
+                <div
+                    style={{
+                        maxWidth: 1280,
+                        margin: "0 auto",
+                    }}
+                >
+                    <div
+                        style={{
+                            maxWidth: 760,
+                        }}
+                    >
+                        <h2
+                            style={{
+                                fontSize: 32,
+                                fontWeight: 600,
+                                lineHeight: 1.25,
+                                letterSpacing: "-0.01em",
+                                color: textColor,
+                                margin: "0 0 24px",
+                                fontFamily,
+                            }}
+                        >
+                            {confirmationHeading}
+                        </h2>
+                        <p
+                            style={{
+                                fontSize: 18,
+                                lineHeight: 1.7,
+                                color: secondaryTextColor,
+                                margin: "0 0 16px",
+                                fontFamily,
+                            }}
+                        >
+                            {confirmationLine1}
+                        </p>
+                        <p
+                            style={{
+                                fontSize: 18,
+                                lineHeight: 1.7,
+                                color: secondaryTextColor,
+                                margin: "0 0 16px",
+                                fontFamily,
+                            }}
+                        >
+                            {confirmationLine2}
+                        </p>
+                        <p
+                            style={{
+                                fontSize: 18,
+                                lineHeight: 1.7,
+                                color: secondaryTextColor,
+                                margin: 0,
+                                fontFamily,
+                            }}
+                        >
+                            {supportLeadingText}{" "}
+                            <a
+                                href={supportLinkUrl}
+                                style={{
+                                    color: accentColor,
+                                    textDecoration: "underline",
+                                    textUnderlineOffset: 4,
+                                }}
+                            >
+                                {supportLinkText}
+                            </a>{" "}
+                            {supportTrailingText}
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -296,117 +224,91 @@ function ThankYou(props: Props) {
 }
 
 addPropertyControls(ThankYou, {
-    showCheckmark: {
+    showBreadcrumb: {
         type: ControlType.Boolean,
-        title: "Show Check",
+        title: "Breadcrumb",
         defaultValue: true,
     },
-    showBadge: {
-        type: ControlType.Boolean,
-        title: "Show Badge",
-        defaultValue: true,
-    },
-    badge: {
+    breadcrumbLabel: {
         type: ControlType.String,
-        title: "Badge Text",
-        defaultValue: "Form submitted successfully",
-        hidden: (props) => !props.showBadge,
+        title: "Crumb Label",
+        defaultValue: "Form Submission",
+        hidden: (props) => !props.showBreadcrumb,
+    },
+    breadcrumbUrl: {
+        type: ControlType.String,
+        title: "Crumb URL",
+        defaultValue: "#",
+        hidden: (props) => !props.showBreadcrumb,
     },
     heading: {
         type: ControlType.String,
         title: "Heading",
-        defaultValue: "Thank you for\nreaching out.",
-        displayTextArea: true,
+        defaultValue: "Thank You",
     },
     headingFontSize: {
         type: ControlType.Number,
         title: "Heading Size",
-        defaultValue: 56,
-        min: 32,
-        max: 96,
+        defaultValue: 112,
+        min: 48,
+        max: 200,
         step: 2,
     },
-    subheading: {
+    confirmationHeading: {
         type: ControlType.String,
-        title: "Subheading",
-        defaultValue: "Your message is on its way to the Beamr team.",
+        title: "Confirm H2",
+        defaultValue: "The form was submitted successfully.",
         displayTextArea: true,
     },
-    body: {
+    confirmationLine1: {
         type: ControlType.String,
-        title: "Body Text",
+        title: "Line 1",
+        defaultValue: "Thank you for submitting your form.",
+        displayTextArea: true,
+    },
+    confirmationLine2: {
+        type: ControlType.String,
+        title: "Line 2",
         defaultValue:
-            "We've received your submission and a member of our team will review it shortly. If a follow-up is needed, we'll be in touch at the email address you provided.",
+            "Your submission will be reviewed promptly. Should we require any additional details, we will reach out to you.",
         displayTextArea: true,
-    },
-    showSupportLine: {
-        type: ControlType.Boolean,
-        title: "Support Line",
-        defaultValue: true,
     },
     supportLeadingText: {
         type: ControlType.String,
         title: "Support Lead",
-        defaultValue: "Have a question in the meantime? Visit our",
-        hidden: (props) => !props.showSupportLine,
+        defaultValue: "Please review our",
     },
     supportLinkText: {
         type: ControlType.String,
         title: "Support Link",
-        defaultValue: "support page",
-        hidden: (props) => !props.showSupportLine,
+        defaultValue: "customer support page",
     },
     supportLinkUrl: {
         type: ControlType.String,
         title: "Support URL",
         defaultValue: "#support",
-        hidden: (props) => !props.showSupportLine,
     },
     supportTrailingText: {
         type: ControlType.String,
         title: "Support Trail",
-        defaultValue: "or email hello@beamr.com.",
-        hidden: (props) => !props.showSupportLine,
-    },
-    ctaPrimaryText: {
-        type: ControlType.String,
-        title: "Primary CTA",
-        defaultValue: "Back to Home",
-    },
-    ctaPrimaryUrl: {
-        type: ControlType.String,
-        title: "Primary URL",
-        defaultValue: "/",
-    },
-    showSecondaryButton: {
-        type: ControlType.Boolean,
-        title: "Show Secondary",
-        defaultValue: true,
-    },
-    ctaSecondaryText: {
-        type: ControlType.String,
-        title: "Secondary CTA",
-        defaultValue: "Explore Resources",
-        hidden: (props) => !props.showSecondaryButton,
-    },
-    ctaSecondaryUrl: {
-        type: ControlType.String,
-        title: "Secondary URL",
-        defaultValue: "#resources",
-        hidden: (props) => !props.showSecondaryButton,
-    },
-    minHeight: {
-        type: ControlType.Number,
-        title: "Min Height",
-        defaultValue: 640,
-        min: 400,
-        max: 1000,
-        step: 10,
+        defaultValue:
+            "if you have any questions or need further assistance.",
+        displayTextArea: true,
     },
     bgColor: {
         type: ControlType.Color,
-        title: "Background",
+        title: "Header BG",
         defaultValue: "#07071c",
+    },
+    layerBgColor: {
+        type: ControlType.Color,
+        title: "Layer BG",
+        defaultValue: "#0a0b1e",
+    },
+    breadcrumbBgColor: {
+        type: ControlType.Color,
+        title: "Crumb BG",
+        defaultValue: "rgba(255,255,255,0.06)",
     },
     textColor: {
         type: ControlType.Color,
@@ -416,7 +318,7 @@ addPropertyControls(ThankYou, {
     secondaryTextColor: {
         type: ControlType.Color,
         title: "Secondary Text",
-        defaultValue: "#8b8ba3",
+        defaultValue: "#c2c2d6",
     },
     accentColor: {
         type: ControlType.Color,
