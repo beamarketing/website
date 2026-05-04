@@ -19,6 +19,9 @@ A complete set of Framer code components for the Beamr homepage design. Every el
 | **CTASection** | `code/CTASection.tsx` | Call-to-action card with glow effect |
 | **Footer** | `code/Footer.tsx` | Full footer with columns, newsletter, socials |
 | **Homepage** | `code/Homepage.tsx` | Full page composition (all sections combined) |
+| **ThankYou** | `code/ThankYou.tsx` | Post-submission confirmation hero (checkmark, message, CTAs) |
+| **ThankYouResources** | `code/ThankYouResources.tsx` | "More From Beamr" 3-card grid (videos / case studies) |
+| **ThankYouPage** | `code/ThankYouPage.tsx` | Full thank-you page: Navigation + ThankYou + Resources + Footer |
 
 ## How to Use in Framer
 
@@ -92,4 +95,15 @@ code/
   CTASection.tsx      # CTA card with glow
   Footer.tsx          # Full footer
   Homepage.tsx        # Complete page assembly
+  ThankYou.tsx        # Post-submission confirmation hero
+  ThankYouResources.tsx # "More From Beamr" recommended content
+  ThankYouPage.tsx    # Full thank-you page composition
 ```
+
+## Thank-You Page
+
+Inspired by `ces.tech/thank-you/`. Use `ThankYouPage` for the full page or
+drop `ThankYou` and `ThankYouResources` individually between `Navigation`
+and `Footer`. All copy, links, and the resource cards are editable from the
+left panel — including a per-card `isVideo` toggle that swaps the play
+overlay for a plain thumbnail.
