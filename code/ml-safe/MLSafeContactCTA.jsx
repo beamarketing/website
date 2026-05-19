@@ -205,6 +205,7 @@ export default function MLSafeContactCTA({
   buttonText = "Let's explore →",
   hubspotPortalId = "",
   hubspotFormId = "",
+  redirectUrl = "https://beamr.com/thank-you",
   consentText = "By submitting, you allow Beamr to send you occasional updates. You can unsubscribe at any time.",
   style
 }) {
@@ -303,9 +304,7 @@ export default function MLSafeContactCTA({
           }
         } catch (e) {}
 
-        setSubmitted(true)
-        setFormData({ firstName: "", lastName: "", workEmail: "", company: "" })
-        setTimeout(() => setSubmitted(false), 4000)
+        window.location.href = redirectUrl
       } else {
         const data = await res.json().catch(() => null)
         setErrorMsg(data?.message || "Submission failed. We've saved your info and will follow up.")
@@ -759,6 +758,11 @@ addPropertyControls(MLSafeContactCTA, {
     title: "HubSpot Form ID",
     defaultValue: "",
     description: "The HubSpot form GUID"
+  },
+  redirectUrl: {
+    type: ControlType.String,
+    title: "Redirect URL",
+    defaultValue: "https://beamr.com/thank-you",
   },
   consentText: {
     type: ControlType.String,
