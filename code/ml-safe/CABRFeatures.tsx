@@ -9,6 +9,7 @@ interface CapabilityCard {
     icon: string
     title: string
     description: string
+    link: string
 }
 
 const hoverStyleId = "cabr-feat-hover"
@@ -130,24 +131,29 @@ function CABRFeatures(props: Props) {
         sectionLabel = "Features",
         sectionTitle = "Built for ML-Safe Video Compression",
         subtitle = "CABR delivers content-adaptive bitrate optimization that preserves the quality metrics ML models depend on — while cutting storage costs by up to 50%.",
+        ctaText = "Learn more →",
+        ctaUrl = "#",
         cards = [
             {
                 icon: "compression",
                 title: "Content-Adaptive Encoding",
                 description:
                     "CABR analyzes each frame to find the optimal balance between quality and file size, delivering up to <b>50% bitrate reduction</b> without compromising ML model accuracy.",
+                link: "#",
             },
             {
                 icon: "ai",
                 title: "ML-Safe Quality Preservation",
                 description:
                     "Unlike traditional codecs that optimize for human perception, CABR preserves <b>temporal consistency</b> and <b>spatial detail</b> that AI systems depend on for accurate inference.",
+                link: "#",
             },
             {
                 icon: "pipeline",
                 title: "Pipeline Integration",
                 description:
                     "Deploy via <a href='#' target='_blank'>Docker, API, FFmpeg, or managed cloud</a>. Works on already-encoded H.264, HEVC, and AV1 — no re-ingest required.",
+                link: "#",
             },
         ],
         subCards = [
@@ -262,6 +268,27 @@ function CABRFeatures(props: Props) {
                         }}
                         dangerouslySetInnerHTML={{ __html: subtitle }}
                     />
+                    {ctaText && ctaUrl && (
+                        <a
+                            href={ctaUrl}
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                marginTop: 20,
+                                fontSize: 14,
+                                fontWeight: 600,
+                                color: accentColor,
+                                textDecoration: "none",
+                                fontFamily,
+                                transition: "opacity 0.2s ease",
+                            }}
+                            onMouseEnter={(e: any) => e.currentTarget.style.opacity = "0.7"}
+                            onMouseLeave={(e: any) => e.currentTarget.style.opacity = "1"}
+                        >
+                            {ctaText}
+                        </a>
+                    )}
                 </div>
 
                 {/* Feature Cards */}
@@ -312,6 +339,27 @@ function CABRFeatures(props: Props) {
                                 }}
                                 dangerouslySetInnerHTML={{ __html: card.description }}
                             />
+                            {card.link && (
+                                <a
+                                    href={card.link}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                        marginTop: 4,
+                                        fontSize: 13,
+                                        fontWeight: 600,
+                                        color: accentColor,
+                                        textDecoration: "none",
+                                        fontFamily,
+                                        transition: "opacity 0.2s ease",
+                                    }}
+                                    onMouseEnter={(e: any) => e.currentTarget.style.opacity = "0.7"}
+                                    onMouseLeave={(e: any) => e.currentTarget.style.opacity = "1"}
+                                >
+                                    Learn more →
+                                </a>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -413,6 +461,16 @@ addPropertyControls(CABRFeatures, {
             "CABR delivers content-adaptive bitrate optimization that preserves the quality metrics ML models depend on — while cutting storage costs by up to 50%.",
         displayTextArea: true,
     },
+    ctaText: {
+        type: ControlType.String,
+        title: "Section CTA Text",
+        defaultValue: "Learn more →",
+    },
+    ctaUrl: {
+        type: ControlType.String,
+        title: "Section CTA URL",
+        defaultValue: "#",
+    },
     cards: {
         type: ControlType.Array,
         title: "Feature Cards",
@@ -436,6 +494,11 @@ addPropertyControls(CABRFeatures, {
                     defaultValue: "Feature description. Supports <a>, <br>, <b>, etc.",
                     displayTextArea: true,
                 },
+                link: {
+                    type: ControlType.String,
+                    title: "Learn More URL",
+                    defaultValue: "#",
+                },
             },
         },
         defaultValue: [
@@ -444,18 +507,21 @@ addPropertyControls(CABRFeatures, {
                 title: "Content-Adaptive Encoding",
                 description:
                     "CABR analyzes each frame to find the optimal balance between quality and file size, delivering up to <b>50% bitrate reduction</b> without compromising ML model accuracy.",
+                link: "#",
             },
             {
                 icon: "ai",
                 title: "ML-Safe Quality Preservation",
                 description:
                     "Unlike traditional codecs that optimize for human perception, CABR preserves <b>temporal consistency</b> and <b>spatial detail</b> that AI systems depend on for accurate inference.",
+                link: "#",
             },
             {
                 icon: "pipeline",
                 title: "Pipeline Integration",
                 description:
                     "Deploy via <a href='#' target='_blank'>Docker, API, FFmpeg, or managed cloud</a>. Works on already-encoded H.264, HEVC, and AV1 — no re-ingest required.",
+                link: "#",
             },
         ],
     },
