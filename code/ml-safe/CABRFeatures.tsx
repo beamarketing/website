@@ -290,9 +290,6 @@ function CABRFeatures(props: Props) {
                                 cursor: "default",
                             }}
                         >
-                            <div style={{ marginBottom: 2 }}>
-                                {renderCardIcon(card.icon, i, accentColor)}
-                            </div>
                             <h3
                                 style={{
                                     fontSize: isMobile ? 17 : 18,
