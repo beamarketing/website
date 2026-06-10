@@ -201,7 +201,7 @@ function CABRFeatures(props: Props) {
         return () => ro.disconnect()
     }, [])
 
-    const gridColumns = isMobile ? "1fr" : isTablet ? "1fr 1fr" : "1fr 1fr 1fr"
+    const gridColumns = isMobile ? "1fr" : isTablet ? "1fr 1fr" : "1fr 1fr 1fr 1fr"
     const sectionPadding = isMobile
         ? `${paddingTop}px 20px 64px`
         : isTablet
