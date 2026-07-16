@@ -299,6 +299,7 @@ export default function BlueprintProblem(props) {
                                 width: "100%",
                                 height: "auto",
                                 display: "block",
+                                borderRadius: 20,
                             }}
                         />
                     ) : image ? (
