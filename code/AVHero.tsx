@@ -144,159 +144,155 @@ function AVHero(props: Props) {
                 }}
             />
 
-            {/* Content container */}
+            {/* Left column - Text */}
             <div
                 style={{
+                    position: "relative",
+                    zIndex: 2,
                     width: "100%",
                     maxWidth: 1280,
+                    margin: "0 auto",
                     display: "flex",
-                    alignItems: "center",
-                    gap: 60,
-                    position: "relative",
+                    flexDirection: "column",
+                    gap: 24,
+                    paddingRight: "50%",
+                }}
+            >
+                <h1
+                    style={{
+                        fontSize: headingFontSize,
+                        fontWeight: 800,
+                        lineHeight: 1.05,
+                        color: textColor,
+                        margin: 0,
+                        letterSpacing: "-0.02em",
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {heading}
+                </h1>
+
+                <p
+                    style={{
+                        fontSize: 18,
+                        lineHeight: 1.6,
+                        color: secondaryTextColor,
+                        margin: 0,
+                        maxWidth: 440,
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {subheading}
+                </p>
+
+                <div style={{ marginTop: 8 }}>
+                    <a
+                        href={ctaUrl}
+                        style={{
+                            display: "inline-block",
+                            padding: "16px 32px",
+                            backgroundColor: ctaBgColor,
+                            color: ctaTextColor,
+                            fontSize: 16,
+                            fontWeight: 600,
+                            fontFamily,
+                            textDecoration: "none",
+                            borderRadius: 6,
+                            border: "none",
+                            cursor: "pointer",
+                            transition: "opacity 0.2s ease",
+                        }}
+                    >
+                        {ctaText}
+                    </a>
+                </div>
+            </div>
+
+            {/* Right side - Car with sonar rings, anchored to right edge and cropped */}
+            <div
+                style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: 0,
+                    transform: "translateY(-50%)",
+                    width: 600,
+                    height: 600,
                     zIndex: 1,
                 }}
             >
-                {/* Left column - Text */}
-                <div
-                    style={{
-                        flex: "1 1 45%",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 24,
-                    }}
-                >
-                    <h1
-                        style={{
-                            fontSize: headingFontSize,
-                            fontWeight: 800,
-                            lineHeight: 1.05,
-                            color: textColor,
-                            margin: 0,
-                            letterSpacing: "-0.02em",
-                            whiteSpace: "pre-line",
-                        }}
-                    >
-                        {heading}
-                    </h1>
-
-                    <p
-                        style={{
-                            fontSize: 18,
-                            lineHeight: 1.6,
-                            color: secondaryTextColor,
-                            margin: 0,
-                            maxWidth: 440,
-                            whiteSpace: "pre-line",
-                        }}
-                    >
-                        {subheading}
-                    </p>
-
-                    <div style={{ marginTop: 8 }}>
-                        <a
-                            href={ctaUrl}
-                            style={{
-                                display: "inline-block",
-                                padding: "16px 32px",
-                                backgroundColor: ctaBgColor,
-                                color: ctaTextColor,
-                                fontSize: 16,
-                                fontWeight: 600,
-                                fontFamily,
-                                textDecoration: "none",
-                                borderRadius: 6,
-                                border: "none",
-                                cursor: "pointer",
-                                transition: "opacity 0.2s ease",
-                            }}
-                        >
-                            {ctaText}
-                        </a>
-                    </div>
-                </div>
-
-                {/* Right column - Car with sonar rings */}
-                <div
-                    style={{
-                        flex: "1 1 55%",
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minHeight: 500,
-                    }}
-                >
-                    {/* Static rings (always visible, subtle) */}
-                    {rings.map((i) => {
-                        const size = 200 + i * 100
-                        return (
-                            <div
-                                key={`static-${i}`}
-                                style={{
-                                    position: "absolute",
-                                    top: "50%",
-                                    left: "50%",
-                                    width: size,
-                                    height: size,
-                                    borderRadius: "50%",
-                                    border: `1.5px solid ${ringColor}`,
-                                    opacity: 0.12 - i * 0.015,
-                                    transform: "translate(-50%, -50%)",
-                                    pointerEvents: "none",
-                                }}
-                            />
-                        )
-                    })}
-
-                    {/* Animated sonar pulses */}
-                    {[0, 1, 2].map((i) => (
+                {/* Static rings (always visible, subtle) */}
+                {rings.map((i) => {
+                    const size = 200 + i * 100
+                    return (
                         <div
-                            key={`pulse-${i}`}
+                            key={`static-${i}`}
                             style={{
                                 position: "absolute",
                                 top: "50%",
                                 left: "50%",
-                                width: 200,
-                                height: 200,
+                                width: size,
+                                height: size,
                                 borderRadius: "50%",
-                                border: `2px solid ${ringColor}`,
-                                animation: `${animId}-sonar-pulse ${totalDuration}s ease-out ${i * (totalDuration / 3)}s infinite`,
+                                border: `1.5px solid ${ringColor}`,
+                                opacity: 0.12 - i * 0.015,
+                                transform: "translate(-50%, -50%)",
                                 pointerEvents: "none",
                             }}
                         />
-                    ))}
+                    )
+                })}
 
-                    {/* Center glow */}
+                {/* Animated sonar pulses */}
+                {[0, 1, 2].map((i) => (
                     <div
+                        key={`pulse-${i}`}
                         style={{
                             position: "absolute",
                             top: "50%",
                             left: "50%",
-                            width: 300,
-                            height: 300,
+                            width: 200,
+                            height: 200,
                             borderRadius: "50%",
-                            background: `radial-gradient(circle, ${ringColor}22 0%, transparent 70%)`,
-                            transform: "translate(-50%, -50%)",
-                            animation: `${animId}-glow 4s ease-in-out infinite`,
+                            border: `2px solid ${ringColor}`,
+                            animation: `${animId}-sonar-pulse ${totalDuration}s ease-out ${i * (totalDuration / 3)}s infinite`,
                             pointerEvents: "none",
                         }}
                     />
+                ))}
 
-                    {/* Car image */}
-                    <img
-                        src={carImage || placeholderCar}
-                        alt="Autonomous vehicle"
-                        style={{
-                            position: "relative",
-                            zIndex: 2,
-                            width: "auto",
-                            maxWidth: "55%",
-                            maxHeight: 400,
-                            objectFit: "contain",
-                            filter: "drop-shadow(0 0 40px rgba(46, 124, 246, 0.3))",
-                        }}
-                    />
-                </div>
+                {/* Center glow */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        width: 300,
+                        height: 300,
+                        borderRadius: "50%",
+                        background: `radial-gradient(circle, ${ringColor}22 0%, transparent 70%)`,
+                        transform: "translate(-50%, -50%)",
+                        animation: `${animId}-glow 4s ease-in-out infinite`,
+                        pointerEvents: "none",
+                    }}
+                />
+
+                {/* Car image */}
+                <img
+                    src={carImage || placeholderCar}
+                    alt="Autonomous vehicle"
+                    style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        zIndex: 2,
+                        width: "auto",
+                        maxWidth: 280,
+                        maxHeight: 400,
+                        objectFit: "contain",
+                        filter: "drop-shadow(0 0 40px rgba(46, 124, 246, 0.3))",
+                    }}
+                />
             </div>
         </section>
     )
