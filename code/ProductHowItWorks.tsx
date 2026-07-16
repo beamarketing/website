@@ -14,6 +14,9 @@ interface StepItem {
 interface Props {
     sectionLabel: string
     sectionTitle: string
+    sectionSubtitle: string
+    subtitleColor: string
+    subtitleFontWeight: number
     steps: StepItem[]
     closingQuote: string
     showClosingQuote: boolean
@@ -37,6 +40,9 @@ function ProductHowItWorks(props: Props) {
     const {
         sectionLabel = "Simple by design",
         sectionTitle = "How it Works",
+        sectionSubtitle = "",
+        subtitleColor = "#666666",
+        subtitleFontWeight = 400,
         steps = [
             {
                 title: "Submit your test",
@@ -153,6 +159,22 @@ function ProductHowItWorks(props: Props) {
                     >
                         {sectionTitle}
                     </h2>
+                    {sectionSubtitle && (
+                        <p
+                            style={{
+                                fontSize: isMobile ? 16 : 18,
+                                fontWeight: subtitleFontWeight,
+                                color: subtitleColor,
+                                margin: "12px auto 0",
+                                lineHeight: 1.5,
+                                fontFamily,
+                                maxWidth: 640,
+                            }}
+                            dangerouslySetInnerHTML={{
+                                __html: sectionSubtitle,
+                            }}
+                        />
+                    )}
                 </div>
 
                 {/* Steps Grid */}
@@ -337,6 +359,25 @@ addPropertyControls(ProductHowItWorks, {
         type: ControlType.String,
         title: "Section Title",
         defaultValue: "How it Works",
+    },
+    sectionSubtitle: {
+        type: ControlType.String,
+        title: "Subtitle (HTML)",
+        defaultValue: "",
+        displayTextArea: true,
+    },
+    subtitleColor: {
+        type: ControlType.Color,
+        title: "Subtitle Color",
+        defaultValue: "#666666",
+    },
+    subtitleFontWeight: {
+        type: ControlType.Number,
+        title: "Subtitle Weight",
+        defaultValue: 400,
+        min: 100,
+        max: 900,
+        step: 100,
     },
     steps: {
         type: ControlType.Array,
