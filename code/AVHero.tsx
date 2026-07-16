@@ -2,6 +2,7 @@
 // Two-column layout with sonar-animated rings around a car image
 // Framer Code Component with full property controls
 
+import React, { useEffect, useRef } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
 interface Props {
@@ -26,53 +27,6 @@ interface Props {
     fontFamily: string
     minHeight: number
     style?: React.CSSProperties
-}
-
-const generateKeyframes = (id: string, ringCount: number, ringSpeed: number) => {
-    let css = ""
-    for (let i = 0; i < ringCount; i++) {
-        const name = `${id}-sonar-${i}`
-        css += `
-@keyframes ${name} {
-    0% {
-        transform: translate(-50%, -50%) scale(0.6);
-        opacity: 0.7;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(${1 + i * 0.35});
-        opacity: 0;
-    }
-}
-`
-    }
-
-    css += `
-@keyframes ${id}-sonar-pulse {
-    0% {
-        transform: translate(-50%, -50%) scale(0.5);
-        opacity: 0;
-    }
-    10% {
-        opacity: 0.6;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(2.8);
-        opacity: 0;
-    }
-}
-`
-
-    css += `
-@keyframes ${id}-glow {
-    0%, 100% {
-        opacity: 0.3;
-    }
-    50% {
-        opacity: 0.6;
-    }
-}
-`
-    return css
 }
 
 function AVHero(props: Props) {
@@ -100,8 +54,26 @@ function AVHero(props: Props) {
         style,
     } = props
 
-    const animId = "av-hero"
-    const totalDuration = ringSpeed
+    const styleId = "av-hero-keyframes"
+
+    useEffect(() => {
+        if (document.getElementById(styleId)) return
+        const sheet = document.createElement("style")
+        sheet.id = styleId
+        sheet.textContent = `
+@keyframes avh-sonar-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    10% { opacity: 0.55; }
+    100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+}
+@keyframes avh-glow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+}
+`
+        document.head.appendChild(sheet)
+        return () => { sheet.remove() }
+    }, [])
 
     const rings = Array.from({ length: ringCount }, (_, i) => i)
 
@@ -136,8 +108,6 @@ function AVHero(props: Props) {
                 justifyContent: "center",
             }}
         >
-            <style>{generateKeyframes(animId, ringCount, ringSpeed)}</style>
-
             {/* Subtle grid background */}
             <div
                 style={{
@@ -231,21 +201,21 @@ function AVHero(props: Props) {
                 </div>
             </div>
 
-            {/* Right side - Car with sonar rings, anchored to right edge and cropped */}
+            {/* Right side - Car with sonar rings, partially cropped at right edge */}
             <div
                 style={{
                     position: "absolute",
                     top: "50%",
-                    right: 0,
+                    right: "-10%",
                     transform: "translateY(-50%)",
-                    width: 600,
-                    height: 600,
+                    width: 700,
+                    height: 700,
                     zIndex: 1,
                 }}
             >
-                {/* Static rings (always visible, subtle) */}
+                {/* Static rings */}
                 {rings.map((i) => {
-                    const size = 200 + i * 100
+                    const size = 180 + i * 110
                     return (
                         <div
                             key={`static-${i}`}
@@ -257,7 +227,7 @@ function AVHero(props: Props) {
                                 height: size,
                                 borderRadius: "50%",
                                 border: `1.5px solid ${ringColor}`,
-                                opacity: 0.12 - i * 0.015,
+                                opacity: 0.15 - i * 0.02,
                                 transform: "translate(-50%, -50%)",
                                 pointerEvents: "none",
                             }}
@@ -273,12 +243,16 @@ function AVHero(props: Props) {
                             position: "absolute",
                             top: "50%",
                             left: "50%",
-                            width: 200,
-                            height: 200,
+                            width: 180,
+                            height: 180,
                             borderRadius: "50%",
                             border: `2px solid ${ringColor}`,
                             opacity: 0,
-                            animation: `${animId}-sonar-pulse ${totalDuration}s ease-out ${i * (totalDuration / 3)}s infinite`,
+                            animationName: "avh-sonar-pulse",
+                            animationDuration: `${ringSpeed}s`,
+                            animationTimingFunction: "ease-out",
+                            animationDelay: `${i * (ringSpeed / 3)}s`,
+                            animationIterationCount: "infinite",
                             pointerEvents: "none",
                         }}
                     />
@@ -295,7 +269,10 @@ function AVHero(props: Props) {
                         borderRadius: "50%",
                         background: `radial-gradient(circle, ${ringColor}22 0%, transparent 70%)`,
                         transform: "translate(-50%, -50%)",
-                        animation: `${animId}-glow 4s ease-in-out infinite`,
+                        animationName: "avh-glow",
+                        animationDuration: "4s",
+                        animationTimingFunction: "ease-in-out",
+                        animationIterationCount: "infinite",
                         pointerEvents: "none",
                     }}
                 />
