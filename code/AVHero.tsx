@@ -254,6 +254,7 @@ function AVHero(props: Props) {
                             height: 200,
                             borderRadius: "50%",
                             border: `2px solid ${ringColor}`,
+                            opacity: 0,
                             animation: `${animId}-sonar-pulse ${totalDuration}s ease-out ${i * (totalDuration / 3)}s infinite`,
                             pointerEvents: "none",
                         }}
