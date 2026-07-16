@@ -5,8 +5,12 @@
 import { addPropertyControls, ControlType } from "framer"
 
 interface Props {
+    eyebrow: string
+    showEyebrow: boolean
+    eyebrowFontWeight: number
     heading: string
     headingFontSize: number
+    headingFontWeight: number
     subheading: string
     ctaText: string
     ctaUrl: string
@@ -74,8 +78,12 @@ const generateKeyframes = (id: string, ringCount: number, ringSpeed: number) => 
 
 function AVHero(props: Props) {
     const {
+        eyebrow = "AUTONOMOUS VEHICLES",
+        showEyebrow = true,
+        eyebrowFontWeight = 600,
         heading = "Steering AV\nData Flood",
         headingFontSize = 64,
+        headingFontWeight = 800,
         subheading = "Cut Costs by up to 50% and Accelerate Video\nAnalysis to Unlock Hidden Value in Your AV Model",
         ctaText = "Schedule 1 on 1 Meeting",
         ctaUrl = "#",
@@ -160,10 +168,25 @@ function AVHero(props: Props) {
                     paddingRight: `${100 - textColumnWidth}%`,
                 }}
             >
+                {showEyebrow && (
+                    <span
+                        style={{
+                            fontSize: 14,
+                            fontWeight: eyebrowFontWeight,
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            color: ctaBgColor,
+                            fontFamily,
+                        }}
+                    >
+                        {eyebrow}
+                    </span>
+                )}
+
                 <h1
                     style={{
                         fontSize: headingFontSize,
-                        fontWeight: 800,
+                        fontWeight: headingFontWeight,
                         lineHeight: 1.05,
                         color: textColor,
                         margin: 0,
@@ -302,8 +325,12 @@ function AVHero(props: Props) {
 }
 
 AVHero.defaultProps = {
+    eyebrow: "AUTONOMOUS VEHICLES",
+    showEyebrow: true,
+    eyebrowFontWeight: 600,
     heading: "Steering AV\nData Flood",
     headingFontSize: 64,
+    headingFontWeight: 800,
     subheading: "Cut Costs by up to 50% and Accelerate Video\nAnalysis to Unlock Hidden Value in Your AV Model",
     ctaText: "Schedule 1 on 1 Meeting",
     ctaUrl: "#",
@@ -322,6 +349,24 @@ AVHero.defaultProps = {
 }
 
 addPropertyControls(AVHero, {
+    eyebrow: {
+        type: ControlType.String,
+        title: "Eyebrow",
+        defaultValue: "AUTONOMOUS VEHICLES",
+    },
+    showEyebrow: {
+        type: ControlType.Boolean,
+        title: "Show Eyebrow",
+        defaultValue: true,
+    },
+    eyebrowFontWeight: {
+        type: ControlType.Number,
+        title: "Eyebrow Weight",
+        defaultValue: 600,
+        min: 100,
+        max: 900,
+        step: 100,
+    },
     heading: {
         type: ControlType.String,
         title: "Heading",
@@ -335,6 +380,14 @@ addPropertyControls(AVHero, {
         min: 32,
         max: 120,
         step: 2,
+    },
+    headingFontWeight: {
+        type: ControlType.Number,
+        title: "Heading Weight",
+        defaultValue: 800,
+        min: 100,
+        max: 900,
+        step: 100,
     },
     subheading: {
         type: ControlType.String,
