@@ -24,7 +24,6 @@ interface Props {
     ctaBgColor: string
     ctaTextColor: string
     fontFamily: string
-    textColumnWidth: number
     minHeight: number
     style?: React.CSSProperties
 }
@@ -97,7 +96,6 @@ function AVHero(props: Props) {
         ctaBgColor = "#2E7CF6",
         ctaTextColor = "#ffffff",
         fontFamily = "'Inter', sans-serif",
-        textColumnWidth = 50,
         minHeight = 600,
         style,
     } = props
@@ -165,7 +163,7 @@ function AVHero(props: Props) {
                     display: "flex",
                     flexDirection: "column",
                     gap: 24,
-                    paddingRight: `${100 - textColumnWidth}%`,
+                    paddingRight: "50%",
                 }}
             >
                 {showEyebrow && (
@@ -344,7 +342,6 @@ AVHero.defaultProps = {
     ctaBgColor: "#2E7CF6",
     ctaTextColor: "#ffffff",
     fontFamily: "'Inter', sans-serif",
-    textColumnWidth: 50,
     minHeight: 600,
 }
 
@@ -460,15 +457,6 @@ addPropertyControls(AVHero, {
         type: ControlType.String,
         title: "Font Family",
         defaultValue: "'Inter', sans-serif",
-    },
-    textColumnWidth: {
-        type: ControlType.Number,
-        title: "Text Width (%)",
-        defaultValue: 50,
-        min: 30,
-        max: 70,
-        step: 5,
-        unit: "%",
     },
     minHeight: {
         type: ControlType.Number,
