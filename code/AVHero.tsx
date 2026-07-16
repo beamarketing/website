@@ -15,7 +15,10 @@ interface Props {
     subheading: string
     ctaText: string
     ctaUrl: string
+    textWidth: number
+    showCar: boolean
     carImage: string
+    carWidth: number
     ringCount: number
     ringColor: string
     ringSpeed: number
@@ -40,7 +43,10 @@ function AVHero(props: Props) {
         subheading = "Cut Costs by up to 50% and Accelerate Video\nAnalysis to Unlock Hidden Value in Your AV Model",
         ctaText = "Schedule 1 on 1 Meeting",
         ctaUrl = "#",
+        textWidth = 55,
+        showCar = true,
         carImage = "",
+        carWidth = 40,
         ringCount = 5,
         ringColor = "#2E7CF6",
         ringSpeed = 3,
@@ -133,7 +139,7 @@ function AVHero(props: Props) {
                     display: "flex",
                     flexDirection: "column",
                     gap: 24,
-                    paddingRight: "35%",
+                    paddingRight: showCar ? `${100 - textWidth}%` : "0%",
                 }}
             >
                 {showEyebrow && (
@@ -202,14 +208,16 @@ function AVHero(props: Props) {
             </div>
 
             {/* Right side - Car with sonar rings, partially cropped at right edge */}
-            <div
+            {showCar && <div
                 style={{
                     position: "absolute",
                     top: "50%",
                     right: "5%",
                     transform: "translateY(-50%)",
-                    width: 600,
-                    height: 600,
+                    width: `${carWidth}vw`,
+                    height: `${carWidth}vw`,
+                    maxWidth: 700,
+                    maxHeight: 700,
                     zIndex: 1,
                 }}
             >
@@ -294,7 +302,7 @@ function AVHero(props: Props) {
                         filter: "drop-shadow(0 0 40px rgba(46, 124, 246, 0.3))",
                     }}
                 />
-            </div>
+            </div>}
         </section>
     )
 }
@@ -309,7 +317,10 @@ AVHero.defaultProps = {
     subheading: "Cut Costs by up to 50% and Accelerate Video\nAnalysis to Unlock Hidden Value in Your AV Model",
     ctaText: "Schedule 1 on 1 Meeting",
     ctaUrl: "#",
+    textWidth: 55,
+    showCar: true,
     carImage: "",
+    carWidth: 40,
     ringCount: 5,
     ringColor: "#2E7CF6",
     ringSpeed: 3,
@@ -380,9 +391,32 @@ addPropertyControls(AVHero, {
         title: "Button URL",
         defaultValue: "#",
     },
+    textWidth: {
+        type: ControlType.Number,
+        title: "Text Width (%)",
+        defaultValue: 55,
+        min: 30,
+        max: 80,
+        step: 5,
+    },
+    showCar: {
+        type: ControlType.Boolean,
+        title: "Show Car",
+        defaultValue: true,
+    },
     carImage: {
         type: ControlType.Image,
         title: "Car Image",
+        hidden: (props: any) => !props.showCar,
+    },
+    carWidth: {
+        type: ControlType.Number,
+        title: "Car Width (vw)",
+        defaultValue: 40,
+        min: 20,
+        max: 60,
+        step: 5,
+        hidden: (props: any) => !props.showCar,
     },
     ringCount: {
         type: ControlType.Number,
@@ -391,11 +425,13 @@ addPropertyControls(AVHero, {
         min: 3,
         max: 8,
         step: 1,
+        hidden: (props: any) => !props.showCar,
     },
     ringColor: {
         type: ControlType.Color,
         title: "Ring Color",
         defaultValue: "#2E7CF6",
+        hidden: (props: any) => !props.showCar,
     },
     ringSpeed: {
         type: ControlType.Number,
@@ -404,6 +440,7 @@ addPropertyControls(AVHero, {
         min: 1,
         max: 8,
         step: 0.5,
+        hidden: (props: any) => !props.showCar,
     },
     bgColor: {
         type: ControlType.Color,
