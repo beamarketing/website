@@ -13,6 +13,7 @@ interface StepItem {
 
 interface Props {
     sectionLabel: string
+    sectionLabelColor: string
     sectionTitle: string
     sectionSubtitle: string
     subtitleColor: string
@@ -20,15 +21,19 @@ interface Props {
     steps: StepItem[]
     closingQuote: string
     showClosingQuote: boolean
+    quoteColor: string
     ctaText: string
     ctaUrl: string
-    accentColor: string
+    ctaBgColor: string
+    ctaTextColor: string
+    iconBadgeBgColor: string
+    iconColor: string
+    connectorColor: string
     bgColor: string
-    textColor: string
-    secondaryTextColor: string
+    headingColor: string
     titleColor: string
     titleFontWeight: number
-    iconColor: string
+    descriptionColor: string
     fontFamily: string
     headingFontFamily: string
     headingFontWeight: number
@@ -36,9 +41,10 @@ interface Props {
     style?: React.CSSProperties
 }
 
-function ProductHowItWorks(props: Props) {
+function HowItWorksBlueprint(props: Props) {
     const {
         sectionLabel = "Simple by design",
+        sectionLabelColor = "#4f3ef5",
         sectionTitle = "How it Works",
         sectionSubtitle = "",
         subtitleColor = "#666666",
@@ -65,15 +71,19 @@ function ProductHowItWorks(props: Props) {
         ],
         closingQuote = "Run the hard part of subjective testing, easily.",
         showClosingQuote = false,
+        quoteColor = "#1a1a2e",
         ctaText = "Try VISTA →",
         ctaUrl = "#",
-        accentColor = "#4f3ef5",
+        ctaBgColor = "#4f3ef5",
+        ctaTextColor = "#ffffff",
+        iconBadgeBgColor = "#4f3ef5",
+        iconColor = "#ffffff",
+        connectorColor = "#4f3ef5",
         bgColor = "#fafaff",
-        textColor = "#1a1a2e",
-        secondaryTextColor = "#666666",
+        headingColor = "#1a1a2e",
         titleColor = "#1a1a2e",
         titleFontWeight = 600,
-        iconColor = "#ffffff",
+        descriptionColor = "#666666",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
         headingFontWeight = 700,
@@ -96,8 +106,6 @@ function ProductHowItWorks(props: Props) {
         ro.observe(el)
         return () => ro.disconnect()
     }, [])
-
-    const isCompact = isMobile || isTablet
 
     const sectionPadding = isMobile
         ? `${paddingTop}px 20px 64px`
@@ -138,7 +146,7 @@ function ProductHowItWorks(props: Props) {
                         style={{
                             fontSize: 13,
                             fontWeight: 600,
-                            color: accentColor,
+                            color: sectionLabelColor,
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
                             fontFamily,
@@ -150,7 +158,7 @@ function ProductHowItWorks(props: Props) {
                         style={{
                             fontSize: isMobile ? 32 : isTablet ? 38 : 44,
                             fontWeight: headingFontWeight,
-                            color: textColor,
+                            color: headingColor,
                             margin: "16px 0 0",
                             lineHeight: 1.15,
                             fontFamily: headingFontFamily,
@@ -209,7 +217,7 @@ function ProductHowItWorks(props: Props) {
                                             left: "calc(50% + 28px)",
                                             right: "-24px",
                                             height: 2,
-                                            background: `linear-gradient(90deg, ${accentColor}40, ${accentColor}10)`,
+                                            background: `linear-gradient(90deg, ${connectorColor}40, ${connectorColor}10)`,
                                             zIndex: 0,
                                         }}
                                     />
@@ -221,7 +229,7 @@ function ProductHowItWorks(props: Props) {
                                         width: 44,
                                         height: 44,
                                         borderRadius: 12,
-                                        backgroundColor: accentColor,
+                                        backgroundColor: iconBadgeBgColor,
                                         color: iconColor,
                                         display: "flex",
                                         alignItems: "center",
@@ -280,7 +288,7 @@ function ProductHowItWorks(props: Props) {
                                 <p
                                     style={{
                                         fontSize: isMobile ? 14 : 15,
-                                        color: secondaryTextColor,
+                                        color: descriptionColor,
                                         margin: 0,
                                         lineHeight: 1.7,
                                         fontFamily,
@@ -311,7 +319,7 @@ function ProductHowItWorks(props: Props) {
                             style={{
                                 fontSize: isMobile ? 18 : 22,
                                 fontStyle: "italic",
-                                color: textColor,
+                                color: quoteColor,
                                 margin: 0,
                                 lineHeight: 1.5,
                                 fontFamily,
@@ -329,8 +337,8 @@ function ProductHowItWorks(props: Props) {
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 8,
-                            backgroundColor: accentColor,
-                            color: "#ffffff",
+                            backgroundColor: ctaBgColor,
+                            color: ctaTextColor,
                             padding: isMobile ? "14px 24px" : "16px 32px",
                             borderRadius: 10,
                             fontSize: 16,
@@ -349,16 +357,39 @@ function ProductHowItWorks(props: Props) {
     )
 }
 
-addPropertyControls(ProductHowItWorks, {
+addPropertyControls(HowItWorksBlueprint, {
     sectionLabel: {
         type: ControlType.String,
         title: "Section Label",
         defaultValue: "Simple by design",
     },
+    sectionLabelColor: {
+        type: ControlType.Color,
+        title: "Label Color",
+        defaultValue: "#4f3ef5",
+    },
     sectionTitle: {
         type: ControlType.String,
         title: "Section Title",
         defaultValue: "How it Works",
+    },
+    headingColor: {
+        type: ControlType.Color,
+        title: "Heading Color",
+        defaultValue: "#1a1a2e",
+    },
+    headingFontWeight: {
+        type: ControlType.Number,
+        title: "Heading Weight",
+        defaultValue: 700,
+        min: 100,
+        max: 900,
+        step: 100,
+    },
+    headingFontFamily: {
+        type: ControlType.String,
+        title: "Heading Font",
+        defaultValue: "'Poppins', sans-serif",
     },
     sectionSubtitle: {
         type: ControlType.String,
@@ -430,6 +461,39 @@ addPropertyControls(ProductHowItWorks, {
             },
         ],
     },
+    titleColor: {
+        type: ControlType.Color,
+        title: "Step Title Color",
+        defaultValue: "#1a1a2e",
+    },
+    titleFontWeight: {
+        type: ControlType.Number,
+        title: "Step Title Weight",
+        defaultValue: 600,
+        min: 100,
+        max: 900,
+        step: 100,
+    },
+    descriptionColor: {
+        type: ControlType.Color,
+        title: "Description Color",
+        defaultValue: "#666666",
+    },
+    iconBadgeBgColor: {
+        type: ControlType.Color,
+        title: "Icon Badge BG",
+        defaultValue: "#4f3ef5",
+    },
+    iconColor: {
+        type: ControlType.Color,
+        title: "Icon Color",
+        defaultValue: "#ffffff",
+    },
+    connectorColor: {
+        type: ControlType.Color,
+        title: "Connector Color",
+        defaultValue: "#4f3ef5",
+    },
     showClosingQuote: {
         type: ControlType.Boolean,
         title: "Show Quote",
@@ -442,6 +506,12 @@ addPropertyControls(ProductHowItWorks, {
         displayTextArea: true,
         hidden: (props) => !props.showClosingQuote,
     },
+    quoteColor: {
+        type: ControlType.Color,
+        title: "Quote Color",
+        defaultValue: "#1a1a2e",
+        hidden: (props) => !props.showClosingQuote,
+    },
     ctaText: {
         type: ControlType.String,
         title: "CTA Text",
@@ -452,61 +522,25 @@ addPropertyControls(ProductHowItWorks, {
         title: "CTA URL",
         defaultValue: "#",
     },
-    accentColor: {
+    ctaBgColor: {
         type: ControlType.Color,
-        title: "Accent Color",
+        title: "CTA Background",
         defaultValue: "#4f3ef5",
+    },
+    ctaTextColor: {
+        type: ControlType.Color,
+        title: "CTA Text Color",
+        defaultValue: "#ffffff",
     },
     bgColor: {
         type: ControlType.Color,
-        title: "Background",
+        title: "Section Background",
         defaultValue: "#fafaff",
-    },
-    textColor: {
-        type: ControlType.Color,
-        title: "Text Color",
-        defaultValue: "#1a1a2e",
-    },
-    secondaryTextColor: {
-        type: ControlType.Color,
-        title: "Secondary Text",
-        defaultValue: "#666666",
-    },
-    titleColor: {
-        type: ControlType.Color,
-        title: "Title Color",
-        defaultValue: "#1a1a2e",
-    },
-    iconColor: {
-        type: ControlType.Color,
-        title: "Icon Color",
-        defaultValue: "#ffffff",
-    },
-    titleFontWeight: {
-        type: ControlType.Number,
-        title: "Title Weight",
-        defaultValue: 600,
-        min: 100,
-        max: 900,
-        step: 100,
     },
     fontFamily: {
         type: ControlType.String,
         title: "Font Family",
         defaultValue: "'Inter', sans-serif",
-    },
-    headingFontFamily: {
-        type: ControlType.String,
-        title: "Heading Font",
-        defaultValue: "'Poppins', sans-serif",
-    },
-    headingFontWeight: {
-        type: ControlType.Number,
-        title: "Heading Weight",
-        defaultValue: 700,
-        min: 100,
-        max: 900,
-        step: 100,
     },
     paddingTop: {
         type: ControlType.Number,
@@ -518,4 +552,4 @@ addPropertyControls(ProductHowItWorks, {
     },
 })
 
-export default ProductHowItWorks
+export default HowItWorksBlueprint
