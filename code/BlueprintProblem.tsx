@@ -192,15 +192,17 @@ export default function BlueprintProblem(props) {
     const {
         image,
         video,
-        tagText = "Proven results",
         title = "Benchmarked on real-world AV data",
         titleColor = C.text,
         titleFontWeight = 700,
         titleFontFamily = F.h,
+        titleFontSize = 48,
+        titleMobileFontSize = 32,
         description = "We validated MLSafe against PandaSet and standard YOLO-based benchmarks using the Cosmos pipeline. Real-world results prove that aggressive compression maintains object detection accuracy while dramatically reducing file sizes.",
         descriptionColor = C.textSec,
         descriptionFontWeight = 400,
         descriptionFontFamily = F.b,
+        descriptionFontSize = 16,
         linkText = "Read the full benchmark results →",
         linkUrl = "https://blog.beamr.com",
         linkColor = C.primary,
@@ -235,13 +237,9 @@ export default function BlueprintProblem(props) {
                 {/* Left column: Text content */}
                 <RevealDiv threshold={0.2}>
                     <div>
-                        <div style={{ marginBottom: 16 }}>
-                            <SectionTag text={tagText} />
-                        </div>
-
                         <h2
                             style={{
-                                fontSize: isMobile ? 32 : 48,
+                                fontSize: isMobile ? titleMobileFontSize : titleFontSize,
                                 fontWeight: titleFontWeight,
                                 fontFamily: titleFontFamily,
                                 lineHeight: 1.2,
@@ -254,7 +252,7 @@ export default function BlueprintProblem(props) {
 
                         <div
                             style={{
-                                fontSize: 16,
+                                fontSize: descriptionFontSize,
                                 lineHeight: 1.6,
                                 color: descriptionColor,
                                 marginBottom: 28,
@@ -291,43 +289,28 @@ export default function BlueprintProblem(props) {
                 {/* Right column: Benchmark visuals */}
                 <RevealDiv threshold={0.2}>
                     {video ? (
-                        <div
+                        <video
+                            src={video}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
                             style={{
                                 width: "100%",
-                                borderRadius: 20,
-                                overflow: "hidden",
-                                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-                                backgroundColor: C.white,
+                                height: "auto",
+                                display: "block",
                             }}
-                        >
-                            <video
-                                src={video}
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                                style={{
-                                    width: "100%",
-                                    height: "auto",
-                                    display: "block",
-                                }}
-                            />
-                        </div>
+                        />
                     ) : image ? (
-                        <div
+                        <img
+                            src={image}
+                            alt="Benchmark visualization"
                             style={{
                                 width: "100%",
-                                borderRadius: 20,
-                                overflow: "hidden",
-                                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-                                backgroundColor: C.white,
+                                height: "auto",
+                                display: "block",
                             }}
-                        >
-                            <ImgSlot
-                                src={image}
-                                alt="Benchmark visualization"
-                            />
-                        </div>
+                        />
                     ) : (
                         <div
                             style={{
@@ -357,11 +340,6 @@ addPropertyControls(BlueprintProblem, {
         type: ControlType.Image,
         title: "Benchmark Image",
     },
-    tagText: {
-        type: ControlType.String,
-        title: "Section Tag",
-        defaultValue: "Proven results",
-    },
     title: {
         type: ControlType.String,
         title: "Title",
@@ -384,6 +362,22 @@ addPropertyControls(BlueprintProblem, {
         type: ControlType.String,
         title: "Title Font",
         defaultValue: "'Poppins', sans-serif",
+    },
+    titleFontSize: {
+        type: ControlType.Number,
+        title: "Title Size",
+        defaultValue: 48,
+        min: 16,
+        max: 96,
+        step: 1,
+    },
+    titleMobileFontSize: {
+        type: ControlType.Number,
+        title: "Title Size (Mobile)",
+        defaultValue: 32,
+        min: 16,
+        max: 72,
+        step: 1,
     },
     description: {
         type: ControlType.String,
@@ -409,6 +403,14 @@ addPropertyControls(BlueprintProblem, {
         type: ControlType.String,
         title: "Description Font",
         defaultValue: "'Inter', sans-serif",
+    },
+    descriptionFontSize: {
+        type: ControlType.Number,
+        title: "Description Size",
+        defaultValue: 16,
+        min: 12,
+        max: 32,
+        step: 1,
     },
     linkText: {
         type: ControlType.String,
