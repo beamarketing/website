@@ -202,10 +202,8 @@ function HowItWorksBlueprint(props: Props) {
                                     position: "relative",
                                     display: "flex",
                                     flexDirection: "column",
-                                    alignItems: isMobile
-                                        ? "center"
-                                        : "flex-start",
-                                    textAlign: isMobile ? "center" : "left",
+                                    alignItems: "center",
+                                    textAlign: "center",
                                 }}
                             >
                                 {/* Connector line */}
