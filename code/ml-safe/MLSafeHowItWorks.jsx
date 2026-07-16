@@ -99,7 +99,7 @@ function RevealDiv({ children, delay = 0 }) {
   )
 }
 
-function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRadius = 16, boxShadow = "0 8px 24px rgba(0, 0, 0, 0.08)" }) {
+function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRadius = 16, boxShadow = "0 8px 24px rgba(0, 0, 0, 0.08)", fontBody = F.b }) {
   return (
     <div
       style={{
@@ -133,7 +133,7 @@ function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRa
             justifyContent: "center",
             backgroundColor: C.offWhite,
             fontSize: "14px",
-            fontFamily: F.b,
+            fontFamily: fontBody,
             color: C.gray400,
             fontWeight: 500,
             padding: "24px",
@@ -147,7 +147,7 @@ function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRa
   )
 }
 
-function SectionTag({ text = "How it works" }) {
+function SectionTag({ text = "How it works", fontBody = F.b }) {
   return (
     <div
       style={{
@@ -167,7 +167,7 @@ function SectionTag({ text = "How it works" }) {
       <span
         style={{
           fontSize: "12px",
-          fontFamily: F.b,
+          fontFamily: fontBody,
           fontWeight: 600,
           color: C.primary,
           textTransform: "uppercase",
@@ -180,7 +180,7 @@ function SectionTag({ text = "How it works" }) {
   )
 }
 
-function CheckItem({ text }) {
+function CheckItem({ text, fontBody = F.b }) {
   return (
     <div
       style={{
@@ -220,7 +220,7 @@ function CheckItem({ text }) {
       <p
         style={{
           fontSize: "15px",
-          fontFamily: F.b,
+          fontFamily: fontBody,
           lineHeight: "1.6",
           color: C.text,
           margin: 0,
@@ -248,11 +248,16 @@ export default function MLSafeHowItWorks({
     "Runs on NVIDIA GPUs already in your stack",
     "Deploy via Docker, API, FFmpeg, or managed cloud",
   ],
+  headingFont = "Poppins",
+  bodyFont = "Inter",
   background = "#FFFFFF",
   style,
 }) {
   const [sectionRef, sectionWidth] = useSectionWidth()
   const isMobile = sectionWidth < 768
+  const fallback = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  const fH = `'${headingFont}', ${fallback}`
+  const fB = `'${bodyFont}', ${fallback}`
 
   return (
     <section
@@ -302,7 +307,7 @@ export default function MLSafeHowItWorks({
               />
             </div>
           ) : (
-            <ImgSlot image={image} alt="How CABR preserves ML-critical detail" />
+            <ImgSlot image={image} alt="How CABR preserves ML-critical detail" fontBody={fB} />
           )}
         </RevealDiv>
 
@@ -310,13 +315,13 @@ export default function MLSafeHowItWorks({
         <RevealDiv delay={100}>
           <div>
             {/* TAG */}
-            <SectionTag text={tagText} />
+            <SectionTag text={tagText} fontBody={fB} />
 
             {/* TITLE */}
             <h2
               style={{
                 fontSize: isMobile ? "28px" : "40px",
-                fontFamily: F.h,
+                fontFamily: fH,
                 fontWeight: 700,
                 lineHeight: "1.2",
                 color: C.text,
@@ -330,7 +335,7 @@ export default function MLSafeHowItWorks({
             <p
               style={{
                 fontSize: "16px",
-                fontFamily: F.b,
+                fontFamily: fB,
                 lineHeight: "1.7",
                 color: C.textSec,
                 margin: "0 0 32px 0",
@@ -349,7 +354,7 @@ export default function MLSafeHowItWorks({
                 }}
               >
                 {bullets.map((text, idx) => (
-                  <CheckItem key={idx} text={text} />
+                  <CheckItem key={idx} text={text} fontBody={fB} />
                 ))}
               </div>
             )}
@@ -404,6 +409,16 @@ addPropertyControls(MLSafeHowItWorks, {
       "Deploy via Docker, API, FFmpeg, or managed cloud",
     ],
     maxCount: 10,
+  },
+  headingFont: {
+    type: ControlType.String,
+    title: "Heading Font",
+    defaultValue: "Poppins",
+  },
+  bodyFont: {
+    type: ControlType.String,
+    title: "Body Font",
+    defaultValue: "Inter",
   },
   background: {
     type: ControlType.Color,
