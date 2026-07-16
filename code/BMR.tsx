@@ -34,6 +34,7 @@ interface Props {
     // Beamr logo
     beamrLogo: string
     beamrLogoWidth: number
+    beamrLogoSize: number
     // Section Label font
     sectionLabelFontFamily: string
     sectionLabelFontSize: number
@@ -108,6 +109,7 @@ function BMR(props: Props) {
         paddingTop = 100,
         beamrLogo = "",
         beamrLogoWidth = 30,
+        beamrLogoSize = 100,
         sectionLabelFontFamily = "'Inter', sans-serif",
         sectionLabelFontSize = 13,
         sectionLabelFontWeight = 600,
@@ -336,7 +338,7 @@ function BMR(props: Props) {
                                 src={beamrLogo}
                                 alt="Beamr"
                                 style={{
-                                    width: "100%",
+                                    width: `${beamrLogoSize}%`,
                                     maxWidth: "100%",
                                     objectFit: "contain",
                                 }}
@@ -370,7 +372,7 @@ function BMR(props: Props) {
                             src={beamrLogo}
                             alt="Beamr"
                             style={{
-                                width: "60%",
+                                width: `${beamrLogoSize}%`,
                                 maxWidth: 200,
                                 objectFit: "contain",
                             }}
@@ -772,6 +774,14 @@ addPropertyControls(BMR, {
         defaultValue: 30,
         min: 15,
         max: 50,
+        step: 5,
+    },
+    beamrLogoSize: {
+        type: ControlType.Number,
+        title: "Logo Size %",
+        defaultValue: 100,
+        min: 10,
+        max: 100,
         step: 5,
     },
     // Section Label Typography
