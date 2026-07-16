@@ -133,7 +133,7 @@ function AVHero(props: Props) {
                     display: "flex",
                     flexDirection: "column",
                     gap: 24,
-                    paddingRight: "45%",
+                    paddingRight: "35%",
                 }}
             >
                 {showEyebrow && (
