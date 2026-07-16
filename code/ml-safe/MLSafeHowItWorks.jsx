@@ -99,17 +99,17 @@ function RevealDiv({ children, delay = 0 }) {
   )
 }
 
-function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRadius = 16, boxShadow = "0 8px 24px rgba(0, 0, 0, 0.08)", fontBody = F.b }) {
+function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRadius = 16, boxShadow = "0 8px 24px rgba(0, 0, 0, 0.08)", fontBody = F.b, imageFrame = true }) {
   return (
     <div
       style={{
         position: "relative",
         width: "100%",
-        aspectRatio,
-        borderRadius,
-        overflow: "hidden",
-        backgroundColor: C.lightGray,
-        boxShadow,
+        aspectRatio: imageFrame ? aspectRatio : undefined,
+        borderRadius: imageFrame ? borderRadius : 0,
+        overflow: imageFrame ? "hidden" : "visible",
+        backgroundColor: imageFrame ? C.lightGray : "transparent",
+        boxShadow: imageFrame ? boxShadow : "none",
       }}
     >
       {image ? (
@@ -118,8 +118,8 @@ function ImgSlot({ image, alt = "Section image", aspectRatio = "16/10", borderRa
           alt={alt}
           style={{
             width: "100%",
-            height: "100%",
-            objectFit: "cover",
+            height: imageFrame ? "100%" : "auto",
+            objectFit: imageFrame ? "cover" : "contain",
             objectPosition: "center",
           }}
         />
@@ -248,6 +248,7 @@ export default function MLSafeHowItWorks({
     "Runs on NVIDIA GPUs already in your stack",
     "Deploy via Docker, API, FFmpeg, or managed cloud",
   ],
+  imageFrame = true,
   headingFont = "Poppins",
   bodyFont = "Inter",
   background = "#FFFFFF",
@@ -286,11 +287,11 @@ export default function MLSafeHowItWorks({
               style={{
                 position: "relative",
                 width: "100%",
-                aspectRatio: "16/10",
-                borderRadius: 16,
-                overflow: "hidden",
-                backgroundColor: C.lightGray,
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                aspectRatio: imageFrame ? "16/10" : undefined,
+                borderRadius: imageFrame ? 16 : 0,
+                overflow: imageFrame ? "hidden" : "visible",
+                backgroundColor: imageFrame ? C.lightGray : "transparent",
+                boxShadow: imageFrame ? "0 8px 24px rgba(0, 0, 0, 0.08)" : "none",
               }}
             >
               <video
@@ -301,13 +302,13 @@ export default function MLSafeHowItWorks({
                 playsInline
                 style={{
                   width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
+                  height: imageFrame ? "100%" : "auto",
+                  objectFit: imageFrame ? "cover" : "contain",
                 }}
               />
             </div>
           ) : (
-            <ImgSlot image={image} alt="How CABR preserves ML-critical detail" fontBody={fB} />
+            <ImgSlot image={image} alt="How CABR preserves ML-critical detail" fontBody={fB} imageFrame={imageFrame} />
           )}
         </RevealDiv>
 
@@ -409,6 +410,13 @@ addPropertyControls(MLSafeHowItWorks, {
       "Deploy via Docker, API, FFmpeg, or managed cloud",
     ],
     maxCount: 10,
+  },
+  imageFrame: {
+    type: ControlType.Boolean,
+    title: "Image Frame",
+    defaultValue: true,
+    enabledTitle: "On",
+    disabledTitle: "Off",
   },
   headingFont: {
     type: ControlType.String,
