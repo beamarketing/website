@@ -19,6 +19,7 @@ interface Props {
     showCar: boolean
     carImage: string
     carWidth: number
+    backgroundImage: string
     ringCount: number
     ringColor: string
     ringSpeed: number
@@ -47,6 +48,7 @@ function AVHero(props: Props) {
         showCar = true,
         carImage = "",
         carWidth = 40,
+        backgroundImage = "",
         ringCount = 5,
         ringColor = "#2E7CF6",
         ringSpeed = 3,
@@ -303,6 +305,25 @@ function AVHero(props: Props) {
                     }}
                 />
             </div>}
+
+            {/* Background image when car is hidden */}
+            {!showCar && backgroundImage && (
+                <img
+                    src={backgroundImage}
+                    alt=""
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        pointerEvents: "none",
+                        zIndex: 0,
+                    }}
+                />
+            )}
         </section>
     )
 }
@@ -321,6 +342,7 @@ AVHero.defaultProps = {
     showCar: true,
     carImage: "",
     carWidth: 40,
+    backgroundImage: "",
     ringCount: 5,
     ringColor: "#2E7CF6",
     ringSpeed: 3,
@@ -417,6 +439,11 @@ addPropertyControls(AVHero, {
         max: 60,
         step: 5,
         hidden: (props: any) => !props.showCar,
+    },
+    backgroundImage: {
+        type: ControlType.Image,
+        title: "Background Image",
+        hidden: (props: any) => props.showCar,
     },
     ringCount: {
         type: ControlType.Number,
