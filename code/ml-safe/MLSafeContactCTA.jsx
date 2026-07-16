@@ -207,6 +207,7 @@ export default function MLSafeContactCTA({
   showLastName = true,
   showEmail = true,
   showCompany = true,
+  showJobTitle = true,
   hubspotPortalId = "",
   hubspotFormId = "",
   redirectUrl = "https://beamr.com/thank-you",
@@ -221,6 +222,7 @@ export default function MLSafeContactCTA({
     lastName: "",
     workEmail: "",
     company: "",
+    jobTitle: "",
   })
 
   const [submitted, setSubmitted] = useState(false)
@@ -261,6 +263,7 @@ export default function MLSafeContactCTA({
       ...(showLastName && { lastName: formData.lastName }),
       ...(showEmail && { email: formData.workEmail }),
       ...(showCompany && { company: formData.company }),
+      ...(showJobTitle && { jobTitle: formData.jobTitle }),
       timestamp: new Date().toISOString(),
       page: typeof window !== "undefined" ? window.location.href : "",
     }
@@ -288,6 +291,7 @@ export default function MLSafeContactCTA({
               ...(showLastName ? [{ name: "lastname", value: formData.lastName }] : []),
               ...(showEmail ? [{ name: "email", value: formData.workEmail }] : []),
               ...(showCompany ? [{ name: "company", value: formData.company }] : []),
+              ...(showJobTitle ? [{ name: "jobtitle", value: formData.jobTitle }] : []),
             ],
             context: {
               hutk: hutkValue,
@@ -656,6 +660,51 @@ export default function MLSafeContactCTA({
               </div>
               )}
 
+              {/* Job Title */}
+              {showJobTitle && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label
+                  style={{
+                    fontFamily: F.b,
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: C.gray600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  Job Title
+                </label>
+                <input
+                  type="text"
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  onChange={handleInputChange}
+                  placeholder="VP of Engineering"
+                  required
+                  style={{
+                    fontFamily: F.b,
+                    fontSize: "14px",
+                    padding: "11px 14px",
+                    border: `1.5px solid ${C.gray200}`,
+                    borderRadius: "10px",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    backgroundColor: C.white,
+                    boxSizing: "border-box"
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = C.primary
+                    e.target.style.boxShadow = `0 0 0 3px ${C.primaryGlow}`
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = C.gray200
+                    e.target.style.boxShadow = "none"
+                  }}
+                />
+              </div>
+              )}
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -785,6 +834,13 @@ addPropertyControls(MLSafeContactCTA, {
   showCompany: {
     type: ControlType.Boolean,
     title: "Company",
+    defaultValue: true,
+    enabledTitle: "Show",
+    disabledTitle: "Hide",
+  },
+  showJobTitle: {
+    type: ControlType.Boolean,
+    title: "Job Title",
     defaultValue: true,
     enabledTitle: "Show",
     disabledTitle: "Hide",
