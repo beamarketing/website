@@ -8,6 +8,7 @@ interface StepItem {
     title: string
     description: string
     icon: string
+    iconImage: string
 }
 
 interface Props {
@@ -24,6 +25,7 @@ interface Props {
     secondaryTextColor: string
     titleColor: string
     titleFontWeight: number
+    iconColor: string
     fontFamily: string
     headingFontFamily: string
     headingFontWeight: number
@@ -65,6 +67,7 @@ function ProductHowItWorks(props: Props) {
         secondaryTextColor = "#666666",
         titleColor = "#1a1a2e",
         titleFontWeight = 600,
+        iconColor = "#ffffff",
         fontFamily = "'Inter', sans-serif",
         headingFontFamily = "'Poppins', sans-serif",
         headingFontWeight = 700,
@@ -197,7 +200,7 @@ function ProductHowItWorks(props: Props) {
                                         height: 44,
                                         borderRadius: 12,
                                         backgroundColor: accentColor,
-                                        color: "#ffffff",
+                                        color: iconColor,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -209,10 +212,33 @@ function ProductHowItWorks(props: Props) {
                                         zIndex: 1,
                                         flexShrink: 0,
                                     }}
-                                    dangerouslySetInnerHTML={{
-                                        __html: step.icon || `${i + 1}`,
-                                    }}
-                                />
+                                >
+                                    {step.iconImage ? (
+                                        <div
+                                            style={{
+                                                width: 24,
+                                                height: 24,
+                                                backgroundColor: iconColor,
+                                                WebkitMaskImage: `url(${step.iconImage})`,
+                                                WebkitMaskSize: "contain",
+                                                WebkitMaskRepeat: "no-repeat",
+                                                WebkitMaskPosition: "center",
+                                                maskImage: `url(${step.iconImage})`,
+                                                maskSize: "contain",
+                                                maskRepeat: "no-repeat",
+                                                maskPosition: "center",
+                                            }}
+                                        />
+                                    ) : step.icon ? (
+                                        <div
+                                            dangerouslySetInnerHTML={{
+                                                __html: step.icon,
+                                            }}
+                                        />
+                                    ) : (
+                                        i + 1
+                                    )}
+                                </div>
 
                                 {/* Step title */}
                                 <h3
@@ -319,6 +345,10 @@ addPropertyControls(ProductHowItWorks, {
         control: {
             type: ControlType.Object,
             controls: {
+                iconImage: {
+                    type: ControlType.Image,
+                    title: "Icon Image",
+                },
                 icon: {
                     type: ControlType.String,
                     title: "Icon (SVG/HTML)",
@@ -405,6 +435,11 @@ addPropertyControls(ProductHowItWorks, {
         type: ControlType.Color,
         title: "Title Color",
         defaultValue: "#1a1a2e",
+    },
+    iconColor: {
+        type: ControlType.Color,
+        title: "Icon Color",
+        defaultValue: "#ffffff",
     },
     titleFontWeight: {
         type: ControlType.Number,
