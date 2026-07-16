@@ -21,6 +21,7 @@ interface Props {
     trustLogos: TrustLogo[]
     trustLogoHeight: number
     trustLogoOpacity: number
+    showProofStrip: boolean
     showCta: boolean
     ctaText: string
     ctaUrl: string
@@ -97,6 +98,7 @@ function BMR(props: Props) {
         trustLogos = [],
         trustLogoHeight = 28,
         trustLogoOpacity = 0.7,
+        showProofStrip = true,
         showCta = true,
         ctaText = "Run your first test",
         ctaUrl = "#",
@@ -382,7 +384,7 @@ function BMR(props: Props) {
                 </div>
 
                 {/* Proof Strip: Emmy + Logos */}
-                <div
+                {showProofStrip && <div
                     style={{
                         display: "grid",
                         gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr",
@@ -572,7 +574,7 @@ function BMR(props: Props) {
                                   ))}
                         </div>
                     </div>
-                </div>
+                </div>}
 
                 {/* CTA */}
                 {showCta && (
@@ -707,6 +709,11 @@ addPropertyControls(BMR, {
         min: 0.1,
         max: 1,
         step: 0.05,
+    },
+    showProofStrip: {
+        type: ControlType.Boolean,
+        title: "Show Emmy & Trust",
+        defaultValue: true,
     },
     showCta: {
         type: ControlType.Boolean,
