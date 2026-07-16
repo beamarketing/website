@@ -203,6 +203,10 @@ export default function MLSafeContactCTA({
   subtitle = "Tell us about your data and we'll provide compression estimates, ML accuracy validation approach, and integration roadmap tailored to your needs.",
   formTitle = "Tell us about your data",
   buttonText = "Let's explore →",
+  showFirstName = true,
+  showLastName = true,
+  showEmail = true,
+  showCompany = true,
   hubspotPortalId = "",
   hubspotFormId = "",
   redirectUrl = "https://beamr.com/thank-you",
@@ -216,7 +220,7 @@ export default function MLSafeContactCTA({
     firstName: "",
     lastName: "",
     workEmail: "",
-    company: ""
+    company: "",
   })
 
   const [submitted, setSubmitted] = useState(false)
@@ -253,10 +257,10 @@ export default function MLSafeContactCTA({
     }
 
     const submission = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.workEmail,
-      company: formData.company,
+      ...(showFirstName && { firstName: formData.firstName }),
+      ...(showLastName && { lastName: formData.lastName }),
+      ...(showEmail && { email: formData.workEmail }),
+      ...(showCompany && { company: formData.company }),
       timestamp: new Date().toISOString(),
       page: typeof window !== "undefined" ? window.location.href : "",
     }
@@ -280,10 +284,10 @@ export default function MLSafeContactCTA({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             fields: [
-              { name: "firstname", value: formData.firstName },
-              { name: "lastname", value: formData.lastName },
-              { name: "email", value: formData.workEmail },
-              { name: "company", value: formData.company },
+              ...(showFirstName ? [{ name: "firstname", value: formData.firstName }] : []),
+              ...(showLastName ? [{ name: "lastname", value: formData.lastName }] : []),
+              ...(showEmail ? [{ name: "email", value: formData.workEmail }] : []),
+              ...(showCompany ? [{ name: "company", value: formData.company }] : []),
             ],
             context: {
               hutk: hutkValue,
@@ -465,13 +469,15 @@ export default function MLSafeContactCTA({
             {/* Form */}
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {/* First & Last Name */}
+              {(showFirstName || showLastName) && (
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gridTemplateColumns: (showFirstName && showLastName && !isMobile) ? "1fr 1fr" : "1fr",
                   gap: "16px",
                 }}
               >
+                {showFirstName && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <label
                     style={{
@@ -513,6 +519,8 @@ export default function MLSafeContactCTA({
                     }}
                   />
                 </div>
+                )}
+                {showLastName && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <label
                     style={{
@@ -554,9 +562,12 @@ export default function MLSafeContactCTA({
                     }}
                   />
                 </div>
+                )}
               </div>
+              )}
 
               {/* Work Email */}
+              {showEmail && (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <label
                   style={{
@@ -598,8 +609,10 @@ export default function MLSafeContactCTA({
                   }}
                 />
               </div>
+              )}
 
               {/* Company */}
+              {showCompany && (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <label
                   style={{
@@ -641,6 +654,7 @@ export default function MLSafeContactCTA({
                   }}
                 />
               </div>
+              )}
 
               {/* Submit Button */}
               <button
@@ -746,6 +760,34 @@ addPropertyControls(MLSafeContactCTA, {
     type: ControlType.String,
     title: "Button Text",
     defaultValue: "Let's explore →"
+  },
+  showFirstName: {
+    type: ControlType.Boolean,
+    title: "First Name",
+    defaultValue: true,
+    enabledTitle: "Show",
+    disabledTitle: "Hide",
+  },
+  showLastName: {
+    type: ControlType.Boolean,
+    title: "Last Name",
+    defaultValue: true,
+    enabledTitle: "Show",
+    disabledTitle: "Hide",
+  },
+  showEmail: {
+    type: ControlType.Boolean,
+    title: "Work Email",
+    defaultValue: true,
+    enabledTitle: "Show",
+    disabledTitle: "Hide",
+  },
+  showCompany: {
+    type: ControlType.Boolean,
+    title: "Company",
+    defaultValue: true,
+    enabledTitle: "Show",
+    disabledTitle: "Hide",
   },
   hubspotPortalId: {
     type: ControlType.String,
