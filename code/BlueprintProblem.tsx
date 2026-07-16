@@ -196,9 +196,11 @@ export default function BlueprintProblem(props) {
         title = "Benchmarked on real-world AV data",
         titleColor = C.text,
         titleFontWeight = 700,
+        titleFontFamily = F.h,
         description = "We validated MLSafe against PandaSet and standard YOLO-based benchmarks using the Cosmos pipeline. Real-world results prove that aggressive compression maintains object detection accuracy while dramatically reducing file sizes.",
         descriptionColor = C.textSec,
         descriptionFontWeight = 400,
+        descriptionFontFamily = F.b,
         linkText = "Read the full benchmark results →",
         linkUrl = "https://blog.beamr.com",
         linkColor = C.primary,
@@ -241,7 +243,7 @@ export default function BlueprintProblem(props) {
                             style={{
                                 fontSize: isMobile ? 32 : 48,
                                 fontWeight: titleFontWeight,
-                                fontFamily: F.h,
+                                fontFamily: titleFontFamily,
                                 lineHeight: 1.2,
                                 marginBottom: 20,
                                 color: titleColor,
@@ -256,7 +258,7 @@ export default function BlueprintProblem(props) {
                                 lineHeight: 1.6,
                                 color: descriptionColor,
                                 marginBottom: 28,
-                                fontFamily: F.b,
+                                fontFamily: descriptionFontFamily,
                                 fontWeight: descriptionFontWeight,
                             }}
                             dangerouslySetInnerHTML={{
@@ -378,6 +380,11 @@ addPropertyControls(BlueprintProblem, {
         max: 900,
         step: 100,
     },
+    titleFontFamily: {
+        type: ControlType.String,
+        title: "Title Font",
+        defaultValue: "'Poppins', sans-serif",
+    },
     description: {
         type: ControlType.String,
         title: "Description (HTML)",
@@ -397,6 +404,11 @@ addPropertyControls(BlueprintProblem, {
         min: 100,
         max: 900,
         step: 100,
+    },
+    descriptionFontFamily: {
+        type: ControlType.String,
+        title: "Description Font",
+        defaultValue: "'Inter', sans-serif",
     },
     linkText: {
         type: ControlType.String,
