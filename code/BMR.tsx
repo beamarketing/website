@@ -31,6 +31,9 @@ interface Props {
     quoteColor: string
     cardBgColor: string
     paddingTop: number
+    // Beamr logo
+    beamrLogo: string
+    beamrLogoWidth: number
     // Section Label font
     sectionLabelFontFamily: string
     sectionLabelFontSize: number
@@ -103,6 +106,8 @@ function BMR(props: Props) {
         quoteColor = "rgba(255,255,255,0.8)",
         cardBgColor = "rgba(255,255,255,0.04)",
         paddingTop = 100,
+        beamrLogo = "",
+        beamrLogoWidth = 30,
         sectionLabelFontFamily = "'Inter', sans-serif",
         sectionLabelFontSize = 13,
         sectionLabelFontWeight = 600,
@@ -185,7 +190,19 @@ function BMR(props: Props) {
                 fontFamily: bodyFontFamily,
             }}
         >
-            <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+            <div
+                style={{
+                    maxWidth: 1080,
+                    margin: "0 auto",
+                    display: isCompact ? "block" : "grid",
+                    gridTemplateColumns: isCompact
+                        ? "1fr"
+                        : `1fr ${beamrLogoWidth}%`,
+                    gap: isMobile ? 32 : 48,
+                    alignItems: "start",
+                }}
+            >
+              <div>
                 {/* Section Label */}
                 <span
                     style={{
@@ -451,7 +468,6 @@ function BMR(props: Props) {
                                                           logo.height ||
                                                           trustLogoHeight,
                                                       objectFit: "contain",
-                                                      filter: "brightness(0) invert(1)",
                                                   }}
                                               />
                                           ) : (
@@ -526,6 +542,65 @@ function BMR(props: Props) {
                         </a>
                     </div>
                 )}
+              </div>
+
+              {/* Beamr Logo - Right Column */}
+              {!isCompact && (
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        minHeight: 200,
+                    }}
+                >
+                    {beamrLogo ? (
+                        <img
+                            src={beamrLogo}
+                            alt="Beamr"
+                            style={{
+                                width: "100%",
+                                maxWidth: "100%",
+                                objectFit: "contain",
+                            }}
+                        />
+                    ) : (
+                        <span
+                            style={{
+                                fontSize: 28,
+                                fontWeight: 700,
+                                color: `${textColor}33`,
+                                letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                            }}
+                        >
+                            Beamr
+                        </span>
+                    )}
+                </div>
+              )}
+
+              {/* Beamr Logo - Mobile (below content) */}
+              {isCompact && beamrLogo && (
+                <div
+                    style={{
+                        marginTop: 40,
+                        display: "flex",
+                        justifyContent: "center",
+                    }}
+                >
+                    <img
+                        src={beamrLogo}
+                        alt="Beamr"
+                        style={{
+                            width: "60%",
+                            maxWidth: 200,
+                            objectFit: "contain",
+                        }}
+                    />
+                </div>
+              )}
             </div>
         </section>
     )
@@ -685,6 +760,19 @@ addPropertyControls(BMR, {
         min: 0,
         max: 300,
         step: 10,
+    },
+    // Beamr Logo
+    beamrLogo: {
+        type: ControlType.Image,
+        title: "Beamr Logo",
+    },
+    beamrLogoWidth: {
+        type: ControlType.Number,
+        title: "Logo Column %",
+        defaultValue: 30,
+        min: 15,
+        max: 50,
+        step: 5,
     },
     // Section Label Typography
     sectionLabelFontFamily: {
