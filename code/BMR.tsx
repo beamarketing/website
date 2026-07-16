@@ -190,136 +190,194 @@ function BMR(props: Props) {
                 fontFamily: bodyFontFamily,
             }}
         >
-            <div
-                style={{
-                    maxWidth: 1080,
-                    margin: "0 auto",
-                    display: isCompact ? "block" : "grid",
-                    gridTemplateColumns: isCompact
-                        ? "1fr"
-                        : `1fr ${beamrLogoWidth}%`,
-                    gap: isMobile ? 32 : 48,
-                    alignItems: "start",
-                }}
-            >
-              <div>
-                {/* Section Label */}
-                <span
-                    style={{
-                        display: "block",
-                        fontSize: sectionLabelFontSize,
-                        fontWeight: sectionLabelFontWeight,
-                        fontFamily: sectionLabelFontFamily,
-                        color: accentColor,
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        marginBottom: 20,
-                    }}
-                >
-                    {sectionLabel}
-                </span>
-
-                {/* Headline */}
-                <h2
-                    style={{
-                        fontSize: responsiveHeadlineSize,
-                        fontWeight: headlineFontWeight,
-                        fontFamily: headlineFontFamily,
-                        color: textColor,
-                        margin: 0,
-                        lineHeight: 1.1,
-                        letterSpacing: "-0.025em",
-                        maxWidth: 700,
-                    }}
-                >
-                    {headline}
-                </h2>
-
-                {/* Body Text */}
-                <div style={{ maxWidth: 660, marginTop: isMobile ? 24 : 32 }}>
-                    {bodyParagraphs.map((p, i) => (
-                        <p
-                            key={i}
-                            style={{
-                                fontSize: responsiveBodySize,
-                                fontWeight: bodyFontWeight,
-                                fontFamily: bodyFontFamily,
-                                color: secondaryTextColor,
-                                lineHeight: 1.75,
-                                margin:
-                                    i < bodyParagraphs.length - 1
-                                        ? "0 0 18px"
-                                        : "0",
-                            }}
-                        >
-                            {p}
-                        </p>
-                    ))}
-                </div>
-
-                {/* Bold Statement */}
+            <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+                {/* Text + Beamr Logo Row */}
                 <div
                     style={{
-                        marginTop: isMobile ? 36 : 48,
-                        marginBottom: isMobile ? 36 : 48,
-                        paddingTop: isMobile ? 32 : 40,
+                        display: isCompact ? "block" : "grid",
+                        gridTemplateColumns: isCompact
+                            ? "1fr"
+                            : `1fr ${beamrLogoWidth}%`,
+                        gap: isMobile ? 32 : 48,
+                        alignItems: "center",
                     }}
                 >
-                    <p
+                  <div>
+                    {/* Section Label */}
+                    <span
                         style={{
-                            fontSize: isMobile
-                                ? boldStatementFontSize * 0.82
-                                : boldStatementFontSize,
-                            fontWeight: boldStatementFontWeight,
-                            fontFamily: boldStatementFontFamily,
-                            color: textColor,
-                            lineHeight: 1.3,
-                            margin: 0,
+                            display: "block",
+                            fontSize: sectionLabelFontSize,
+                            fontWeight: sectionLabelFontWeight,
+                            fontFamily: sectionLabelFontFamily,
+                            color: accentColor,
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                            marginBottom: 20,
                         }}
                     >
-                        {boldStatement}
-                    </p>
-                </div>
+                        {sectionLabel}
+                    </span>
 
-                {/* Quote */}
-                <blockquote
-                    style={{
-                        borderLeft: `3px solid ${accentColor}`,
-                        paddingLeft: isMobile ? 16 : 24,
-                        marginLeft: 0,
-                        marginRight: 0,
-                        marginTop: 0,
-                        marginBottom: isMobile ? 36 : 48,
-                        maxWidth: 660,
-                    }}
-                >
-                    <p
+                    {/* Headline */}
+                    <h2
                         style={{
-                            fontSize: isMobile
-                                ? quoteFontSize - 2
-                                : quoteFontSize,
-                            fontWeight: quoteFontWeight,
-                            fontFamily: quoteFontFamily,
-                            color: quoteColor,
-                            lineHeight: 1.7,
-                            margin: "0 0 12px",
-                            fontStyle: "italic",
+                            fontSize: responsiveHeadlineSize,
+                            fontWeight: headlineFontWeight,
+                            fontFamily: headlineFontFamily,
+                            color: textColor,
+                            margin: 0,
+                            lineHeight: 1.1,
+                            letterSpacing: "-0.025em",
+                            maxWidth: 700,
                         }}
                     >
-                        {quote}
-                    </p>
-                    <cite
+                        {headline}
+                    </h2>
+
+                    {/* Body Text */}
+                    <div style={{ maxWidth: 660, marginTop: isMobile ? 24 : 32 }}>
+                        {bodyParagraphs.map((p, i) => (
+                            <p
+                                key={i}
+                                style={{
+                                    fontSize: responsiveBodySize,
+                                    fontWeight: bodyFontWeight,
+                                    fontFamily: bodyFontFamily,
+                                    color: secondaryTextColor,
+                                    lineHeight: 1.75,
+                                    margin:
+                                        i < bodyParagraphs.length - 1
+                                            ? "0 0 18px"
+                                            : "0",
+                                }}
+                            >
+                                {p}
+                            </p>
+                        ))}
+                    </div>
+
+                    {/* Bold Statement */}
+                    <div
                         style={{
-                            fontSize: quoteAttributionFontSize,
-                            fontWeight: quoteAttributionFontWeight,
-                            fontFamily: quoteAttributionFontFamily,
-                            color: secondaryTextColor,
-                            fontStyle: "normal",
+                            marginTop: isMobile ? 36 : 48,
+                            marginBottom: isMobile ? 36 : 48,
+                            paddingTop: isMobile ? 32 : 40,
                         }}
                     >
-                        {quoteAttribution}
-                    </cite>
-                </blockquote>
+                        <p
+                            style={{
+                                fontSize: isMobile
+                                    ? boldStatementFontSize * 0.82
+                                    : boldStatementFontSize,
+                                fontWeight: boldStatementFontWeight,
+                                fontFamily: boldStatementFontFamily,
+                                color: textColor,
+                                lineHeight: 1.3,
+                                margin: 0,
+                            }}
+                        >
+                            {boldStatement}
+                        </p>
+                    </div>
+
+                    {/* Quote */}
+                    <blockquote
+                        style={{
+                            borderLeft: `3px solid ${accentColor}`,
+                            paddingLeft: isMobile ? 16 : 24,
+                            marginLeft: 0,
+                            marginRight: 0,
+                            marginTop: 0,
+                            marginBottom: 0,
+                            maxWidth: 660,
+                        }}
+                    >
+                        <p
+                            style={{
+                                fontSize: isMobile
+                                    ? quoteFontSize - 2
+                                    : quoteFontSize,
+                                fontWeight: quoteFontWeight,
+                                fontFamily: quoteFontFamily,
+                                color: quoteColor,
+                                lineHeight: 1.7,
+                                margin: "0 0 12px",
+                                fontStyle: "italic",
+                            }}
+                        >
+                            {quote}
+                        </p>
+                        <cite
+                            style={{
+                                fontSize: quoteAttributionFontSize,
+                                fontWeight: quoteAttributionFontWeight,
+                                fontFamily: quoteAttributionFontFamily,
+                                color: secondaryTextColor,
+                                fontStyle: "normal",
+                            }}
+                        >
+                            {quoteAttribution}
+                        </cite>
+                    </blockquote>
+                  </div>
+
+                  {/* Beamr Logo - Right Column */}
+                  {!isCompact && (
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        {beamrLogo ? (
+                            <img
+                                src={beamrLogo}
+                                alt="Beamr"
+                                style={{
+                                    width: "100%",
+                                    maxWidth: "100%",
+                                    objectFit: "contain",
+                                }}
+                            />
+                        ) : (
+                            <span
+                                style={{
+                                    fontSize: 28,
+                                    fontWeight: 700,
+                                    color: `${textColor}33`,
+                                    letterSpacing: "0.05em",
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Beamr
+                            </span>
+                        )}
+                    </div>
+                  )}
+
+                  {/* Beamr Logo - Mobile (below text) */}
+                  {isCompact && beamrLogo && (
+                    <div
+                        style={{
+                            marginTop: 32,
+                            display: "flex",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <img
+                            src={beamrLogo}
+                            alt="Beamr"
+                            style={{
+                                width: "60%",
+                                maxWidth: 200,
+                                objectFit: "contain",
+                            }}
+                        />
+                    </div>
+                  )}
+                </div>
 
                 {/* Proof Strip: Emmy + Logos */}
                 <div
@@ -328,6 +386,7 @@ function BMR(props: Props) {
                         gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr",
                         gap: isMobile ? 20 : 24,
                         alignItems: "stretch",
+                        marginTop: isMobile ? 36 : 48,
                     }}
                 >
                     {/* Emmy Card */}
@@ -542,65 +601,6 @@ function BMR(props: Props) {
                         </a>
                     </div>
                 )}
-              </div>
-
-              {/* Beamr Logo - Right Column */}
-              {!isCompact && (
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        minHeight: 200,
-                    }}
-                >
-                    {beamrLogo ? (
-                        <img
-                            src={beamrLogo}
-                            alt="Beamr"
-                            style={{
-                                width: "100%",
-                                maxWidth: "100%",
-                                objectFit: "contain",
-                            }}
-                        />
-                    ) : (
-                        <span
-                            style={{
-                                fontSize: 28,
-                                fontWeight: 700,
-                                color: `${textColor}33`,
-                                letterSpacing: "0.05em",
-                                textTransform: "uppercase",
-                            }}
-                        >
-                            Beamr
-                        </span>
-                    )}
-                </div>
-              )}
-
-              {/* Beamr Logo - Mobile (below content) */}
-              {isCompact && beamrLogo && (
-                <div
-                    style={{
-                        marginTop: 40,
-                        display: "flex",
-                        justifyContent: "center",
-                    }}
-                >
-                    <img
-                        src={beamrLogo}
-                        alt="Beamr"
-                        style={{
-                            width: "60%",
-                            maxWidth: 200,
-                            objectFit: "contain",
-                        }}
-                    />
-                </div>
-              )}
             </div>
         </section>
     )
