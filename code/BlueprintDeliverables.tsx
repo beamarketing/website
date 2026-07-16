@@ -1,78 +1,37 @@
 import { addPropertyControls, ControlType } from "framer"
 import { useRef, useState, useEffect } from "react"
 
-interface ColumnData {
+interface PhaseItem {
     heading: string
-    row1: string
-    row2: string
-    row3: string
+    items: string
+    iconImage: string
 }
 
-interface Props {
-    columns: ColumnData[]
-    headerBgColor: string
-    headerTextColor: string
-    headerFontWeight: number
-    headerFontSize: number
-    cellTextColor: string
-    cellFontSize: number
-    cellFontWeight: number
-    borderColor: string
-    bgColor: string
-    rowAltBgColor: string
-    fontFamily: string
-    headingFontFamily: string
-    borderRadius: number
-    sectionTitle: string
-    sectionTitleColor: string
-    sectionTitleFontSize: number
-    sectionTitleFontWeight: number
-    sectionTitleFontFamily: string
-    showSectionTitle: boolean
-    sectionSubtitle: string
-    subtitleColor: string
-    showSectionSubtitle: boolean
-    paddingTop: number
-    paddingBottom: number
-    sectionBgColor: string
-    style?: React.CSSProperties
-}
-
-export default function BlueprintDeliverables(props: Props) {
+export default function BlueprintDeliverables(props) {
     const {
-        columns = [
+        phases = [
             {
                 heading: "Know where you stand",
-                row1: "A map of your video pipeline, end to end",
-                row2: 'What "safe" means for you – in numbers',
-                row3: "Where to compress, how hard – lossy, lossless, or not at all",
+                items: "A map of your video pipeline, end to end\nWhat \"safe\" means for you – in numbers\nWhere to compress, how hard – lossy, lossless, or not at all",
             },
             {
                 heading: "Tested on your data",
-                row1: "Compression experiments on your video data",
-                row2: "Model outputs compared: Raw/lossless/original vs. compressed, against your KPIs",
-                row3: "Where models are sensitive – mitigation guidance, not just a verdict",
+                items: "Compression experiments on your video data\nModel outputs compared: Raw/lossless/original vs. compressed, against your KPIs\nWhere models are sensitive – mitigation guidance, not just a verdict",
             },
             {
                 heading: "Decide, with proof in hand",
-                row1: "Recommendation report with projected ROI, on your numbers",
-                row2: "Scripts, recipes, configs, results – yours to keep",
-                row3: "Readout + Q&A",
+                items: "Recommendation report with projected ROI, on your numbers\nScripts, recipes, configs, results – yours to keep\nReadout + Q&A",
             },
         ],
-        headerBgColor = "#2563EB",
-        headerTextColor = "#ffffff",
-        headerFontWeight = 700,
-        headerFontSize = 18,
-        cellTextColor = "#1a1a2e",
-        cellFontSize = 15,
-        cellFontWeight = 400,
-        borderColor = "#E5E7EB",
-        bgColor = "#ffffff",
-        rowAltBgColor = "#F9FAFB",
-        fontFamily = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        headingFontFamily = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        borderRadius = 12,
+        accentColor = "#2563EB",
+        cardBgColor = "#ffffff",
+        cardBorderColor = "#E8EAF0",
+        headingColor = "#1a1a2e",
+        headingFontSize = 20,
+        headingFontWeight = 700,
+        itemColor = "#555555",
+        itemFontSize = 15,
+        bulletColor = "#2563EB",
         sectionTitle = "What You Get",
         sectionTitleColor = "#1a1a2e",
         sectionTitleFontSize = 44,
@@ -82,220 +41,239 @@ export default function BlueprintDeliverables(props: Props) {
         sectionSubtitle = "",
         subtitleColor = "#666666",
         showSectionSubtitle = false,
+        showPhaseNumbers = true,
+        phaseNumberColor = "#2563EB",
+        sectionBgColor = "#F7F8FC",
+        fontFamily = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        headingFontFamily = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         paddingTop = 80,
         paddingBottom = 80,
-        sectionBgColor = "#ffffff",
+        cardBorderRadius = 16,
+        showAccentTop = true,
         style,
     } = props
 
-    const containerRef = useRef<HTMLDivElement>(null)
+    const containerRef = useRef(null)
     const [isMobile, setIsMobile] = useState(false)
+    const [isTablet, setIsTablet] = useState(false)
 
     useEffect(() => {
         const el = containerRef.current
         if (!el) return
         const ro = new ResizeObserver((entries) => {
             const w = entries[0]?.contentRect.width ?? 0
-            setIsMobile(w < 700)
+            setIsMobile(w < 560)
+            setIsTablet(w >= 560 && w < 900)
         })
         ro.observe(el)
         return () => ro.disconnect()
     }, [])
 
-    const rowKeys = ["row1", "row2", "row3"] as const
-    const numRows = rowKeys.length
-
-    if (isMobile) {
-        return (
-            <section
-                ref={containerRef}
-                style={{
-                    backgroundColor: sectionBgColor,
-                    padding: `${paddingTop}px 20px ${paddingBottom}px`,
-                    fontFamily,
-                    ...style,
-                }}
-            >
-                <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-                    {showSectionTitle && (
-                        <h2
-                            style={{
-                                fontSize: Math.round(sectionTitleFontSize * 0.7),
-                                fontWeight: sectionTitleFontWeight,
-                                fontFamily: sectionTitleFontFamily,
-                                color: sectionTitleColor,
-                                textAlign: "center",
-                                marginBottom: showSectionSubtitle && sectionSubtitle ? 12 : 32,
-                                lineHeight: 1.2,
-                            }}
-                        >
-                            {sectionTitle}
-                        </h2>
-                    )}
-                    {showSectionSubtitle && sectionSubtitle && (
-                        <p
-                            style={{
-                                fontSize: 16,
-                                color: subtitleColor,
-                                textAlign: "center",
-                                marginBottom: 32,
-                                lineHeight: 1.5,
-                                fontFamily,
-                                maxWidth: 600,
-                                marginLeft: "auto",
-                                marginRight: "auto",
-                            }}
-                            dangerouslySetInnerHTML={{ __html: sectionSubtitle }}
-                        />
-                    )}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                        {columns.map((col, ci) => (
-                            <div
-                                key={ci}
-                                style={{
-                                    borderRadius,
-                                    overflow: "hidden",
-                                    border: `1px solid ${borderColor}`,
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        backgroundColor: headerBgColor,
-                                        color: headerTextColor,
-                                        fontSize: headerFontSize,
-                                        fontWeight: headerFontWeight,
-                                        fontFamily: headingFontFamily,
-                                        padding: "16px 20px",
-                                        lineHeight: 1.3,
-                                    }}
-                                    dangerouslySetInnerHTML={{ __html: col.heading }}
-                                />
-                                {rowKeys.map((key, ri) => (
-                                    <div
-                                        key={ri}
-                                        style={{
-                                            padding: "16px 20px",
-                                            fontSize: cellFontSize,
-                                            fontWeight: cellFontWeight,
-                                            color: cellTextColor,
-                                            lineHeight: 1.6,
-                                            fontFamily,
-                                            backgroundColor: ri % 2 === 1 ? rowAltBgColor : bgColor,
-                                            borderTop: `1px solid ${borderColor}`,
-                                        }}
-                                        dangerouslySetInnerHTML={{ __html: col[key] }}
-                                    />
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-        )
-    }
+    const parseItems = (raw: string) =>
+        raw
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean)
 
     return (
         <section
             ref={containerRef}
             style={{
                 backgroundColor: sectionBgColor,
-                padding: `${paddingTop}px 40px ${paddingBottom}px`,
+                padding: isMobile
+                    ? `${paddingTop}px 20px ${paddingBottom}px`
+                    : `${paddingTop}px 40px ${paddingBottom}px`,
                 fontFamily,
                 ...style,
             }}
         >
             <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-                {showSectionTitle && (
-                    <h2
-                        style={{
-                            fontSize: sectionTitleFontSize,
-                            fontWeight: sectionTitleFontWeight,
-                            fontFamily: sectionTitleFontFamily,
-                            color: sectionTitleColor,
-                            textAlign: "center",
-                            marginBottom: showSectionSubtitle && sectionSubtitle ? 12 : 48,
-                            lineHeight: 1.2,
-                        }}
-                    >
-                        {sectionTitle}
-                    </h2>
-                )}
-                {showSectionSubtitle && sectionSubtitle && (
-                    <p
-                        style={{
-                            fontSize: 18,
-                            color: subtitleColor,
-                            textAlign: "center",
-                            marginBottom: 48,
-                            lineHeight: 1.5,
-                            fontFamily,
-                            maxWidth: 640,
-                            marginLeft: "auto",
-                            marginRight: "auto",
-                        }}
-                        dangerouslySetInnerHTML={{ __html: sectionSubtitle }}
-                    />
-                )}
-                <div
-                    style={{
-                        borderRadius,
-                        overflow: "hidden",
-                        border: `1px solid ${borderColor}`,
-                    }}
-                >
-                    {/* Header row */}
+                {/* Section header */}
+                {(showSectionTitle || (showSectionSubtitle && sectionSubtitle)) && (
                     <div
                         style={{
-                            display: "grid",
-                            gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-                            backgroundColor: headerBgColor,
+                            textAlign: "center",
+                            marginBottom: isMobile ? 36 : 56,
                         }}
                     >
-                        {columns.map((col, ci) => (
-                            <div
-                                key={ci}
+                        {showSectionTitle && (
+                            <h2
                                 style={{
-                                    padding: "20px 28px",
-                                    color: headerTextColor,
-                                    fontSize: headerFontSize,
-                                    fontWeight: headerFontWeight,
-                                    fontFamily: headingFontFamily,
-                                    lineHeight: 1.3,
-                                    borderLeft: ci > 0 ? `1px solid rgba(255,255,255,0.2)` : "none",
+                                    fontSize: isMobile
+                                        ? Math.round(sectionTitleFontSize * 0.68)
+                                        : sectionTitleFontSize,
+                                    fontWeight: sectionTitleFontWeight,
+                                    fontFamily: sectionTitleFontFamily,
+                                    color: sectionTitleColor,
+                                    margin: 0,
+                                    lineHeight: 1.15,
+                                    letterSpacing: "-0.02em",
                                 }}
-                                dangerouslySetInnerHTML={{ __html: col.heading }}
+                            >
+                                {sectionTitle}
+                            </h2>
+                        )}
+                        {showSectionSubtitle && sectionSubtitle && (
+                            <p
+                                style={{
+                                    fontSize: isMobile ? 16 : 18,
+                                    color: subtitleColor,
+                                    marginTop: 14,
+                                    marginBottom: 0,
+                                    lineHeight: 1.5,
+                                    fontFamily,
+                                    maxWidth: 600,
+                                    marginLeft: "auto",
+                                    marginRight: "auto",
+                                }}
+                                dangerouslySetInnerHTML={{ __html: sectionSubtitle }}
                             />
-                        ))}
+                        )}
                     </div>
+                )}
 
-                    {/* Data rows */}
-                    {rowKeys.map((key, ri) => (
-                        <div
-                            key={ri}
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-                                backgroundColor: ri % 2 === 0 ? bgColor : rowAltBgColor,
-                                borderTop: `1px solid ${borderColor}`,
-                            }}
-                        >
-                            {columns.map((col, ci) => (
+                {/* Phase cards */}
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: isMobile
+                            ? "1fr"
+                            : isTablet
+                              ? "1fr 1fr"
+                              : `repeat(${phases.length}, 1fr)`,
+                        gap: isMobile ? 20 : 24,
+                    }}
+                >
+                    {phases.map((phase, i) => {
+                        const items = parseItems(phase.items || "")
+                        return (
+                            <div
+                                key={i}
+                                style={{
+                                    backgroundColor: cardBgColor,
+                                    borderRadius: cardBorderRadius,
+                                    border: `1px solid ${cardBorderColor}`,
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                {/* Accent top bar */}
+                                {showAccentTop && (
+                                    <div
+                                        style={{
+                                            height: 4,
+                                            backgroundColor: accentColor,
+                                        }}
+                                    />
+                                )}
+
                                 <div
-                                    key={ci}
                                     style={{
-                                        padding: "20px 28px",
-                                        fontSize: cellFontSize,
-                                        fontWeight: cellFontWeight,
-                                        color: cellTextColor,
-                                        lineHeight: 1.6,
-                                        fontFamily,
-                                        borderLeft: ci > 0 ? `1px solid ${borderColor}` : "none",
+                                        padding: isMobile ? "28px 24px 32px" : "32px 28px 36px",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        flex: 1,
                                     }}
-                                    dangerouslySetInnerHTML={{ __html: col[key] }}
-                                />
-                            ))}
-                        </div>
-                    ))}
+                                >
+                                    {/* Phase number */}
+                                    {showPhaseNumbers && (
+                                        <div
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: phaseNumberColor,
+                                                fontFamily,
+                                                letterSpacing: "0.06em",
+                                                textTransform: "uppercase",
+                                                marginBottom: 10,
+                                            }}
+                                        >
+                                            Phase {i + 1}
+                                        </div>
+                                    )}
+
+                                    {/* Icon */}
+                                    {phase.iconImage && (
+                                        <div style={{ marginBottom: 16 }}>
+                                            <img
+                                                src={phase.iconImage}
+                                                alt=""
+                                                style={{
+                                                    width: 36,
+                                                    height: 36,
+                                                    objectFit: "contain",
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Heading */}
+                                    <h3
+                                        style={{
+                                            fontSize: headingFontSize,
+                                            fontWeight: headingFontWeight,
+                                            color: headingColor,
+                                            fontFamily: headingFontFamily,
+                                            margin: 0,
+                                            marginBottom: 20,
+                                            lineHeight: 1.3,
+                                        }}
+                                        dangerouslySetInnerHTML={{ __html: phase.heading }}
+                                    />
+
+                                    {/* Deliverable items */}
+                                    <ul
+                                        style={{
+                                            listStyle: "none",
+                                            margin: 0,
+                                            padding: 0,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 14,
+                                        }}
+                                    >
+                                        {items.map((item, j) => (
+                                            <li
+                                                key={j}
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "flex-start",
+                                                    gap: 12,
+                                                    fontSize: itemFontSize,
+                                                    color: itemColor,
+                                                    lineHeight: 1.55,
+                                                    fontFamily,
+                                                }}
+                                            >
+                                                <svg
+                                                    width="18"
+                                                    height="18"
+                                                    viewBox="0 0 18 18"
+                                                    fill="none"
+                                                    style={{
+                                                        flexShrink: 0,
+                                                        marginTop: 2,
+                                                    }}
+                                                >
+                                                    <path
+                                                        d="M15 4.5L6.75 12.75L3 9"
+                                                        stroke={bulletColor}
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                </svg>
+                                                <span
+                                                    dangerouslySetInnerHTML={{ __html: item }}
+                                                />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </section>
@@ -362,34 +340,26 @@ addPropertyControls(BlueprintDeliverables, {
         defaultValue: "#666666",
         hidden: (props) => !props.showSectionSubtitle,
     },
-    columns: {
+    phases: {
         type: ControlType.Array,
-        title: "Columns",
-        maxCount: 5,
+        title: "Phases",
+        maxCount: 6,
         control: {
             type: ControlType.Object,
             controls: {
+                iconImage: {
+                    type: ControlType.Image,
+                    title: "Icon",
+                },
                 heading: {
                     type: ControlType.String,
                     title: "Heading (HTML)",
-                    defaultValue: "Column heading",
+                    defaultValue: "Phase heading",
                 },
-                row1: {
+                items: {
                     type: ControlType.String,
-                    title: "Row 1 (HTML)",
-                    defaultValue: "Row 1 content",
-                    displayTextArea: true,
-                },
-                row2: {
-                    type: ControlType.String,
-                    title: "Row 2 (HTML)",
-                    defaultValue: "Row 2 content",
-                    displayTextArea: true,
-                },
-                row3: {
-                    type: ControlType.String,
-                    title: "Row 3 (HTML)",
-                    defaultValue: "Row 3 content",
+                    title: "Items (one per line, HTML)",
+                    defaultValue: "Deliverable item",
                     displayTextArea: true,
                 },
             },
@@ -397,93 +367,100 @@ addPropertyControls(BlueprintDeliverables, {
         defaultValue: [
             {
                 heading: "Know where you stand",
-                row1: "A map of your video pipeline, end to end",
-                row2: 'What "safe" means for you – in numbers',
-                row3: "Where to compress, how hard – lossy, lossless, or not at all",
+                items: "A map of your video pipeline, end to end\nWhat \"safe\" means for you – in numbers\nWhere to compress, how hard – lossy, lossless, or not at all",
             },
             {
                 heading: "Tested on your data",
-                row1: "Compression experiments on your video data",
-                row2: "Model outputs compared: Raw/lossless/original vs. compressed, against your KPIs",
-                row3: "Where models are sensitive – mitigation guidance, not just a verdict",
+                items: "Compression experiments on your video data\nModel outputs compared: Raw/lossless/original vs. compressed, against your KPIs\nWhere models are sensitive – mitigation guidance, not just a verdict",
             },
             {
                 heading: "Decide, with proof in hand",
-                row1: "Recommendation report with projected ROI, on your numbers",
-                row2: "Scripts, recipes, configs, results – yours to keep",
-                row3: "Readout + Q&A",
+                items: "Recommendation report with projected ROI, on your numbers\nScripts, recipes, configs, results – yours to keep\nReadout + Q&A",
             },
         ],
     },
-    headerBgColor: {
+    showPhaseNumbers: {
+        type: ControlType.Boolean,
+        title: "Show Phase #",
+        defaultValue: true,
+    },
+    phaseNumberColor: {
         type: ControlType.Color,
-        title: "Header BG",
+        title: "Phase # Color",
+        defaultValue: "#2563EB",
+        hidden: (props) => !props.showPhaseNumbers,
+    },
+    showAccentTop: {
+        type: ControlType.Boolean,
+        title: "Accent Top Bar",
+        defaultValue: true,
+    },
+    accentColor: {
+        type: ControlType.Color,
+        title: "Accent Color",
         defaultValue: "#2563EB",
     },
-    headerTextColor: {
+    headingColor: {
         type: ControlType.Color,
-        title: "Header Text",
-        defaultValue: "#ffffff",
+        title: "Heading Color",
+        defaultValue: "#1a1a2e",
     },
-    headerFontSize: {
+    headingFontSize: {
         type: ControlType.Number,
-        title: "Header Size",
-        defaultValue: 18,
-        min: 12,
-        max: 32,
+        title: "Heading Size",
+        defaultValue: 20,
+        min: 14,
+        max: 36,
         step: 1,
     },
-    headerFontWeight: {
+    headingFontWeight: {
         type: ControlType.Number,
-        title: "Header Weight",
+        title: "Heading Weight",
         defaultValue: 700,
         min: 100,
         max: 900,
         step: 100,
     },
-    cellTextColor: {
+    itemColor: {
         type: ControlType.Color,
-        title: "Cell Text Color",
-        defaultValue: "#1a1a2e",
+        title: "Item Color",
+        defaultValue: "#555555",
     },
-    cellFontSize: {
+    itemFontSize: {
         type: ControlType.Number,
-        title: "Cell Size",
+        title: "Item Size",
         defaultValue: 15,
         min: 12,
         max: 24,
         step: 1,
     },
-    cellFontWeight: {
-        type: ControlType.Number,
-        title: "Cell Weight",
-        defaultValue: 400,
-        min: 100,
-        max: 900,
-        step: 100,
-    },
-    bgColor: {
+    bulletColor: {
         type: ControlType.Color,
-        title: "Row BG",
+        title: "Checkmark Color",
+        defaultValue: "#2563EB",
+    },
+    cardBgColor: {
+        type: ControlType.Color,
+        title: "Card BG",
         defaultValue: "#ffffff",
     },
-    rowAltBgColor: {
+    cardBorderColor: {
         type: ControlType.Color,
-        title: "Row Alt BG",
-        defaultValue: "#F9FAFB",
+        title: "Card Border",
+        defaultValue: "#E8EAF0",
     },
-    borderColor: {
-        type: ControlType.Color,
-        title: "Border Color",
-        defaultValue: "#E5E7EB",
-    },
-    borderRadius: {
+    cardBorderRadius: {
         type: ControlType.Number,
-        title: "Border Radius",
-        defaultValue: 12,
+        title: "Card Radius",
+        defaultValue: 16,
         min: 0,
         max: 32,
         step: 2,
+    },
+    sectionBgColor: {
+        type: ControlType.Color,
+        title: "Section BG",
+        defaultValue: "#F7F8FC",
     },
     headingFontFamily: {
         type: ControlType.String,
@@ -494,11 +471,6 @@ addPropertyControls(BlueprintDeliverables, {
         type: ControlType.String,
         title: "Body Font",
         defaultValue: "'Inter', sans-serif",
-    },
-    sectionBgColor: {
-        type: ControlType.Color,
-        title: "Section BG",
-        defaultValue: "#ffffff",
     },
     paddingTop: {
         type: ControlType.Number,
