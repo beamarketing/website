@@ -123,6 +123,9 @@
   .card .del { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--muted); font-size: 15px; padding: 2px 6px; opacity: 0; }
   .card:hover .del { opacity: 1; }
   .card .del:hover { color: var(--red); }
+  .card .edit { position: absolute; top: 10px; right: 34px; background: transparent; border: none; color: var(--muted); font-size: 13px; padding: 2px 6px; opacity: 0; }
+  .card:hover .edit { opacity: 1; }
+  .card .edit:hover { color: var(--accent); }
 
   /* ── View toggle ── */
   .view-toggle { display: flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
@@ -157,8 +160,12 @@
   .c-prog .mut { color: var(--muted); }
   .c-due { white-space: nowrap; }
   .c-act { text-align: right; }
-  .c-act .del { position: static; opacity: 1; color: var(--muted); background: transparent; border: none; font-size: 16px; padding: 2px 6px; }
+  .c-act { white-space: nowrap; }
+  .c-act .del, .c-act .edit { position: static; opacity: 1; color: var(--muted); background: transparent; border: none; padding: 2px 6px; }
+  .c-act .del { font-size: 16px; }
+  .c-act .edit { font-size: 13px; }
   .c-act .del:hover { color: var(--red); }
+  .c-act .edit:hover { color: var(--accent); }
   tr.drow > td { background: var(--card-2); padding: 14px; }
   .drow-in { display: flex; flex-direction: column; gap: 10px; }
   .drow-in .dl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; align-self: center; }
@@ -245,7 +252,7 @@
   <!-- Add/Edit modal -->
   <div class="modal-bg" id="modalBg">
     <div class="modal">
-      <h3>Add objective</h3>
+      <h3 id="m-heading">Add objective</h3>
       <label>Title</label>
       <input id="m-title" placeholder="Objective name" />
       <label>Detail (optional)</label>
@@ -258,6 +265,11 @@
       <input id="m-due" type="date" />
       <label>Quarter</label>
       <select id="m-quarter"><option value="">—</option><option>Q3</option><option>Q4</option></select>
+      <label>Numeric target (optional &mdash; makes this a metric)</label>
+      <div style="display:flex; gap:8px;">
+        <input id="m-target" type="number" min="0" placeholder="e.g. 10" style="flex:1;" />
+        <input id="m-unit" placeholder="unit e.g. MQLs" style="flex:2;" />
+      </div>
       <div class="modal-actions">
         <button id="m-cancel">Cancel</button>
         <button class="primary" id="m-save">Add</button>
@@ -309,7 +321,14 @@
         owner: e.owner != null ? e.owner : (o.owner || ""),
         notes: e.notes != null ? e.notes : (o.notes || ""),
         due: e.due != null ? e.due : (o.due || ""),
-        dueLabel: e.dueLabel != null ? e.dueLabel : (o.dueLabel || "—")
+        dueLabel: e.dueLabel != null ? e.dueLabel : (o.dueLabel || "—"),
+        title: e.title != null ? e.title : o.title,
+        detail: e.detail != null ? e.detail : (o.detail || ""),
+        pillar: e.pillar != null ? e.pillar : o.pillar,
+        quarter: e.quarter != null ? e.quarter : (o.quarter || ""),
+        type: e.type != null ? e.type : o.type,
+        target: e.target != null ? e.target : o.target,
+        unit: e.unit != null ? e.unit : o.unit
       });
     });
   }
@@ -319,7 +338,11 @@
     try { saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) {}
     saved.edits = saved.edits || {};
     state.forEach(function (o) {
-      saved.edits[o.id] = { status: o.status, current: o.current, owner: o.owner, notes: o.notes, due: o.due, dueLabel: o.dueLabel };
+      saved.edits[o.id] = {
+        status: o.status, current: o.current, owner: o.owner, notes: o.notes,
+        due: o.due, dueLabel: o.dueLabel, title: o.title, detail: o.detail,
+        pillar: o.pillar, quarter: o.quarter, type: o.type, target: o.target, unit: o.unit
+      };
     });
     saved.custom = state.filter(function (o) { return o.custom; });
     localStorage.setItem(STORE_KEY, JSON.stringify(saved));
@@ -410,6 +433,7 @@
     var ds = root.querySelector(".due-save");
     var dc = root.querySelector(".due-clear");
     var del = root.querySelector(".del");
+    var ed = root.querySelector(".edit");
 
     if (st) st.onchange = function (e) { o.status = e.target.value; save(); render(); };
     if (ow) ow.onchange = function (e) { o.owner = e.target.value; save(); };
@@ -428,6 +452,7 @@
       state = state.filter(function (x) { return x.id !== o.id; });
       markDeleted(o.id); save(); render();
     };
+    if (ed) ed.onclick = function () { openEditor(o); };
   }
 
   var flashT;
@@ -566,6 +591,7 @@
     el.setAttribute("data-status", isComplete(o) ? "Done" : o.status);
 
     var html =
+      '<button class="edit" title="Edit objective">&#9998;</button>' +
       '<button class="del" title="Delete">&times;</button>' +
       '<div class="card-top"><div class="card-title">' + esc(o.title) + '</div></div>' +
       (o.detail ? '<div class="card-detail">' + esc(o.detail) + '</div>' : '') +
@@ -660,7 +686,7 @@
       '<td class="c-owner"><input class="owner" placeholder="&mdash;" value="' + esc(o.owner) + '" /></td>' +
       '<td class="c-prog">' + prog + '</td>' +
       '<td class="c-due"><span class="tag ' + dueClass(o) + ' due-tag" title="Edit deadline">&#128197; ' + dueText(o) + ' &#9998;</span></td>' +
-      '<td class="c-act"><button class="del" title="Delete">&times;</button></td>';
+      '<td class="c-act"><button class="edit" title="Edit objective">&#9998;</button><button class="del" title="Delete">&times;</button></td>';
 
     var drow = document.createElement("tr");
     drow.className = "drow";
@@ -737,31 +763,74 @@
     render();
   };
 
-  // ---- add modal ----
+  // ---- add / edit modal ----
   var modal = document.getElementById("modalBg");
+  var editingId = null;
   document.getElementById("m-pillar").innerHTML = PILLARS.map(function (p) { return '<option>' + p + '</option>'; }).join("");
-  document.getElementById("addBtn").onclick = function () { modal.classList.add("show"); };
+  function mField(id) { return document.getElementById(id); }
+
+  function openAdder() {
+    editingId = null;
+    mField("m-heading").textContent = "Add objective";
+    mField("m-save").textContent = "Add";
+    ["m-title", "m-detail", "m-dueLabel", "m-due", "m-target", "m-unit"].forEach(function (id) { mField(id).value = ""; });
+    mField("m-pillar").selectedIndex = 0;
+    mField("m-quarter").value = "";
+    modal.classList.add("show");
+    mField("m-title").focus();
+  }
+
+  function openEditor(o) {
+    editingId = o.id;
+    mField("m-heading").textContent = "Edit objective";
+    mField("m-save").textContent = "Save changes";
+    mField("m-title").value = o.title;
+    mField("m-detail").value = o.detail || "";
+    mField("m-pillar").value = o.pillar;
+    mField("m-dueLabel").value = o.dueLabel === "—" ? "" : o.dueLabel;
+    mField("m-due").value = o.due || "";
+    mField("m-quarter").value = o.quarter || "";
+    mField("m-target").value = o.type === "metric" ? o.target : "";
+    mField("m-unit").value = o.type === "metric" ? (o.unit || "") : "";
+    modal.classList.add("show");
+    mField("m-title").focus();
+  }
+
+  document.getElementById("addBtn").onclick = openAdder;
   document.getElementById("m-cancel").onclick = function () { modal.classList.remove("show"); };
   modal.onclick = function (e) { if (e.target === modal) modal.classList.remove("show"); };
+
   document.getElementById("m-save").onclick = function () {
-    var title = document.getElementById("m-title").value.trim();
+    var title = mField("m-title").value.trim();
     if (!title) { alert("Title is required."); return; }
-    var o = {
-      id: "custom-" + state.length + "-" + title.slice(0, 6).replace(/\W/g, ""),
-      custom: true,
-      pillar: document.getElementById("m-pillar").value,
+    var targetVal = parseFloat(mField("m-target").value);
+    var isMetric = !isNaN(targetVal) && targetVal > 0;
+    var due = mField("m-due").value || "";
+    var fields = {
+      pillar: mField("m-pillar").value,
       title: title,
-      detail: document.getElementById("m-detail").value.trim(),
-      owner: "", notes: "",
-      due: document.getElementById("m-due").value || "",
-      dueLabel: document.getElementById("m-dueLabel").value.trim() || "—",
-      quarter: document.getElementById("m-quarter").value,
-      type: "task", status: "Not started"
+      detail: mField("m-detail").value.trim(),
+      due: due,
+      dueLabel: mField("m-dueLabel").value.trim() || (due ? fmtDate(due) : "—"),
+      quarter: mField("m-quarter").value,
+      type: isMetric ? "metric" : "task",
+      target: isMetric ? targetVal : undefined,
+      unit: isMetric ? mField("m-unit").value.trim() : undefined
     };
-    state.push(o);
+    if (editingId) {
+      var o = state.filter(function (x) { return x.id === editingId; })[0];
+      if (o) {
+        Object.assign(o, fields);
+        if (o.type === "metric" && typeof o.current !== "number") o.current = 0;
+      }
+    } else {
+      state.push(Object.assign({
+        id: "custom-" + Date.now(),
+        custom: true, owner: "", notes: "", current: 0, status: "Not started"
+      }, fields));
+    }
     save(); render();
     modal.classList.remove("show");
-    ["m-title", "m-detail", "m-dueLabel", "m-due"].forEach(function (id) { document.getElementById(id).value = ""; });
   };
 
   loadPrefs();

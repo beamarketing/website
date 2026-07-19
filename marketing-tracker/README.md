@@ -24,7 +24,13 @@ The header shows overall completion, a status breakdown, and how many items
 are **overdue** (deadline passed and not complete). Filter by status or quarter,
 or search across titles, owners, and notes. Click a pillar heading to collapse it.
 
-Use **+ Add objective** to add anything not in the original plan.
+Switch between **Cards** and **List** view (top-right); the List view is a
+sortable table — click a column header (or use the Sort dropdown) to sort by
+due date, status, pillar, owner, or name.
+
+Click the **✎** on any objective to **edit** it — title, detail, pillar,
+quarter, deadline, and numeric target (set a target to turn a task into a
+tracked metric). Use **+ Add objective** to add anything not in the original plan.
 
 ## Saving & sharing
 
