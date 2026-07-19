@@ -124,6 +124,45 @@
   .card:hover .del { opacity: 1; }
   .card .del:hover { color: var(--red); }
 
+  /* ── View toggle ── */
+  .view-toggle { display: flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
+  .view-toggle button { border: none; border-radius: 0; padding: 9px 14px; }
+  .view-toggle button:hover { color: var(--accent); }
+  .view-toggle button.active { background: var(--accent-dim); color: var(--accent); }
+  #sortSelect { cursor: pointer; }
+
+  /* ── List view ── */
+  .ltable-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+  .ltable { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 860px; }
+  .ltable thead th { text-align: left; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; padding: 12px 14px; border-bottom: 1px solid var(--border-strong); background: var(--card-2); white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+  .ltable thead th.sortable { cursor: pointer; }
+  .ltable thead th.sortable:hover { color: var(--text); }
+  .ltable thead th .arrow { font-size: 9px; margin-left: 4px; color: var(--accent); }
+  .ltable tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .ltable tbody tr.lrow:hover { background: rgba(255,255,255,0.025); }
+  .ltable tbody tr.lrow.overdue td.c-due { }
+  .sdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; flex-shrink: 0; }
+  .c-status { white-space: nowrap; }
+  .c-status .status { font-size: 12px; padding: 5px 7px; border-radius: 7px; background: var(--card-2); border: 1px solid var(--border-strong); color: var(--text); }
+  .c-title { min-width: 240px; }
+  .lcaret { display: inline-block; color: var(--muted); cursor: pointer; margin-right: 7px; transition: .15s; font-size: 11px; }
+  .lcaret.open { transform: rotate(90deg); }
+  .ltitle { font-weight: 600; }
+  .lsub { color: var(--muted); font-size: 12px; margin-top: 3px; padding-left: 18px; line-height: 1.4; }
+  .c-owner .owner { font-size: 12px; background: transparent; border: 1px dashed var(--border-strong); color: var(--text); border-radius: 8px; padding: 6px 8px; width: 100%; min-width: 90px; }
+  .c-owner .owner::placeholder { color: var(--muted); }
+  .c-prog { min-width: 150px; }
+  .c-prog .metric { margin-top: 0; }
+  .c-prog .ok { color: var(--accent); font-weight: 600; }
+  .c-prog .mut { color: var(--muted); }
+  .c-due { white-space: nowrap; }
+  .c-act { text-align: right; }
+  .c-act .del { position: static; opacity: 1; color: var(--muted); background: transparent; border: none; font-size: 16px; padding: 2px 6px; }
+  .c-act .del:hover { color: var(--red); }
+  tr.drow > td { background: var(--card-2); padding: 14px; }
+  .drow-in { display: flex; flex-direction: column; gap: 10px; }
+  .drow-in .dl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; align-self: center; }
+
   .empty { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }
   .footer-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px; line-height: 1.6; }
   .saved { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent); opacity: 0; transition: opacity .3s; }
@@ -182,6 +221,19 @@
     <input type="search" id="search" placeholder="Search objectives, owners, notes&hellip;" />
     <div class="filter-group" id="statusFilters"></div>
     <div class="filter-group" id="quarterFilters"></div>
+    <select id="sortSelect" title="Sort objectives">
+      <option value="default">Sort: Pillar order</option>
+      <option value="due-asc">Due date &uarr; (soonest)</option>
+      <option value="due-desc">Due date &darr; (latest)</option>
+      <option value="status-asc">Status</option>
+      <option value="pillar-asc">Pillar</option>
+      <option value="owner-asc">Owner</option>
+      <option value="title-asc">Objective A&ndash;Z</option>
+    </select>
+    <div class="view-toggle" id="viewToggle">
+      <button data-view="cards">Cards</button>
+      <button data-view="list">List</button>
+    </div>
   </div>
 
   <div id="board"></div>
@@ -222,6 +274,23 @@
   var TODAY = new Date("2026-07-19T00:00:00");
 
   var filters = { status: "All", quarter: "All", q: "" };
+  var viewMode = "cards";
+  var sortKey = "default";
+
+  function loadPrefs() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
+      var p = s.prefs || {};
+      viewMode = p.viewMode || "cards";
+      sortKey = p.sortKey || "default";
+    } catch (e) {}
+  }
+  function savePrefs() {
+    var s = {};
+    try { s = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) {}
+    s.prefs = { viewMode: viewMode, sortKey: sortKey };
+    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+  }
 
   // ---- state: merge seed with saved edits ----
   function load() {
@@ -284,6 +353,74 @@
     return Math.round((new Date(o.due + "T00:00:00") - TODAY) / 86400000);
   }
   function esc(s) { return (s || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function fmtDate(iso) { return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+  function dueText(o) {
+    var d = daysTo(o);
+    var txt = o.dueLabel || "—";
+    if (o.due && !isComplete(o) && d < 0) txt += " &middot; " + Math.abs(d) + "d late";
+    else if (o.due && !isComplete(o) && d <= 14) txt += " &middot; " + d + "d left";
+    return txt;
+  }
+  function dueClass(o) {
+    var d = daysTo(o), c = "due";
+    if (o.due && !isComplete(o)) { if (d < 0) c += " over"; else if (d <= 14) c += " soon"; }
+    return c;
+  }
+  function metricHTML(o) {
+    var mp = Math.min(100, Math.round(((o.current || 0) / o.target) * 100));
+    return '<div class="metric">' +
+      '<input type="number" class="mcur" value="' + (o.current || 0) + '" min="0" /> ' +
+      '<span>/ ' + o.target + ' ' + esc(o.unit || '') + '</span>' +
+      '<div class="mbar"><span style="width:' + mp + '%"></span></div>' +
+      '<span>' + mp + '%</span></div>';
+  }
+
+  // sort comparator driven by sortKey ("field-dir")
+  function cmp(a, b) {
+    if (sortKey === "default") return 0;
+    var parts = sortKey.split("-");
+    var field = parts[0], dir = parts[1] === "desc" ? -1 : 1;
+    if (field === "due") {
+      var an = a.due ? new Date(a.due + "T00:00:00").getTime() : null;
+      var bn = b.due ? new Date(b.due + "T00:00:00").getTime() : null;
+      if (an === null && bn === null) return 0;
+      if (an === null) return 1;   // no-date always sorts last
+      if (bn === null) return -1;
+      return (an - bn) * dir;
+    }
+    if (field === "status") return (STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status)) * dir;
+    if (field === "pillar") return a.pillar.localeCompare(b.pillar) * dir;
+    if (field === "quarter") return (a.quarter || "~").localeCompare(b.quarter || "~") * dir;
+    if (field === "owner") return (a.owner || "~~~").localeCompare(b.owner || "~~~") * dir;
+    if (field === "title") return a.title.localeCompare(b.title) * dir;
+    return 0;
+  }
+
+  // shared control wiring for both card and list-row roots
+  function wireControls(root, o) {
+    var st = root.querySelector(".status"); if (st) st.onchange = function (e) { o.status = e.target.value; save(); render(); };
+    var ow = root.querySelector(".owner"); if (ow) ow.onchange = function (e) { o.owner = e.target.value; save(); };
+    var nt = root.querySelector(".notes"); if (nt) nt.onchange = function (e) { o.notes = e.target.value; save(); };
+    var mc = root.querySelector(".mcur"); if (mc) mc.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
+    var dd = root.querySelector(".due-date");
+    if (dd) dd.onchange = function () {
+      var lbl = root.querySelector(".due-label");
+      if (lbl && !lbl.value.trim() && dd.value) lbl.value = fmtDate(dd.value);
+    };
+    var ds = root.querySelector(".due-save");
+    if (ds) ds.onclick = function () {
+      o.due = dd.value || "";
+      var lbl = root.querySelector(".due-label").value.trim();
+      o.dueLabel = lbl || (o.due ? fmtDate(o.due) : "—");
+      save(); render();
+    };
+    var dc = root.querySelector(".due-clear"); if (dc) dc.onclick = function () { o.due = ""; o.dueLabel = "—"; save(); render(); };
+    var del = root.querySelector(".del"); if (del) del.onclick = function () {
+      if (!confirm("Delete \"" + o.title + "\"?")) return;
+      state = state.filter(function (x) { return x.id !== o.id; });
+      markDeleted(o.id); save(); render();
+    };
+  }
 
   var flashT;
   function flashSaved() {
@@ -299,7 +436,17 @@
     renderOverall();
     renderStats();
     renderFilters();
-    renderBoard();
+    renderViewControls();
+    if (viewMode === "list") renderList();
+    else renderBoard();
+  }
+
+  function renderViewControls() {
+    document.querySelectorAll("#viewToggle button").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-view") === viewMode);
+    });
+    var sel = document.getElementById("sortSelect");
+    if (sel.value !== sortKey) sel.value = sortKey;
   }
 
   function renderOverall() {
@@ -371,7 +518,7 @@
     board.innerHTML = "";
     var any = false;
     PILLARS.forEach(function (pillar) {
-      var items = state.filter(function (o) { return o.pillar === pillar && matchesFilter(o); });
+      var items = state.filter(function (o) { return o.pillar === pillar && matchesFilter(o); }).sort(cmp);
       var allItems = state.filter(function (o) { return o.pillar === pillar; });
       if (items.length === 0) return;
       any = true;
@@ -396,20 +543,19 @@
     if (!any) board.innerHTML = '<div class="empty">No objectives match these filters.</div>';
   }
 
+  function dueEditorHTML(o) {
+    return '<div class="due-edit">' +
+      '<input type="date" class="due-date" value="' + (o.due || '') + '" />' +
+      '<input type="text" class="due-label" placeholder="Label e.g. End of Q3" value="' + esc(o.dueLabel === '—' ? '' : o.dueLabel) + '" />' +
+      '<button class="due-save">Save</button>' +
+      '<button class="due-clear">Clear</button>' +
+    '</div>';
+  }
+
   function buildCard(o) {
     var el = document.createElement("div");
     el.className = "card" + (isOverdue(o) ? " overdue" : "");
     el.setAttribute("data-status", isComplete(o) ? "Done" : o.status);
-
-    var d = daysTo(o);
-    var dueCls = "due";
-    if (o.due && !isComplete(o)) {
-      if (d < 0) dueCls += " over";
-      else if (d <= 14) dueCls += " soon";
-    }
-    var dueTxt = o.dueLabel || "—";
-    if (o.due && !isComplete(o) && d < 0) dueTxt += " &middot; " + Math.abs(d) + "d late";
-    else if (o.due && !isComplete(o) && d <= 14) dueTxt += " &middot; " + d + "d left";
 
     var html =
       '<button class="del" title="Delete">&times;</button>' +
@@ -417,28 +563,11 @@
       (o.detail ? '<div class="card-detail">' + esc(o.detail) + '</div>' : '') +
       '<div class="meta">' +
         (o.quarter ? '<span class="tag q">' + o.quarter + '</span>' : '') +
-        '<span class="tag ' + dueCls + ' due-tag" title="Click to edit deadline">&#128197; ' + dueTxt + ' &#9998;</span>' +
+        '<span class="tag ' + dueClass(o) + ' due-tag" title="Click to edit deadline">&#128197; ' + dueText(o) + ' &#9998;</span>' +
         (o.type === "metric" ? '<span class="tag">Metric</span>' : '') +
       '</div>' +
-      '<div class="due-edit">' +
-        '<input type="date" class="due-date" value="' + (o.due || '') + '" />' +
-        '<input type="text" class="due-label" placeholder="Label e.g. End of Q3" value="' + esc(o.dueLabel === '—' ? '' : o.dueLabel) + '" />' +
-        '<button class="due-save">Save</button>' +
-        '<button class="due-clear">Clear</button>' +
-      '</div>';
-
-    if (o.type === "metric") {
-      var mp = Math.min(100, Math.round(((o.current || 0) / o.target) * 100));
-      html +=
-        '<div class="metric">' +
-          '<input type="number" class="mcur" value="' + (o.current || 0) + '" min="0" /> ' +
-          '<span>/ ' + o.target + ' ' + esc(o.unit || '') + '</span>' +
-          '<div class="mbar"><span style="width:' + mp + '%"></span></div>' +
-          '<span>' + mp + '%</span>' +
-        '</div>';
-    }
-
-    html +=
+      dueEditorHTML(o) +
+      (o.type === "metric" ? metricHTML(o) : "") +
       '<div class="row">' +
         '<select class="status">' + STATUSES.map(function (s) {
           return '<option' + (o.status === s ? " selected" : "") + '>' + s + '</option>';
@@ -449,41 +578,112 @@
 
     el.innerHTML = html;
 
-    el.querySelector(".status").onchange = function (e) { o.status = e.target.value; save(); render(); };
-    el.querySelector(".owner").onchange = function (e) { o.owner = e.target.value; save(); };
-    el.querySelector(".notes").onchange = function (e) { o.notes = e.target.value; save(); };
-    var mcur = el.querySelector(".mcur");
-    if (mcur) mcur.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
-    var dueTag = el.querySelector(".due-tag");
     var dueEdit = el.querySelector(".due-edit");
-    var dd = el.querySelector(".due-date");
-    dueTag.onclick = function () { dueEdit.style.display = dueEdit.style.display === "flex" ? "none" : "flex"; };
-    dd.onchange = function () {
-      var lbl = el.querySelector(".due-label");
-      if (!lbl.value.trim() && dd.value) {
-        lbl.value = new Date(dd.value + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      }
+    el.querySelector(".due-tag").onclick = function () {
+      dueEdit.style.display = dueEdit.style.display === "flex" ? "none" : "flex";
     };
-    el.querySelector(".due-save").onclick = function () {
-      o.due = dd.value || "";
-      var lbl = el.querySelector(".due-label").value.trim();
-      o.dueLabel = lbl || (o.due ? new Date(o.due + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—");
-      save(); render();
-    };
-    el.querySelector(".due-clear").onclick = function () {
-      o.due = ""; o.dueLabel = "—"; save(); render();
-    };
-    el.querySelector(".del").onclick = function () {
-      if (!confirm("Delete \"" + o.title + "\"?")) return;
-      state = state.filter(function (x) { return x.id !== o.id; });
-      markDeleted(o.id);
-      save(); render();
-    };
+    wireControls(el, o);
     return el;
   }
 
+  // ---- list (table) view ----
+  function renderList() {
+    var board = document.getElementById("board");
+    var items = state.filter(matchesFilter).slice().sort(cmp);
+    if (!items.length) { board.innerHTML = '<div class="empty">No objectives match these filters.</div>'; return; }
+
+    var cols = [
+      { k: "status", label: "Status", sortable: true },
+      { k: "title", label: "Objective", sortable: true },
+      { k: "pillar", label: "Pillar", sortable: true },
+      { k: "quarter", label: "Q", sortable: true },
+      { k: "owner", label: "Owner", sortable: true },
+      { k: "progress", label: "Progress" },
+      { k: "due", label: "Due date", sortable: true },
+      { k: "act", label: "" }
+    ];
+    var active = sortKey.split("-");
+    var thead = cols.map(function (c) {
+      var arrow = (c.sortable && active[0] === c.k) ? ' <span class="arrow">' + (active[1] === "desc" ? "▼" : "▲") + '</span>' : "";
+      return '<th class="' + (c.sortable ? "sortable" : "") + '" data-k="' + c.k + '">' + c.label + arrow + '</th>';
+    }).join("");
+
+    var wrap = document.createElement("div");
+    wrap.className = "ltable-wrap";
+    wrap.innerHTML = '<table class="ltable"><thead><tr>' + thead + '</tr></thead><tbody></tbody></table>';
+    var tbody = wrap.querySelector("tbody");
+    items.forEach(function (o) { tbody.appendChild(buildRow(o)); });
+
+    board.innerHTML = "";
+    board.appendChild(wrap);
+
+    wrap.querySelectorAll("th.sortable").forEach(function (th) {
+      th.onclick = function () {
+        var k = th.getAttribute("data-k");
+        var cur = sortKey.split("-");
+        sortKey = (cur[0] === k && cur[1] === "asc") ? k + "-desc" : k + "-asc";
+        savePrefs(); render();
+      };
+    });
+  }
+
+  function buildRow(o) {
+    var frag = document.createDocumentFragment();
+    var tr = document.createElement("tr");
+    tr.className = "lrow" + (isOverdue(o) ? " overdue" : "");
+
+    var stColor = isComplete(o) ? "var(--accent)"
+      : o.status === "In progress" ? "var(--blue)"
+      : o.status === "At risk" ? "var(--amber)"
+      : o.status === "Blocked" ? "var(--red)"
+      : "rgba(255,255,255,0.18)";
+    var prog = o.type === "metric" ? metricHTML(o)
+      : (isComplete(o) ? '<span class="ok">&#10003; done</span>' : '<span class="mut">&mdash;</span>');
+
+    tr.innerHTML =
+      '<td class="c-status"><span class="sdot" style="background:' + stColor + '"></span>' +
+        '<select class="status">' + STATUSES.map(function (s) {
+          return '<option' + (o.status === s ? " selected" : "") + '>' + s + '</option>';
+        }).join("") + '</select></td>' +
+      '<td class="c-title"><span class="lcaret">&#9656;</span><span class="ltitle">' + esc(o.title) + '</span>' +
+        (o.detail ? '<div class="lsub">' + esc(o.detail) + '</div>' : '') + '</td>' +
+      '<td><span class="tag">' + esc(o.pillar) + '</span></td>' +
+      '<td>' + (o.quarter ? '<span class="tag q">' + o.quarter + '</span>' : '<span class="mut">&mdash;</span>') + '</td>' +
+      '<td class="c-owner"><input class="owner" placeholder="&mdash;" value="' + esc(o.owner) + '" /></td>' +
+      '<td class="c-prog">' + prog + '</td>' +
+      '<td class="c-due"><span class="tag ' + dueClass(o) + ' due-tag" title="Edit deadline">&#128197; ' + dueText(o) + ' &#9998;</span></td>' +
+      '<td class="c-act"><button class="del" title="Delete">&times;</button></td>';
+
+    var drow = document.createElement("tr");
+    drow.className = "drow";
+    drow.style.display = "none";
+    drow.innerHTML = '<td colspan="8"><div class="drow-in">' +
+      dueEditorHTML(o).replace('<div class="due-edit">', '<div class="due-edit" style="display:flex"><span class="dl">Deadline</span>') +
+      '<textarea class="notes" placeholder="Notes / next step&hellip;">' + esc(o.notes) + '</textarea>' +
+    '</div></td>';
+
+    frag.appendChild(tr);
+    frag.appendChild(drow);
+
+    var caret = tr.querySelector(".lcaret");
+    var toggle = function () {
+      var open = drow.style.display === "none";
+      drow.style.display = open ? "table-row" : "none";
+      caret.classList.toggle("open", open);
+    };
+    caret.onclick = toggle;
+    tr.querySelector(".due-tag").onclick = toggle;
+    wireControls(frag, o);
+    return frag;
+  }
+
   // ---- toolbar actions ----
-  document.getElementById("search").oninput = function (e) { filters.q = e.target.value; renderBoard(); };
+  document.getElementById("search").oninput = function (e) { filters.q = e.target.value; if (viewMode === "list") renderList(); else renderBoard(); };
+
+  document.querySelectorAll("#viewToggle button").forEach(function (b) {
+    b.onclick = function () { viewMode = b.getAttribute("data-view"); savePrefs(); render(); };
+  });
+  document.getElementById("sortSelect").onchange = function (e) { sortKey = e.target.value; savePrefs(); render(); };
 
   document.getElementById("exportBtn").onclick = function () {
     var payload = { exported: TODAY.toISOString(), objectives: state };
@@ -556,6 +756,7 @@
     ["m-title", "m-detail", "m-dueLabel", "m-due"].forEach(function (id) { document.getElementById(id).value = ""; });
   };
 
+  loadPrefs();
   render();
 })();
 </script>
