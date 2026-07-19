@@ -92,7 +92,7 @@
   .card[data-status="Blocked"] { border-left-color: var(--red); }
   .card.overdue { box-shadow: inset 0 0 0 1px rgba(255,92,114,0.35); }
 
-  .card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; padding-right: 80px; }
   .card-title { font-size: 14px; font-weight: 600; line-height: 1.35; }
   .card-detail { color: var(--muted); font-size: 12px; margin-top: 5px; line-height: 1.4; }
   .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
@@ -123,15 +123,12 @@
 
   .notes { margin-top: 10px; width: 100%; font-family: var(--font); font-size: 12px; background: var(--card-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 10px; resize: vertical; min-height: 34px; line-height: 1.4; }
   .notes::placeholder { color: var(--muted); }
-  .card .del { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--muted); font-size: 15px; padding: 2px 6px; opacity: 0; }
-  .card:hover .del { opacity: 1; }
-  .card .del:hover { color: var(--red); }
-  .card .edit { position: absolute; top: 10px; right: 34px; background: transparent; border: none; color: var(--muted); font-size: 13px; padding: 2px 6px; opacity: 0; }
-  .card:hover .edit { opacity: 1; }
-  .card .edit:hover { color: var(--accent); }
-  .card .pin { position: absolute; top: 10px; right: 58px; background: transparent; border: none; font-size: 12px; padding: 2px 6px; cursor: pointer; opacity: 0; filter: grayscale(1); transition: .15s; }
-  .card:hover .pin { opacity: .45; }
-  .card:hover .pin:hover { opacity: .9; }
+  .card .del { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--muted); font-size: 15px; padding: 2px 6px; cursor: pointer; opacity: .6; transition: .15s; }
+  .card .del:hover { color: var(--red); opacity: 1; }
+  .card .edit { position: absolute; top: 10px; right: 34px; background: transparent; border: none; color: var(--muted); font-size: 13px; padding: 2px 6px; cursor: pointer; opacity: .6; transition: .15s; }
+  .card .edit:hover { color: var(--accent); opacity: 1; }
+  .card .pin { position: absolute; top: 10px; right: 58px; background: transparent; border: none; font-size: 12px; padding: 2px 6px; cursor: pointer; opacity: .5; filter: grayscale(1); transition: .15s; }
+  .card .pin:hover { opacity: .9; }
   .card .pin.on { opacity: 1; filter: none; }
   .card.pinned { box-shadow: inset 0 2px 0 var(--accent); }
   .card.pinned.overdue { box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px rgba(255,92,114,0.35); }
@@ -169,8 +166,10 @@
   .c-prog .mut { color: var(--muted); }
   .c-due { white-space: nowrap; }
   .c-act { text-align: right; }
-  .c-act { white-space: nowrap; }
-  .c-act .del, .c-act .edit { position: static; opacity: 1; color: var(--muted); background: transparent; border: none; padding: 2px 6px; }
+  .c-act { white-space: nowrap; text-align: right; position: sticky; right: 0; background: var(--card); border-left: 1px solid var(--border); }
+  .ltable thead th:last-child { position: sticky; right: 0; background: var(--card-2); z-index: 3; border-left: 1px solid var(--border); }
+  .ltable tbody tr.lrow:hover td.c-act { background: var(--card-2); }
+  .c-act .del, .c-act .edit { position: static; opacity: 1; color: var(--muted); background: transparent; border: none; padding: 2px 6px; cursor: pointer; }
   .c-act .del { font-size: 16px; }
   .c-act .edit { font-size: 13px; }
   .c-act .del:hover { color: var(--red); }
