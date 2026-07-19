@@ -129,6 +129,12 @@
   .card .edit { position: absolute; top: 10px; right: 34px; background: transparent; border: none; color: var(--muted); font-size: 13px; padding: 2px 6px; opacity: 0; }
   .card:hover .edit { opacity: 1; }
   .card .edit:hover { color: var(--accent); }
+  .card .pin { position: absolute; top: 10px; right: 58px; background: transparent; border: none; font-size: 12px; padding: 2px 6px; cursor: pointer; opacity: 0; filter: grayscale(1); transition: .15s; }
+  .card:hover .pin { opacity: .45; }
+  .card:hover .pin:hover { opacity: .9; }
+  .card .pin.on { opacity: 1; filter: none; }
+  .card.pinned { box-shadow: inset 0 2px 0 var(--accent); }
+  .card.pinned.overdue { box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px rgba(255,92,114,0.35); }
 
   /* ── View toggle ── */
   .view-toggle { display: flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
@@ -169,6 +175,11 @@
   .c-act .edit { font-size: 13px; }
   .c-act .del:hover { color: var(--red); }
   .c-act .edit:hover { color: var(--accent); }
+  .c-act .pin { font-size: 12px; opacity: .4; filter: grayscale(1); }
+  .c-act .pin.on { opacity: 1; filter: none; }
+  .c-act .pin:hover { opacity: .85; }
+  tr.lrow.pinned td { background: rgba(0,212,106,0.045); }
+  tr.lrow.pinned td.c-title { box-shadow: inset 3px 0 0 var(--accent); }
   tr.drow > td { background: var(--card-2); padding: 14px; }
   .drow-in { display: flex; flex-direction: column; gap: 10px; }
   .drow .due-edit { display: flex; }
@@ -338,7 +349,8 @@
         quarter: e.quarter != null ? e.quarter : (o.quarter || ""),
         type: e.type != null ? e.type : o.type,
         target: e.target != null ? e.target : o.target,
-        unit: e.unit != null ? e.unit : o.unit
+        unit: e.unit != null ? e.unit : o.unit,
+        pinned: e.pinned != null ? e.pinned : (o.pinned || false)
       });
     });
   }
@@ -352,7 +364,8 @@
         status: o.status, current: o.current, owner: o.owner, notes: o.notes,
         due: o.due, dueLabel: o.dueLabel, newDue: o.newDue, newDueLabel: o.newDueLabel,
         title: o.title, detail: o.detail,
-        pillar: o.pillar, quarter: o.quarter, type: o.type, target: o.target, unit: o.unit
+        pillar: o.pillar, quarter: o.quarter, type: o.type, target: o.target, unit: o.unit,
+        pinned: o.pinned
       };
     });
     saved.custom = state.filter(function (o) { return o.custom; });
@@ -438,6 +451,15 @@
     return 0;
   }
 
+  // pinned objectives always float to the top, then the chosen sort applies
+  function sortItems(arr) {
+    return arr.slice().sort(function (a, b) {
+      var pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+      if (pa !== pb) return pb - pa;
+      return cmp(a, b);
+    });
+  }
+
   // shared control wiring for both card and list-row roots.
   // Capture element references now — when root is a DocumentFragment its nodes
   // move into the DOM on append, leaving the fragment empty, so we must not
@@ -453,6 +475,7 @@
     var dc = root.querySelector(".due-clear");
     var del = root.querySelector(".del");
     var ed = root.querySelector(".edit");
+    var pin = root.querySelector(".pin");
 
     if (st) st.onchange = function (e) {
       o.status = e.target.value;
@@ -486,6 +509,7 @@
       markDeleted(o.id); save(); render();
     };
     if (ed) ed.onclick = function () { openEditor(o); };
+    if (pin) pin.onclick = function () { o.pinned = !o.pinned; save(); render(); };
   }
 
   var flashT;
@@ -616,7 +640,7 @@
     board.innerHTML = "";
     var any = false;
     PILLARS.forEach(function (pillar) {
-      var items = state.filter(function (o) { return o.pillar === pillar && matchesFilter(o); }).sort(cmp);
+      var items = sortItems(state.filter(function (o) { return o.pillar === pillar && matchesFilter(o); }));
       var allItems = state.filter(function (o) { return o.pillar === pillar; });
       if (items.length === 0) return;
       any = true;
@@ -656,11 +680,12 @@
 
   function buildCard(o) {
     var el = document.createElement("div");
-    el.className = "card" + (isOverdue(o) ? " overdue" : "");
+    el.className = "card" + (isOverdue(o) ? " overdue" : "") + (o.pinned ? " pinned" : "");
     el.setAttribute("data-status", isComplete(o) ? "Done" : o.status);
     el.setAttribute("data-id", o.id);
 
     var html =
+      '<button class="pin' + (o.pinned ? " on" : "") + '" title="' + (o.pinned ? "Unpin" : "Pin to top") + '">&#128204;</button>' +
       '<button class="edit" title="Edit objective">&#9998;</button>' +
       '<button class="del" title="Delete">&times;</button>' +
       '<div class="card-top"><div class="card-title">' + esc(o.title) + '</div></div>' +
@@ -693,7 +718,7 @@
   // ---- list (table) view ----
   function renderList() {
     var board = document.getElementById("board");
-    var items = state.filter(matchesFilter).slice().sort(cmp);
+    var items = sortItems(state.filter(matchesFilter));
     if (!items.length) { board.innerHTML = '<div class="empty">No objectives match these filters.</div>'; return; }
 
     var cols = [
@@ -734,7 +759,7 @@
   function buildRow(o) {
     var frag = document.createDocumentFragment();
     var tr = document.createElement("tr");
-    tr.className = "lrow" + (isOverdue(o) ? " overdue" : "");
+    tr.className = "lrow" + (isOverdue(o) ? " overdue" : "") + (o.pinned ? " pinned" : "");
     tr.setAttribute("data-id", o.id);
 
     var stColor = isComplete(o) ? "var(--accent)"
@@ -758,7 +783,7 @@
       '<td class="c-owner"><input class="owner" placeholder="&mdash;" value="' + esc(o.owner) + '" /></td>' +
       '<td class="c-prog">' + prog + '</td>' +
       '<td class="c-due"><span class="tag ' + dueClass(o) + ' due-tag" title="Edit deadline">&#128197; ' + dueText(o) + ' &#9998;</span></td>' +
-      '<td class="c-act"><button class="edit" title="Edit objective">&#9998;</button><button class="del" title="Delete">&times;</button></td>';
+      '<td class="c-act"><button class="pin' + (o.pinned ? " on" : "") + '" title="' + (o.pinned ? "Unpin" : "Pin to top") + '">&#128204;</button><button class="edit" title="Edit objective">&#9998;</button><button class="del" title="Delete">&times;</button></td>';
 
     var drow = document.createElement("tr");
     drow.className = "drow";
