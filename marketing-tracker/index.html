@@ -396,26 +396,34 @@
     return 0;
   }
 
-  // shared control wiring for both card and list-row roots
+  // shared control wiring for both card and list-row roots.
+  // Capture element references now — when root is a DocumentFragment its nodes
+  // move into the DOM on append, leaving the fragment empty, so we must not
+  // re-query root inside the handlers.
   function wireControls(root, o) {
-    var st = root.querySelector(".status"); if (st) st.onchange = function (e) { o.status = e.target.value; save(); render(); };
-    var ow = root.querySelector(".owner"); if (ow) ow.onchange = function (e) { o.owner = e.target.value; save(); };
-    var nt = root.querySelector(".notes"); if (nt) nt.onchange = function (e) { o.notes = e.target.value; save(); };
-    var mc = root.querySelector(".mcur"); if (mc) mc.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
+    var st = root.querySelector(".status");
+    var ow = root.querySelector(".owner");
+    var nt = root.querySelector(".notes");
+    var mc = root.querySelector(".mcur");
     var dd = root.querySelector(".due-date");
-    if (dd) dd.onchange = function () {
-      var lbl = root.querySelector(".due-label");
-      if (lbl && !lbl.value.trim() && dd.value) lbl.value = fmtDate(dd.value);
-    };
+    var lbl = root.querySelector(".due-label");
     var ds = root.querySelector(".due-save");
+    var dc = root.querySelector(".due-clear");
+    var del = root.querySelector(".del");
+
+    if (st) st.onchange = function (e) { o.status = e.target.value; save(); render(); };
+    if (ow) ow.onchange = function (e) { o.owner = e.target.value; save(); };
+    if (nt) nt.onchange = function (e) { o.notes = e.target.value; save(); };
+    if (mc) mc.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
+    if (dd) dd.onchange = function () { if (lbl && !lbl.value.trim() && dd.value) lbl.value = fmtDate(dd.value); };
     if (ds) ds.onclick = function () {
-      o.due = dd.value || "";
-      var lbl = root.querySelector(".due-label").value.trim();
-      o.dueLabel = lbl || (o.due ? fmtDate(o.due) : "—");
+      o.due = dd ? (dd.value || "") : "";
+      var v = lbl ? lbl.value.trim() : "";
+      o.dueLabel = v || (o.due ? fmtDate(o.due) : "—");
       save(); render();
     };
-    var dc = root.querySelector(".due-clear"); if (dc) dc.onclick = function () { o.due = ""; o.dueLabel = "—"; save(); render(); };
-    var del = root.querySelector(".del"); if (del) del.onclick = function () {
+    if (dc) dc.onclick = function () { o.due = ""; o.dueLabel = "—"; save(); render(); };
+    if (del) del.onclick = function () {
       if (!confirm("Delete \"" + o.title + "\"?")) return;
       state = state.filter(function (x) { return x.id !== o.id; });
       markDeleted(o.id); save(); render();
