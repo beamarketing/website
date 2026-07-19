@@ -171,7 +171,11 @@
   .c-act .edit:hover { color: var(--accent); }
   tr.drow > td { background: var(--card-2); padding: 14px; }
   .drow-in { display: flex; flex-direction: column; gap: 10px; }
-  .drow-in .dl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; align-self: center; }
+  .drow .due-edit { display: flex; }
+  .due-edit .dl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; align-self: center; }
+  .due-edit.delayed .dl { color: var(--delay); }
+  .due-edit.delayed input.due-date { border-color: var(--delay); }
+  .wasdue { color: var(--muted); text-decoration: line-through; font-size: 10px; margin-left: 4px; }
 
   .empty { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }
   .footer-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px; line-height: 1.6; }
@@ -326,6 +330,8 @@
         notes: e.notes != null ? e.notes : (o.notes || ""),
         due: e.due != null ? e.due : (o.due || ""),
         dueLabel: e.dueLabel != null ? e.dueLabel : (o.dueLabel || "—"),
+        newDue: e.newDue != null ? e.newDue : (o.newDue || ""),
+        newDueLabel: e.newDueLabel != null ? e.newDueLabel : (o.newDueLabel || ""),
         title: e.title != null ? e.title : o.title,
         detail: e.detail != null ? e.detail : (o.detail || ""),
         pillar: e.pillar != null ? e.pillar : o.pillar,
@@ -344,7 +350,8 @@
     state.forEach(function (o) {
       saved.edits[o.id] = {
         status: o.status, current: o.current, owner: o.owner, notes: o.notes,
-        due: o.due, dueLabel: o.dueLabel, title: o.title, detail: o.detail,
+        due: o.due, dueLabel: o.dueLabel, newDue: o.newDue, newDueLabel: o.newDueLabel,
+        title: o.title, detail: o.detail,
         pillar: o.pillar, quarter: o.quarter, type: o.type, target: o.target, unit: o.unit
       };
     });
@@ -371,26 +378,33 @@
     if (o.type === "metric") return (o.current || 0) >= o.target;
     return o.status === "Done";
   }
+  // When Delayed with a revised date, that revised date becomes the active deadline.
+  function effDue(o) { return (o.status === "Delayed" && o.newDue) ? o.newDue : o.due; }
+  function effLabel(o) { return (o.status === "Delayed" && o.newDue) ? (o.newDueLabel || fmtDate(o.newDue)) : o.dueLabel; }
   function isOverdue(o) {
-    if (!o.due || isComplete(o)) return false;
-    return new Date(o.due + "T00:00:00") < TODAY;
+    var e = effDue(o);
+    if (!e || isComplete(o)) return false;
+    return new Date(e + "T00:00:00") < TODAY;
   }
   function daysTo(o) {
-    if (!o.due) return null;
-    return Math.round((new Date(o.due + "T00:00:00") - TODAY) / 86400000);
+    var e = effDue(o);
+    if (!e) return null;
+    return Math.round((new Date(e + "T00:00:00") - TODAY) / 86400000);
   }
   function esc(s) { return (s || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function fmtDate(iso) { return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
   function dueText(o) {
-    var d = daysTo(o);
-    var txt = o.dueLabel || "—";
-    if (o.due && !isComplete(o) && d < 0) txt += " &middot; " + Math.abs(d) + "d late";
-    else if (o.due && !isComplete(o) && d <= 14) txt += " &middot; " + d + "d left";
+    var d = daysTo(o), eff = effDue(o);
+    var txt = effLabel(o) || "—";
+    if (eff && !isComplete(o) && d < 0) txt += " &middot; " + Math.abs(d) + "d late";
+    else if (eff && !isComplete(o) && d <= 14) txt += " &middot; " + d + "d left";
+    var revised = o.status === "Delayed" && o.newDue && o.newDue !== o.due;
+    if (revised) txt = "&#9203; " + txt + ' <span class="wasdue">was ' + esc(o.dueLabel === "—" ? "?" : o.dueLabel) + '</span>';
     return txt;
   }
   function dueClass(o) {
-    var d = daysTo(o), c = "due";
-    if (o.due && !isComplete(o)) { if (d < 0) c += " over"; else if (d <= 14) c += " soon"; }
+    var d = daysTo(o), c = "due", eff = effDue(o);
+    if (eff && !isComplete(o)) { if (d < 0) c += " over"; else if (d <= 14) c += " soon"; }
     return c;
   }
   function metricHTML(o) {
@@ -408,8 +422,9 @@
     var parts = sortKey.split("-");
     var field = parts[0], dir = parts[1] === "desc" ? -1 : 1;
     if (field === "due") {
-      var an = a.due ? new Date(a.due + "T00:00:00").getTime() : null;
-      var bn = b.due ? new Date(b.due + "T00:00:00").getTime() : null;
+      var ae = effDue(a), be = effDue(b);
+      var an = ae ? new Date(ae + "T00:00:00").getTime() : null;
+      var bn = be ? new Date(be + "T00:00:00").getTime() : null;
       if (an === null && bn === null) return 0;
       if (an === null) return 1;   // no-date always sorts last
       if (bn === null) return -1;
@@ -449,12 +464,22 @@
     if (mc) mc.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
     if (dd) dd.onchange = function () { if (lbl && !lbl.value.trim() && dd.value) lbl.value = fmtDate(dd.value); };
     if (ds) ds.onclick = function () {
-      o.due = dd ? (dd.value || "") : "";
+      var iso = dd ? (dd.value || "") : "";
       var v = lbl ? lbl.value.trim() : "";
-      o.dueLabel = v || (o.due ? fmtDate(o.due) : "—");
+      if (o.status === "Delayed") {
+        o.newDue = iso;
+        o.newDueLabel = v || (iso ? fmtDate(iso) : "—");
+      } else {
+        o.due = iso;
+        o.dueLabel = v || (iso ? fmtDate(iso) : "—");
+      }
       save(); render();
     };
-    if (dc) dc.onclick = function () { o.due = ""; o.dueLabel = "—"; save(); render(); };
+    if (dc) dc.onclick = function () {
+      if (o.status === "Delayed") { o.newDue = ""; o.newDueLabel = ""; }
+      else { o.due = ""; o.dueLabel = "—"; }
+      save(); render();
+    };
     if (del) del.onclick = function () {
       if (!confirm("Delete \"" + o.title + "\"?")) return;
       state = state.filter(function (x) { return x.id !== o.id; });
@@ -497,15 +522,17 @@
         drow.style.display = "table-row";
         var caret = tr.querySelector(".lcaret");
         if (caret) caret.classList.add("open");
-        var nt = drow.querySelector(".notes");
-        if (nt) nt.focus();
+        var dd = drow.querySelector(".due-date");
+        if (dd) dd.focus();
       }
       tr.scrollIntoView({ block: "center" });
     } else {
       var card = document.querySelector('.card[data-id="' + id + '"]');
       if (!card) return;
-      var n = card.querySelector(".notes");
-      if (n) n.focus();
+      var ed = card.querySelector(".due-edit");
+      if (ed) ed.style.display = "flex"; // reveal the new-due-date editor
+      var dd2 = card.querySelector(".due-date");
+      if (dd2) dd2.focus();
       card.scrollIntoView({ block: "center" });
     }
   }
@@ -615,9 +642,13 @@
   }
 
   function dueEditorHTML(o) {
-    return '<div class="due-edit">' +
-      '<input type="date" class="due-date" value="' + (o.due || '') + '" />' +
-      '<input type="text" class="due-label" placeholder="Label e.g. End of Q3" value="' + esc(o.dueLabel === '—' ? '' : o.dueLabel) + '" />' +
+    var delayed = o.status === "Delayed";
+    var dval = delayed ? (o.newDue || "") : (o.due || "");
+    var lval = delayed ? (o.newDueLabel && o.newDueLabel !== "—" ? o.newDueLabel : "") : (o.dueLabel === "—" ? "" : o.dueLabel);
+    return '<div class="due-edit' + (delayed ? ' delayed' : '') + '">' +
+      '<span class="dl">' + (delayed ? "New due date" : "Deadline") + '</span>' +
+      '<input type="date" class="due-date" value="' + dval + '" />' +
+      '<input type="text" class="due-label" placeholder="Label e.g. End of Q3" value="' + esc(lval) + '" />' +
       '<button class="due-save">Save</button>' +
       '<button class="due-clear">Clear</button>' +
     '</div>';
@@ -733,7 +764,7 @@
     drow.className = "drow";
     drow.style.display = "none";
     drow.innerHTML = '<td colspan="8"><div class="drow-in">' +
-      dueEditorHTML(o).replace('<div class="due-edit">', '<div class="due-edit" style="display:flex"><span class="dl">Deadline</span>') +
+      dueEditorHTML(o) +
       '<textarea class="notes" placeholder="Notes / next step&hellip;">' + esc(o.notes) + '</textarea>' +
     '</div></td>';
 
