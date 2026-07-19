@@ -98,6 +98,14 @@
   .tag.due { color: var(--muted); }
   .tag.due.soon { color: var(--amber); border-color: rgba(255,176,32,0.3); }
   .tag.due.over { color: var(--red); border-color: rgba(255,92,114,0.35); }
+  .due-tag { cursor: pointer; }
+  .due-tag:hover { border-color: var(--accent); color: var(--accent); }
+  .due-edit { display: none; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .due-edit input { font-size: 12px; background: var(--card-2); border: 1px solid var(--border-strong); color: var(--text); border-radius: 8px; padding: 6px 8px; }
+  .due-edit input.due-label { flex: 1; min-width: 110px; }
+  .due-edit button { font-size: 12px; padding: 6px 10px; }
+  .due-edit .due-save { background: var(--accent); color: #04120a; border-color: var(--accent); }
+  .due-edit .due-save:hover { filter: brightness(1.08); color: #04120a; }
 
   .row { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
   .card select.status { flex: 1; min-width: 130px; font-size: 12px; padding: 7px 9px; border-radius: 8px; background: var(--card-2); border: 1px solid var(--border-strong); color: var(--text); }
@@ -230,7 +238,9 @@
         status: e.status || o.status || "Not started",
         current: e.current != null ? e.current : (o.current || 0),
         owner: e.owner != null ? e.owner : (o.owner || ""),
-        notes: e.notes != null ? e.notes : (o.notes || "")
+        notes: e.notes != null ? e.notes : (o.notes || ""),
+        due: e.due != null ? e.due : (o.due || ""),
+        dueLabel: e.dueLabel != null ? e.dueLabel : (o.dueLabel || "—")
       });
     });
   }
@@ -240,7 +250,7 @@
     try { saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) {}
     saved.edits = saved.edits || {};
     state.forEach(function (o) {
-      saved.edits[o.id] = { status: o.status, current: o.current, owner: o.owner, notes: o.notes };
+      saved.edits[o.id] = { status: o.status, current: o.current, owner: o.owner, notes: o.notes, due: o.due, dueLabel: o.dueLabel };
     });
     saved.custom = state.filter(function (o) { return o.custom; });
     localStorage.setItem(STORE_KEY, JSON.stringify(saved));
@@ -407,8 +417,14 @@
       (o.detail ? '<div class="card-detail">' + esc(o.detail) + '</div>' : '') +
       '<div class="meta">' +
         (o.quarter ? '<span class="tag q">' + o.quarter + '</span>' : '') +
-        '<span class="tag ' + dueCls + '">&#128197; ' + dueTxt + '</span>' +
+        '<span class="tag ' + dueCls + ' due-tag" title="Click to edit deadline">&#128197; ' + dueTxt + ' &#9998;</span>' +
         (o.type === "metric" ? '<span class="tag">Metric</span>' : '') +
+      '</div>' +
+      '<div class="due-edit">' +
+        '<input type="date" class="due-date" value="' + (o.due || '') + '" />' +
+        '<input type="text" class="due-label" placeholder="Label e.g. End of Q3" value="' + esc(o.dueLabel === '—' ? '' : o.dueLabel) + '" />' +
+        '<button class="due-save">Save</button>' +
+        '<button class="due-clear">Clear</button>' +
       '</div>';
 
     if (o.type === "metric") {
@@ -438,6 +454,25 @@
     el.querySelector(".notes").onchange = function (e) { o.notes = e.target.value; save(); };
     var mcur = el.querySelector(".mcur");
     if (mcur) mcur.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
+    var dueTag = el.querySelector(".due-tag");
+    var dueEdit = el.querySelector(".due-edit");
+    var dd = el.querySelector(".due-date");
+    dueTag.onclick = function () { dueEdit.style.display = dueEdit.style.display === "flex" ? "none" : "flex"; };
+    dd.onchange = function () {
+      var lbl = el.querySelector(".due-label");
+      if (!lbl.value.trim() && dd.value) {
+        lbl.value = new Date(dd.value + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      }
+    };
+    el.querySelector(".due-save").onclick = function () {
+      o.due = dd.value || "";
+      var lbl = el.querySelector(".due-label").value.trim();
+      o.dueLabel = lbl || (o.due ? new Date(o.due + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—");
+      save(); render();
+    };
+    el.querySelector(".due-clear").onclick = function () {
+      o.due = ""; o.dueLabel = "—"; save(); render();
+    };
     el.querySelector(".del").onclick = function () {
       if (!confirm("Delete \"" + o.title + "\"?")) return;
       state = state.filter(function (x) { return x.id !== o.id; });
@@ -471,7 +506,7 @@
         if (!Array.isArray(objs)) throw new Error("bad format");
         var saved = { edits: {}, custom: [], deleted: [] };
         objs.forEach(function (o) {
-          saved.edits[o.id] = { status: o.status, current: o.current, owner: o.owner, notes: o.notes };
+          saved.edits[o.id] = { status: o.status, current: o.current, owner: o.owner, notes: o.notes, due: o.due, dueLabel: o.dueLabel };
           if (o.custom) saved.custom.push(o);
         });
         // seed ids not present => deleted
