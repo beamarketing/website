@@ -15,7 +15,9 @@ No build step, no dependencies.
 
 For each objective you can:
 
-- Set a **status** (Not started → In progress → At risk / Blocked → Done)
+- Set a **status** (Not started → In progress → At risk → Delayed → Blocked → Done).
+  Marking something **Delayed** automatically opens its notes so you can record
+  why it slipped / the new expected date. Delayed items get their own count and filter.
 - Assign an **owner**
 - For numeric goals (**metrics**), enter the current count against the target
 - Add **notes / next step**

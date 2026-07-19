@@ -18,6 +18,7 @@
     --amber: #ffb020;
     --red: #ff5c72;
     --blue: #5b8def;
+    --delay: #b07bff;
     --radius: 14px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
@@ -57,6 +58,7 @@
   .stat .n { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
   .stat .l { color: var(--muted); font-size: 12px; margin-top: 3px; }
   .stat.overdue .n { color: var(--red); }
+  .stat.delayed .n { color: var(--delay); }
 
   /* ── Controls ── */
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
@@ -86,6 +88,7 @@
   .card[data-status="Done"] { border-left-color: var(--accent); }
   .card[data-status="In progress"] { border-left-color: var(--blue); }
   .card[data-status="At risk"] { border-left-color: var(--amber); }
+  .card[data-status="Delayed"] { border-left-color: var(--delay); }
   .card[data-status="Blocked"] { border-left-color: var(--red); }
   .card.overdue { box-shadow: inset 0 0 0 1px rgba(255,92,114,0.35); }
 
@@ -217,7 +220,7 @@
     <div class="legend">
       <span><i style="background:var(--accent)"></i>Done</span>
       <span><i style="background:var(--blue)"></i>In progress</span>
-      <span><i style="background:var(--amber)"></i>At risk / blocked</span>
+      <span><i style="background:var(--amber)"></i>At risk / delayed / blocked</span>
       <span><i style="background:rgba(255,255,255,0.12)"></i>Not started</span>
     </div>
   </div>
@@ -282,7 +285,8 @@
 (function () {
   var STORE_KEY = "beamr_mkt_tracker_v1";
   var PILLARS = ["Solution Provider", "Revenue", "Market Position M&E", "Decision Making"];
-  var STATUSES = ["Not started", "In progress", "At risk", "Blocked", "Done"];
+  var STATUSES = ["Not started", "In progress", "At risk", "Delayed", "Blocked", "Done"];
+  var pendingNotes = null; // objective id to expand + focus notes for after render
   var TODAY = new Date("2026-07-19T00:00:00");
 
   var filters = { status: "All", quarter: "All", q: "" };
@@ -435,7 +439,11 @@
     var del = root.querySelector(".del");
     var ed = root.querySelector(".edit");
 
-    if (st) st.onchange = function (e) { o.status = e.target.value; save(); render(); };
+    if (st) st.onchange = function (e) {
+      o.status = e.target.value;
+      if (o.status === "Delayed") pendingNotes = o.id; // open notes to record why
+      save(); render();
+    };
     if (ow) ow.onchange = function (e) { o.owner = e.target.value; save(); };
     if (nt) nt.onchange = function (e) { o.notes = e.target.value; save(); };
     if (mc) mc.onchange = function (e) { o.current = parseFloat(e.target.value) || 0; save(); render(); };
@@ -472,6 +480,34 @@
     renderViewControls();
     if (viewMode === "list") renderList();
     else renderBoard();
+    afterRender();
+  }
+
+  // After a render, if an objective was just marked Delayed, open its notes so
+  // the user can record why it slipped.
+  function afterRender() {
+    if (!pendingNotes) return;
+    var id = pendingNotes;
+    pendingNotes = null;
+    if (viewMode === "list") {
+      var tr = document.querySelector('tr.lrow[data-id="' + id + '"]');
+      if (!tr) return;
+      var drow = tr.nextElementSibling;
+      if (drow && drow.classList.contains("drow")) {
+        drow.style.display = "table-row";
+        var caret = tr.querySelector(".lcaret");
+        if (caret) caret.classList.add("open");
+        var nt = drow.querySelector(".notes");
+        if (nt) nt.focus();
+      }
+      tr.scrollIntoView({ block: "center" });
+    } else {
+      var card = document.querySelector('.card[data-id="' + id + '"]');
+      if (!card) return;
+      var n = card.querySelector(".notes");
+      if (n) n.focus();
+      card.scrollIntoView({ block: "center" });
+    }
   }
 
   function renderViewControls() {
@@ -486,7 +522,7 @@
     var total = state.length;
     var done = state.filter(isComplete).length;
     var prog = state.filter(function (o) { return !isComplete(o) && o.status === "In progress"; }).length;
-    var risk = state.filter(function (o) { return !isComplete(o) && (o.status === "At risk" || o.status === "Blocked"); }).length;
+    var risk = state.filter(function (o) { return !isComplete(o) && (o.status === "At risk" || o.status === "Delayed" || o.status === "Blocked"); }).length;
     document.getElementById("overallPct").textContent = pct(done, total) + "%";
     document.getElementById("overallCap").textContent = done + " of " + total + " objectives complete";
     document.getElementById("overallBar").innerHTML =
@@ -500,12 +536,14 @@
     var done = state.filter(isComplete).length;
     var prog = state.filter(function (o) { return !isComplete(o) && o.status === "In progress"; }).length;
     var ns = state.filter(function (o) { return !isComplete(o) && o.status === "Not started"; }).length;
+    var delayed = state.filter(function (o) { return !isComplete(o) && o.status === "Delayed"; }).length;
     var over = state.filter(isOverdue).length;
     var cards = [
       { n: total, l: "Total objectives" },
       { n: done, l: "Complete" },
       { n: prog, l: "In progress" },
       { n: ns, l: "Not started" },
+      { n: delayed, l: "Delayed", cls: "delayed" },
       { n: over, l: "Overdue", cls: "overdue" }
     ];
     document.getElementById("stats").innerHTML = cards.map(function (c) {
@@ -589,6 +627,7 @@
     var el = document.createElement("div");
     el.className = "card" + (isOverdue(o) ? " overdue" : "");
     el.setAttribute("data-status", isComplete(o) ? "Done" : o.status);
+    el.setAttribute("data-id", o.id);
 
     var html =
       '<button class="edit" title="Edit objective">&#9998;</button>' +
@@ -665,10 +704,12 @@
     var frag = document.createDocumentFragment();
     var tr = document.createElement("tr");
     tr.className = "lrow" + (isOverdue(o) ? " overdue" : "");
+    tr.setAttribute("data-id", o.id);
 
     var stColor = isComplete(o) ? "var(--accent)"
       : o.status === "In progress" ? "var(--blue)"
       : o.status === "At risk" ? "var(--amber)"
+      : o.status === "Delayed" ? "var(--delay)"
       : o.status === "Blocked" ? "var(--red)"
       : "rgba(255,255,255,0.18)";
     var prog = o.type === "metric" ? metricHTML(o)
