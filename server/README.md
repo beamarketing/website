@@ -55,17 +55,48 @@ the dashboard works normally. LinkedIn access tokens expire — for unattended
 running, store the refresh token and exchange it on a schedule, or use a
 long-lived token per LinkedIn’s current policy.
 
-## Deploy (so it refreshes without your laptop)
+## Deploy on Vercel (configured)
 
-Any Node ≥18 host works. The dashboard fetches live on every load and the
-server caches each upstream response for `CACHE_TTL_SECONDS` (default 6h), so
-data refreshes several times a day on its own — no cron job required.
+This repo is wired for Vercel out of the box:
 
-- **Railway / Render / Fly.io:** point at this `server/` dir, set the env vars
+- `api/metrics.mjs` — the serverless function served at `/api/metrics`.
+- `server/lib/metrics.mjs` — shared fetch logic (imported by both the function
+  and the local Express server).
+- `vercel.json` — rewrites `/` to `/dashboard.html`.
+- `.vercelignore` — keeps the deploy focused on the dashboard + API.
+
+Steps:
+
+1. Push this branch to GitHub (already done).
+2. In Vercel, **Add New → Project** and import the `beamarketing/website` repo.
+   Leave the framework preset as **Other** and the root directory as the repo
+   root — no build command is needed (it's static + a function).
+3. Under **Settings → Environment Variables**, add the values from
+   `.env.example` (`META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`,
+   `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AD_ACCOUNT_ID`, etc.). Do **not** add
+   `PORT` — Vercel manages that.
+4. **Deploy.** Your dashboard is at `https://<project>.vercel.app/` and the API
+   at `https://<project>.vercel.app/api/metrics`.
+
+Node ≥18 (Vercel default) provides the built-in `fetch` this uses; there are no
+npm dependencies in the function path.
+
+> **Vercel caveat (as flagged):** serverless functions are ephemeral, so the
+> in-memory cache only helps within a warm instance — a cold start re-fetches.
+> That's fine here (the dashboard fetches on load, not in a tight loop), but if
+> you want a guaranteed shared cache, use a long-running host (below) or add a
+> tiny KV store.
+
+## Deploy on a long-running host (alternative)
+
+Any Node ≥18 host runs the Express server directly. The dashboard fetches live
+on every load and the server caches each upstream response for
+`CACHE_TTL_SECONDS` (default 6h), so data refreshes several times a day on its
+own — no cron job required.
+
+- **Railway / Render / Fly.io:** point at the `server/` dir, set the env vars
   from `.env.example`, start command `npm start`.
 - **A VPS:** `npm install && npm start` behind nginx / a process manager (pm2).
-- **Vercel/Netlify:** wrap `buildMetrics()` in a serverless function instead of
-  the Express `listen` (the fetch logic is host-agnostic).
 
 Set the env vars in the host’s dashboard — never commit `.env`.
 
