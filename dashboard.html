@@ -231,6 +231,7 @@
       </div>
     </div>
     <div class="actions">
+      <button class="btn primary" id="btn-refresh">↻ Refresh live</button>
       <button class="btn" id="btn-export">Export</button>
       <button class="btn" id="btn-import">Import</button>
       <button class="btn" id="btn-print">Print / PDF</button>
@@ -290,7 +291,7 @@
     <div class="section-head">
       <h2>Channel performance</h2>
       <span class="hint">This quarter to date</span>
-      <span class="tag synced" id="chan-sync">Facebook synced —</span>
+      <span id="chan-sources"></span>
     </div>
     <div class="cards chan-grid"></div>
   </section>
@@ -326,8 +327,7 @@
   <section>
     <div class="section-head">
       <h2>Monthly data</h2>
-      <span class="tag synced">Facebook = synced</span>
-      <span class="tag manual">LinkedIn = manual</span>
+      <span class="hint">Read-only cells come from a connected channel; editable (green) cells are manual.</span>
     </div>
     <div class="card" style="overflow-x:auto;">
       <table class="data" id="data-table"></table>
@@ -410,6 +410,70 @@ const DEFAULT_DATA = {
 
 /* ------------------------------- state -------------------------------- */
 let state = load();
+// Per-channel data source, discovered from the backend at runtime:
+// "snapshot" (no backend reached), "live", "mock" (backend up, no creds), or "error: …".
+let live = { facebook: "snapshot", linkedin: "snapshot", syncedAt: null, reachable: false };
+
+/* --------------------------- live backend ----------------------------- */
+// Fetches GET /api/metrics from the backend service (server/). On success,
+// live Facebook/LinkedIn figures overwrite the manual/snapshot values for any
+// channel the backend reports as "live"; manual KPI targets & actuals are never
+// touched. If the backend can't be reached (e.g. the standalone artifact), the
+// baked-in snapshot + your manual entries are used unchanged.
+async function fetchLive(force){
+  // Opened directly from disk (file://) — no backend to reach; stay on snapshot.
+  if(location.protocol === "file:"){ live.reachable = false; render(); return; }
+  const btn = document.getElementById("btn-refresh");
+  if(btn){ btn.disabled = true; btn.textContent = "↻ Refreshing…"; }
+  try {
+    const res = await fetch("/api/metrics" + (force ? "?force=1" : ""), { cache: "no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    applyLive(await res.json());
+  } catch(e) {
+    live.reachable = false;
+    live.facebook = "snapshot"; live.linkedin = "snapshot";
+    render();                       // show snapshot + manual, with a clear status
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "↻ Refresh live"; }
+  }
+}
+function applyLive(data){
+  live.reachable = true;
+  live.facebook = (data.sources && data.sources.facebook) || "snapshot";
+  live.linkedin = (data.sources && data.sources.linkedin) || "snapshot";
+  live.syncedAt = data.syncedAt || null;
+  const fbLive = live.facebook === "live";
+  const liLive = live.linkedin === "live";
+  if(fbLive && data.facebook) state.channels.facebook.current = data.facebook.current;
+  if(liLive && data.linkedin) state.channels.linkedin.current = data.linkedin.current;
+
+  // Rebuild the monthly series: take FB fields from live only if FB is live,
+  // LI fields from live only if LinkedIn is live — otherwise keep what's there
+  // (so manually-entered LinkedIn months survive while LinkedIn isn't approved yet).
+  const prev = new Map(state.months.map(m => [m.m, m]));
+  const seen = new Set();
+  const out = (data.months || []).map(lm => {
+    const p = prev.get(lm.label) || { fbLeads:0, fbSpend:0, liLeads:0, liSpend:0 };
+    seen.add(lm.label);
+    return {
+      m: lm.label,
+      fbLeads: fbLive ? lm.fbLeads : p.fbLeads,
+      fbSpend: fbLive ? lm.fbSpend : p.fbSpend,
+      liLeads: liLive ? lm.liLeads : p.liLeads,
+      liSpend: liLive ? lm.liSpend : p.liSpend,
+    };
+  });
+  state.months.forEach(m => { if(!seen.has(m.m)) out.push(m); });   // keep months the backend didn't return
+  const MO = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const order = (lbl) => { const [mn, yr] = String(lbl).split(" "); return (+yr||0)*12 + (MO.indexOf(mn)); };
+  out.sort((a,b) => order(a.m) - order(b.m));                        // keep chronological even on a partial response
+  if(out.length) state.months = out;
+  if(data.syncedAt) state.meta.facebookSync = data.syncedAt.slice(0,10);
+  if(data.currency) state.meta.currency = data.currency;
+  save();
+  render();
+}
+function liEditable(){ return live.linkedin !== "live"; }   // manual inputs only when LinkedIn isn't live
 
 function load() {
   try {
@@ -541,6 +605,7 @@ function paintKPIrow(node, period, r, idx, pathBase){
 function renderChannels(){
   const host = document.querySelector(".chan-grid");
   const fb = state.channels.facebook.current;
+  const li = state.channels.linkedin.current;
   const c = combined();
   host.innerHTML = `
     <div class="card chan">
@@ -565,15 +630,15 @@ function renderChannels(){
       <div class="chan-head">
         <div class="logo" style="background:var(--series-li)">in</div>
         <div class="name">LinkedIn</div>
-        <span class="tag manual" style="margin-left:auto">manual</span>
+        <span class="tag ${liEditable()?'manual':'synced'}" style="margin-left:auto">${liEditable()?'manual':'live'}</span>
       </div>
       <div class="metric-list">
-        ${metricEd("Leads", "channels.linkedin.current.leads", 1)}
+        ${liEditable() ? metricEd("Leads", "channels.linkedin.current.leads", 1) : metricRO("Leads", int(li.leads))}
         ${metricRO("Cost / lead", `<span data-out="li.cpl">—</span>`)}
-        ${metricEd("Spend", "channels.linkedin.current.spend", 1)}
+        ${liEditable() ? metricEd("Spend", "channels.linkedin.current.spend", 1) : metricRO("Spend", money(li.spend,0))}
         ${metricRO("CPM", `<span data-out="li.cpm">—</span>`)}
-        ${metricEd("Impressions", "channels.linkedin.current.impressions", 1)}
-        ${metricEd("Clicks", "channels.linkedin.current.clicks", 1)}
+        ${liEditable() ? metricEd("Impressions", "channels.linkedin.current.impressions", 1) : metricRO("Impressions", int(li.impressions))}
+        ${liEditable() ? metricEd("Clicks", "channels.linkedin.current.clicks", 1) : metricRO("Clicks", int(li.clicks))}
       </div>
     </div>
 
@@ -606,12 +671,18 @@ function renderTable(){
   state.months.forEach((mo, i) => {
     const tot = num(mo.fbLeads)+num(mo.liLeads);
     const spend = num(mo.fbSpend)+num(mo.liSpend);
+    const liLeadCell = liEditable()
+      ? `<input class="ed" type="number" min="0" step="1" data-path="months.${i}.liLeads" value="${mo.liLeads}">`
+      : int(mo.liLeads);
+    const liSpendCell = liEditable()
+      ? `<input class="ed" type="number" min="0" step="1" data-path="months.${i}.liSpend" value="${mo.liSpend}">`
+      : money(mo.liSpend,0);
     rows += `<tr>
       <td>${mo.m}</td>
       <td class="ro">${int(mo.fbLeads)}</td>
-      <td><input class="ed" type="number" min="0" step="1" data-path="months.${i}.liLeads" value="${mo.liLeads}"></td>
+      <td class="${liEditable()?'':'ro'}">${liLeadCell}</td>
       <td class="ro">${money(mo.fbSpend,0)}</td>
-      <td><input class="ed" type="number" min="0" step="1" data-path="months.${i}.liSpend" value="${mo.liSpend}"></td>
+      <td class="${liEditable()?'':'ro'}">${liSpendCell}</td>
       <td class="ro" data-out="row.${i}.leads">${int(tot)}</td>
       <td class="ro" data-out="row.${i}.cpl">${tot?money(spend/tot):"—"}</td>
     </tr>`;
@@ -639,23 +710,25 @@ function renderTable(){
 function renderNote(){
   document.getElementById("note-block").innerHTML = `
     <b>How this dashboard works.</b>
-    <b>Facebook / Meta</b> figures are pulled live from the Meta Ads account
-    “Beamr Marketing” and baked in as a snapshot (last synced
-    <b>${state.meta.facebookSync}</b>). They are read-only here.
-    <b>LinkedIn</b>, and every <b>MQL / SQL / Opportunity</b> target and actual,
-    are entered by hand — click any <span style="color:var(--accent);font-weight:700">green value</span> to edit.
-    Everything you type is saved in this browser automatically.
+    When served by the backend (<code>server/</code>), <b>Facebook / Meta</b> and <b>LinkedIn</b>
+    figures are fetched live from the ad platforms on every load and cached for a few hours, so they
+    refresh several times a day on their own. Channels shown as <span class="tag synced">live</span>
+    are read-only; any channel without credentials yet shows as
+    <span class="tag manual">snapshot</span> and its numbers stay editable by hand.
+    Every <b>MQL / SQL / Opportunity</b> target and actual is always manual — click any
+    <span style="color:var(--accent);font-weight:700">green value</span> to edit. Manual entries
+    save in this browser automatically and are never overwritten by a live channel.
+    <br><br>
+    <b>Opened as the standalone artifact?</b> There’s no backend to reach, so you’ll see
+    “backend offline — saved snapshot”: the baked-in Facebook snapshot plus your manual entries.
+    Use the deployed backend URL for live data.
     <br><br>
     <b>Pacing.</b> The white marker on each bar shows how far through the period we are today.
     If the colored fill is at or past the marker, we’re on track; the “Projected” figure is a simple
     run-rate estimate of where the number lands at period end if the current pace holds.
     <br><br>
-    <b>Refreshing Facebook.</b> A static file can’t call the ad platforms itself. To pull fresh Meta
-    numbers, ask Claude to <code>re-sync the Facebook data in dashboard.html</code> — your manual
-    entries are preserved. A real-time auto-refresh would require a small backend service holding the
-    Meta &amp; LinkedIn API credentials (LinkedIn has no connector in this environment yet).
-    <br><br>
-    <b>Backup.</b> Use <b>Export</b> to download a JSON snapshot and <b>Import</b> to restore it (e.g. on another machine).`;
+    <b>Backup.</b> Use <b>Export</b> to download a JSON snapshot and <b>Import</b> to restore it.
+    <b>Refresh live</b> (top right) forces an immediate re-pull from the backend.`;
 }
 
 /* ---- derived outputs (no input re-render → no focus loss) ---- */
@@ -699,7 +772,7 @@ function updateDerived(){
   setOut("c.cpm", c.cpm!=null?money(c.cpm):"—");
   setOut("c.impr", int(c.impressions));
   setOut("c.ctr", c.ctr!=null?pct(c.ctr):"—");
-  document.getElementById("chan-sync").textContent = `Facebook synced ${state.meta.facebookSync}`;
+  renderSourceStatus();
 
   // Funnel (quarter actuals)
   renderFunnel();
@@ -721,6 +794,25 @@ function updateDerived(){
   drawCPLChart();
 }
 function setOut(key,val){ document.querySelectorAll(`[data-out="${key}"]`).forEach(n=>n.innerHTML=val); }
+
+// Per-channel data-source badges (live / snapshot / mock / error).
+function sourceBadge(label, src){
+  const map = {
+    live:     ["synced", "live"],
+    mock:     ["manual", "snapshot"],
+    snapshot: ["manual", "snapshot"],
+  };
+  const spec = src && src.startsWith("error") ? ["manual","error"] : (map[src] || ["manual","snapshot"]);
+  return `<span class="tag ${spec[0]}">${label}: ${spec[1]}</span>`;
+}
+function renderSourceStatus(){
+  const host = document.getElementById("chan-sources");
+  if(!host) return;
+  const synced = state.meta.facebookSync ? ` · synced ${state.meta.facebookSync}` : "";
+  const offline = live.reachable ? "" : `<span class="tag manual">backend offline — saved snapshot</span> `;
+  host.innerHTML = offline + sourceBadge("Facebook", live.facebook) + " " + sourceBadge("LinkedIn", live.linkedin)
+    + `<span class="hint" style="margin-left:8px">${synced.replace(/^ · /,"")}</span>`;
+}
 
 /* ---- Funnel ---- */
 function renderFunnel(){
@@ -868,9 +960,11 @@ document.getElementById("file-input").onchange=(e)=>{
   r.readAsText(f); e.target.value="";
 };
 document.getElementById("btn-print").onclick=()=>window.print();
+document.getElementById("btn-refresh").onclick=()=>fetchLive(true);
 
 /* ================================ GO ================================= */
-render();
+render();       // paint immediately from snapshot + saved manual data
+fetchLive();    // then try the backend; live channels overwrite, manual stays
 </script>
 </body>
 </html>
