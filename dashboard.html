@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beamr Marketing — Campaign & KPI Dashboard</title>
+<style>
+  :root {
+    --bg:            #07071c;
+    --surface-1:     #0f1029;
+    --surface-2:     #161638;
+    --border:        #1c1c3a;
+    --border-light:  #2a2a4a;
+    --text:          #ffffff;
+    --text-2:        #c2c2d6;
+    --muted:         #8b8ba3;
+    --accent:        #00d46a;   /* brand green */
+    --accent-dim:    #00b85c;
+
+    /* series (validated CVD-safe on --surface-1) */
+    --series-fb:     #3987e5;   /* Facebook = blue */
+    --series-li:     #d95926;   /* LinkedIn = orange */
+    --series-3:      #199e70;   /* aqua */
+
+    /* status (pacing) */
+    --good:          #00d46a;
+    --warn:          #fab219;
+    --bad:           #e66767;
+
+    --grid:          #22223f;
+    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 64px;
+  }
+  a { color: var(--accent); }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Top bar ---------- */
+  header.topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(7,7,28,.82);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 24px; max-width: 1280px; margin: 0 auto;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand .mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), #06b6d4);
+    display: grid; place-items: center; font-weight: 800; color: #04120a; font-size: 15px;
+  }
+  .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .brand .sub { font-size: 12px; color: var(--muted); margin: 0; }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  button.btn {
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    color: var(--text-2); background: var(--surface-2);
+    border: 1px solid var(--border-light); border-radius: 9px;
+    padding: 8px 14px; cursor: pointer; transition: .15s;
+  }
+  button.btn:hover { border-color: var(--accent); color: var(--text); }
+  button.btn.primary { background: var(--accent); color: #04120a; border-color: var(--accent); }
+  button.btn.primary:hover { background: var(--accent-dim); }
+
+  /* ---------- Layout ---------- */
+  section { margin-top: 40px; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 19px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .section-head .hint { font-size: 12.5px; color: var(--muted); }
+  .tag {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-light);
+    color: var(--muted);
+  }
+  .tag.synced { color: var(--series-fb); border-color: rgba(57,135,229,.4); background: rgba(57,135,229,.08); }
+  .tag.manual { color: var(--warn); border-color: rgba(250,178,25,.35); background: rgba(250,178,25,.08); }
+
+  .grid { display: grid; gap: 16px; }
+  .cards { display: grid; gap: 16px; }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow);
+  }
+  .card h3 { font-size: 15px; margin: 0 0 4px; font-weight: 700; }
+  .card .card-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
+
+  /* ---------- Hero summary ---------- */
+  .hero {
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(0,212,106,.10), transparent 55%),
+      var(--surface-1);
+    border: 1px solid var(--border); border-radius: 20px; padding: 28px;
+    display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 28px; align-items: center;
+  }
+  .hero .lead .eyebrow { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .hero .lead .status-line { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+  .hero .lead .status-note { font-size: 13.5px; color: var(--text-2); margin: 10px 0 0; }
+  .hero .stat { border-left: 1px solid var(--border); padding-left: 24px; }
+  .hero .stat .k { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .hero .stat .v { font-size: 34px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+  .hero .stat .d { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+
+  /* ---------- KPI meters ---------- */
+  .kpi-col-head { display:flex; align-items:center; gap:10px; margin: 0 0 14px; }
+  .kpi-col-head .period { font-size: 15px; font-weight: 700; }
+  .kpi-col-head .elapsed { font-size: 12px; color: var(--muted); }
+
+  .kpi { padding: 16px 0; border-top: 1px solid var(--border); }
+  .kpi:first-of-type { border-top: none; }
+  .kpi-top { display:flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .kpi-name { font-size: 14px; font-weight: 700; }
+  .kpi-name .full { color: var(--muted); font-weight: 500; font-size: 12px; }
+  .kpi-vals { font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kpi-vals b { color: var(--text); font-weight: 700; }
+
+  .meter { position: relative; height: 12px; border-radius: 999px; background: var(--surface-2); margin: 10px 0 8px; overflow: hidden; }
+  .meter .fill { position:absolute; left:0; top:0; bottom:0; border-radius: 999px; transition: width .5s ease; }
+  .meter .pace {
+    position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text);
+    opacity: .85;
+  }
+  .kpi-foot { display:flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .pill.good { color: var(--good); background: rgba(0,212,106,.10); }
+  .pill.warn { color: var(--warn); background: rgba(250,178,25,.10); }
+  .pill.bad  { color: var(--bad);  background: rgba(230,103,103,.12); }
+  .pill.good .dot { background: var(--good);} .pill.warn .dot{background:var(--warn);} .pill.bad .dot{background:var(--bad);}
+  .kpi-proj { color: var(--muted); }
+  .kpi-proj b { color: var(--text-2); }
+
+  /* ---------- inputs ---------- */
+  input.ed {
+    font-family: var(--font); font-variant-numeric: tabular-nums;
+    background: transparent; border: none; border-bottom: 1px dashed var(--border-light);
+    color: var(--accent); font-weight: 700; font-size: inherit; width: 74px; text-align: right;
+    padding: 1px 2px; border-radius: 4px; transition: .12s;
+  }
+  input.ed:hover { border-bottom-color: var(--accent); }
+  input.ed:focus { outline: none; background: rgba(0,212,106,.08); border-bottom-color: var(--accent); }
+  input.ed.wide { width: 96px; }
+
+  /* ---------- channel cards ---------- */
+  .chan-grid { grid-template-columns: repeat(3, 1fr); }
+  .chan { position: relative; overflow: hidden; }
+  .chan .accent-bar { position:absolute; left:0; top:0; bottom:0; width:4px; }
+  .chan .chan-head { display:flex; align-items:center; gap:10px; margin-bottom: 18px; }
+  .chan .chan-head .logo { width: 26px; height:26px; border-radius: 7px; display:grid; place-items:center; font-weight:800; font-size:13px; color:#fff; }
+  .chan .chan-head .name { font-size: 15px; font-weight: 700; }
+  .metric-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .metric .m-k { font-size: 11.5px; color: var(--muted); margin: 0 0 3px; text-transform: uppercase; letter-spacing: .03em; }
+  .metric .m-v { font-size: 21px; font-weight: 700; letter-spacing: -.01em; margin: 0; font-variant-numeric: tabular-nums; }
+  .metric .m-v.editable-wrap { font-size: 18px; }
+
+  /* ---------- funnel ---------- */
+  .funnel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: stretch; }
+  .fstage { background: var(--surface-2); border-radius: 12px; padding: 16px; position: relative; }
+  .fstage .f-k { font-size: 12px; color: var(--muted); margin: 0 0 6px; display:flex; align-items:center; gap:7px; }
+  .fstage .f-k .sw { width:9px; height:9px; border-radius: 2px; }
+  .fstage .f-v { font-size: 26px; font-weight: 800; margin: 0; font-variant-numeric: tabular-nums; }
+  .fstage .f-conv { position:absolute; right: -6px; top: 50%; transform: translateY(-50%); z-index: 2;
+    background: var(--surface-1); border: 1px solid var(--border-light); border-radius: 999px;
+    font-size: 11px; font-weight: 700; color: var(--text-2); padding: 3px 8px; white-space: nowrap; }
+
+  /* ---------- charts ---------- */
+  .charts-grid { grid-template-columns: 1fr 1fr; }
+  .chart-box svg { width: 100%; height: auto; display:block; overflow: visible; }
+  .legend { display:flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: var(--text-2); }
+  .legend .li { display:inline-flex; align-items:center; gap:7px; }
+  .legend .li .sw { width: 11px; height: 11px; border-radius: 3px; }
+
+  /* ---------- data table ---------- */
+  table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data th, table.data td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  table.data th:first-child, table.data td:first-child { text-align: left; }
+  table.data thead th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; }
+  table.data tfoot td { font-weight: 700; border-top: 2px solid var(--border-light); border-bottom: none; }
+  table.data .ro { color: var(--text-2); }
+
+  .note {
+    font-size: 12.5px; color: var(--muted); background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; line-height: 1.6;
+  }
+  .note b { color: var(--text-2); }
+  .note code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--accent); font-size: 12px; }
+
+  .foot { margin-top: 44px; font-size: 12px; color: var(--muted); text-align: center; }
+
+  @media (max-width: 1000px) {
+    .hero { grid-template-columns: 1fr; gap: 20px; }
+    .hero .stat { border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 18px; }
+    .chan-grid { grid-template-columns: 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 620px) {
+    .metric-list { grid-template-columns: 1fr 1fr; }
+    .funnel { grid-template-columns: 1fr 1fr; }
+    .hero .lead .status-line { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="mark">b</div>
+      <div>
+        <h1>Beamr Marketing Dashboard</h1>
+        <p class="sub">Campaign performance vs. quarterly &amp; half-year objectives</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-export">Export</button>
+      <button class="btn" id="btn-import">Import</button>
+      <button class="btn" id="btn-print">Print / PDF</button>
+      <button class="btn" id="btn-reset">Reset data</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section style="margin-top:32px;">
+    <div class="hero">
+      <div class="lead">
+        <p class="eyebrow" id="hero-eyebrow">This quarter · objectives</p>
+        <p class="status-line" id="hero-status">—</p>
+        <p class="status-note" id="hero-note">—</p>
+      </div>
+      <div class="stat">
+        <p class="k">Total leads this quarter</p>
+        <p class="v" data-out="hero-leads">—</p>
+        <p class="d" data-out="hero-leads-d">Facebook + LinkedIn</p>
+      </div>
+      <div class="stat">
+        <p class="k">Blended cost per lead</p>
+        <p class="v" data-out="hero-cpl">—</p>
+        <p class="d" data-out="hero-spend-d">—</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI OBJECTIVES -->
+  <section>
+    <div class="section-head">
+      <h2>Objectives &amp; pacing</h2>
+      <span class="hint">Targets and current actuals are editable. Pacing compares progress against the % of the period elapsed today.</span>
+    </div>
+    <div class="grid kpi-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="card" id="kpi-quarter"></div>
+      <div class="card" id="kpi-half"></div>
+    </div>
+  </section>
+
+  <!-- FUNNEL -->
+  <section>
+    <div class="section-head">
+      <h2>Lead → opportunity funnel</h2>
+      <span class="hint" id="funnel-hint">This quarter · conversion between stages</span>
+    </div>
+    <div class="card">
+      <div class="funnel" id="funnel"></div>
+    </div>
+  </section>
+
+  <!-- CHANNELS -->
+  <section>
+    <div class="section-head">
+      <h2>Channel performance</h2>
+      <span class="hint">This quarter to date</span>
+      <span class="tag synced" id="chan-sync">Facebook synced —</span>
+    </div>
+    <div class="cards chan-grid"></div>
+  </section>
+
+  <!-- CHARTS -->
+  <section>
+    <div class="section-head">
+      <h2>Trends</h2>
+      <span class="hint">Monthly, from the data table below</span>
+    </div>
+    <div class="grid charts-grid">
+      <div class="card chart-box">
+        <h3>Leads per month</h3>
+        <p class="card-sub">Facebook + LinkedIn, stacked</p>
+        <div id="chart-leads"></div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--series-fb)"></span>Facebook</span>
+          <span class="li"><span class="sw" style="background:var(--series-li)"></span>LinkedIn</span>
+        </div>
+      </div>
+      <div class="card chart-box">
+        <h3>Blended cost per lead</h3>
+        <p class="card-sub">Total spend ÷ total leads, by month</p>
+        <div id="chart-cpl"></div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--accent);border-radius:50%"></span>Blended CPL</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA TABLE -->
+  <section>
+    <div class="section-head">
+      <h2>Monthly data</h2>
+      <span class="tag synced">Facebook = synced</span>
+      <span class="tag manual">LinkedIn = manual</span>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <table class="data" id="data-table"></table>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section>
+    <div class="note" id="note-block"></div>
+  </section>
+
+  <div class="foot">
+    Beamr Marketing Dashboard · all edits saved locally in this browser (localStorage) · export regularly to keep a shareable copy.
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="application/json" style="display:none" />
+
+<script>
+/* ============================================================================
+   Beamr Marketing Dashboard
+   - Facebook figures baked in from the Meta Ads account "Beamr Marketing"
+     (USD), last synced on SYNC_DATE below. These are read-only in the UI.
+   - LinkedIn, KPI targets and KPI actuals are entered manually and persist
+     to localStorage.
+   - To refresh Facebook: ask Claude to re-pull the Meta data and update the
+     DEFAULT_DATA.channels.facebook block; your manual edits are preserved.
+   ========================================================================== */
+
+const STORAGE_KEY = "beamr_dashboard_v1";
+
+const DEFAULT_DATA = {
+  meta: { facebookSync: "2026-07-27", currency: "USD" },
+
+  // ---- Objectives: editable targets + manually-updated actuals ----
+  // NOTE: target/actual values below are EXAMPLE placeholders — replace with
+  // Beamr's real numbers (click any green value to edit).
+  kpis: {
+    quarter: {
+      label: "Q3 2026", start: "2026-07-01", end: "2026-09-30",
+      rows: [
+        { key: "mql",  name: "MQL",  full: "Marketing-qualified leads", target: 180, actual: 61 },
+        { key: "sql",  name: "SQL",  full: "Sales-qualified leads",      target: 60,  actual: 17 },
+        { key: "opps", name: "Opps", full: "Opportunities created",      target: 18,  actual: 4  }
+      ]
+    },
+    half: {
+      label: "H2 2026", start: "2026-07-01", end: "2026-12-31",
+      rows: [
+        { key: "mql",  name: "MQL",  full: "Marketing-qualified leads", target: 360, actual: 61 },
+        { key: "sql",  name: "SQL",  full: "Sales-qualified leads",      target: 120, actual: 17 },
+        { key: "opps", name: "Opps", full: "Opportunities created",      target: 40,  actual: 4  }
+      ]
+    }
+  },
+
+  // ---- Channels: current-quarter snapshot ----
+  channels: {
+    facebook: {
+      // synced snapshot (Q3-to-date, active lead-gen campaign)
+      current: { leads: 54, spend: 7888.39, impressions: 294571, clicks: 4409, reach: 121462, cpm: 26.78, cpc: 1.79, ctr: 1.50, cpl: 146.08 }
+    },
+    linkedin: {
+      // MANUAL — enter your LinkedIn quarter-to-date numbers
+      current: { leads: 0, spend: 0, impressions: 0, clicks: 0 }
+    }
+  },
+
+  // ---- Monthly series (drives the trend charts) ----
+  // Facebook rows come from Meta; LinkedIn columns are manual.
+  months: [
+    { m: "Feb 2026", fbLeads: 12,  fbSpend: 90.55,   liLeads: 0, liSpend: 0 },
+    { m: "Mar 2026", fbLeads: 0,   fbSpend: 0,       liLeads: 0, liSpend: 0 },
+    { m: "Apr 2026", fbLeads: 90,  fbSpend: 3245.41, liLeads: 0, liSpend: 0 },
+    { m: "May 2026", fbLeads: 109, fbSpend: 7954.56, liLeads: 0, liSpend: 0 },
+    { m: "Jun 2026", fbLeads: 38,  fbSpend: 8999.47, liLeads: 0, liSpend: 0 },
+    { m: "Jul 2026", fbLeads: 54,  fbSpend: 7888.39, liLeads: 0, liSpend: 0 }
+  ]
+};
+
+/* ------------------------------- state -------------------------------- */
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return deepMerge(clone(DEFAULT_DATA), JSON.parse(raw));
+  } catch (e) { console.warn("load failed", e); }
+  return clone(DEFAULT_DATA);
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.warn("save failed", e); }
+}
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function deepMerge(base, over) {
+  if (Array.isArray(base) && Array.isArray(over)) return over;
+  if (isObj(base) && isObj(over)) {
+    const out = {};
+    for (const k of new Set([...Object.keys(base), ...Object.keys(over)]))
+      out[k] = (k in over) ? deepMerge(base[k], over[k]) : base[k];
+    return out;
+  }
+  return over === undefined ? base : over;
+}
+function isObj(x){ return x && typeof x === "object" && !Array.isArray(x); }
+
+/* ----------------------------- formatting ----------------------------- */
+const CUR = () => state.meta.currency || "USD";
+const SYM = { USD: "$", ILS: "₪", EUR: "€", GBP: "£" };
+function cur(){ return SYM[CUR()] || "$"; }
+function int(n){ return (n==null||isNaN(n)) ? "—" : Math.round(n).toLocaleString("en-US"); }
+function money(n, dp){
+  if (n==null||isNaN(n)) return "—";
+  dp = dp==null ? (n>=1000?0:2) : dp;
+  return cur() + n.toLocaleString("en-US",{minimumFractionDigits:dp, maximumFractionDigits:dp});
+}
+function pct(n, dp){ return (n==null||isNaN(n)) ? "—" : (n*100).toFixed(dp==null?1:dp) + "%"; }
+
+/* ------------------------------- dates -------------------------------- */
+function today(){ return new Date(); }
+function daysBetween(a, b){ return (b - a) / 86400000; }
+function elapsedFrac(startISO, endISO){
+  const s = new Date(startISO+"T00:00:00"), e = new Date(endISO+"T23:59:59"), n = today();
+  if (n <= s) return 0;
+  if (n >= e) return 1;
+  return daysBetween(s, n) / daysBetween(s, e);
+}
+
+/* --------------------------- pacing logic ----------------------------- */
+function pacing(actual, target, startISO, endISO){
+  const el = elapsedFrac(startISO, endISO);
+  const prog = target > 0 ? actual / target : 0;
+  let status, label;
+  if (prog >= 1)            { status = "good"; label = "Achieved"; }
+  else {
+    const ratio = el > 0 ? prog / el : (prog > 0 ? 2 : 0);
+    if (ratio >= 0.95)      { status = "good"; label = "On track"; }
+    else if (ratio >= 0.75) { status = "warn"; label = "Slightly behind"; }
+    else                    { status = "bad";  label = "Behind"; }
+  }
+  const projected = el > 0 ? actual / el : actual;
+  return { el, prog, status, label, projected };
+}
+
+/* ------------------------- derived aggregates ------------------------- */
+function combined(){
+  const fb = state.channels.facebook.current, li = state.channels.linkedin.current;
+  const leads = num(fb.leads) + num(li.leads);
+  const spend = num(fb.spend) + num(li.spend);
+  const impr  = num(fb.impressions) + num(li.impressions);
+  const clicks= num(fb.clicks) + num(li.clicks);
+  return {
+    leads, spend, impressions: impr, clicks,
+    cpl: leads ? spend/leads : null,
+    cpm: impr ? spend/impr*1000 : null,
+    ctr: impr ? clicks/impr : null
+  };
+}
+function num(x){ const n = parseFloat(x); return isNaN(n)?0:n; }
+
+/* ================================ RENDER =============================== */
+function render(){
+  renderKPIcard("kpi-quarter", state.kpis.quarter);
+  renderKPIcard("kpi-half", state.kpis.half);
+  renderChannels();
+  renderTable();
+  renderNote();
+  updateDerived();
+}
+
+/* ---- KPI cards ---- */
+function renderKPIcard(id, period){
+  const el = document.getElementById(id);
+  const efrac = elapsedFrac(period.start, period.end);
+  let html = `<div class="kpi-col-head">
+      <span class="period">${period.label}</span>
+      <span class="elapsed">· ${Math.round(efrac*100)}% of period elapsed</span>
+    </div>`;
+  period.rows.forEach((r, i) => {
+    html += `<div class="kpi" data-kpi="${id}:${i}"></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function paintKPIrow(node, period, r, idx, pathBase){
+  const p = pacing(num(r.actual), num(r.target), period.start, period.end);
+  const fillColor = p.status==="good"?"var(--good)":p.status==="warn"?"var(--warn)":"var(--bad)";
+  const w = Math.max(0, Math.min(1, p.prog)) * 100;
+  node.innerHTML = `
+    <div class="kpi-top">
+      <div class="kpi-name">${r.name} <span class="full">${r.full}</span></div>
+      <div class="kpi-vals">
+        <b><input class="ed" type="number" min="0" step="1" data-path="${pathBase}.actual" value="${r.actual}"></b>
+        <span> / </span>
+        <input class="ed" type="number" min="0" step="1" data-path="${pathBase}.target" value="${r.target}">
+        <span data-out="${pathBase}.pctwrap"></span>
+      </div>
+    </div>
+    <div class="meter">
+      <div class="fill" style="width:${w}%;background:${fillColor}"></div>
+      <div class="pace" style="left:${p.el*100}%"></div>
+    </div>
+    <div class="kpi-foot">
+      <span class="pill ${p.status}"><span class="dot"></span>${p.label}</span>
+      <span class="kpi-proj">Projected: <b>${int(p.projected)}</b> · pace marker = ${Math.round(p.el*100)}%</span>
+    </div>`;
+}
+
+/* ---- Channels ---- */
+function renderChannels(){
+  const host = document.querySelector(".chan-grid");
+  const fb = state.channels.facebook.current;
+  const c = combined();
+  host.innerHTML = `
+    <div class="card chan">
+      <div class="accent-bar" style="background:var(--series-fb)"></div>
+      <div class="chan-head">
+        <div class="logo" style="background:var(--series-fb)">f</div>
+        <div class="name">Facebook / Meta</div>
+        <span class="tag synced" style="margin-left:auto">synced</span>
+      </div>
+      <div class="metric-list">
+        ${metricRO("Leads", int(fb.leads))}
+        ${metricRO("Cost / lead", money(fb.cpl))}
+        ${metricRO("Spend", money(fb.spend,0))}
+        ${metricRO("CPM", money(fb.cpm))}
+        ${metricRO("Impressions", int(fb.impressions))}
+        ${metricRO("CTR", pct(fb.ctr/100))}
+      </div>
+    </div>
+
+    <div class="card chan">
+      <div class="accent-bar" style="background:var(--series-li)"></div>
+      <div class="chan-head">
+        <div class="logo" style="background:var(--series-li)">in</div>
+        <div class="name">LinkedIn</div>
+        <span class="tag manual" style="margin-left:auto">manual</span>
+      </div>
+      <div class="metric-list">
+        ${metricEd("Leads", "channels.linkedin.current.leads", 1)}
+        ${metricRO("Cost / lead", `<span data-out="li.cpl">—</span>`)}
+        ${metricEd("Spend", "channels.linkedin.current.spend", 1)}
+        ${metricRO("CPM", `<span data-out="li.cpm">—</span>`)}
+        ${metricEd("Impressions", "channels.linkedin.current.impressions", 1)}
+        ${metricEd("Clicks", "channels.linkedin.current.clicks", 1)}
+      </div>
+    </div>
+
+    <div class="card chan">
+      <div class="accent-bar" style="background:var(--accent)"></div>
+      <div class="chan-head">
+        <div class="logo" style="background:var(--accent);color:#04120a">Σ</div>
+        <div class="name">Combined</div>
+      </div>
+      <div class="metric-list">
+        ${metricRO("Leads", `<span data-out="c.leads">—</span>`)}
+        ${metricRO("Blended CPL", `<span data-out="c.cpl">—</span>`)}
+        ${metricRO("Spend", `<span data-out="c.spend">—</span>`)}
+        ${metricRO("Blended CPM", `<span data-out="c.cpm">—</span>`)}
+        ${metricRO("Impressions", `<span data-out="c.impr">—</span>`)}
+        ${metricRO("CTR", `<span data-out="c.ctr">—</span>`)}
+      </div>
+    </div>`;
+}
+function metricRO(k, v){ return `<div class="metric"><p class="m-k">${k}</p><p class="m-v ro">${v}</p></div>`; }
+function metricEd(k, path, step){
+  return `<div class="metric"><p class="m-k">${k}</p>
+    <p class="m-v editable-wrap"><input class="ed wide" type="number" min="0" step="${step||1}" data-path="${path}" value="${getPath(path)}"></p></div>`;
+}
+
+/* ---- Data table ---- */
+function renderTable(){
+  const t = document.getElementById("data-table");
+  let rows = "";
+  state.months.forEach((mo, i) => {
+    const tot = num(mo.fbLeads)+num(mo.liLeads);
+    const spend = num(mo.fbSpend)+num(mo.liSpend);
+    rows += `<tr>
+      <td>${mo.m}</td>
+      <td class="ro">${int(mo.fbLeads)}</td>
+      <td><input class="ed" type="number" min="0" step="1" data-path="months.${i}.liLeads" value="${mo.liLeads}"></td>
+      <td class="ro">${money(mo.fbSpend,0)}</td>
+      <td><input class="ed" type="number" min="0" step="1" data-path="months.${i}.liSpend" value="${mo.liSpend}"></td>
+      <td class="ro" data-out="row.${i}.leads">${int(tot)}</td>
+      <td class="ro" data-out="row.${i}.cpl">${tot?money(spend/tot):"—"}</td>
+    </tr>`;
+  });
+  t.innerHTML = `
+    <thead><tr>
+      <th>Month</th>
+      <th>FB leads</th><th>LI leads</th>
+      <th>FB spend</th><th>LI spend</th>
+      <th>Total leads</th><th>Blended CPL</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td>Total</td>
+      <td class="ro" data-out="tf.fbleads"></td>
+      <td class="ro" data-out="tf.lileads"></td>
+      <td class="ro" data-out="tf.fbspend"></td>
+      <td class="ro" data-out="tf.lispend"></td>
+      <td class="ro" data-out="tf.leads"></td>
+      <td class="ro" data-out="tf.cpl"></td>
+    </tr></tfoot>`;
+}
+
+/* ---- Notes ---- */
+function renderNote(){
+  document.getElementById("note-block").innerHTML = `
+    <b>How this dashboard works.</b>
+    <b>Facebook / Meta</b> figures are pulled live from the Meta Ads account
+    “Beamr Marketing” and baked in as a snapshot (last synced
+    <b>${state.meta.facebookSync}</b>). They are read-only here.
+    <b>LinkedIn</b>, and every <b>MQL / SQL / Opportunity</b> target and actual,
+    are entered by hand — click any <span style="color:var(--accent);font-weight:700">green value</span> to edit.
+    Everything you type is saved in this browser automatically.
+    <br><br>
+    <b>Pacing.</b> The white marker on each bar shows how far through the period we are today.
+    If the colored fill is at or past the marker, we’re on track; the “Projected” figure is a simple
+    run-rate estimate of where the number lands at period end if the current pace holds.
+    <br><br>
+    <b>Refreshing Facebook.</b> A static file can’t call the ad platforms itself. To pull fresh Meta
+    numbers, ask Claude to <code>re-sync the Facebook data in dashboard.html</code> — your manual
+    entries are preserved. A real-time auto-refresh would require a small backend service holding the
+    Meta &amp; LinkedIn API credentials (LinkedIn has no connector in this environment yet).
+    <br><br>
+    <b>Backup.</b> Use <b>Export</b> to download a JSON snapshot and <b>Import</b> to restore it (e.g. on another machine).`;
+}
+
+/* ---- derived outputs (no input re-render → no focus loss) ---- */
+function updateDerived(){
+  // KPI rows (re-paint fully; inputs live inside but we only repaint on structural render + value inputs handled separately)
+  ["quarter","half"].forEach(pk => {
+    const id = pk==="quarter" ? "kpi-quarter" : "kpi-half";
+    const period = state.kpis[pk];
+    period.rows.forEach((r, i) => {
+      const node = document.querySelector(`[data-kpi="${id}:${i}"]`);
+      if (node && !node.querySelector("input:focus"))
+        paintKPIrow(node, period, r, i, `kpis.${pk}.rows.${i}`);
+    });
+  });
+
+  // Hero
+  const c = combined();
+  setOut("hero-leads", int(c.leads));
+  setOut("hero-cpl", c.cpl!=null ? money(c.cpl) : "—");
+  setOut("hero-spend-d", `${money(c.spend,0)} spent`);
+  const q = state.kpis.quarter;
+  const paces = q.rows.map(r => pacing(num(r.actual), num(r.target), q.start, q.end));
+  const onTrack = paces.filter(p => p.status==="good").length;
+  const behind = paces.filter(p => p.status==="bad").length;
+  const heroStatus = document.getElementById("hero-status");
+  const heroNote = document.getElementById("hero-note");
+  document.getElementById("hero-eyebrow").textContent = `${q.label} · objectives (${Math.round(elapsedFrac(q.start,q.end)*100)}% elapsed)`;
+  heroStatus.textContent = `${onTrack} of ${q.rows.length} objectives on track`;
+  const worst = behind>0 ? "bad" : (onTrack < q.rows.length ? "warn" : "good");
+  heroStatus.style.color = worst==="good"?"var(--good)":worst==="warn"?"var(--warn)":"var(--bad)";
+  heroNote.innerHTML = q.rows.map((r,i)=>`${r.name} ${Math.round(paces[i].prog*100)}%`).join(" · ")
+     + (behind>0 ? ` — ${behind} behind pace` : "");
+
+  // LinkedIn + combined metrics
+  const fb = state.channels.facebook.current, li = state.channels.linkedin.current;
+  setOut("li.cpl", num(li.leads)?money(num(li.spend)/num(li.leads)):"—");
+  setOut("li.cpm", num(li.impressions)?money(num(li.spend)/num(li.impressions)*1000):"—");
+  setOut("c.leads", int(c.leads));
+  setOut("c.cpl", c.cpl!=null?money(c.cpl):"—");
+  setOut("c.spend", money(c.spend,0));
+  setOut("c.cpm", c.cpm!=null?money(c.cpm):"—");
+  setOut("c.impr", int(c.impressions));
+  setOut("c.ctr", c.ctr!=null?pct(c.ctr):"—");
+  document.getElementById("chan-sync").textContent = `Facebook synced ${state.meta.facebookSync}`;
+
+  // Funnel (quarter actuals)
+  renderFunnel();
+
+  // Table totals + derived cells
+  let tfb=0,tli=0,tfs=0,tls=0;
+  state.months.forEach((mo,i)=>{
+    const tot=num(mo.fbLeads)+num(mo.liLeads), sp=num(mo.fbSpend)+num(mo.liSpend);
+    setOut(`row.${i}.leads`, int(tot));
+    setOut(`row.${i}.cpl`, tot?money(sp/tot):"—");
+    tfb+=num(mo.fbLeads); tli+=num(mo.liLeads); tfs+=num(mo.fbSpend); tls+=num(mo.liSpend);
+  });
+  setOut("tf.fbleads",int(tfb)); setOut("tf.lileads",int(tli));
+  setOut("tf.fbspend",money(tfs,0)); setOut("tf.lispend",money(tls,0));
+  setOut("tf.leads",int(tfb+tli)); setOut("tf.cpl",(tfb+tli)?money((tfs+tls)/(tfb+tli)):"—");
+
+  // Charts
+  drawLeadsChart();
+  drawCPLChart();
+}
+function setOut(key,val){ document.querySelectorAll(`[data-out="${key}"]`).forEach(n=>n.innerHTML=val); }
+
+/* ---- Funnel ---- */
+function renderFunnel(){
+  const c = combined();
+  const q = state.kpis.quarter.rows;
+  const mql = num(q.find(r=>r.key==="mql").actual);
+  const sql = num(q.find(r=>r.key==="sql").actual);
+  const opp = num(q.find(r=>r.key==="opps").actual);
+  const stages = [
+    { k:"Leads", v:c.leads, col:"var(--series-fb)", conv:null },
+    { k:"MQL",   v:mql, col:"var(--series-3)", conv: c.leads?mql/c.leads:null },
+    { k:"SQL",   v:sql, col:"var(--warn)",     conv: mql?sql/mql:null },
+    { k:"Opps",  v:opp, col:"var(--accent)",   conv: sql?opp/sql:null }
+  ];
+  document.getElementById("funnel").innerHTML = stages.map((s,i)=>`
+    <div class="fstage">
+      <p class="f-k"><span class="sw" style="background:${s.col}"></span>${s.k}</p>
+      <p class="f-v">${int(s.v)}</p>
+      ${s.conv!=null && i>0 ? `<span class="f-conv">${pct(s.conv,0)} ↴</span>`:""}
+    </div>`).join("");
+}
+
+/* =============================== CHARTS ================================ */
+function drawLeadsChart(){
+  const data = state.months.map(m=>({label:m.m.replace(" 2026",""), fb:num(m.fbLeads), li:num(m.liLeads)}));
+  const W=560, H=260, P={t:20,r:16,b:34,l:40};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const max = Math.max(1, ...data.map(d=>d.fb+d.li));
+  const step = niceStep(max);
+  const top = Math.ceil(max/step)*step;
+  const n=data.length, band=iw/n, bw=Math.min(34, band*0.55);
+  const y=v=>P.t+ih-(v/top)*ih;
+  let g="";
+  for(let t=0;t<=top+1e-9;t+=step){ const yy=y(t);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${P.l+iw}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+    g+=`<text x="${P.l-8}" y="${yy+4}" text-anchor="end" fill="var(--muted)" font-size="11">${int(t)}</text>`;
+  }
+  let bars="";
+  data.forEach((d,i)=>{
+    const cx=P.l+band*i+band/2, x=cx-bw/2;
+    const hFb=(d.fb/top)*ih, hLi=(d.li/top)*ih;
+    const yFbTop=P.t+ih-hFb;
+    // Facebook (bottom), square base + rounded top only if no LI on top
+    bars+=roundedBar(x,yFbTop,bw,hFb,"var(--series-fb)", d.li>0?false:true);
+    if(d.li>0){
+      const yLiTop=yFbTop-hLi-2; // 2px surface gap
+      bars+=roundedBar(x,yLiTop,bw,hLi,"var(--series-li)", true);
+    }
+    const totV=d.fb+d.li;
+    if(totV>0) bars+=`<text x="${cx}" y="${(d.li>0?yFbTop-hLi-2:yFbTop)-7}" text-anchor="middle" fill="var(--text-2)" font-size="11" font-weight="700">${int(totV)}</text>`;
+    bars+=`<text x="${cx}" y="${P.t+ih+18}" text-anchor="middle" fill="var(--muted)" font-size="11">${d.label}</text>`;
+  });
+  document.getElementById("chart-leads").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Leads per month, Facebook and LinkedIn stacked">${g}${bars}</svg>`;
+}
+
+function drawCPLChart(){
+  const data = state.months.map(m=>{
+    const leads=num(m.fbLeads)+num(m.liLeads), spend=num(m.fbSpend)+num(m.liSpend);
+    return {label:m.m.replace(" 2026",""), cpl: leads?spend/leads:null};
+  });
+  const W=560,H=260,P={t:20,r:20,b:34,l:46};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const vals=data.map(d=>d.cpl).filter(v=>v!=null);
+  const max=Math.max(1,...vals);
+  const step=niceStep(max); const top=Math.ceil(max/step)*step;
+  const n=data.length, band=iw/n;
+  const x=i=>P.l+band*i+band/2, y=v=>P.t+ih-(v/top)*ih;
+  let g="";
+  for(let t=0;t<=top+1e-9;t+=step){ const yy=y(t);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${P.l+iw}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+    g+=`<text x="${P.l-8}" y="${yy+4}" text-anchor="end" fill="var(--muted)" font-size="11">${cur()}${int(t)}</text>`;
+  }
+  // line across points that have a value
+  const pts=data.map((d,i)=>d.cpl!=null?{x:x(i),y:y(d.cpl),d}:null).filter(Boolean);
+  let path="";
+  pts.forEach((p,i)=>path+=(i?"L":"M")+p.x+" "+p.y+" ");
+  let line = pts.length>1?`<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`:"";
+  let dots="";
+  pts.forEach((p,i)=>{
+    dots+=`<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="var(--accent)" stroke="var(--surface-1)" stroke-width="2"/>`;
+    if(i===pts.length-1) dots+=`<text x="${p.x}" y="${p.y-11}" text-anchor="middle" fill="var(--text)" font-size="11" font-weight="700">${money(p.d.cpl)}</text>`;
+  });
+  let labels="";
+  data.forEach((d,i)=>labels+=`<text x="${x(i)}" y="${P.t+ih+18}" text-anchor="middle" fill="var(--muted)" font-size="11">${d.label}</text>`);
+  document.getElementById("chart-cpl").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Blended cost per lead by month">${g}${line}${dots}${labels}</svg>`;
+}
+
+function roundedBar(x,y,w,h,fill,roundTop){
+  if(h<=0) return "";
+  const r=Math.min(4,w/2,h);
+  if(!roundTop||h<r) return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;
+  return `<path d="M${x} ${y+h} L${x} ${y+r} Q${x} ${y} ${x+r} ${y} L${x+w-r} ${y} Q${x+w} ${y} ${x+w} ${y+r} L${x+w} ${y+h} Z" fill="${fill}"/>`;
+}
+function niceStep(max){
+  const raw=max/4; const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const n=raw/mag;
+  const s=n<1.5?1:n<3?2:n<7?5:10;
+  return s*mag;
+}
+
+/* ============================ INPUT BINDING =========================== */
+function getPath(path){
+  return path.split(".").reduce((o,k)=> (o==null?undefined:o[k]), state);
+}
+function setPath(path,val){
+  const keys=path.split("."); let o=state;
+  for(let i=0;i<keys.length-1;i++) o=o[keys[i]];
+  o[keys[keys.length-1]]=val;
+}
+// Delegated listeners (attached once) so dynamically re-painted inputs keep working.
+document.addEventListener("input", (e)=>{
+  const inp = e.target.closest ? e.target.closest("input.ed") : null;
+  if(!inp || !inp.dataset.path) return;
+  const v = inp.value==="" ? 0 : parseFloat(inp.value);
+  setPath(inp.dataset.path, isNaN(v)?0:v);
+  save();
+  updateDerived();            // focused KPI row is skipped in updateDerived → focus/cursor preserved
+});
+document.addEventListener("focusout", (e)=>{
+  const inp = e.target.closest ? e.target.closest("input.ed") : null;
+  if(inp) setTimeout(updateDerived, 0);   // refresh the just-edited row once focus has left
+});
+
+/* ============================== TOOLBAR =============================== */
+document.getElementById("btn-reset").onclick=()=>{
+  if(confirm("Reset all manual entries (LinkedIn, KPI targets & actuals) back to the synced defaults? This cannot be undone.")){
+    localStorage.removeItem(STORAGE_KEY); state=clone(DEFAULT_DATA); render();
+  }
+};
+document.getElementById("btn-export").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="beamr-dashboard-"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("btn-import").onclick=()=>document.getElementById("file-input").click();
+document.getElementById("file-input").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ state=deepMerge(clone(DEFAULT_DATA),JSON.parse(r.result)); save(); render(); }
+    catch(err){ alert("Could not read that file: "+err.message); } };
+  r.readAsText(f); e.target.value="";
+};
+document.getElementById("btn-print").onclick=()=>window.print();
+
+/* ================================ GO ================================= */
+render();
+</script>
+</body>
+</html>
