@@ -21,7 +21,7 @@ export function readCfg() {
     linkedin: {
       accountId: process.env.LINKEDIN_AD_ACCOUNT_ID || "",
       token: process.env.LINKEDIN_ACCESS_TOKEN || "",
-      version: process.env.LINKEDIN_VERSION || "202405",
+      version: process.env.LINKEDIN_VERSION || "202501",
     },
     quarterStart: process.env.QUARTER_START || "2026-07-01",
     quarterEnd: process.env.QUARTER_END || "2026-09-30",
