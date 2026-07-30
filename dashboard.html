@@ -90,6 +90,7 @@
   .delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat { color: var(--muted); }
   .delta.bad-up { color: var(--bad); } .delta.good-down { color: var(--good); }
   .hero .stat .d .delta { margin-right: 6px; }
+  .cmp-prev { color: var(--muted); font-size: 12px; font-weight: 500; }
   .metric .m-sub { font-size: 11.5px; margin: 3px 0 0; color: var(--muted); }
 
   /* ---------- Ads table ---------- */
@@ -108,6 +109,14 @@
   .ad-name .txt { font-weight: 600; color: var(--text); }
   .ads-wrap { max-height: 560px; overflow: auto; }
   .ads-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13.5px; }
+  .ads-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
+  .ads-toolbar .ads-sort-label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+  .ads-sort { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .ads-sort button { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-2);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; cursor: pointer; }
+  .ads-sort button:hover { color: var(--text); border-color: var(--border-light); }
+  .ads-sort button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
   button.btn {
@@ -212,14 +221,12 @@
   .metric .m-v.editable-wrap { font-size: 18px; }
 
   /* ---------- funnel ---------- */
-  .funnel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: stretch; }
-  .fstage { background: var(--surface-2); border-radius: 12px; padding: 16px; position: relative; }
-  .fstage .f-k { font-size: 12px; color: var(--muted); margin: 0 0 6px; display:flex; align-items:center; gap:7px; }
-  .fstage .f-k .sw { width:9px; height:9px; border-radius: 2px; }
-  .fstage .f-v { font-size: 26px; font-weight: 800; margin: 0; font-variant-numeric: tabular-nums; }
-  .fstage .f-conv { position:absolute; right: -6px; top: 50%; transform: translateY(-50%); z-index: 2;
-    background: var(--surface-1); border: 1px solid var(--border-light); border-radius: 999px;
-    font-size: 11px; font-weight: 700; color: var(--text-2); padding: 3px 8px; white-space: nowrap; }
+  .funnel svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .funnel-summary { display:flex; flex-wrap:wrap; gap: 10px 26px; margin-top: 16px;
+    padding-top: 16px; border-top: 1px solid var(--border); }
+  .funnel-summary .fs-item { display:flex; flex-direction:column; gap:2px; }
+  .funnel-summary .fs-k { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing:.03em; }
+  .funnel-summary .fs-v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
   /* ---------- charts ---------- */
   .charts-grid { grid-template-columns: 1fr 1fr; }
@@ -344,6 +351,7 @@
     </div>
     <div class="card">
       <div class="funnel" id="funnel"></div>
+      <div class="funnel-summary" id="funnel-summary"></div>
     </div>
   </section>
 
@@ -407,6 +415,15 @@
       </span>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
+      <div class="ads-toolbar">
+        <span class="ads-sort-label">Quick sort</span>
+        <span class="ads-sort" id="ads-sort">
+          <button data-key="impressions">Top impressions</button>
+          <button data-key="clicks">Top clicks</button>
+          <button data-key="ctr">Top CTR</button>
+          <button data-key="leads">Top leads</button>
+        </span>
+      </div>
       <div class="ads-wrap"><table class="ads" id="ads-table"></table></div>
     </div>
   </section>
@@ -880,8 +897,12 @@ function updateDerived(){
   const pc = prevCombined();
   setOut("hero-leads", int(c.leads));
   setOut("hero-cpl", c.cpl!=null ? money(c.cpl) : "—");
-  setOut("hero-leads-d", (ui.compare && pc) ? deltaChip(c.leads, pc.leads, true) : "Facebook + LinkedIn");
-  setOut("hero-spend-d", ((ui.compare && pc) ? deltaChip(c.cpl, pc.cpl, false) + " · " : "") + `${money(c.spend,0)} spent`);
+  setOut("hero-leads-d", (ui.compare && pc)
+    ? `${deltaChip(c.leads, pc.leads, true)} <span class="cmp-prev">vs ${int(pc.leads)} prev</span>`
+    : "Facebook + LinkedIn");
+  setOut("hero-spend-d", (ui.compare && pc)
+    ? `${deltaChip(c.cpl, pc.cpl, false)} <span class="cmp-prev">vs ${pc.cpl!=null?money(pc.cpl):"—"} prev</span> · ${money(c.spend,0)} spent`
+    : `${money(c.spend,0)} spent`);
   const q = state.kpis.quarter;
   const paces = q.rows.map(r => pacing(num(r.actual), num(r.target), q.start, q.end));
   const onTrack = paces.filter(p => p.status==="good").length;
@@ -964,6 +985,8 @@ function renderSourceStatus(){
 }
 
 /* ---- Funnel ---- */
+// Tapering SVG funnel: Leads → MQL → SQL → Opportunities, with the
+// stage-to-stage conversion rate rendered on every boundary.
 function renderFunnel(){
   const c = combined();
   const q = state.kpis.quarter.rows;
@@ -971,17 +994,55 @@ function renderFunnel(){
   const sql = num(q.find(r=>r.key==="sql").actual);
   const opp = num(q.find(r=>r.key==="opps").actual);
   const stages = [
-    { k:"Leads", v:c.leads, col:"var(--series-fb)", conv:null },
-    { k:"MQL",   v:mql, col:"var(--series-3)", conv: c.leads?mql/c.leads:null },
-    { k:"SQL",   v:sql, col:"var(--warn)",     conv: mql?sql/mql:null },
-    { k:"Opps",  v:opp, col:"var(--accent)",   conv: sql?opp/sql:null }
+    { k:"Leads",         v:c.leads, col:"var(--series-fb)" },
+    { k:"MQL",           v:mql,     col:"var(--series-3)" },
+    { k:"SQL",           v:sql,     col:"var(--warn)" },
+    { k:"Opportunities", v:opp,     col:"var(--accent)" }
   ];
-  document.getElementById("funnel").innerHTML = stages.map((s,i)=>`
-    <div class="fstage">
-      <p class="f-k"><span class="sw" style="background:${s.col}"></span>${s.k}</p>
-      <p class="f-v">${int(s.v)}</p>
-      ${s.conv!=null && i>0 ? `<span class="f-conv">${pct(s.conv,0)} ↴</span>`:""}
-    </div>`).join("");
+  const n = stages.length;
+  const max = Math.max(1, ...stages.map(s=>s.v));
+  const W=960, H=320, padX=16, topPad=66, botPad=52;
+  const innerH = H - topPad - botPad;
+  const gap = 74;                                   // room for the conversion badge
+  const segW = (W - padX*2 - gap*(n-1)) / n;
+  const midY = topPad + innerH/2;
+  const hOf = v => Math.max(10, (v/max)*innerH);
+  let x = padX, svg = "";
+  stages.forEach((s,i)=>{
+    const hL = hOf(s.v);
+    const hR = hOf(i<n-1 ? stages[i+1].v : s.v);
+    const yTL=midY-hL/2, yBL=midY+hL/2, yTR=midY-hR/2, yBR=midY+hR/2;
+    svg += `<path d="M${x} ${yTL} L${x+segW} ${yTR} L${x+segW} ${yBR} L${x} ${yBL} Z" fill="${s.col}" opacity="0.94"/>`;
+    const cx = x+segW/2;
+    // stage name + value above the shape
+    svg += `<text x="${cx}" y="${topPad-40}" text-anchor="middle" fill="var(--muted)" font-size="12" font-weight="700" letter-spacing="0.4">${s.k.toUpperCase()}</text>`;
+    svg += `<text x="${cx}" y="${topPad-14}" text-anchor="middle" fill="var(--text)" font-size="27" font-weight="800">${int(s.v)}</text>`;
+    // % of all leads, below the shape
+    const pctLeads = stages[0].v ? s.v/stages[0].v : null;
+    svg += `<text x="${cx}" y="${topPad+innerH+30}" text-anchor="middle" fill="var(--text-2)" font-size="12">${i===0?"100% of leads":(pctLeads!=null?pct(pctLeads,1)+" of leads":"—")}</text>`;
+    // conversion badge on the boundary to the next stage
+    if(i<n-1){
+      const conv = s.v ? stages[i+1].v/s.v : null;
+      const bx = x+segW+gap/2, bw=60, bh=26;
+      svg += `<line x1="${x+segW}" y1="${midY}" x2="${x+segW+gap}" y2="${midY}" stroke="var(--border-light)" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+      svg += `<rect x="${bx-bw/2}" y="${midY-bh/2}" width="${bw}" height="${bh}" rx="13" fill="var(--surface-1)" stroke="var(--border-light)" stroke-width="1.5"/>`;
+      svg += `<text x="${bx}" y="${midY+4}" text-anchor="middle" fill="var(--text)" font-size="12.5" font-weight="800">${conv!=null?pct(conv,0):"—"}</text>`;
+    }
+    x += segW+gap;
+  });
+  document.getElementById("funnel").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Lead to opportunity funnel with stage conversion rates">${svg}</svg>`;
+
+  // summary strip — every stage-to-stage rate plus the end-to-end rate
+  const rate=(a,b)=> a ? pct(b/a,1) : "—";
+  const items = [
+    { k:"Leads → MQL", v: rate(stages[0].v, stages[1].v) },
+    { k:"MQL → SQL",   v: rate(stages[1].v, stages[2].v) },
+    { k:"SQL → Opp.",  v: rate(stages[2].v, stages[3].v) },
+    { k:"Leads → Opp. (overall)", v: rate(stages[0].v, stages[3].v) }
+  ];
+  const sum = document.getElementById("funnel-summary");
+  if(sum) sum.innerHTML = items.map(it=>`<div class="fs-item"><span class="fs-k">${it.k}</span><span class="fs-v">${it.v}</span></div>`).join("");
 }
 
 /* =============================== CHARTS ================================ */
@@ -1142,6 +1203,8 @@ function renderAdsTable(){
   const chColor=(ch)=> ch==="facebook" ? "var(--series-fb)" : "var(--series-li)";
   const prevMap=new Map(adsData.previous.map(a=>[a.channel+"|"+a.name, a]));
   const sk=ui.adsSort.key, dir=ui.adsSort.dir;
+  // reflect the active quick-sort chip (only when sorting top-down)
+  document.querySelectorAll("#ads-sort button").forEach(b=>b.classList.toggle("active", b.dataset.key===sk && dir<0));
   const ads=adsData.ads.slice().sort((a,b)=>{
     if(sk==="name"){ const va=(a.name||"").toLowerCase(), vb=(b.name||"").toLowerCase(); return dir*(va<vb?-1:va>vb?1:0); }
     const va=a[sk]==null?-Infinity:a[sk], vb=b[sk]==null?-Infinity:b[sk]; return dir*(va-vb);
@@ -1189,6 +1252,11 @@ document.getElementById("ads-table").addEventListener("click", (e)=>{
   const th=e.target.closest("th[data-sort]"); if(!th) return;
   const key=th.dataset.sort;
   if(ui.adsSort.key===key) ui.adsSort.dir*=-1; else ui.adsSort={ key, dir: key==="name"?1:-1 };
+  saveUI(); renderAdsTable();
+});
+document.getElementById("ads-sort").addEventListener("click", (e)=>{
+  const btn=e.target.closest("button[data-key]"); if(!btn) return;
+  ui.adsSort={ key: btn.dataset.key, dir: -1 };   // quick sorts always show the top performers first
   saveUI(); renderAdsTable();
 });
 
