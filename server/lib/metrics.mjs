@@ -10,7 +10,25 @@ const monthKey = (iso) => iso.slice(0, 7);
 const monthLabel = (key) => `${MONTHS[+key.slice(5, 7) - 1]} ${key.slice(0, 4)}`;
 const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
+// Current quarter / year-to-date window, computed from today (UTC). Live API
+// queries must target the real current period; the QUARTER_*/YEAR_START env
+// vars override this only if you need to pin a specific window.
+function currentRanges() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const pad = (n) => String(n).padStart(2, "0");
+  const qStartMonth = Math.floor(now.getUTCMonth() / 3) * 3;      // 0,3,6,9
+  const qEndMonth = qStartMonth + 2;
+  const lastDay = new Date(Date.UTC(y, qEndMonth + 1, 0)).getUTCDate();
+  return {
+    quarterStart: `${y}-${pad(qStartMonth + 1)}-01`,
+    quarterEnd: `${y}-${pad(qEndMonth + 1)}-${pad(lastDay)}`,
+    yearStart: `${y}-01-01`,
+  };
+}
+
 export function readCfg() {
+  const r = currentRanges();
   return {
     cacheTtl: parseInt(process.env.CACHE_TTL_SECONDS || "21600", 10) * 1000,
     meta: {
@@ -21,11 +39,11 @@ export function readCfg() {
     linkedin: {
       accountId: process.env.LINKEDIN_AD_ACCOUNT_ID || "",
       token: process.env.LINKEDIN_ACCESS_TOKEN || "",
-      version: process.env.LINKEDIN_VERSION || "202501",
+      version: process.env.LINKEDIN_VERSION || "202503",
     },
-    quarterStart: process.env.QUARTER_START || "2026-07-01",
-    quarterEnd: process.env.QUARTER_END || "2026-09-30",
-    yearStart: process.env.YEAR_START || "2026-01-01",
+    quarterStart: process.env.QUARTER_START || r.quarterStart,
+    quarterEnd: process.env.QUARTER_END || r.quarterEnd,
+    yearStart: process.env.YEAR_START || r.yearStart,
     currency: process.env.CURRENCY || "USD",
   };
 }
@@ -93,12 +111,16 @@ function liDateRange(s, e) {
 }
 async function liAnalytics(cfg, granularity) {
   const { accountId, token, version } = cfg.linkedin;
-  const fields = "impressions,clicks,costInLocalCurrency,oneClickLeads,externalWebsiteConversions,dateRange,pivotValues";
-  const account = encodeURIComponent(`List(urn:li:sponsoredAccount:${accountId})`);
+  // LinkedIn's Rest.li 2.0 query parser requires the structured params
+  // (dateRange, accounts, fields) to keep their parentheses/colons/commas
+  // LITERAL — percent-encoding the dateRange yields 400 ILLEGAL_ARGUMENT. Only
+  // the urn colons inside accounts are encoded (%3A).
+  const fields = "impressions,clicks,costInLocalCurrency,oneClickLeads,externalWebsiteConversions,dateRange";
+  const account = `List(urn%3Ali%3AsponsoredAccount%3A${accountId})`;
   const url = `https://api.linkedin.com/rest/adAnalytics?q=analytics&pivot=ACCOUNT` +
     `&timeGranularity=${granularity}` +
-    `&dateRange=${encodeURIComponent(liDateRange(cfg.yearStart, cfg.quarterEnd))}` +
-    `&accounts=${account}&fields=${encodeURIComponent(fields)}`;
+    `&dateRange=${liDateRange(cfg.yearStart, cfg.quarterEnd)}` +
+    `&accounts=${account}&fields=${fields}`;
   return getJSON(url, {
     Authorization: `Bearer ${token}`,
     "LinkedIn-Version": version,
