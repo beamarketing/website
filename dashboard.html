@@ -346,8 +346,8 @@
   <!-- FUNNEL -->
   <section>
     <div class="section-head">
-      <h2>Lead → opportunity funnel</h2>
-      <span class="hint" id="funnel-hint">This quarter · conversion between stages</span>
+      <h2>MQL → SQL → Opportunity funnel</h2>
+      <span class="hint" id="funnel-hint">This quarter · conversion rate between every stage</span>
     </div>
     <div class="card">
       <div class="funnel" id="funnel"></div>
@@ -985,19 +985,17 @@ function renderSourceStatus(){
 }
 
 /* ---- Funnel ---- */
-// Tapering SVG funnel: Leads → MQL → SQL → Opportunities, with the
-// stage-to-stage conversion rate rendered on every boundary.
+// Tapering SVG funnel: MQL → SQL → Opportunity, with the stage-to-stage
+// conversion rate rendered on every boundary.
 function renderFunnel(){
-  const c = combined();
   const q = state.kpis.quarter.rows;
   const mql = num(q.find(r=>r.key==="mql").actual);
   const sql = num(q.find(r=>r.key==="sql").actual);
   const opp = num(q.find(r=>r.key==="opps").actual);
   const stages = [
-    { k:"Leads",         v:c.leads, col:"var(--series-fb)" },
-    { k:"MQL",           v:mql,     col:"var(--series-3)" },
-    { k:"SQL",           v:sql,     col:"var(--warn)" },
-    { k:"Opportunities", v:opp,     col:"var(--accent)" }
+    { k:"MQL",           v:mql, col:"var(--series-3)" },
+    { k:"SQL",           v:sql, col:"var(--warn)" },
+    { k:"Opportunities", v:opp, col:"var(--accent)" }
   ];
   const n = stages.length;
   const max = Math.max(1, ...stages.map(s=>s.v));
@@ -1017,9 +1015,9 @@ function renderFunnel(){
     // stage name + value above the shape
     svg += `<text x="${cx}" y="${topPad-40}" text-anchor="middle" fill="var(--muted)" font-size="12" font-weight="700" letter-spacing="0.4">${s.k.toUpperCase()}</text>`;
     svg += `<text x="${cx}" y="${topPad-14}" text-anchor="middle" fill="var(--text)" font-size="27" font-weight="800">${int(s.v)}</text>`;
-    // % of all leads, below the shape
-    const pctLeads = stages[0].v ? s.v/stages[0].v : null;
-    svg += `<text x="${cx}" y="${topPad+innerH+30}" text-anchor="middle" fill="var(--text-2)" font-size="12">${i===0?"100% of leads":(pctLeads!=null?pct(pctLeads,1)+" of leads":"—")}</text>`;
+    // share of MQL, below the shape
+    const pctBase = stages[0].v ? s.v/stages[0].v : null;
+    svg += `<text x="${cx}" y="${topPad+innerH+30}" text-anchor="middle" fill="var(--text-2)" font-size="12">${i===0?"100% of MQL":(pctBase!=null?pct(pctBase,1)+" of MQL":"—")}</text>`;
     // conversion badge on the boundary to the next stage
     if(i<n-1){
       const conv = s.v ? stages[i+1].v/s.v : null;
@@ -1036,10 +1034,9 @@ function renderFunnel(){
   // summary strip — every stage-to-stage rate plus the end-to-end rate
   const rate=(a,b)=> a ? pct(b/a,1) : "—";
   const items = [
-    { k:"Leads → MQL", v: rate(stages[0].v, stages[1].v) },
-    { k:"MQL → SQL",   v: rate(stages[1].v, stages[2].v) },
-    { k:"SQL → Opp.",  v: rate(stages[2].v, stages[3].v) },
-    { k:"Leads → Opp. (overall)", v: rate(stages[0].v, stages[3].v) }
+    { k:"MQL → SQL",  v: rate(stages[0].v, stages[1].v) },
+    { k:"SQL → Opp.", v: rate(stages[1].v, stages[2].v) },
+    { k:"MQL → Opp. (overall)", v: rate(stages[0].v, stages[2].v) }
   ];
   const sum = document.getElementById("funnel-summary");
   if(sum) sum.innerHTML = items.map(it=>`<div class="fs-item"><span class="fs-k">${it.k}</span><span class="fs-v">${it.v}</span></div>`).join("");
