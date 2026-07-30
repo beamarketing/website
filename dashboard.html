@@ -1,36 +1,40 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Beamr Marketing — Campaign & KPI Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg:            #07071c;
-    --surface-1:     #0f1029;
-    --surface-2:     #161638;
-    --border:        #1c1c3a;
-    --border-light:  #2a2a4a;
-    --text:          #ffffff;
-    --text-2:        #c2c2d6;
-    --muted:         #8b8ba3;
-    --accent:        #00d46a;   /* brand green */
-    --accent-dim:    #00b85c;
+    /* Beamr brand — blue accent, near-black ink on soft light surfaces, Poppins */
+    --bg:            #f5f8fc;
+    --surface-1:     #ffffff;
+    --surface-2:     #eef3f9;
+    --border:        #e3e9f2;
+    --border-light:  #d2dbe8;
+    --text:          #0b1524;   /* near-black, slight blue bias */
+    --text-2:        #45536b;
+    --muted:         #8593aa;
+    --accent:        #0091ff;   /* Beamr blue */
+    --accent-dim:    #007be0;
 
-    /* series (validated CVD-safe on --surface-1) */
-    --series-fb:     #3987e5;   /* Facebook = blue */
-    --series-li:     #d95926;   /* LinkedIn = orange */
-    --series-3:      #199e70;   /* aqua */
+    /* series (validated CVD-safe on the light surface) */
+    --series-fb:     #2a78d6;   /* Facebook = blue */
+    --series-li:     #eb6834;   /* LinkedIn = orange */
+    --series-3:      #1baf7a;   /* aqua */
 
     /* status (pacing) */
-    --good:          #00d46a;
-    --warn:          #fab219;
-    --bad:           #e66767;
+    --good:          #0ca30c;
+    --warn:          #c77a00;
+    --bad:           #d03b3b;
 
-    --grid:          #22223f;
-    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --grid:          #e9eef5;
+    --font: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --radius: 16px;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 10px 28px rgba(16,24,40,.08);
   }
 
   * { box-sizing: border-box; }
@@ -51,22 +55,21 @@
   /* ---------- Top bar ---------- */
   header.topbar {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(7,7,28,.82);
+    background: rgba(255,255,255,.85);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
   .topbar-inner {
     display: flex; align-items: center; gap: 16px;
-    padding: 16px 24px; max-width: 1280px; margin: 0 auto;
+    padding: 14px 24px; max-width: 1280px; margin: 0 auto;
     flex-wrap: wrap;
   }
   .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
-  .brand .mark {
-    width: 30px; height: 30px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), #06b6d4);
-    display: grid; place-items: center; font-weight: 800; color: #04120a; font-size: 15px;
-  }
-  .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .brand .logo { display: flex; align-items: center; gap: 10px; }
+  .brand .logo svg { display: block; }
+  .brand .wordmark { font-size: 22px; font-weight: 800; letter-spacing: .01em; color: var(--text); }
+  .brand .divider { width: 1px; height: 26px; background: var(--border-light); margin: 0 4px; }
+  .brand h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -.01em; color: var(--text); }
   .brand .sub { font-size: 12px; color: var(--muted); margin: 0; }
 
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -77,7 +80,7 @@
     padding: 8px 14px; cursor: pointer; transition: .15s;
   }
   button.btn:hover { border-color: var(--accent); color: var(--text); }
-  button.btn.primary { background: var(--accent); color: #04120a; border-color: var(--accent); }
+  button.btn.primary { background: var(--accent); color: #ffffff; border-color: var(--accent); }
   button.btn.primary:hover { background: var(--accent-dim); }
 
   /* ---------- Layout ---------- */
@@ -106,7 +109,7 @@
   /* ---------- Hero summary ---------- */
   .hero {
     background:
-      radial-gradient(120% 140% at 100% 0%, rgba(0,212,106,.10), transparent 55%),
+      radial-gradient(120% 140% at 100% 0%, rgba(0,145,255,.10), transparent 55%),
       var(--surface-1);
     border: 1px solid var(--border); border-radius: 20px; padding: 28px;
     display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 28px; align-items: center;
@@ -141,9 +144,9 @@
   .kpi-foot { display:flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; }
   .pill { display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; }
   .pill .dot { width: 7px; height: 7px; border-radius: 50%; }
-  .pill.good { color: var(--good); background: rgba(0,212,106,.10); }
-  .pill.warn { color: var(--warn); background: rgba(250,178,25,.10); }
-  .pill.bad  { color: var(--bad);  background: rgba(230,103,103,.12); }
+  .pill.good { color: var(--good); background: rgba(12,163,12,.12); }
+  .pill.warn { color: var(--warn); background: rgba(199,122,0,.12); }
+  .pill.bad  { color: var(--bad);  background: rgba(208,59,59,.12); }
   .pill.good .dot { background: var(--good);} .pill.warn .dot{background:var(--warn);} .pill.bad .dot{background:var(--bad);}
   .kpi-proj { color: var(--muted); }
   .kpi-proj b { color: var(--text-2); }
@@ -156,7 +159,7 @@
     padding: 1px 2px; border-radius: 4px; transition: .12s;
   }
   input.ed:hover { border-bottom-color: var(--accent); }
-  input.ed:focus { outline: none; background: rgba(0,212,106,.08); border-bottom-color: var(--accent); }
+  input.ed:focus { outline: none; background: rgba(0,145,255,.08); border-bottom-color: var(--accent); }
   input.ed.wide { width: 96px; }
 
   /* ---------- channel cards ---------- */
@@ -224,10 +227,18 @@
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <div class="mark">b</div>
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 100 100" role="img" aria-label="Beamr">
+          <rect width="100" height="100" rx="24" fill="#0091ff" />
+          <circle cx="48" cy="61" r="21" fill="none" stroke="#ffffff" stroke-width="11.5" />
+          <path d="M36 61 L36 38 C36 27 46 22 54 29" fill="none" stroke="#ffffff" stroke-width="11.5" stroke-linecap="round" />
+        </svg>
+        <span class="wordmark">BEAMR</span>
+      </div>
+      <div class="divider"></div>
       <div>
-        <h1>Beamr Marketing Dashboard</h1>
-        <p class="sub">Campaign performance vs. quarterly &amp; half-year objectives</p>
+        <h1>Marketing Dashboard</h1>
+        <p class="sub">Campaigns vs. quarterly &amp; half-year objectives</p>
       </div>
     </div>
     <div class="actions">
@@ -327,7 +338,7 @@
   <section>
     <div class="section-head">
       <h2>Monthly data</h2>
-      <span class="hint">Read-only cells come from a connected channel; editable (green) cells are manual.</span>
+      <span class="hint">Read-only cells come from a connected channel; editable (blue) cells are manual.</span>
     </div>
     <div class="card" style="overflow-x:auto;">
       <table class="data" id="data-table"></table>
@@ -716,7 +727,7 @@ function renderNote(){
     are read-only; any channel without credentials yet shows as
     <span class="tag manual">snapshot</span> and its numbers stay editable by hand.
     Every <b>MQL / SQL / Opportunity</b> target and actual is always manual — click any
-    <span style="color:var(--accent);font-weight:700">green value</span> to edit. Manual entries
+    <span style="color:var(--accent);font-weight:700">blue value</span> to edit. Manual entries
     save in this browser automatically and are never overwritten by a live channel.
     <br><br>
     <b>Opened as the standalone artifact?</b> There’s no backend to reach, so you’ll see
