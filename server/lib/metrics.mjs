@@ -29,17 +29,20 @@ function currentRanges() {
 
 export function readCfg() {
   const r = currentRanges();
+  // Trim every credential/id — a stray space or newline pasted into a host's
+  // env-var field is a common cause of "invalid token" style rejections.
+  const env = (k, d = "") => (process.env[k] || d).trim();
   return {
-    cacheTtl: parseInt(process.env.CACHE_TTL_SECONDS || "21600", 10) * 1000,
+    cacheTtl: parseInt(env("CACHE_TTL_SECONDS", "21600"), 10) * 1000,
     meta: {
-      accountId: process.env.META_AD_ACCOUNT_ID || "",
-      token: process.env.META_ACCESS_TOKEN || "",
-      version: process.env.META_API_VERSION || "v20.0",
+      accountId: env("META_AD_ACCOUNT_ID"),
+      token: env("META_ACCESS_TOKEN"),
+      version: env("META_API_VERSION", "v20.0"),
     },
     linkedin: {
-      accountId: process.env.LINKEDIN_AD_ACCOUNT_ID || "",
-      token: process.env.LINKEDIN_ACCESS_TOKEN || "",
-      version: process.env.LINKEDIN_VERSION || "202503",
+      accountId: env("LINKEDIN_AD_ACCOUNT_ID"),
+      token: env("LINKEDIN_ACCESS_TOKEN"),
+      version: env("LINKEDIN_VERSION", "202503"),
     },
     quarterStart: process.env.QUARTER_START || r.quarterStart,
     quarterEnd: process.env.QUARTER_END || r.quarterEnd,
