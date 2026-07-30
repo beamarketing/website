@@ -25,7 +25,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
   }
 })();
 
-const { getMetrics, readCfg } = await import("./lib/metrics.mjs");
+const { getMetrics, getAds, readCfg } = await import("./lib/metrics.mjs");
+const q = (req) => ({ start: req.query.start, end: req.query.end, compare: req.query.compare === "1", channel: req.query.channel, force: req.query.force === "1" });
 
 const app = express();
 app.use("/api", (req, res, next) => {                 // allow a separately-hosted dashboard to call the API
@@ -34,11 +35,12 @@ app.use("/api", (req, res, next) => {                 // allow a separately-host
 });
 
 app.get("/api/metrics", async (req, res) => {
-  try {
-    res.json(await getMetrics(req.query.force === "1"));
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  try { res.json(await getMetrics(q(req))); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/ads", async (req, res) => {
+  try { res.json(await getAds(q(req))); }
+  catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
