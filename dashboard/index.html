@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beamr · Marketing Goals & OKRs — H2 2026</title>
+<meta name="description" content="Beamr marketing goals and OKRs dashboard for H2 2026." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   THEME TOKENS
+   ============================================================ */
+:root {
+  color-scheme: dark;
+  --bg: #07071c;
+  --bg-grad: radial-gradient(1200px 600px at 15% -10%, rgba(0,212,106,0.07), transparent 60%),
+             radial-gradient(1000px 500px at 100% 0%, rgba(79,70,229,0.10), transparent 55%);
+  --surface: #0f1029;
+  --surface-2: #15173a;
+  --surface-hover: #1a1c46;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --text: #f5f5fb;
+  --text-secondary: #a2a2c0;
+  --text-muted: #6f6f8f;
+  --accent: #00d46a;
+  --accent-2: #6c5ce7;
+
+  /* status palette (fixed across themes) */
+  --st-good: #16c784;
+  --st-warn: #f5b301;
+  --st-crit: #ef4d4d;
+  --st-info: #3d8bfd;
+  --st-muted: #6f6f8f;
+  --st-good-bg: rgba(22,199,132,0.14);
+  --st-warn-bg: rgba(245,179,1,0.14);
+  --st-crit-bg: rgba(239,77,77,0.14);
+  --st-info-bg: rgba(61,139,253,0.14);
+  --st-muted-bg: rgba(111,111,143,0.16);
+
+  /* chart chrome */
+  --grid: rgba(255,255,255,0.07);
+  --axis: rgba(255,255,255,0.16);
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 40px -12px rgba(0,0,0,0.5);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f5fb;
+  --bg-grad: radial-gradient(1200px 600px at 15% -10%, rgba(0,212,106,0.10), transparent 60%),
+             radial-gradient(1000px 500px at 100% 0%, rgba(108,92,231,0.10), transparent 55%);
+  --surface: #ffffff;
+  --surface-2: #f7f8fc;
+  --surface-hover: #eef0f8;
+  --border: rgba(15,16,41,0.10);
+  --border-strong: rgba(15,16,41,0.16);
+  --text: #12122b;
+  --text-secondary: #4d4d6b;
+  --text-muted: #8a8aa3;
+  --accent: #00a352;
+  --accent-2: #6c5ce7;
+  --st-good: #0ca35a;
+  --st-warn: #d9930a;
+  --st-crit: #d83a3a;
+  --st-info: #2d6fd6;
+  --grid: rgba(15,16,41,0.07);
+  --axis: rgba(15,16,41,0.18);
+  --shadow: 0 1px 2px rgba(15,16,41,0.06), 0 16px 40px -18px rgba(15,16,41,0.22);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+a { color: inherit; }
+::selection { background: rgba(0,212,106,0.3); }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 24px 80px; }
+
+/* ---------- Header ---------- */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: linear-gradient(135deg, var(--accent), #00a352);
+  display: grid; place-items: center; font-weight: 800; color: #04140b; font-size: 20px;
+  box-shadow: 0 6px 20px -6px rgba(0,212,106,0.6);
+}
+.brand h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.brand p { font-size: 12.5px; color: var(--text-secondary); }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.chip {
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 7px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px;
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(0,212,106,0.15); }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-secondary); cursor: pointer;
+  display: grid; place-items: center; font-size: 16px; transition: .15s;
+}
+.icon-btn:hover { background: var(--surface-hover); color: var(--text); }
+
+/* ---------- Hero ---------- */
+.hero {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 26px 28px; margin-bottom: 20px;
+  display: grid; grid-template-columns: 1.5fr auto; gap: 28px; align-items: center;
+  box-shadow: var(--shadow);
+}
+.hero-title { font-size: clamp(22px, 3vw, 30px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+.hero-title span { color: var(--accent); }
+.hero-sub { color: var(--text-secondary); font-size: 14px; max-width: 640px; }
+.hero-meta { display: flex; gap: 18px; margin-top: 16px; flex-wrap: wrap; }
+.hero-meta .m-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.hero-meta .m-val { font-size: 14px; font-weight: 600; }
+.ring-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ring-box .ring-cap { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+
+/* time progress bar */
+.timebar { margin-top: 18px; }
+.timebar .tb-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+:root[data-theme="light"] .timebar .tb-track { background: rgba(15,16,41,0.07); }
+.timebar .tb-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+.timebar .tb-labels { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
+
+/* ---------- KPI tiles ---------- */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px; position: relative; overflow: hidden; box-shadow: var(--shadow);
+}
+.kpi::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--k-accent, var(--accent)); }
+.kpi .k-lbl { font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+.kpi .k-val { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi .k-val small { font-size: 15px; font-weight: 700; color: var(--text-secondary); }
+.kpi .k-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 12px; }
+.kpi .k-tgt { color: var(--text-muted); }
+.mini-track { height: 5px; border-radius: 999px; background: rgba(255,255,255,0.07); margin-top: 10px; overflow: hidden; }
+:root[data-theme="light"] .mini-track { background: rgba(15,16,41,0.07); }
+.mini-fill { height: 100%; border-radius: 999px; }
+.delta { font-weight: 700; display: inline-flex; align-items: center; gap: 3px; }
+.delta.up { color: var(--st-good); }
+.delta.down { color: var(--st-crit); }
+
+/* ---------- Cards / charts ---------- */
+.grid-2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; margin-bottom: 20px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow);
+}
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 12px; }
+.card-head h3 { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+.card-head p, .card-sub { font-size: 12.5px; color: var(--text-secondary); }
+.card-sub { margin-bottom: 14px; }
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; }
+.legend .lg { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+.legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+.legend .sw.line { height: 3px; width: 16px; border-radius: 2px; }
+
+/* donut legend rows */
+.donut-wrap { display: flex; align-items: center; gap: 22px; }
+.donut-legend { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.dl-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.dl-row .sw { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.dl-row .dl-name { color: var(--text-secondary); flex: 1; }
+.dl-row .dl-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* bar chart rows */
+.bars { display: flex; flex-direction: column; gap: 15px; margin-top: 6px; }
+.bar-row .bar-top { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 6px; }
+.bar-row .bar-name { color: var(--text-secondary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 10px; }
+.bar-row .bar-pct { font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.bar-track { height: 9px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+:root[data-theme="light"] .bar-track { background: rgba(15,16,41,0.06); }
+.bar-fill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.2,.7,.3,1); }
+
+/* ---------- Objectives ---------- */
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 30px 0 14px; flex-wrap: wrap; }
+.section-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn {
+  font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+  cursor: pointer; transition: .15s; display: inline-flex; align-items: center; gap: 6px;
+}
+.filter-btn:hover { background: var(--surface-hover); color: var(--text); }
+.filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.filter-btn .cnt { opacity: .7; font-variant-numeric: tabular-nums; }
+
+.obj { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow); }
+.obj-head { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; padding: 18px 20px; cursor: pointer; }
+.obj-head:hover { background: var(--surface-hover); }
+.obj-num { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: var(--accent); border: 1px solid var(--border); }
+.obj-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.obj-desc { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+.obj-right { display: flex; align-items: center; gap: 18px; }
+.obj-prog { text-align: right; min-width: 96px; }
+.obj-prog .op-val { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.obj-prog .op-track { height: 6px; width: 96px; border-radius: 999px; background: rgba(255,255,255,0.08); margin-top: 5px; overflow: hidden; }
+:root[data-theme="light"] .obj-prog .op-track { background: rgba(15,16,41,0.08); }
+.obj-prog .op-fill { height: 100%; border-radius: 999px; }
+.caret { color: var(--text-muted); transition: transform .2s; font-size: 13px; }
+.obj.open .caret { transform: rotate(90deg); }
+
+/* KR table */
+.krs { border-top: 1px solid var(--border); display: none; }
+.obj.open .krs { display: block; }
+.kr {
+  display: grid; grid-template-columns: 1fr 150px 128px 96px; gap: 14px; align-items: center;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.kr:last-child { border-bottom: none; }
+.kr-main .kr-name { font-size: 13.5px; font-weight: 600; }
+.kr-main .kr-owner { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; display: inline-flex; align-items: center; gap: 5px; }
+.avatar { width: 16px; height: 16px; border-radius: 50%; background: var(--surface-2); display: inline-grid; place-items: center; font-size: 8px; font-weight: 700; color: var(--text-secondary); border: 1px solid var(--border); }
+.kr-metric { text-align: left; }
+.kr-metric .m-cur { font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kr-metric .m-tgt { font-size: 11.5px; color: var(--text-muted); }
+.kr-bar .kr-track { height: 7px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+:root[data-theme="light"] .kr-bar .kr-track { background: rgba(15,16,41,0.07); }
+.kr-bar .kr-fill { height: 100%; border-radius: 999px; }
+.kr-bar .kr-pct { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* status badge */
+.badge {
+  font-size: 11px; font-weight: 700; padding: 4px 9px 4px 8px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.badge .b-dot { width: 6px; height: 6px; border-radius: 50%; }
+.badge svg { width: 11px; height: 11px; }
+.st-on-track { color: var(--st-good); background: var(--st-good-bg); }
+.st-on-track .b-dot { background: var(--st-good); }
+.st-at-risk { color: var(--st-warn); background: var(--st-warn-bg); }
+.st-at-risk .b-dot { background: var(--st-warn); }
+.st-off-track { color: var(--st-crit); background: var(--st-crit-bg); }
+.st-off-track .b-dot { background: var(--st-crit); }
+.st-achieved { color: var(--st-info); background: var(--st-info-bg); }
+.st-achieved .b-dot { background: var(--st-info); }
+.st-not-started { color: var(--st-muted); background: var(--st-muted-bg); }
+.st-not-started .b-dot { background: var(--st-muted); }
+
+/* tooltip */
+#tooltip {
+  position: fixed; pointer-events: none; z-index: 50; opacity: 0; transition: opacity .1s;
+  background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 10px;
+  padding: 9px 11px; font-size: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); max-width: 240px;
+}
+#tooltip .tt-t { font-weight: 700; margin-bottom: 3px; }
+#tooltip .tt-r { color: var(--text-secondary); display: flex; gap: 10px; justify-content: space-between; }
+#tooltip .tt-r b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.footer { margin-top: 40px; text-align: center; font-size: 12px; color: var(--text-muted); }
+.footer a { color: var(--text-secondary); text-decoration: none; }
+.footer a:hover { color: var(--accent); }
+
+svg text { font-family: var(--font); }
+.crosshair { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .ring-box { flex-direction: row; justify-content: flex-start; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .wrap { padding: 20px 16px 60px; }
+  .kr { grid-template-columns: 1fr auto; row-gap: 10px; }
+  .kr-bar { grid-column: 1 / -1; }
+  .kr-badge { grid-column: 2; grid-row: 1; }
+  .obj-head { grid-template-columns: auto 1fr; }
+  .obj-right { grid-column: 1 / -1; justify-content: space-between; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">B</div>
+      <div>
+        <h1>Beamr · Marketing</h1>
+        <p>Goals & OKRs dashboard</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span class="chip"><span class="dot"></span><span id="updated-chip">Updated —</span></span>
+      <button class="icon-btn" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle theme">◐</button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div>
+      <div class="hero-title" id="hero-title">Marketing Goals & OKRs — <span>H2 2026</span></div>
+      <p class="hero-sub" id="hero-mission"></p>
+      <div class="hero-meta" id="hero-meta"></div>
+      <div class="timebar">
+        <div class="tb-track"><div class="tb-fill" id="time-fill"></div></div>
+        <div class="tb-labels"><span id="time-start"></span><span id="time-now"></span><span id="time-end"></span></div>
+      </div>
+    </div>
+    <div class="ring-box">
+      <div id="overall-ring"></div>
+      <div class="ring-cap">Overall attainment</div>
+    </div>
+  </section>
+
+  <!-- KPI tiles -->
+  <section class="kpis" id="kpis"></section>
+
+  <!-- Charts row -->
+  <section class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3 id="trend-title">Monthly marketing-sourced pipeline</h3>
+          <p class="card-sub" id="trend-sub"></p>
+        </div>
+      </div>
+      <div class="legend" id="trend-legend" style="margin-bottom:8px"></div>
+      <div id="trend-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Key results by status</h3></div>
+      <p class="card-sub">Health across all key results this half.</p>
+      <div class="donut-wrap">
+        <div id="donut-chart"></div>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Objective attainment bars -->
+  <section class="card" style="margin-bottom:20px">
+    <div class="card-head"><h3>Objective attainment</h3></div>
+    <p class="card-sub">Average progress across each objective's key results.</p>
+    <div class="bars" id="obj-bars"></div>
+  </section>
+
+  <!-- Objectives list -->
+  <div class="section-head">
+    <h2>Objectives &amp; key results</h2>
+    <div class="filters" id="filters"></div>
+  </div>
+  <section id="objectives"></section>
+
+  <footer class="footer">
+    <p>Beamr Marketing OKR dashboard · <span id="footer-period"></span> · Data is editable in <code>dashboard/index.html</code> → <code>DASHBOARD</code>.</p>
+  </footer>
+</div>
+
+<div id="tooltip" role="status"></div>
+
+<script>
+/* ============================================================================
+   ▓▓▓  EDIT YOUR DATA HERE  ▓▓▓
+   This is the ONLY block you need to change to update the dashboard.
+   Everything below renders automatically from this object.
+
+   status values (per key result & objective):
+     "on-track" | "at-risk" | "off-track" | "achieved" | "not-started"
+   progress: 0–100 (percent toward target). Set it to match current/target.
+   ============================================================================ */
+const DASHBOARD = {
+  meta: {
+    period: "H2 2026",
+    periodStart: "2026-07-01",
+    periodEnd:   "2026-12-31",
+    today:       "2026-08-02",           // "today" marker for the time bar
+    updated:     "August 2, 2026",
+    mission: "Build a predictable, brand-leading demand engine that fills pipeline, " +
+             "grows self-serve adoption of Beamr Cloud, and cements Beamr as the category " +
+             "leader in AI video optimization."
+  },
+
+  /* Headline KPIs — the four numbers leadership checks first. */
+  kpis: [
+    { label: "Marketing-sourced pipeline", value: 820,  unit: "$K", target: 4500, progress: 18, delta: "+34% MoM", deltaUp: true,  accent: "var(--accent)" },
+    { label: "Marketing-qualified leads",  value: 190,  unit: "",   target: 1200, progress: 16, delta: "+12% MoM", deltaUp: true,  accent: "var(--st-info)" },
+    { label: "Beamr Cloud sign-ups",       value: 820,  unit: "",   target: 5000, progress: 16, delta: "+41% MoM", deltaUp: true,  accent: "var(--accent-2)" },
+    { label: "Organic monthly traffic",    value: 41,   unit: "K",  target: 60,   progress: 68, delta: "-3% MoM",  deltaUp: false, accent: "var(--st-warn)" }
+  ],
+
+  /* Trend chart — monthly marketing-sourced pipeline ($K): actual vs plan. */
+  trend: {
+    subtitle: "Actual vs. plan, last 7 months ($K). August in progress.",
+    unit: "$K",
+    months: ["Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+    actual: [210, 290, 340, 410, 520, 630, null],
+    plan:   [300, 350, 400, 500, 600, 700, 800]
+  },
+
+  /* Objectives. Each has key results with an owner, current/target, unit, progress %, status. */
+  objectives: [
+    {
+      id: "O1",
+      title: "Build a predictable demand-generation engine",
+      description: "Turn marketing into a reliable, measurable source of pipeline and revenue.",
+      status: "on-track",
+      keyResults: [
+        { name: "Generate marketing-sourced pipeline",        owner: "Demand Gen", current: "$820K",  target: "$4.5M", progress: 18, status: "on-track" },
+        { name: "Deliver MQLs at ≤ $180 blended CPL",         owner: "Demand Gen", current: "190",     target: "1,200", progress: 16, status: "on-track" },
+        { name: "Grow marketing-sourced ARR",                 owner: "Growth",     current: "$210K",   target: "$1.2M", progress: 18, status: "at-risk" },
+        { name: "Lift MQL → SQL conversion rate",             owner: "RevOps",     current: "17%",     target: "22%",   progress: 55, status: "on-track" }
+      ]
+    },
+    {
+      id: "O2",
+      title: "Establish Beamr as the category leader in video optimization",
+      description: "Own the conversation on AI-driven, content-adaptive video optimization.",
+      status: "at-risk",
+      keyResults: [
+        { name: "Grow organic monthly website traffic",       owner: "Content",  current: "41K",   target: "60K",  progress: 68, status: "at-risk" },
+        { name: "Rank top-3 for priority keywords",           owner: "SEO",      current: "7",     target: "15",   progress: 47, status: "at-risk" },
+        { name: "Grow LinkedIn following",                    owner: "Brand",    current: "18.4K", target: "25K",  progress: 74, status: "on-track" },
+        { name: "Earn tier-1 media / analyst mentions",       owner: "PR",       current: "3",     target: "12",   progress: 25, status: "off-track" }
+      ]
+    },
+    {
+      id: "O3",
+      title: "Accelerate self-serve adoption of Beamr Cloud",
+      description: "Make it effortless to sign up, activate, and convert to paid.",
+      status: "on-track",
+      keyResults: [
+        { name: "Drive free-tier sign-ups",                   owner: "Growth",       current: "820",  target: "5,000", progress: 16, status: "on-track" },
+        { name: "Convert sign-ups to paid",                   owner: "Growth",       current: "5.1%", target: "8%",    progress: 64, status: "on-track" },
+        { name: "Reach monthly active cloud users",           owner: "Product Mktg", current: "610",  target: "1,500", progress: 41, status: "at-risk" },
+        { name: "Cut time-to-first-optimized-video",          owner: "Product Mktg", current: "16m",  target: "<10m",  progress: 45, status: "at-risk" }
+      ]
+    },
+    {
+      id: "O4",
+      title: "Ship product marketing for the AI video pipeline",
+      description: "Launch, position, and enable sales for Beamr's AI optimization lineup.",
+      status: "on-track",
+      keyResults: [
+        { name: "Ship major go-to-market launches",           owner: "Product Mktg", current: "1",   target: "3",   progress: 33, status: "on-track" },
+        { name: "Publish customer case studies",              owner: "Content",      current: "3",   target: "8",   progress: 38, status: "on-track" },
+        { name: "Refresh sales enablement collateral",        owner: "Product Mktg", current: "60%", target: "100%",progress: 60, status: "on-track" },
+        { name: "Win competitive deals (win-rate)",           owner: "RevOps",       current: "24%", target: "35%", progress: 40, status: "at-risk" }
+      ]
+    },
+    {
+      id: "O5",
+      title: "Run high-impact events & co-marketing bets",
+      description: "Concentrated bets on events and partnerships that create outsized pipeline.",
+      status: "at-risk",
+      keyResults: [
+        { name: "Host webinars (avg. 150 registrants)",       owner: "Demand Gen", current: "2",     target: "6",     progress: 33, status: "on-track" },
+        { name: "Secure co-marketing partnerships",           owner: "Partnerships", current: "1",   target: "3",     progress: 33, status: "at-risk" },
+        { name: "Generate pipeline from IBC + NAB",           owner: "Events",     current: "$120K", target: "$900K", progress: 13, status: "off-track" }
+      ]
+    }
+  ]
+};
+/* ============================  END OF EDITABLE DATA  ======================== */
+
+
+/* ============================================================================
+   Rendering engine — no need to edit below this line.
+   ============================================================================ */
+const STATUS = {
+  "on-track":    { label: "On track",    cls: "st-on-track",    color: "var(--st-good)"  },
+  "at-risk":     { label: "At risk",     cls: "st-at-risk",     color: "var(--st-warn)"  },
+  "off-track":   { label: "Off track",   cls: "st-off-track",   color: "var(--st-crit)"  },
+  "achieved":    { label: "Achieved",    cls: "st-achieved",    color: "var(--st-info)"  },
+  "not-started": { label: "Not started", cls: "st-not-started", color: "var(--st-muted)" }
+};
+const clamp = (n) => Math.max(0, Math.min(100, n));
+const cssVar = (v) => {
+  const m = String(v).match(/var\((--[\w-]+)\)/);
+  return m ? getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim() : v;
+};
+const initials = (s) => s.split(/[\s/&]+/).filter(Boolean).slice(0,2).map(w => w[0]).join("").toUpperCase();
+const statusIcon = (key) => {
+  if (key === "on-track" || key === "achieved") return '<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (key === "at-risk") return '<svg viewBox="0 0 16 16" fill="none"><path d="M8 4.5v4M8 11.2v.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  if (key === "off-track") return '<svg viewBox="0 0 16 16" fill="none"><path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  return '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="currentColor"/></svg>';
+};
+const badge = (key) => {
+  const s = STATUS[key] || STATUS["not-started"];
+  return `<span class="badge ${s.cls}">${statusIcon(key)}${s.label}</span>`;
+};
+
+/* ---- Tooltip ---- */
+const tt = document.getElementById("tooltip");
+function showTip(html, x, y) {
+  tt.innerHTML = html;
+  tt.style.opacity = "1";
+  const r = tt.getBoundingClientRect();
+  let left = x + 14, top = y - r.height - 12;
+  if (left + r.width > window.innerWidth - 8) left = x - r.width - 14;
+  if (top < 8) top = y + 18;
+  tt.style.left = left + "px";
+  tt.style.top = top + "px";
+}
+const hideTip = () => (tt.style.opacity = "0");
+
+/* ---- Progress ring (SVG) ---- */
+function ring(pct, size = 118, stroke = 12) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, off = c * (1 - clamp(pct) / 100);
+  const col = pct >= 70 ? "var(--st-good)" : pct >= 40 ? "var(--st-warn)" : "var(--st-crit)";
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--grid)" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${stroke}"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+      transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset .8s cubic-bezier(.2,.7,.3,1)"/>
+    <text x="50%" y="49%" text-anchor="middle" dominant-baseline="middle" font-size="27" font-weight="800" fill="var(--text)">${Math.round(pct)}<tspan font-size="15">%</tspan></text>
+    <text x="50%" y="66%" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">of goal</text>
+  </svg>`;
+}
+
+/* ---- Compute derived numbers ---- */
+function objProgress(o) {
+  return o.keyResults.reduce((a, k) => a + clamp(k.progress), 0) / o.keyResults.length;
+}
+const allKRs = DASHBOARD.objectives.flatMap(o => o.keyResults);
+const overall = DASHBOARD.objectives.reduce((a, o) => a + objProgress(o), 0) / DASHBOARD.objectives.length;
+
+/* ---- Header / hero ---- */
+document.getElementById("updated-chip").textContent = "Updated " + DASHBOARD.meta.updated;
+document.getElementById("hero-title").innerHTML = `Marketing Goals & OKRs — <span>${DASHBOARD.meta.period}</span>`;
+document.getElementById("hero-mission").textContent = DASHBOARD.meta.mission;
+document.getElementById("footer-period").textContent = DASHBOARD.meta.period;
+document.getElementById("overall-ring").innerHTML = ring(overall);
+
+const objCount = DASHBOARD.objectives.length;
+const krCount = allKRs.length;
+const onTrackCount = allKRs.filter(k => k.status === "on-track" || k.status === "achieved").length;
+document.getElementById("hero-meta").innerHTML = `
+  <div><div class="m-lbl">Objectives</div><div class="m-val">${objCount}</div></div>
+  <div><div class="m-lbl">Key results</div><div class="m-val">${krCount}</div></div>
+  <div><div class="m-lbl">On track</div><div class="m-val">${onTrackCount} / ${krCount}</div></div>
+  <div><div class="m-lbl">Period</div><div class="m-val">${DASHBOARD.meta.period}</div></div>`;
+
+/* ---- Time progress bar ---- */
+(function timebar() {
+  const s = new Date(DASHBOARD.meta.periodStart), e = new Date(DASHBOARD.meta.periodEnd), n = new Date(DASHBOARD.meta.today);
+  const pct = clamp(((n - s) / (e - s)) * 100);
+  document.getElementById("time-fill").style.width = pct + "%";
+  const fmt = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  document.getElementById("time-start").textContent = fmt(s);
+  document.getElementById("time-now").textContent = `Today · ${Math.round(pct)}% elapsed`;
+  document.getElementById("time-end").textContent = fmt(e);
+})();
+
+/* ---- KPI tiles ---- */
+document.getElementById("kpis").innerHTML = DASHBOARD.kpis.map(k => {
+  const p = clamp(k.progress);
+  const col = p >= 70 ? "var(--st-good)" : p >= 40 ? "var(--st-warn)" : "var(--accent)";
+  const valStr = k.unit === "$K"
+      ? "$" + k.value + "K"
+      : (k.value.toLocaleString ? k.value.toLocaleString() : k.value) + (k.unit || "");
+  const tgtStr = k.unit === "$K" ? "$" + (k.target/1000) + "M" : k.target.toLocaleString() + (k.unit || "");
+  return `<div class="kpi" style="--k-accent:${k.accent}">
+    <div class="k-lbl">${k.label}</div>
+    <div class="k-val">${valStr}</div>
+    <div class="mini-track"><div class="mini-fill" style="width:${p}%;background:${col}"></div></div>
+    <div class="k-foot">
+      <span class="k-tgt">${p}% of ${tgtStr}</span>
+      <span class="delta ${k.deltaUp ? "up" : "down"}">${k.deltaUp ? "▲" : "▼"} ${k.delta.replace(/^[+-]/, "")}</span>
+    </div>
+  </div>`;
+}).join("");
+
+/* ---- Trend line chart (actual vs plan) ---- */
+function renderTrend() {
+  const t = DASHBOARD.trend;
+  const W = 560, H = 230, pad = { l: 42, r: 16, t: 14, b: 28 };
+  const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  const vals = [...t.actual, ...t.plan].filter(v => v != null);
+  const max = Math.ceil(Math.max(...vals) / 100) * 100;
+  const x = (i) => pad.l + (iw * i) / (t.months.length - 1);
+  const y = (v) => pad.t + ih - (ih * v) / max;
+
+  const grid = [], ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const v = (max / ticks) * i, gy = y(v);
+    grid.push(`<line class="crosshair" style="stroke-dasharray:0" stroke="var(--grid)" x1="${pad.l}" y1="${gy}" x2="${W-pad.r}" y2="${gy}"/>
+      <text x="${pad.l-8}" y="${gy+3.5}" text-anchor="end" font-size="10" fill="var(--text-muted)">${v>=1000?(v/1000)+"k":v}</text>`);
+  }
+  const xlabels = t.months.map((m, i) => `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">${m}</text>`).join("");
+
+  const linePath = (arr) => {
+    let d = "", started = false;
+    arr.forEach((v, i) => { if (v == null) return; d += (started ? "L" : "M") + x(i) + " " + y(v) + " "; started = true; });
+    return d.trim();
+  };
+  const areaPath = (arr) => {
+    const pts = arr.map((v, i) => v == null ? null : [x(i), y(v)]).filter(Boolean);
+    if (!pts.length) return "";
+    return `M${pts[0][0]} ${y(0)} ` + pts.map(p => `L${p[0]} ${p[1]}`).join(" ") + ` L${pts[pts.length-1][0]} ${y(0)} Z`;
+  };
+
+  const actDots = t.actual.map((v, i) => v == null ? "" :
+    `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`).join("");
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" style="overflow:visible" id="trend-svg">
+    <defs><linearGradient id="grad-a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--accent)" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    ${grid.join("")}
+    <path d="${areaPath(t.actual)}" fill="url(#grad-a)"/>
+    <path d="${linePath(t.plan)}" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-dasharray="5 4" opacity="0.85"/>
+    <path d="${linePath(t.actual)}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${actDots}
+    ${xlabels}
+    <line id="tr-cross" class="crosshair" x1="0" y1="${pad.t}" x2="0" y2="${pad.t+ih}" style="opacity:0"/>
+    <rect id="tr-hit" x="${pad.l}" y="${pad.t}" width="${iw}" height="${ih}" fill="transparent"/>
+  </svg>`;
+  document.getElementById("trend-chart").innerHTML = svg;
+  document.getElementById("trend-sub").textContent = t.subtitle;
+  document.getElementById("trend-legend").innerHTML =
+    `<span class="lg"><span class="sw line" style="background:var(--accent)"></span>Actual</span>
+     <span class="lg"><span class="sw line" style="background:var(--text-muted)"></span>Plan</span>`;
+
+  // hover crosshair
+  const hit = document.getElementById("tr-hit"), cross = document.getElementById("tr-cross");
+  const svgEl = document.getElementById("trend-svg");
+  hit.addEventListener("mousemove", (ev) => {
+    const rect = svgEl.getBoundingClientRect();
+    const scale = W / rect.width;
+    const mx = (ev.clientX - rect.left) * scale;
+    let i = Math.round((mx - pad.l) / (iw / (t.months.length - 1)));
+    i = Math.max(0, Math.min(t.months.length - 1, i));
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.style.opacity = "1";
+    const a = t.actual[i], p = t.plan[i];
+    showTip(`<div class="tt-t">${t.months[i]} 2026</div>
+      <div class="tt-r"><span>Actual</span><b>${a==null?"—":"$"+a+"K"}</b></div>
+      <div class="tt-r"><span>Plan</span><b>$${p}K</b></div>`, ev.clientX, ev.clientY);
+  });
+  hit.addEventListener("mouseleave", () => { cross.style.opacity = "0"; hideTip(); });
+}
+
+/* ---- Donut: KR status distribution ---- */
+function renderDonut() {
+  const order = ["on-track", "at-risk", "off-track", "achieved", "not-started"];
+  const counts = {};
+  allKRs.forEach(k => counts[k.status] = (counts[k.status] || 0) + 1);
+  const data = order.filter(s => counts[s]).map(s => ({ key: s, label: STATUS[s].label, val: counts[s], color: STATUS[s].color }));
+  const total = allKRs.length;
+  const size = 168, r = 70, rin = 46, cx = size/2, cy = size/2;
+  let a0 = -Math.PI / 2;
+  const arc = (a, b) => {
+    const large = b - a > Math.PI ? 1 : 0;
+    const p = (ang, rad) => [cx + rad * Math.cos(ang), cy + rad * Math.sin(ang)];
+    const [x1,y1]=p(a,r),[x2,y2]=p(b,r),[x3,y3]=p(b,rin),[x4,y4]=p(a,rin);
+    return `M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${rin} ${rin} 0 ${large} 0 ${x4} ${y4} Z`;
+  };
+  const gap = 0.03;
+  const segs = data.map(d => {
+    const sweep = (d.val / total) * (2 * Math.PI);
+    const a = a0 + gap/2, b = a0 + sweep - gap/2; a0 += sweep;
+    return `<path d="${arc(a, Math.max(a+0.001,b))}" fill="${d.color}" data-k="${d.key}" class="donut-seg" style="cursor:pointer;transition:opacity .12s"/>`;
+  }).join("");
+  document.getElementById("donut-chart").innerHTML = `
+    <svg viewBox="0 0 ${size} ${size}" width="168" height="168">
+      ${segs}
+      <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="30" font-weight="800" fill="var(--text)">${total}</text>
+      <text x="${cx}" y="${cy+15}" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">key results</text>
+    </svg>`;
+  document.getElementById("donut-legend").innerHTML = data.map(d => `
+    <div class="dl-row" data-k="${d.key}">
+      <span class="sw" style="background:${d.color}"></span>
+      <span class="dl-name">${d.label}</span>
+      <span class="dl-val">${d.val} · ${Math.round(d.val/total*100)}%</span>
+    </div>`).join("");
+
+  document.querySelectorAll(".donut-seg").forEach(seg => {
+    seg.addEventListener("mousemove", (ev) => {
+      const k = seg.dataset.k, d = data.find(x => x.key === k);
+      showTip(`<div class="tt-t">${d.label}</div><div class="tt-r"><span>${d.val} of ${total}</span><b>${Math.round(d.val/total*100)}%</b></div>`, ev.clientX, ev.clientY);
+      document.querySelectorAll(".donut-seg").forEach(s => s.style.opacity = s === seg ? "1" : "0.35");
+    });
+    seg.addEventListener("mouseleave", () => { hideTip(); document.querySelectorAll(".donut-seg").forEach(s => s.style.opacity = "1"); });
+  });
+}
+
+/* ---- Objective attainment bars ---- */
+function renderObjBars() {
+  document.getElementById("obj-bars").innerHTML = DASHBOARD.objectives.map((o, i) => {
+    const p = Math.round(objProgress(o));
+    const col = STATUS[o.status].color;
+    return `<div class="bar-row">
+      <div class="bar-top">
+        <span class="bar-name">${o.id} · ${o.title}</span>
+        <span class="bar-pct" style="color:${col}">${p}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${col}"></div></div>
+    </div>`;
+  }).join("");
+}
+
+/* ---- Objectives + KRs ---- */
+let activeFilter = "all";
+function renderObjectives() {
+  const host = document.getElementById("objectives");
+  const objs = DASHBOARD.objectives;
+  host.innerHTML = objs.map((o, idx) => {
+    const p = Math.round(objProgress(o));
+    const col = STATUS[o.status].color;
+    const visibleKRs = o.keyResults.filter(k => activeFilter === "all" || k.status === activeFilter);
+    if (activeFilter !== "all" && visibleKRs.length === 0) return "";
+    const openClass = (activeFilter !== "all" || idx === 0) ? "open" : "";
+    const krRows = visibleKRs.map(k => `
+      <div class="kr">
+        <div class="kr-main">
+          <div class="kr-name">${k.name}</div>
+          <div class="kr-owner"><span class="avatar">${initials(k.owner)}</span>${k.owner}</div>
+        </div>
+        <div class="kr-metric">
+          <div class="m-cur">${k.current} <span style="color:var(--text-muted);font-weight:600">/</span> <span class="m-tgt" style="font-size:13px">${k.target}</span></div>
+        </div>
+        <div class="kr-bar">
+          <div class="kr-track"><div class="kr-fill" style="width:${clamp(k.progress)}%;background:${STATUS[k.status].color}"></div></div>
+          <div class="kr-pct">${clamp(k.progress)}% to target</div>
+        </div>
+        <div class="kr-badge">${badge(k.status)}</div>
+      </div>`).join("");
+    return `<div class="obj ${openClass}" data-idx="${idx}">
+      <div class="obj-head">
+        <div class="obj-num">${o.id}</div>
+        <div>
+          <div class="obj-title">${o.title}</div>
+          <div class="obj-desc">${o.description}</div>
+        </div>
+        <div class="obj-right">
+          ${badge(o.status)}
+          <div class="obj-prog">
+            <div class="op-val" style="color:${col}">${p}%</div>
+            <div class="op-track"><div class="op-fill" style="width:${p}%;background:${col}"></div></div>
+          </div>
+          <span class="caret">▶</span>
+        </div>
+      </div>
+      <div class="krs">${krRows}</div>
+    </div>`;
+  }).join("");
+
+  host.querySelectorAll(".obj-head").forEach(h => {
+    h.addEventListener("click", () => h.closest(".obj").classList.toggle("open"));
+  });
+}
+
+/* ---- Filters ---- */
+function renderFilters() {
+  const order = ["all", "on-track", "at-risk", "off-track", "achieved", "not-started"];
+  const counts = { all: allKRs.length };
+  allKRs.forEach(k => counts[k.status] = (counts[k.status] || 0) + 1);
+  const label = (s) => s === "all" ? "All" : STATUS[s].label;
+  document.getElementById("filters").innerHTML = order.filter(s => s === "all" || counts[s]).map(s => `
+    <button class="filter-btn ${s === activeFilter ? "active" : ""}" data-f="${s}">
+      ${s !== "all" ? `<span class="b-dot" style="width:7px;height:7px;border-radius:50%;background:${STATUS[s].color};display:inline-block"></span>` : ""}
+      ${label(s)} <span class="cnt">${counts[s] || 0}</span>
+    </button>`).join("");
+  document.querySelectorAll(".filter-btn").forEach(b => b.addEventListener("click", () => {
+    activeFilter = b.dataset.f;
+    renderFilters();
+    renderObjectives();
+  }));
+}
+
+/* ---- Theme toggle ---- */
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+  // re-render charts so CSS-var colors resolve to the new theme
+  document.getElementById("overall-ring").innerHTML = ring(overall);
+  renderTrend(); renderDonut(); renderObjBars();
+});
+
+/* ---- Boot ---- */
+renderTrend();
+renderDonut();
+renderObjBars();
+renderFilters();
+renderObjectives();
+</script>
+</body>
+</html>
