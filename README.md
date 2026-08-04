@@ -12,6 +12,7 @@ A complete set of Framer code components for the Beamr homepage design. Every el
 | **Solutions** | `code/Solutions.tsx` | Industry solutions cards grid |
 | **CompanyUsage** | `code/CompanyUsage.tsx` | Metrics/use-case cards (CDN costs, storage, quality) |
 | **CABRScience** | `code/CABRScience.tsx` | Split layout: text + media with stats |
+| **BroadcastArchitecture** | `code/BroadcastArchitecture.tsx` | Integration pipeline: animated broadcast workflow showing where Beamr fits |
 | **TrustSection** | `code/TrustSection.tsx` | Awards and testimonial quotes |
 | **PartnerSection** | `code/PartnerSection.tsx` | Features list + media split layout |
 | **NewsSection** | `code/NewsSection.tsx` | Blog post cards grid |
