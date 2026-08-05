@@ -21,6 +21,20 @@ A complete set of Framer code components for the Beamr homepage design. Every el
 | **Footer** | `code/Footer.tsx` | Full footer with columns, newsletter, socials |
 | **Homepage** | `code/Homepage.tsx` | Full page composition (all sections combined) |
 
+### Event Page Template (`code/event/`)
+
+Framer components for an event landing page (e.g. "Meet us at IBC 2026"), in Beamr's light brand.
+
+| Component | File | Description |
+|---|---|---|
+| **EventHero** | `code/event/EventHero.tsx` | Hero with headline, CTAs, and an event "pass" card (dates, location, stand, featured joint demo) |
+| **EventBooth** | `code/event/EventBooth.tsx` | "On the booth" — featured Beamr × NVIDIA demo + bento grid of booth experiences |
+| **EventWhyMeet** | `code/event/EventWhyMeet.tsx` | "Why meet us" — numbered reasons row |
+| **EventScheduleCTA** | `code/event/EventScheduleCTA.tsx` | Closing "Schedule a demo" CTA with event facts (dark ground) |
+| **EventPage** | `code/event/EventPage.tsx` | Full event page composition (toggle sections) |
+
+Open `code/event/EventPage.preview.html` in a browser for the visual reference.
+
 ## How to Use in Framer
 
 ### Option 1: Use Individual Sections (Recommended)
