@@ -1,243 +1,179 @@
-<title>Beamr — Broadcast Architecture Component Preview</title>
+<title>Beamr — Broadcast Signal-Path Schematic</title>
 <style>
   :root {
     --bg: #07071c;
-    --panel-top: #0a0a20;
-    --panel-bot: #0f1029;
     --text: #ffffff;
     --muted: #8b8ba3;
-    --muted2: #c2c2d6;
+    --slate: #4a5578;
     --accent: #00d46a;
-    --border: rgba(255, 255, 255, 0.08);
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
   }
-
   * { box-sizing: border-box; }
 
-  .ba-section {
-    width: 100%;
-    background: var(--bg);
-    padding: 100px 48px;
-    font-family: var(--font);
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
+  .ba { width: 100%; background: var(--bg); padding: 100px 48px; font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
+  .ba-wrap { max-width: 1120px; margin: 0 auto; }
+
+  /* header */
+  .ba-head { display: flex; flex-direction: column; gap: 18px; max-width: 720px; }
+  .ba-fig { font-size: 11.5px; font-weight: 500; color: var(--slate); font-family: var(--mono); letter-spacing: 0.18em; }
+  .ba-h { font-size: 40px; font-weight: 700; margin: 0; line-height: 1.12; letter-spacing: -0.03em; text-wrap: balance; }
+  .ba-desc { font-size: 15.5px; color: var(--muted); margin: 0; line-height: 1.7; max-width: 560px; }
+
+  /* schematic frame */
+  .ba-scroll { width: 100%; overflow-x: auto; padding-bottom: 4px; margin-top: 64px; }
+  .ba-schem { position: relative; min-width: 760px; height: 232px; margin: 0 auto; }
+
+  .ba-ruler { position: absolute; top: 0; left: 0; right: 0; height: 16px; }
+  .ba-ruler-line { position: absolute; top: 8px; left: 0; right: 0; height: 1px; background: rgba(74,85,120,0.18); }
+  .ba-tick { position: absolute; width: 1px; background: rgba(74,85,120,0.3); }
+
+  .ba-bracket {
+    position: absolute; top: 34px; height: 16px;
+    border-left: 1px solid rgba(0,212,106,0.5); border-right: 1px solid rgba(0,212,106,0.5); border-top: 1px solid rgba(0,212,106,0.5);
+    border-top-left-radius: 4px; border-top-right-radius: 4px;
   }
-  .ba-wrap { max-width: 1160px; margin: 0 auto; }
-  .ba-grid {
-    display: grid;
-    grid-template-columns: 0.95fr 1.05fr;
-    gap: 72px;
-    align-items: center;
+  .ba-bracket span {
+    position: absolute; top: -8px; left: 50%; transform: translate(-50%,-100%); white-space: nowrap;
+    font-size: 10px; font-family: var(--mono); letter-spacing: 0.1em; color: var(--accent); background: var(--bg); padding: 0 8px;
   }
 
-  /* ---- Header ---- */
-  .ba-header { display: flex; flex-direction: column; gap: 20px; }
-  .ba-eyebrow {
-    font-size: 12px; font-weight: 600; color: var(--accent);
-    letter-spacing: 0.1em; text-transform: uppercase;
+  .ba-bus-thick, .ba-bus-thin { position: absolute; top: 108px; }
+  .ba-bus-thick { height: 5px; margin-top: -2.5px; border-radius: 3px; background: linear-gradient(90deg, rgba(74,85,120,0.65), rgba(0,212,106,0.5)); }
+  .ba-bus-thin { height: 2px; margin-top: -1px; border-radius: 2px; background: linear-gradient(90deg, rgba(0,212,106,0.5), rgba(74,85,120,0.65)); }
+
+  .ba-note { position: absolute; top: 118px; transform: translateX(-50%); font-size: 9.5px; font-family: var(--mono); white-space: nowrap; }
+  .ba-note.slate { color: rgba(74,85,120,0.9); letter-spacing: 0.14em; }
+  .ba-note.green { color: var(--accent); letter-spacing: 0.1em; }
+
+  .ba-packet {
+    position: absolute; top: 108px; width: 26px; height: 8px; border-radius: 4px; background: var(--accent);
+    box-shadow: 0 0 14px rgba(0,212,106,0.8); transform: translate(-50%,-50%);
+    animation: ba-run 4.2s cubic-bezier(0.45,0,0.55,1) infinite;
   }
-  .ba-heading {
-    font-size: 42px; font-weight: 700; margin: 0; line-height: 1.12;
-    letter-spacing: -0.03em; text-wrap: balance;
-  }
-  .ba-desc {
-    font-size: 16px; color: var(--muted); margin: 0; line-height: 1.7; max-width: 460px;
+  @keyframes ba-run {
+    0%   { left: 4%;  opacity: 0; transform: translate(-50%,-50%) scaleX(1); }
+    6%   { opacity: 1; }
+    58%  { transform: translate(-50%,-50%) scaleX(1); }
+    66%  { transform: translate(-50%,-50%) scaleX(0.4); }
+    94%  { opacity: 1; }
+    100% { left: 96%; opacity: 0; transform: translate(-50%,-50%) scaleX(0.4); }
   }
 
-  /* ---- Checklist ---- */
-  .ba-checklist { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
-  .ba-check { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
-  .ba-check.emph {
-    padding: 14px 16px; border-radius: 12px;
-    background: rgba(0, 212, 106, 0.08); border: 1px solid rgba(0, 212, 106, 0.28);
+  .ba-node { position: absolute; top: 82px; transform: translateX(-50%); width: 150px; display: flex; flex-direction: column; align-items: center; transition: transform 0.25s ease; }
+  .ba-node:hover { transform: translateX(-50%) translateY(-2px); }
+  .ba-mod {
+    position: relative; width: 52px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); border: 1px solid rgba(74,85,120,0.55); flex-shrink: 0;
   }
-  .ba-check-dot {
-    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(0, 212, 106, 0.1);
-  }
-  .ba-check.emph .ba-check-dot { background: rgba(0, 212, 106, 0.18); }
-  .ba-check-label { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
-  .ba-check.emph .ba-check-label { font-weight: 600; color: var(--text); }
+  .ba-mod.hi { background: rgba(0,212,106,0.14); border: 1px solid rgba(0,212,106,0.6); box-shadow: 0 0 20px rgba(0,212,106,0.22); animation: ba-live 2.6s ease-in-out infinite; }
+  @keyframes ba-live { 0%,100% { box-shadow: 0 0 0 0 rgba(0,212,106,0); } 50% { box-shadow: 0 0 20px 0 rgba(0,212,106,0.35); } }
+  .ba-idx { position: absolute; top: -1px; left: 6px; font-size: 8.5px; font-family: var(--mono); transform: translateY(-100%); padding-bottom: 2px; opacity: 0.85; }
+  .ba-code { margin-top: 16px; font-size: 10.5px; font-family: var(--mono); letter-spacing: 0.08em; }
+  .ba-name { margin-top: 6px; font-size: 12.5px; font-weight: 500; text-align: center; line-height: 1.35; letter-spacing: -0.01em; }
 
-  /* ---- Pipeline panel ---- */
-  .ba-panel {
-    background: linear-gradient(180deg, var(--panel-top) 0%, var(--panel-bot) 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 30px 28px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
-  }
-  .ba-panel-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; }
-  .ba-dots { display: flex; gap: 5px; }
-  .ba-dots span { width: 9px; height: 9px; border-radius: 50%; opacity: 0.85; }
-  .ba-panel-title {
-    font-size: 12px; font-weight: 600; color: var(--muted);
-    letter-spacing: 0.04em; text-transform: uppercase; margin-left: 4px;
-  }
-  .ba-stages { display: flex; flex-direction: column; }
+  /* legend */
+  .ba-legend { margin-top: 44px; padding-top: 22px; border-top: 1px solid rgba(74,85,120,0.25); display: flex; flex-wrap: wrap; align-items: center; gap: 28px; }
+  .ba-leg { display: flex; align-items: center; gap: 10px; }
+  .ba-sw { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(74,85,120,0.55); }
+  .ba-sw.on { border: none; background: var(--accent); box-shadow: 0 0 10px rgba(0,212,106,0.5); }
+  .ba-leg-t { font-size: 13.5px; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
+  .ba-leg-t.on { font-weight: 600; color: var(--text); }
 
-  .ba-stage { position: relative; display: flex; gap: 16px; padding-bottom: 26px; }
-  .ba-stage:last-child { padding-bottom: 0; }
-
-  .ba-rail { position: relative; flex-shrink: 0; width: 46px; display: flex; justify-content: center; }
-  .ba-connector {
-    position: absolute; top: 46px; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.09); overflow: hidden;
-  }
-  .ba-pulse {
-    position: absolute; left: 0; right: 0; height: 55%;
-    background: linear-gradient(180deg, transparent, var(--accent), transparent);
-    animation: ba-flow 2.6s linear infinite;
-  }
-  .ba-ring {
-    position: absolute; top: 0; width: 46px; height: 46px; border-radius: 14px;
-    border: 1px solid var(--accent); animation: ba-ring 2.6s ease-in-out infinite; pointer-events: none;
-  }
-  .ba-icon {
-    position: relative; z-index: 1; width: 46px; height: 46px; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
-  }
-  .ba-stage.hi .ba-icon {
-    background: rgba(0, 212, 106, 0.12); border: 1px solid rgba(0, 212, 106, 0.5);
-    box-shadow: 0 0 22px rgba(0, 212, 106, 0.25);
-  }
-
-  .ba-card {
-    flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 13px 18px; border-radius: 14px;
-    background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
-    transition: transform 0.3s ease;
-  }
-  .ba-card:hover { transform: translateX(3px); }
-  .ba-stage.hi .ba-card { background: rgba(0, 212, 106, 0.06); border: 1px solid rgba(0, 212, 106, 0.22); }
-  .ba-title { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; line-height: 1.3; }
-  .ba-sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-  .ba-tag {
-    flex-shrink: 0; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--muted); padding: 4px 9px; border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
-  }
-  .ba-stage.hi .ba-tag {
-    color: var(--accent); background: rgba(0, 212, 106, 0.12); border: 1px solid rgba(0, 212, 106, 0.35);
-  }
-
-  @keyframes ba-flow {
-    0%   { transform: translateY(-110%); opacity: 0; }
-    20%  { opacity: 1; }
-    80%  { opacity: 1; }
-    100% { transform: translateY(210%); opacity: 0; }
-  }
-  @keyframes ba-ring {
-    0%, 100% { opacity: 0.18; transform: scale(1); }
-    50%      { opacity: 0.55; transform: scale(1.08); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ba-pulse, .ba-ring { animation: none; }
-    .ba-pulse { opacity: 0.6; }
-  }
-
-  .ba-narrow-checklist { display: none; }
-
-  @media (max-width: 960px) {
-    .ba-section { padding: 72px 32px; }
-    .ba-grid { grid-template-columns: 1fr; gap: 40px; }
-    .ba-heading { font-size: 36px; }
-    .ba-header .ba-checklist { display: none; }
-    .ba-narrow-checklist { display: flex; margin-top: 28px; }
-  }
-  @media (max-width: 560px) {
-    .ba-section { padding: 56px 20px; }
-    .ba-heading { font-size: 30px; }
-    .ba-panel { padding: 24px 20px; }
+  @media (max-width: 760px) {
+    .ba { padding: 56px 22px; }
+    .ba-h { font-size: 31px; }
+    .ba-scroll { margin-top: 40px; }
+    .ba-legend { gap: 14px; margin-top: 36px; }
   }
 </style>
 
-<section class="ba-section">
+<section class="ba">
   <div class="ba-wrap">
-    <div class="ba-grid">
-      <!-- Header -->
-      <div class="ba-header">
-        <span class="ba-eyebrow">Seamless Integration</span>
-        <h2 class="ba-heading">Fits Into Your Existing Broadcast Infrastructure</h2>
-        <p class="ba-desc">Beamr slots into the workflow you already run. Two intelligent steps in production do the work — everything upstream and downstream stays exactly as it is.</p>
-        <div class="ba-checklist" id="checklist-desktop"></div>
-      </div>
-
-      <!-- Pipeline -->
-      <div class="ba-panel">
-        <div class="ba-panel-bar">
-          <span class="ba-dots">
-            <span style="background:#ff5f56"></span>
-            <span style="background:#ffbd2e"></span>
-            <span style="background:#27c93f"></span>
-          </span>
-          <span class="ba-panel-title">Production Pipeline</span>
-        </div>
-        <div class="ba-stages" id="stages"></div>
-      </div>
+    <div class="ba-head">
+      <span class="ba-fig">FIG.01 — SIGNAL PATH</span>
+      <h2 class="ba-h">Fits into your existing broadcast infrastructure</h2>
+      <p class="ba-desc">Two intelligent steps drop into production. Everything upstream and downstream stays exactly as it is — the same signal chain you run today, now carrying far less bitrate.</p>
     </div>
-    <div class="ba-checklist ba-narrow-checklist" id="checklist-mobile"></div>
+
+    <div class="ba-scroll">
+      <div class="ba-schem" id="schem"></div>
+    </div>
+
+    <div class="ba-legend" id="legend"></div>
   </div>
 </section>
 
 <script>
-  const ACCENT = "#00d46a";
-  const MUTED = "#c2c2d6";
-
+  const ACCENT = "#00d46a", SLATE = "#4a5578";
   const icons = {
-    camera: c => `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="12" height="10" rx="2" stroke="${c}" stroke-width="1.6"/><path d="M14 9.5L20 6.5V15.5L14 12.5V9.5Z" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
-    sliders: c => `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 6H18M4 11H18M4 16H18" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="6" r="2" fill="#0b0d1c" stroke="${c}" stroke-width="1.6"/><circle cx="14" cy="11" r="2" fill="#0b0d1c" stroke="${c}" stroke-width="1.6"/><circle cx="7" cy="16" r="2" fill="#0b0d1c" stroke="${c}" stroke-width="1.6"/></svg>`,
-    sparkle: c => `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2.5L12.6 8.2L18 10L12.6 11.8L11 17.5L9.4 11.8L4 10L9.4 8.2L11 2.5Z" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/><path d="M17.5 15L18.2 17L20 17.7L18.2 18.4L17.5 20.4L16.8 18.4L15 17.7L16.8 17L17.5 15Z" fill="${c}"/></svg>`,
-    compress: c => `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3V6M11 3L9 5M11 3L13 5" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 19V16M11 19L9 17M11 19L13 17" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="8.5" width="14" height="5" rx="1.4" stroke="${c}" stroke-width="1.6"/></svg>`,
-    cloud: c => `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6.5 16C4 16 2.5 14.3 2.5 12.2C2.5 10.3 3.9 8.7 5.8 8.5C6.3 6 8.4 4.2 11 4.2C13.9 4.2 16.2 6.4 16.4 9.2C18.1 9.5 19.3 10.9 19.3 12.6C19.3 14.5 17.8 16 15.9 16H6.5Z" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
-    viewers: c => `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="4" width="17" height="11" rx="2" stroke="${c}" stroke-width="1.6"/><path d="M9.5 7.7L13 9.5L9.5 11.3V7.7Z" fill="${c}"/><path d="M7.5 18.5H14.5" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/></svg>`
+    camera: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="12" height="10" rx="1.5" stroke="${c}" stroke-width="1.5"/><path d="M14 9.5L20 6.5V15.5L14 12.5V9.5Z" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+    sliders: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M4 6H18M4 11H18M4 16H18" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="4" width="4" height="4" rx="1" fill="${c}"/><rect x="12" y="9" width="4" height="4" rx="1" fill="${c}"/><rect x="5" y="14" width="4" height="4" rx="1" fill="${c}"/></svg>`,
+    sparkle: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 2.5L12.6 8.2L18 10L12.6 11.8L11 17.5L9.4 11.8L4 10L9.4 8.2L11 2.5Z" stroke="${c}" stroke-width="1.4" stroke-linejoin="round"/><path d="M17.5 15L18.2 17L20 17.7L18.2 18.4L17.5 20.4L16.8 18.4L15 17.7L16.8 17L17.5 15Z" fill="${c}"/></svg>`,
+    compress: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 2.5V6M11 2.5L9 4.5M11 2.5L13 4.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 19.5V16M11 19.5L9 17.5M11 19.5L13 17.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="8.5" width="14" height="5" rx="1" stroke="${c}" stroke-width="1.5"/></svg>`,
+    cloud: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M6.5 16C4 16 2.5 14.3 2.5 12.2C2.5 10.3 3.9 8.7 5.8 8.5C6.3 6 8.4 4.2 11 4.2C13.9 4.2 16.2 6.4 16.4 9.2C18.1 9.5 19.3 10.9 19.3 12.6C19.3 14.5 17.8 16 15.9 16H6.5Z" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+    viewers: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="4" width="17" height="11" rx="1.5" stroke="${c}" stroke-width="1.5"/><path d="M9.5 7.7L13 9.5L9.5 11.3V7.7Z" fill="${c}"/><path d="M7.5 18.5H14.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/></svg>`
   };
-  const checkIcon = c => `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.8 7.2L5.6 10L11.2 4" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const sparkIcon = c => `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5L8 5L11.5 6L8 7L7 10.5L6 7L2.5 6L6 5L7 1.5Z" fill="${c}"/></svg>`;
 
   const stages = [
-    { icon: "camera", title: "HD Camera Feed", subtitle: "Your existing capture", tag: "", hi: false },
-    { icon: "sliders", title: "Production Switching", subtitle: "Live gallery &amp; vision mixing", tag: "", hi: false },
-    { icon: "sparkle", title: "NVIDIA RTX Video Super Resolution", subtitle: "AI upscaling to pristine detail", tag: "Enhance", hi: true },
-    { icon: "compress", title: "Beamr CABR Encoding", subtitle: "Content-adaptive bitrate reduction", tag: "Optimize", hi: true },
-    { icon: "cloud", title: "Packaging &amp; CDN", subtitle: "Your current delivery stack", tag: "", hi: false },
-    { icon: "viewers", title: "Viewers", subtitle: "No player changes required", tag: "", hi: false }
+    { icon: "camera",   code: "12G-SDI",  name: "HD Camera Feed", hi: false },
+    { icon: "sliders",  code: "SWITCH",   name: "Production Switching", hi: false },
+    { icon: "sparkle",  code: "RTX-VSR",  name: "NVIDIA RTX Video Super Resolution", hi: true },
+    { icon: "compress", code: "CABR",     name: "Beamr CABR Encoding", hi: true },
+    { icon: "cloud",    code: "HLS/DASH", name: "Packaging &amp; CDN", hi: false },
+    { icon: "viewers",  code: "PLAYOUT",  name: "Viewers", hi: false }
   ];
-
   const reassurances = [
     { text: "No new cameras", emphasis: false },
     { text: "No new delivery infrastructure", emphasis: false },
     { text: "No player changes", emphasis: false },
     { text: "Just a smarter production pipeline", emphasis: true }
   ];
+  const THICK_NOTE = "FULL BITRATE";
+  const THIN_NOTE = "BITRATE ↓ 50% · QUALITY 100%";
+  const INSERT = "SMART PRODUCTION LAYER — the only thing you add";
 
-  document.getElementById("stages").innerHTML = stages.map((s, i) => {
-    const last = i === stages.length - 1;
-    const iconColor = s.hi ? ACCENT : MUTED;
-    return `
-      <div class="ba-stage ${s.hi ? "hi" : ""}">
-        <div class="ba-rail">
-          ${last ? "" : `<div class="ba-connector"><div class="ba-pulse" style="animation-delay:${i * 0.35}s"></div></div>`}
-          ${s.hi ? `<div class="ba-ring" style="animation-delay:${i * 0.2}s"></div>` : ""}
-          <div class="ba-icon">${icons[s.icon](iconColor)}</div>
+  const n = stages.length;
+  const centers = stages.map((_, i) => ((i + 0.5) / n) * 100);
+  const hiIdx = stages.map((s, i) => s.hi ? i : -1).filter(i => i >= 0);
+  const firstHi = hiIdx[0], lastHi = hiIdx[hiIdx.length - 1];
+
+  let html = "";
+  // ruler
+  html += `<div class="ba-ruler"><div class="ba-ruler-line"></div>`;
+  for (let i = 0; i < 25; i++) {
+    const major = i % 4 === 0;
+    html += `<div class="ba-tick" style="left:${(i/24)*100}%; top:${major?3:5}px; height:${major?6:4}px"></div>`;
+  }
+  html += `</div>`;
+  // bracket
+  html += `<div class="ba-bracket" style="left:${centers[firstHi]}%; width:${centers[lastHi]-centers[firstHi]}%"><span>${INSERT}</span></div>`;
+  // bus
+  html += `<div class="ba-bus-thick" style="left:${centers[0]}%; width:${centers[lastHi]-centers[0]}%"></div>`;
+  html += `<div class="ba-bus-thin" style="left:${centers[lastHi]}%; width:${centers[n-1]-centers[lastHi]}%"></div>`;
+  // notes
+  html += `<div class="ba-note slate" style="left:${(centers[0]+centers[lastHi])/2}%">${THICK_NOTE}</div>`;
+  html += `<div class="ba-note green" style="left:${(centers[lastHi]+centers[n-1])/2}%">${THIN_NOTE}</div>`;
+  // packet
+  html += `<div class="ba-packet"></div>`;
+  // nodes
+  stages.forEach((s, i) => {
+    const col = s.hi ? ACCENT : SLATE;
+    html += `
+      <div class="ba-node" style="left:${centers[i]}%">
+        <div class="ba-mod ${s.hi ? "hi" : ""}" style="animation-delay:${i*0.2}s">
+          <span class="ba-idx" style="color:${col}">${String(i+1).padStart(2,"0")}</span>
+          ${icons[s.icon](col)}
         </div>
-        <div class="ba-card">
-          <div>
-            <div class="ba-title">${s.title}</div>
-            ${s.subtitle ? `<div class="ba-sub">${s.subtitle}</div>` : ""}
-          </div>
-          ${s.tag ? `<span class="ba-tag">${s.tag}</span>` : ""}
-        </div>
+        <span class="ba-code" style="color:${col}">${s.code}</span>
+        <span class="ba-name" style="color:${s.hi ? "#fff" : "#8b8ba3"}">${s.name}</span>
       </div>`;
-  }).join("");
+  });
+  document.getElementById("schem").innerHTML = html;
 
-  const checklistHTML = reassurances.map(r => `
-    <div class="ba-check ${r.emphasis ? "emph" : ""}">
-      <span class="ba-check-dot">${r.emphasis ? sparkIcon(ACCENT) : checkIcon(ACCENT)}</span>
-      <span class="ba-check-label">${r.text}</span>
+  document.getElementById("legend").innerHTML = reassurances.map(r => `
+    <div class="ba-leg">
+      <span class="ba-sw ${r.emphasis ? "on" : ""}"></span>
+      <span class="ba-leg-t ${r.emphasis ? "on" : ""}">${r.text}</span>
     </div>`).join("");
-  document.getElementById("checklist-desktop").innerHTML = checklistHTML;
-  document.getElementById("checklist-mobile").innerHTML = checklistHTML;
 </script>
