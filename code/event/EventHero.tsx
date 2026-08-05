@@ -7,7 +7,6 @@ import { addPropertyControls, ControlType } from "framer"
 import { useEffect, useRef, useState } from "react"
 
 interface Props {
-    tag: string
     heading: string
     headingSize: number
     headingWeight: number
@@ -72,7 +71,6 @@ function PhotoFrame({ src, label, ratio, radius, placeholderBg, lightColor }: { 
 
 function EventHero(props: Props) {
     const {
-        tag = "IBC 2026 · Amsterdam",
         heading = "Meet Beamr\nat IBC 2026",
         headingSize = 58,
         headingWeight = 800,
@@ -152,9 +150,6 @@ function EventHero(props: Props) {
                 {/* Left */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                     {eventLogo ? <img src={eventLogo} alt="Event" style={{ height: 36, width: "auto", objectFit: "contain", alignSelf: "flex-start", ...rv(0) }} /> : null}
-                    <span style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.02em", color: primaryColor, border: `1px solid ${hexToRgba(primaryColor, 0.3)}`, background: hexToRgba(primaryColor, 0.05), padding: "6px 14px", borderRadius: 999, ...rv(0) }}>
-                        {tag}
-                    </span>
                     <h1 style={{ fontSize: isMobile ? Math.round(headingSize * 0.58) : headingSize, fontWeight: headingWeight, color: textColor, margin: 0, lineHeight: 1.02, letterSpacing: "-0.035em", whiteSpace: "pre-line", ...rv(1) }}>
                         {heading}
                     </h1>
@@ -199,7 +194,6 @@ function EventHero(props: Props) {
 }
 
 addPropertyControls(EventHero, {
-    tag: { type: ControlType.String, title: "Tag", defaultValue: "IBC 2026 · Amsterdam" },
     heading: { type: ControlType.String, title: "Heading", defaultValue: "Meet Beamr\nat IBC 2026", displayTextArea: true },
     headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 58, min: 24, max: 100, step: 1 },
     headingWeight: { type: ControlType.Enum, title: "Heading Weight", options: [300, 400, 500, 600, 700, 800, 900], optionTitles: ["300", "400", "500", "600", "700", "800", "900"], defaultValue: 800 },
