@@ -16,10 +16,20 @@ interface Stage {
 }
 
 interface Props {
-    label: string
     heading: string
     headingSize: number
+    headingWeight: number
     subtitle: string
+    subtitleSize: number
+    subtitleWeight: number
+    cardNameSize: number
+    cardNameWeight: number
+    kickerSize: number
+    kickerWeight: number
+    reassureSize: number
+    reassureWeight: number
+    closerSize: number
+    closerWeight: number
     stages: Stage[]
     layerCaption: string
     reassurances: string[]
@@ -86,10 +96,20 @@ function hexToRgba(hex: string, alpha: number) {
 
 function BroadcastArchitecture(props: Props) {
     const {
-        label = "SEAMLESS INTEGRATION",
         heading = "Fits into your existing broadcast infrastructure",
         headingSize = 42,
+        headingWeight = 800,
         subtitle = "Two intelligent steps drop into production. Everything upstream and downstream stays exactly as it is — the same signal chain you already run.",
+        subtitleSize = 17,
+        subtitleWeight = 400,
+        cardNameSize = 14.5,
+        cardNameWeight = 600,
+        kickerSize = 10.5,
+        kickerWeight = 600,
+        reassureSize = 18,
+        reassureWeight = 500,
+        closerSize = 22,
+        closerWeight = 700,
         stages = [
             { icon: "camera", name: "HD Camera Feed", kicker: "Capture", highlighted: false },
             { icon: "sliders", name: "Production Switching", kicker: "Live mix", highlighted: false },
@@ -204,8 +224,8 @@ function BroadcastArchitecture(props: Props) {
                 <div style={{ minWidth: 0 }}>
                     <div
                         style={{
-                            fontSize: 10.5,
-                            fontWeight: 600,
+                            fontSize: kickerSize,
+                            fontWeight: kickerWeight,
                             letterSpacing: "0.08em",
                             textTransform: "uppercase",
                             color: hi ? primaryColor : lightColor,
@@ -217,8 +237,8 @@ function BroadcastArchitecture(props: Props) {
                     </div>
                     <div
                         style={{
-                            fontSize: isMobile ? 15 : 14.5,
-                            fontWeight: 600,
+                            fontSize: cardNameSize,
+                            fontWeight: cardNameWeight,
                             color: textColor,
                             fontFamily,
                             lineHeight: 1.35,
@@ -354,26 +374,10 @@ function BroadcastArchitecture(props: Props) {
             <div style={{ maxWidth: 1120, margin: "0 auto" }}>
                 {/* Header */}
                 <div style={{ maxWidth: 720, marginBottom: isMobile ? 40 : 56, ...revealBase(0) }}>
-                    <div
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: primaryColor,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            marginBottom: 18,
-                        }}
-                    >
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: primaryColor }} />
-                        {label}
-                    </div>
                     <h2
                         style={{
                             fontSize: isMobile ? Math.round(headingSize * 0.72) : headingSize,
-                            fontWeight: 800,
+                            fontWeight: headingWeight,
                             color: textColor,
                             margin: 0,
                             lineHeight: 1.1,
@@ -384,7 +388,8 @@ function BroadcastArchitecture(props: Props) {
                     </h2>
                     <p
                         style={{
-                            fontSize: 17,
+                            fontSize: subtitleSize,
+                            fontWeight: subtitleWeight,
                             color: secondaryColor,
                             margin: "18px 0 0",
                             lineHeight: 1.65,
@@ -436,8 +441,8 @@ function BroadcastArchitecture(props: Props) {
                 >
                     <div
                         style={{
-                            fontSize: isMobile ? 17 : 18,
-                            fontWeight: 500,
+                            fontSize: reassureSize,
+                            fontWeight: reassureWeight,
                             color: secondaryColor,
                             lineHeight: 1.5,
                         }}
@@ -452,8 +457,8 @@ function BroadcastArchitecture(props: Props) {
                     <div
                         style={{
                             flexShrink: 0,
-                            fontSize: isMobile ? 20 : 22,
-                            fontWeight: 700,
+                            fontSize: closerSize,
+                            fontWeight: closerWeight,
                             color: textColor,
                             letterSpacing: "-0.02em",
                             lineHeight: 1.3,
@@ -467,21 +472,70 @@ function BroadcastArchitecture(props: Props) {
     )
 }
 
+const WEIGHT_OPTIONS = [300, 400, 500, 600, 700, 800, 900]
+const WEIGHT_TITLES = ["Light 300", "Regular 400", "Medium 500", "SemiBold 600", "Bold 700", "ExtraBold 800", "Black 900"]
+
 addPropertyControls(BroadcastArchitecture, {
-    label: { type: ControlType.String, title: "Eyebrow", defaultValue: "SEAMLESS INTEGRATION" },
     heading: {
         type: ControlType.String,
         title: "Heading",
         defaultValue: "Fits into your existing broadcast infrastructure",
         displayTextArea: true,
     },
-    headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 42, min: 28, max: 60, step: 2 },
+    headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 42, min: 16, max: 96, step: 1 },
+    headingWeight: {
+        type: ControlType.Enum,
+        title: "Heading Weight",
+        options: WEIGHT_OPTIONS,
+        optionTitles: WEIGHT_TITLES,
+        defaultValue: 800,
+    },
     subtitle: {
         type: ControlType.String,
         title: "Subtitle",
         defaultValue:
             "Two intelligent steps drop into production. Everything upstream and downstream stays exactly as it is — the same signal chain you already run.",
         displayTextArea: true,
+    },
+    subtitleSize: { type: ControlType.Number, title: "Subtitle Size", defaultValue: 17, min: 12, max: 40, step: 1 },
+    subtitleWeight: {
+        type: ControlType.Enum,
+        title: "Subtitle Weight",
+        options: WEIGHT_OPTIONS,
+        optionTitles: WEIGHT_TITLES,
+        defaultValue: 400,
+    },
+    cardNameSize: { type: ControlType.Number, title: "Card Name Size", defaultValue: 14.5, min: 10, max: 28, step: 0.5 },
+    cardNameWeight: {
+        type: ControlType.Enum,
+        title: "Card Name Weight",
+        options: WEIGHT_OPTIONS,
+        optionTitles: WEIGHT_TITLES,
+        defaultValue: 600,
+    },
+    kickerSize: { type: ControlType.Number, title: "Kicker Size", defaultValue: 10.5, min: 8, max: 20, step: 0.5 },
+    kickerWeight: {
+        type: ControlType.Enum,
+        title: "Kicker Weight",
+        options: WEIGHT_OPTIONS,
+        optionTitles: WEIGHT_TITLES,
+        defaultValue: 600,
+    },
+    reassureSize: { type: ControlType.Number, title: "Reassurance Size", defaultValue: 18, min: 12, max: 36, step: 1 },
+    reassureWeight: {
+        type: ControlType.Enum,
+        title: "Reassurance Weight",
+        options: WEIGHT_OPTIONS,
+        optionTitles: WEIGHT_TITLES,
+        defaultValue: 500,
+    },
+    closerSize: { type: ControlType.Number, title: "Closer Size", defaultValue: 22, min: 12, max: 48, step: 1 },
+    closerWeight: {
+        type: ControlType.Enum,
+        title: "Closer Weight",
+        options: WEIGHT_OPTIONS,
+        optionTitles: WEIGHT_TITLES,
+        defaultValue: 700,
     },
     stages: {
         type: ControlType.Array,
