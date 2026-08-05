@@ -19,11 +19,16 @@ interface Props {
     primaryUrl: string
     secondaryText: string
     secondaryUrl: string
+    eventLogo: string
     heroImage: string
+    heroVideo: string
+    heroUseVideo: boolean
     captionLabel: string
     captionTitle: string
     partnerA: string
     partnerB: string
+    partnerALogo: string
+    partnerBLogo: string
     bgColor: string
     textColor: string
     secondaryColor: string
@@ -79,11 +84,16 @@ function EventHero(props: Props) {
         primaryUrl = "#schedule",
         secondaryText = "On the booth",
         secondaryUrl = "#booth",
+        eventLogo = "",
         heroImage = "",
+        heroVideo = "",
+        heroUseVideo = false,
         captionLabel = "FEATURED JOINT DEMO",
         captionTitle = "Real-time AI Video Super Resolution",
         partnerA = "beamr",
         partnerB = "NVIDIA",
+        partnerALogo = "",
+        partnerBLogo = "",
         bgColor = "#ffffff",
         textColor = "#111827",
         secondaryColor = "#6b7280",
@@ -129,9 +139,9 @@ function EventHero(props: Props) {
             <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.09em", color: primaryColor }}>{captionLabel}</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginTop: 6, letterSpacing: "-0.01em", lineHeight: 1.25 }}>{captionTitle}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, color: textColor, letterSpacing: "-0.02em" }}>{partnerA}</span>
+                {partnerALogo ? <img src={partnerALogo} alt={partnerA} style={{ height: 20, width: "auto", objectFit: "contain", display: "block" }} /> : <span style={{ fontSize: 15, fontWeight: 800, color: textColor, letterSpacing: "-0.02em" }}>{partnerA}</span>}
                 <span style={{ fontSize: 12, color: lightColor }}>×</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#76b900" }}>{partnerB}</span>
+                {partnerBLogo ? <img src={partnerBLogo} alt={partnerB} style={{ height: 18, width: "auto", objectFit: "contain", display: "block" }} /> : <span style={{ fontSize: 13, fontWeight: 700, color: "#76b900" }}>{partnerB}</span>}
             </div>
         </div>
     )
@@ -141,6 +151,7 @@ function EventHero(props: Props) {
             <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 0.82fr", gap: isMobile ? 36 : 72, alignItems: "center" }}>
                 {/* Left */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    {eventLogo ? <img src={eventLogo} alt="Event" style={{ height: 36, width: "auto", objectFit: "contain", alignSelf: "flex-start", ...rv(0) }} /> : null}
                     <span style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.02em", color: primaryColor, border: `1px solid ${hexToRgba(primaryColor, 0.3)}`, background: hexToRgba(primaryColor, 0.05), padding: "6px 14px", borderRadius: 999, ...rv(0) }}>
                         {tag}
                     </span>
@@ -171,7 +182,13 @@ function EventHero(props: Props) {
 
                 {/* Right: photo with floating caption */}
                 <div style={{ position: "relative", marginBottom: isMobile ? 0 : 28, ...rv(2) }}>
-                    <PhotoFrame src={heroImage} label="Booth / event photo" ratio={isMobile ? "4/3" : "4/5"} radius={20} placeholderBg={placeholderBg} lightColor={lightColor} />
+                    {heroUseVideo && heroVideo ? (
+                        <div style={{ width: "100%", aspectRatio: isMobile ? "4/3" : "4/5", borderRadius: 20, overflow: "hidden", background: placeholderBg }}>
+                            <video src={heroVideo} autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                        </div>
+                    ) : (
+                        <PhotoFrame src={heroImage} label="Booth / event photo or video" ratio={isMobile ? "4/3" : "4/5"} radius={20} placeholderBg={placeholderBg} lightColor={lightColor} />
+                    )}
                     <div style={{ position: isMobile ? "static" : "absolute", left: isMobile ? 0 : 20, bottom: isMobile ? "auto" : -26, marginTop: isMobile ? 16 : 0 }}>
                         {captionCard}
                     </div>
@@ -194,11 +211,16 @@ addPropertyControls(EventHero, {
     primaryUrl: { type: ControlType.String, title: "Primary URL", defaultValue: "#schedule" },
     secondaryText: { type: ControlType.String, title: "Secondary Button", defaultValue: "On the booth" },
     secondaryUrl: { type: ControlType.String, title: "Secondary URL", defaultValue: "#booth" },
-    heroImage: { type: ControlType.Image, title: "Hero Photo" },
+    eventLogo: { type: ControlType.Image, title: "Event Logo" },
+    heroUseVideo: { type: ControlType.Boolean, title: "Use Video", defaultValue: false },
+    heroVideo: { type: ControlType.File, title: "Hero Video", allowedFileTypes: ["mp4", "webm"], hidden: (p: any) => !p.heroUseVideo },
+    heroImage: { type: ControlType.Image, title: "Hero Photo", hidden: (p: any) => p.heroUseVideo },
     captionLabel: { type: ControlType.String, title: "Caption Label", defaultValue: "FEATURED JOINT DEMO" },
     captionTitle: { type: ControlType.String, title: "Caption Title", defaultValue: "Real-time AI Video Super Resolution" },
     partnerA: { type: ControlType.String, title: "Partner A", defaultValue: "beamr" },
+    partnerALogo: { type: ControlType.Image, title: "Partner A Logo" },
     partnerB: { type: ControlType.String, title: "Partner B", defaultValue: "NVIDIA" },
+    partnerBLogo: { type: ControlType.Image, title: "Partner B Logo" },
     bgColor: { type: ControlType.Color, title: "Background", defaultValue: "#ffffff" },
     textColor: { type: ControlType.Color, title: "Text", defaultValue: "#111827" },
     secondaryColor: { type: ControlType.Color, title: "Secondary Text", defaultValue: "#6b7280" },

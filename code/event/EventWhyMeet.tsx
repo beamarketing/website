@@ -16,6 +16,8 @@ interface Props {
     headingSize: number
     headingWeight: number
     photo: string
+    video: string
+    useVideo: boolean
     reasons: Reason[]
     bgColor: string
     textColor: string
@@ -50,6 +52,8 @@ function EventWhyMeet(props: Props) {
         headingSize = 40,
         headingWeight = 800,
         photo = "",
+        video = "",
+        useVideo = false,
         reasons = [
             { title: "See it, don't imagine it", description: "Live CABR and AI super resolution on real footage — not slides. Judge the quality with your own eyes." },
             { title: "A first with NVIDIA", description: "The joint Beamr × NVIDIA demo runs only at the booth. See real-time Video Super Resolution before anyone else." },
@@ -101,12 +105,14 @@ function EventWhyMeet(props: Props) {
             <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "0.85fr 1fr", gap: isMobile ? 36 : 72, alignItems: "center" }}>
                 {/* photo */}
                 <div style={{ position: "relative", width: "100%", aspectRatio: isMobile ? "16/10" : "4/5", borderRadius: 20, overflow: "hidden", background: placeholderBg, ...rv(0) }}>
-                    {photo ? (
+                    {useVideo && video ? (
+                        <video src={video} autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    ) : photo ? (
                         <img src={photo} alt={heading} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     ) : (
                         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
                             {imageGlyph(hexToRgba("#111827", 0.2))}
-                            <span style={{ fontSize: 12, fontWeight: 500, color: lightColor }}>Team / booth candid</span>
+                            <span style={{ fontSize: 12, fontWeight: 500, color: lightColor }}>Team / booth · photo or video</span>
                         </div>
                     )}
                 </div>
@@ -140,7 +146,9 @@ addPropertyControls(EventWhyMeet, {
     heading: { type: ControlType.String, title: "Heading", defaultValue: "Worth the walk to Hall 5", displayTextArea: true },
     headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 40, min: 20, max: 64, step: 1 },
     headingWeight: { type: ControlType.Enum, title: "Heading Weight", options: [300, 400, 500, 600, 700, 800, 900], optionTitles: ["300", "400", "500", "600", "700", "800", "900"], defaultValue: 800 },
-    photo: { type: ControlType.Image, title: "Photo" },
+    useVideo: { type: ControlType.Boolean, title: "Use Video", defaultValue: false },
+    video: { type: ControlType.File, title: "Video", allowedFileTypes: ["mp4", "webm"], hidden: (p: any) => !p.useVideo },
+    photo: { type: ControlType.Image, title: "Photo", hidden: (p: any) => p.useVideo },
     reasons: {
         type: ControlType.Array,
         title: "Reasons",

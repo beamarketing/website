@@ -22,6 +22,8 @@
   .ph { position: relative; width: 100%; overflow: hidden; background: var(--ph); }
   .ph-in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; background: linear-gradient(135deg, var(--ph), rgba(0,0,0,0.03)); }
   .ph-in svg { opacity: .8; } .ph-in span { font-size: 11.5px; font-weight: 500; color: var(--light); }
+  .logo-ph { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--light); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 14px; }
+  .cta .logo-ph { color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.18); }
 
   /* HERO */
   .hero { padding: 72px 32px 84px; }
@@ -110,6 +112,7 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div style="display:flex; flex-direction:column; gap:24px">
+      <div class="logo-ph rv">Event logo</div>
       <span class="tag rv">IBC 2026 · Amsterdam</span>
       <h1 class="rv">Meet Beamr<br>at IBC 2026</h1>
       <p class="hero-sub rv">See CABR and AI-driven video optimization running live — including our joint demo with NVIDIA on real-time Video Super Resolution.</p>
@@ -120,7 +123,7 @@
       </div>
     </div>
     <div class="hero-photo rv">
-      <div class="ph" data-label="Booth / event photo"></div>
+      <div class="ph" data-label="Booth / event · photo or video"></div>
       <div class="cap"><div class="l">FEATURED JOINT DEMO</div><div class="t">Real-time AI Video Super Resolution</div><div class="partners"><span class="p-beamr">beamr</span><span class="p-x">×</span><span class="p-nv">NVIDIA</span></div></div>
     </div>
   </div>
@@ -138,7 +141,7 @@
     </div>
 
     <div class="featured rv">
-      <div class="imgwrap"><div class="ph" data-label="Joint demo — video wall / GPU rig" style="height:100%"></div><span class="ftag">Joint Live Demo</span></div>
+      <div class="imgwrap"><div class="ph" data-label="Joint demo · video or photo" style="height:100%"></div><span class="ftag">Joint Live Demo</span></div>
       <div class="body">
         <div class="partners" style="margin:0 0 14px"><span class="p-beamr">beamr</span><span class="p-x">×</span><span class="p-nv">NVIDIA</span></div>
         <h3>Real-time AI Video Super Resolution</h3>
@@ -154,7 +157,7 @@
 <!-- WHY -->
 <section class="why">
   <div class="wrap why-grid">
-    <div class="why-photo rv"><div class="ph" data-label="Team / booth candid"></div></div>
+    <div class="why-photo rv"><div class="ph" data-label="Team / booth · photo or video"></div></div>
     <div>
       <div class="kick rv"><span>Why Meet Us</span></div>
       <h2 class="rv">Worth the walk to Hall 5</h2>
@@ -167,6 +170,7 @@
 <section class="cta" id="schedule">
   <div class="cta-card rv">
     <div class="cta-body">
+      <div class="logo-ph" style="margin-bottom:20px">Event logo</div>
       <div class="kick"><span>Schedule a Demo</span></div>
       <h2>Let's find the bits that don't matter — together</h2>
       <p class="cta-sub">Book a slot with the Beamr team at IBC 2026 and see CABR and the NVIDIA joint demo running live. Tell us your workflow and we'll tailor the session to it.</p>
@@ -180,7 +184,7 @@
         <div class="cta-fact"><div class="k">Stand</div><div class="v">Hall 5 · Stand 5.B29</div></div>
       </div>
     </div>
-    <div class="cta-photo"><div class="ph-in" data-dark="1"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="4" y="6" width="22" height="18" rx="2.5" stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/><circle cx="10.5" cy="12" r="2" stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/><path d="M5 21L11.5 15.5L16 19.5L20 16L25 20.5" stroke="rgba(255,255,255,0.22)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Booth / team photo</span></div></div>
+    <div class="cta-photo"><div class="ph-in" data-dark="1"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="4" y="6" width="22" height="18" rx="2.5" stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/><circle cx="10.5" cy="12" r="2" stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/><path d="M5 21L11.5 15.5L16 19.5L20 16L25 20.5" stroke="rgba(255,255,255,0.22)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Booth / team · photo or video</span></div></div>
   </div>
 </section>
 
@@ -204,7 +208,7 @@
     ["Meet the engineers","Talk directly with the team behind CABR — 53 patents and counting."]
   ];
   document.getElementById("gallery").innerHTML = items.map(it => `
-    <div class="gcard"><div class="imgwrap"><div class="ph" data-label="Booth photo"><div class="ph-in">${glyph("rgba(17,24,39,0.2)")}<span>Booth photo</span></div></div></div><div class="body"><div class="gt">${it[0]}</div><div class="gd">${it[1]}</div></div></div>`).join("");
+    <div class="gcard"><div class="imgwrap"><div class="ph" data-label="Booth photo"><div class="ph-in">${glyph("rgba(17,24,39,0.2)")}<span>Photo or video</span></div></div></div><div class="body"><div class="gt">${it[0]}</div><div class="gd">${it[1]}</div></div></div>`).join("");
 
   const reasons = [
     ["See it, don't imagine it","Live CABR and AI super resolution on real footage — not slides. Judge the quality with your own eyes."],

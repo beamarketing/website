@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from "react"
 
 interface BoothItem {
     image: string
+    video: string
+    useVideo: boolean
     title: string
     description: string
 }
@@ -19,11 +21,15 @@ interface Props {
     headingWeight: number
     subtitle: string
     featuredImage: string
+    featuredVideo: string
+    featuredUseVideo: boolean
     featuredTag: string
     featuredTitle: string
     featuredDescription: string
     partnerA: string
     partnerB: string
+    partnerALogo: string
+    partnerBLogo: string
     featuredBullets: string[]
     items: BoothItem[]
     bgColor: string
@@ -76,17 +82,21 @@ function EventBooth(props: Props) {
         headingWeight = 800,
         subtitle = "Live demos, real footage, and the people who built it.",
         featuredImage = "",
+        featuredVideo = "",
+        featuredUseVideo = false,
         featuredTag = "JOINT LIVE DEMO",
         featuredTitle = "Real-time AI Video Super Resolution",
         featuredDescription = "See NVIDIA RTX Video Super Resolution and Beamr CABR working together on a live GPU pipeline — upscaling to pristine detail, then cutting bitrate 30–50% with quality guaranteed.",
         partnerA = "beamr",
         partnerB = "NVIDIA",
+        partnerALogo = "",
+        partnerBLogo = "",
         featuredBullets = ["Live on NVIDIA RTX GPUs", "Side-by-side quality comparison", "Measured bitrate savings"],
         items = [
-            { image: "", title: "CABR encoding, live", description: "Content-adaptive bitrate reduction on real footage — savings measured in front of you." },
-            { image: "", title: "Super resolution showcase", description: "SD and HD sources upscaled to HD and 4K." },
-            { image: "", title: "Your savings, estimated", description: "Bring your specs; we'll model your CDN and storage savings on the spot." },
-            { image: "", title: "Meet the engineers", description: "Talk directly with the team behind CABR — 53 patents and counting." },
+            { image: "", video: "", useVideo: false, title: "CABR encoding, live", description: "Content-adaptive bitrate reduction on real footage — savings measured in front of you." },
+            { image: "", video: "", useVideo: false, title: "Super resolution showcase", description: "SD and HD sources upscaled to HD and 4K." },
+            { image: "", video: "", useVideo: false, title: "Your savings, estimated", description: "Bring your specs; we'll model your CDN and storage savings on the spot." },
+            { image: "", video: "", useVideo: false, title: "Meet the engineers", description: "Talk directly with the team behind CABR — 53 patents and counting." },
         ],
         bgColor = "#ffffff",
         textColor = "#111827",
@@ -163,15 +173,19 @@ function EventBooth(props: Props) {
                 <div className="eb2-card" style={{ display: "grid", gridTemplateColumns: isMobile || isTablet ? "1fr" : "1.15fr 1fr", gap: isMobile ? 0 : 0, borderRadius: 22, overflow: "hidden", border: `1px solid ${borderColor}`, marginBottom: isMobile ? 40 : 56, ...rv(2) }}>
                     <div style={{ position: "relative", overflow: "hidden" }}>
                         <div className="eb2-img" style={{ width: "100%", height: "100%", minHeight: isMobile ? 220 : 340 }}>
-                            <Photo src={featuredImage} label="Joint demo — video wall / GPU rig" ratio={isMobile ? "16/10" : "auto"} placeholderBg={placeholderBg} lightColor={lightColor} />
+                            {featuredUseVideo && featuredVideo ? (
+                                <video src={featuredVideo} autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", minHeight: isMobile ? 220 : 340 }} />
+                            ) : (
+                                <Photo src={featuredImage} label="Joint demo — video or photo" ratio={isMobile ? "16/10" : "auto"} placeholderBg={placeholderBg} lightColor={lightColor} />
+                            )}
                         </div>
                         <span style={{ position: "absolute", top: 16, left: 16, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff", background: primaryColor, padding: "6px 12px", borderRadius: 999 }}>{featuredTag}</span>
                     </div>
                     <div style={{ padding: isMobile ? "26px 22px" : "40px", background: cardBg, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                         <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                            <span style={{ fontSize: 15, fontWeight: 800, color: textColor, letterSpacing: "-0.02em" }}>{partnerA}</span>
+                            {partnerALogo ? <img src={partnerALogo} alt={partnerA} style={{ height: 20, width: "auto", objectFit: "contain", display: "block" }} /> : <span style={{ fontSize: 15, fontWeight: 800, color: textColor, letterSpacing: "-0.02em" }}>{partnerA}</span>}
                             <span style={{ fontSize: 12, color: lightColor }}>×</span>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: "#76b900" }}>{partnerB}</span>
+                            {partnerBLogo ? <img src={partnerBLogo} alt={partnerB} style={{ height: 18, width: "auto", objectFit: "contain", display: "block" }} /> : <span style={{ fontSize: 13, fontWeight: 700, color: "#76b900" }}>{partnerB}</span>}
                         </div>
                         <h3 style={{ fontSize: isMobile ? 23 : 27, fontWeight: 700, color: textColor, margin: 0, lineHeight: 1.15, letterSpacing: "-0.02em" }}>{featuredTitle}</h3>
                         <p style={{ fontSize: 15.5, color: secondaryColor, margin: "14px 0 20px", lineHeight: 1.6 }}>{featuredDescription}</p>
@@ -192,7 +206,13 @@ function EventBooth(props: Props) {
                         <div key={i} className="eb2-card" style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${borderColor}`, background: bgColor, ...rv(3 + i * 0.4) }}>
                             <div style={{ overflow: "hidden" }}>
                                 <div className="eb2-img">
-                                    <Photo src={item.image} label="Booth photo" ratio="4/3" placeholderBg={placeholderBg} lightColor={lightColor} />
+                                    {item.useVideo && item.video ? (
+                                        <div style={{ width: "100%", aspectRatio: "4/3", overflow: "hidden", background: placeholderBg }}>
+                                            <video src={item.video} autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                        </div>
+                                    ) : (
+                                        <Photo src={item.image} label="Booth photo or video" ratio="4/3" placeholderBg={placeholderBg} lightColor={lightColor} />
+                                    )}
                                 </div>
                             </div>
                             <div style={{ padding: "18px 18px 20px" }}>
@@ -213,12 +233,16 @@ addPropertyControls(EventBooth, {
     headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 42, min: 20, max: 72, step: 1 },
     headingWeight: { type: ControlType.Enum, title: "Heading Weight", options: [300, 400, 500, 600, 700, 800, 900], optionTitles: ["300", "400", "500", "600", "700", "800", "900"], defaultValue: 800 },
     subtitle: { type: ControlType.String, title: "Subtitle", defaultValue: "Live demos, real footage, and the people who built it.", displayTextArea: true },
-    featuredImage: { type: ControlType.Image, title: "Featured Photo" },
+    featuredUseVideo: { type: ControlType.Boolean, title: "Featured Use Video", defaultValue: false },
+    featuredVideo: { type: ControlType.File, title: "Featured Video", allowedFileTypes: ["mp4", "webm"], hidden: (p: any) => !p.featuredUseVideo },
+    featuredImage: { type: ControlType.Image, title: "Featured Photo", hidden: (p: any) => p.featuredUseVideo },
     featuredTag: { type: ControlType.String, title: "Featured Tag", defaultValue: "JOINT LIVE DEMO" },
     featuredTitle: { type: ControlType.String, title: "Featured Title", defaultValue: "Real-time AI Video Super Resolution", displayTextArea: true },
     featuredDescription: { type: ControlType.String, title: "Featured Description", defaultValue: "See NVIDIA RTX Video Super Resolution and Beamr CABR working together on a live GPU pipeline — upscaling to pristine detail, then cutting bitrate 30–50% with quality guaranteed.", displayTextArea: true },
     partnerA: { type: ControlType.String, title: "Partner A", defaultValue: "beamr" },
+    partnerALogo: { type: ControlType.Image, title: "Partner A Logo" },
     partnerB: { type: ControlType.String, title: "Partner B", defaultValue: "NVIDIA" },
+    partnerBLogo: { type: ControlType.Image, title: "Partner B Logo" },
     featuredBullets: { type: ControlType.Array, title: "Featured Bullets", control: { type: ControlType.String }, maxCount: 5, defaultValue: ["Live on NVIDIA RTX GPUs", "Side-by-side quality comparison", "Measured bitrate savings"] },
     items: {
         type: ControlType.Array,
@@ -227,16 +251,18 @@ addPropertyControls(EventBooth, {
         control: {
             type: ControlType.Object,
             controls: {
-                image: { type: ControlType.Image, title: "Photo" },
+                useVideo: { type: ControlType.Boolean, title: "Use Video", defaultValue: false },
+                video: { type: ControlType.File, title: "Video", allowedFileTypes: ["mp4", "webm"], hidden: (p: any) => !p.useVideo },
+                image: { type: ControlType.Image, title: "Photo", hidden: (p: any) => p.useVideo },
                 title: { type: ControlType.String, title: "Title", defaultValue: "Booth item" },
                 description: { type: ControlType.String, title: "Description", defaultValue: "What visitors can see or do." },
             },
         },
         defaultValue: [
-            { image: "", title: "CABR encoding, live", description: "Content-adaptive bitrate reduction on real footage — savings measured in front of you." },
-            { image: "", title: "Super resolution showcase", description: "SD and HD sources upscaled to HD and 4K." },
-            { image: "", title: "Your savings, estimated", description: "Bring your specs; we'll model your CDN and storage savings on the spot." },
-            { image: "", title: "Meet the engineers", description: "Talk directly with the team behind CABR — 53 patents and counting." },
+            { image: "", video: "", useVideo: false, title: "CABR encoding, live", description: "Content-adaptive bitrate reduction on real footage — savings measured in front of you." },
+            { image: "", video: "", useVideo: false, title: "Super resolution showcase", description: "SD and HD sources upscaled to HD and 4K." },
+            { image: "", video: "", useVideo: false, title: "Your savings, estimated", description: "Bring your specs; we'll model your CDN and storage savings on the spot." },
+            { image: "", video: "", useVideo: false, title: "Meet the engineers", description: "Talk directly with the team behind CABR — 53 patents and counting." },
         ],
     },
     bgColor: { type: ControlType.Color, title: "Background", defaultValue: "#ffffff" },

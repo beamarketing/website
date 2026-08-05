@@ -19,6 +19,9 @@ interface Props {
     location: string
     stand: string
     photo: string
+    video: string
+    useVideo: boolean
+    eventLogo: string
     bgColor: string
     panelColor: string
     textColor: string
@@ -60,6 +63,9 @@ function EventScheduleCTA(props: Props) {
         location = "RAI Amsterdam",
         stand = "Hall 5 · Stand 5.B29",
         photo = "",
+        video = "",
+        useVideo = false,
+        eventLogo = "",
         bgColor = "#0f1117",
         panelColor = "#171a24",
         textColor = "#ffffff",
@@ -112,6 +118,7 @@ function EventScheduleCTA(props: Props) {
             <div style={{ maxWidth: 1120, margin: "0 auto", background: panelColor, border: `1px solid ${borderColor}`, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr" }}>
                 {/* content */}
                 <div style={{ padding: isMobile ? "36px 26px" : "56px 52px" }}>
+                    {eventLogo ? <img src={eventLogo} alt="Event" style={{ height: 32, width: "auto", objectFit: "contain", display: "block", marginBottom: 20, ...rv(0) }} /> : null}
                     <div style={{ ...rv(0) }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: hexToRgba("#ffffff", 0.75), textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
                     </div>
@@ -137,12 +144,14 @@ function EventScheduleCTA(props: Props) {
 
                 {/* photo */}
                 <div style={{ position: "relative", minHeight: isMobile ? 200 : "auto", background: placeholderBg, ...rv(2) }}>
-                    {photo ? (
+                    {useVideo && video ? (
+                        <video src={video} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    ) : photo ? (
                         <img src={photo} alt="Beamr at the show" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     ) : (
                         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
                             {imageGlyph(hexToRgba("#ffffff", 0.22))}
-                            <span style={{ fontSize: 12, fontWeight: 500, color: hexToRgba("#ffffff", 0.4) }}>Booth / team photo</span>
+                            <span style={{ fontSize: 12, fontWeight: 500, color: hexToRgba("#ffffff", 0.4) }}>Booth / team · photo or video</span>
                         </div>
                     )}
                 </div>
@@ -164,7 +173,10 @@ addPropertyControls(EventScheduleCTA, {
     dates: { type: ControlType.String, title: "Dates", defaultValue: "11–14 September 2026" },
     location: { type: ControlType.String, title: "Location", defaultValue: "RAI Amsterdam" },
     stand: { type: ControlType.String, title: "Stand", defaultValue: "Hall 5 · Stand 5.B29" },
-    photo: { type: ControlType.Image, title: "Photo" },
+    eventLogo: { type: ControlType.Image, title: "Event Logo" },
+    useVideo: { type: ControlType.Boolean, title: "Use Video", defaultValue: false },
+    video: { type: ControlType.File, title: "Video", allowedFileTypes: ["mp4", "webm"], hidden: (p: any) => !p.useVideo },
+    photo: { type: ControlType.Image, title: "Photo", hidden: (p: any) => p.useVideo },
     bgColor: { type: ControlType.Color, title: "Background", defaultValue: "#0f1117" },
     panelColor: { type: ControlType.Color, title: "Panel", defaultValue: "#171a24" },
     textColor: { type: ControlType.Color, title: "Text", defaultValue: "#ffffff" },
