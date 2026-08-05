@@ -31,6 +31,7 @@ interface Props {
     closerSize: number
     closerWeight: number
     stages: Stage[]
+    layerTag: string
     layerCaption: string
     reassurances: string[]
     closer: string
@@ -118,6 +119,7 @@ function BroadcastArchitecture(props: Props) {
             { icon: "cloud", name: "Packaging & CDN", kicker: "Deliver", highlighted: false },
             { icon: "viewers", name: "Viewers", kicker: "Playback", highlighted: false },
         ],
+        layerTag = "Added by Beamr",
         layerCaption = "The smart production layer — the only two steps you add",
         reassurances = ["No new cameras", "No new delivery infrastructure", "No player changes"],
         closer = "Just a smarter production pipeline.",
@@ -312,7 +314,7 @@ function BroadcastArchitecture(props: Props) {
                     transition: `opacity 0.6s ${ease} 0.5s`,
                 }}
             >
-                Added by Beamr
+                {layerTag}
             </span>
             <div
                 style={{
@@ -564,6 +566,11 @@ addPropertyControls(BroadcastArchitecture, {
             { icon: "cloud", name: "Packaging & CDN", kicker: "Deliver", highlighted: false },
             { icon: "viewers", name: "Viewers", kicker: "Playback", highlighted: false },
         ],
+    },
+    layerTag: {
+        type: ControlType.String,
+        title: "Layer Tag",
+        defaultValue: "Added by Beamr",
     },
     layerCaption: {
         type: ControlType.String,
