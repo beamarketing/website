@@ -142,9 +142,8 @@ function EventBooth(props: Props) {
     }, [])
 
     const Kicker = (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, ...rv(0) }}>
-            <span style={{ width: 28, height: 2, background: primaryColor, borderRadius: 2 }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: textColor, textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
+        <div style={{ ...rv(0) }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: primaryColor, textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
         </div>
     )
 

@@ -15,9 +15,8 @@
   .btn-dark { background: var(--text); color: #fff; } .btn-primary { background: var(--primary); color: #fff; }
   .btn-outline { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
   .btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.2); }
-  .kick { display: flex; align-items: center; gap: 12px; }
-  .kick .rule { width: 28px; height: 2px; background: var(--primary); border-radius: 2px; }
-  .kick span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
+  .kick .rule { display: none; }
+  .kick span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--primary); }
   .rv { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
   .rv.in { opacity: 1; transform: translateY(0); }
   .ph { position: relative; width: 100%; overflow: hidden; background: var(--ph); }
@@ -132,7 +131,7 @@
   <div class="wrap">
     <div class="booth-head">
       <div>
-        <div class="kick rv"><span class="rule"></span><span style="color:var(--text)">On the Booth</span></div>
+        <div class="kick rv"><span>On the Booth</span></div>
         <h2 class="rv">Everything you'll see at Stand 5.B29</h2>
       </div>
       <p class="rv">Live demos, real footage, and the people who built it.</p>
@@ -157,7 +156,7 @@
   <div class="wrap why-grid">
     <div class="why-photo rv"><div class="ph" data-label="Team / booth candid"></div></div>
     <div>
-      <div class="kick rv"><span class="rule"></span><span style="color:var(--text)">Why Meet Us</span></div>
+      <div class="kick rv"><span>Why Meet Us</span></div>
       <h2 class="rv">Worth the walk to Hall 5</h2>
       <div id="reasons"></div>
     </div>
@@ -168,7 +167,7 @@
 <section class="cta" id="schedule">
   <div class="cta-card rv">
     <div class="cta-body">
-      <div class="kick"><span class="rule"></span><span>Schedule a Demo</span></div>
+      <div class="kick"><span>Schedule a Demo</span></div>
       <h2>Let's find the bits that don't matter — together</h2>
       <p class="cta-sub">Book a slot with the Beamr team at IBC 2026 and see CABR and the NVIDIA joint demo running live. Tell us your workflow and we'll tailor the session to it.</p>
       <div class="cta-actions">

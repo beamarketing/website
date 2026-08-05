@@ -113,9 +113,8 @@ function EventWhyMeet(props: Props) {
 
                 {/* reasons */}
                 <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, ...rv(0) }}>
-                        <span style={{ width: 28, height: 2, background: primaryColor, borderRadius: 2 }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: textColor, textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
+                    <div style={{ ...rv(0) }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: primaryColor, textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
                     </div>
                     <h2 style={{ fontSize: isMobile ? Math.round(headingSize * 0.76) : headingSize, fontWeight: headingWeight, color: textColor, margin: "16px 0 28px", lineHeight: 1.1, letterSpacing: "-0.03em", ...rv(1) }}>{heading}</h2>
 

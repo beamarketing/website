@@ -112,8 +112,7 @@ function EventScheduleCTA(props: Props) {
             <div style={{ maxWidth: 1120, margin: "0 auto", background: panelColor, border: `1px solid ${borderColor}`, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr" }}>
                 {/* content */}
                 <div style={{ padding: isMobile ? "36px 26px" : "56px 52px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, ...rv(0) }}>
-                        <span style={{ width: 28, height: 2, background: primaryColor, borderRadius: 2 }} />
+                    <div style={{ ...rv(0) }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: hexToRgba("#ffffff", 0.75), textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
                     </div>
                     <h2 style={{ fontSize: isMobile ? Math.round(headingSize * 0.74) : headingSize, fontWeight: headingWeight, color: textColor, margin: "18px 0 0", lineHeight: 1.12, letterSpacing: "-0.03em", ...rv(1) }}>{heading}</h2>
