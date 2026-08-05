@@ -7,6 +7,7 @@ import { addPropertyControls, ControlType } from "framer"
 import { useEffect, useRef, useState } from "react"
 
 interface Props {
+    paddingTop: number
     heading: string
     headingSize: number
     headingWeight: number
@@ -71,6 +72,7 @@ function PhotoFrame({ src, label, ratio, radius, placeholderBg, lightColor }: { 
 
 function EventHero(props: Props) {
     const {
+        paddingTop = 72,
         heading = "Meet Beamr\nat IBC 2026",
         headingSize = 58,
         headingWeight = 800,
@@ -145,7 +147,7 @@ function EventHero(props: Props) {
     )
 
     return (
-        <section ref={ref} style={{ ...style, width: "100%", backgroundColor: bgColor, padding: isMobile ? "44px 22px 56px" : "72px 32px 84px", boxSizing: "border-box", fontFamily }}>
+        <section ref={ref} style={{ ...style, width: "100%", backgroundColor: bgColor, padding: isMobile ? `${paddingTop}px 22px 56px` : `${paddingTop}px 32px 84px`, boxSizing: "border-box", fontFamily }}>
             <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 0.82fr", gap: isMobile ? 36 : 72, alignItems: "center" }}>
                 {/* Left */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -194,6 +196,7 @@ function EventHero(props: Props) {
 }
 
 addPropertyControls(EventHero, {
+    paddingTop: { type: ControlType.Number, title: "Padding Top", defaultValue: 72, min: 0, max: 240, step: 4 },
     heading: { type: ControlType.String, title: "Heading", defaultValue: "Meet Beamr\nat IBC 2026", displayTextArea: true },
     headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 58, min: 24, max: 100, step: 1 },
     headingWeight: { type: ControlType.Enum, title: "Heading Weight", options: [300, 400, 500, 600, 700, 800, 900], optionTitles: ["300", "400", "500", "600", "700", "800", "900"], defaultValue: 800 },
