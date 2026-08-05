@@ -1,179 +1,164 @@
-<title>Beamr — Broadcast Signal-Path Schematic</title>
+<title>Beamr — Broadcast Integration Figure</title>
 <style>
   :root {
-    --bg: #07071c;
-    --text: #ffffff;
-    --muted: #8b8ba3;
-    --slate: #4a5578;
-    --accent: #00d46a;
+    --bg: #ffffff;
+    --text: #111827;
+    --secondary: #6b7280;
+    --light: #9ca3af;
+    --primary: #4F46E5;
+    --border: #e5e7eb;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); }
 
-  .ba { width: 100%; background: var(--bg); padding: 100px 48px; font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
+  .ba { width: 100%; background: var(--bg); padding: 100px 32px; font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
   .ba-wrap { max-width: 1120px; margin: 0 auto; }
 
   /* header */
-  .ba-head { display: flex; flex-direction: column; gap: 18px; max-width: 720px; }
-  .ba-fig { font-size: 11.5px; font-weight: 500; color: var(--slate); font-family: var(--mono); letter-spacing: 0.18em; }
-  .ba-h { font-size: 40px; font-weight: 700; margin: 0; line-height: 1.12; letter-spacing: -0.03em; text-wrap: balance; }
-  .ba-desc { font-size: 15.5px; color: var(--muted); margin: 0; line-height: 1.7; max-width: 560px; }
+  .ba-head { max-width: 720px; margin-bottom: 56px; }
+  .ba-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; }
+  .ba-eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); display: inline-block; }
+  .ba-h { font-size: 42px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; color: var(--text); text-wrap: balance; }
+  .ba-sub { font-size: 17px; color: var(--secondary); margin-top: 18px; line-height: 1.65; max-width: 580px; }
 
-  /* schematic frame */
-  .ba-scroll { width: 100%; overflow-x: auto; padding-bottom: 4px; margin-top: 64px; }
-  .ba-schem { position: relative; min-width: 760px; height: 232px; margin: 0 auto; }
-
-  .ba-ruler { position: absolute; top: 0; left: 0; right: 0; height: 16px; }
-  .ba-ruler-line { position: absolute; top: 8px; left: 0; right: 0; height: 1px; background: rgba(74,85,120,0.18); }
-  .ba-tick { position: absolute; width: 1px; background: rgba(74,85,120,0.3); }
-
-  .ba-bracket {
-    position: absolute; top: 34px; height: 16px;
-    border-left: 1px solid rgba(0,212,106,0.5); border-right: 1px solid rgba(0,212,106,0.5); border-top: 1px solid rgba(0,212,106,0.5);
-    border-top-left-radius: 4px; border-top-right-radius: 4px;
+  /* flow */
+  .ba-flow { display: flex; align-items: stretch; }
+  .ba-item { display: flex; flex: 1 1 0; min-width: 0; }
+  .ba-card {
+    flex: 1 1 0; min-width: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+    transition: transform 0.35s var(--ease), box-shadow 0.35s ease, border-color 0.35s ease;
   }
-  .ba-bracket span {
-    position: absolute; top: -8px; left: 50%; transform: translate(-50%,-100%); white-space: nowrap;
-    font-size: 10px; font-family: var(--mono); letter-spacing: 0.1em; color: var(--accent); background: var(--bg); padding: 0 8px;
-  }
+  .ba-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.06); }
+  .ba-card.hi { border-color: rgba(79,70,229,0.35); }
+  .ba-ic { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(17,24,39,0.04); }
+  .ba-card.hi .ba-ic { background: rgba(79,70,229,0.08); }
+  .ba-kick { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--light); margin-bottom: 5px; }
+  .ba-card.hi .ba-kick { color: var(--primary); }
+  .ba-name { font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.35; letter-spacing: -0.01em; }
 
-  .ba-bus-thick, .ba-bus-thin { position: absolute; top: 108px; }
-  .ba-bus-thick { height: 5px; margin-top: -2.5px; border-radius: 3px; background: linear-gradient(90deg, rgba(74,85,120,0.65), rgba(0,212,106,0.5)); }
-  .ba-bus-thin { height: 2px; margin-top: -1px; border-radius: 2px; background: linear-gradient(90deg, rgba(0,212,106,0.5), rgba(74,85,120,0.65)); }
+  .ba-conn { flex-shrink: 0; width: 34px; display: flex; align-items: center; justify-content: center; color: var(--light); }
 
-  .ba-note { position: absolute; top: 118px; transform: translateX(-50%); font-size: 9.5px; font-family: var(--mono); white-space: nowrap; }
-  .ba-note.slate { color: rgba(74,85,120,0.9); letter-spacing: 0.14em; }
-  .ba-note.green { color: var(--accent); letter-spacing: 0.1em; }
+  /* indigo layer */
+  .ba-layer { position: relative; background: rgba(79,70,229,0.04); border: 1px solid rgba(79,70,229,0.14); border-radius: 18px; padding: 14px 14px 16px; }
+  .ba-layer-tab { position: absolute; top: -10px; left: 16px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); background: var(--bg); padding: 0 8px; }
+  .ba-layer-row { display: flex; align-items: stretch; gap: 12px; }
 
-  .ba-packet {
-    position: absolute; top: 108px; width: 26px; height: 8px; border-radius: 4px; background: var(--accent);
-    box-shadow: 0 0 14px rgba(0,212,106,0.8); transform: translate(-50%,-50%);
-    animation: ba-run 4.2s cubic-bezier(0.45,0,0.55,1) infinite;
-  }
-  @keyframes ba-run {
-    0%   { left: 4%;  opacity: 0; transform: translate(-50%,-50%) scaleX(1); }
-    6%   { opacity: 1; }
-    58%  { transform: translate(-50%,-50%) scaleX(1); }
-    66%  { transform: translate(-50%,-50%) scaleX(0.4); }
-    94%  { opacity: 1; }
-    100% { left: 96%; opacity: 0; transform: translate(-50%,-50%) scaleX(0.4); }
-  }
+  .ba-caption { margin-top: 18px; font-size: 13.5px; color: var(--light); }
 
-  .ba-node { position: absolute; top: 82px; transform: translateX(-50%); width: 150px; display: flex; flex-direction: column; align-items: center; transition: transform 0.25s ease; }
-  .ba-node:hover { transform: translateX(-50%) translateY(-2px); }
-  .ba-mod {
-    position: relative; width: 52px; height: 52px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
-    background: var(--bg); border: 1px solid rgba(74,85,120,0.55); flex-shrink: 0;
-  }
-  .ba-mod.hi { background: rgba(0,212,106,0.14); border: 1px solid rgba(0,212,106,0.6); box-shadow: 0 0 20px rgba(0,212,106,0.22); animation: ba-live 2.6s ease-in-out infinite; }
-  @keyframes ba-live { 0%,100% { box-shadow: 0 0 0 0 rgba(0,212,106,0); } 50% { box-shadow: 0 0 20px 0 rgba(0,212,106,0.35); } }
-  .ba-idx { position: absolute; top: -1px; left: 6px; font-size: 8.5px; font-family: var(--mono); transform: translateY(-100%); padding-bottom: 2px; opacity: 0.85; }
-  .ba-code { margin-top: 16px; font-size: 10.5px; font-family: var(--mono); letter-spacing: 0.08em; }
-  .ba-name { margin-top: 6px; font-size: 12.5px; font-weight: 500; text-align: center; line-height: 1.35; letter-spacing: -0.01em; }
+  /* closer */
+  .ba-closer { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; gap: 40px; }
+  .ba-reassure { font-size: 18px; font-weight: 500; color: var(--secondary); line-height: 1.5; }
+  .ba-reassure .sep { color: var(--border); }
+  .ba-punch { flex-shrink: 0; font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; line-height: 1.3; }
 
-  /* legend */
-  .ba-legend { margin-top: 44px; padding-top: 22px; border-top: 1px solid rgba(74,85,120,0.25); display: flex; flex-wrap: wrap; align-items: center; gap: 28px; }
-  .ba-leg { display: flex; align-items: center; gap: 10px; }
-  .ba-sw { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(74,85,120,0.55); }
-  .ba-sw.on { border: none; background: var(--accent); box-shadow: 0 0 10px rgba(0,212,106,0.5); }
-  .ba-leg-t { font-size: 13.5px; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
-  .ba-leg-t.on { font-weight: 600; color: var(--text); }
+  /* reveal */
+  .rv { opacity: 0; transform: translateY(24px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+  .rv.in { opacity: 1; transform: translateY(0); }
 
-  @media (max-width: 760px) {
-    .ba { padding: 56px 22px; }
-    .ba-h { font-size: 31px; }
-    .ba-scroll { margin-top: 40px; }
-    .ba-legend { gap: 14px; margin-top: 36px; }
+  @media (max-width: 860px) {
+    .ba { padding: 64px 22px; }
+    .ba-h { font-size: 30px; }
+    .ba-head { margin-bottom: 40px; }
+    .ba-flow { flex-direction: column; }
+    .ba-item { flex: none; }
+    .ba-card { flex-direction: row; align-items: center; }
+    .ba-conn { width: 100%; height: 24px; justify-content: flex-start; margin-left: 22px; }
+    .ba-conn svg { transform: rotate(90deg); }
+    .ba-layer { padding: 34px 12px 12px; }
+    .ba-layer-tab { top: 12px; left: 14px; background: transparent; padding: 0; }
+    .ba-layer-row { flex-direction: column; }
+    .ba-closer { flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 40px; }
+    .ba-punch { font-size: 20px; }
   }
 </style>
 
 <section class="ba">
   <div class="ba-wrap">
-    <div class="ba-head">
-      <span class="ba-fig">FIG.01 — SIGNAL PATH</span>
+    <div class="ba-head rv">
+      <span class="ba-eyebrow"><i></i>Seamless Integration</span>
       <h2 class="ba-h">Fits into your existing broadcast infrastructure</h2>
-      <p class="ba-desc">Two intelligent steps drop into production. Everything upstream and downstream stays exactly as it is — the same signal chain you run today, now carrying far less bitrate.</p>
+      <p class="ba-sub">Two intelligent steps drop into production. Everything upstream and downstream stays exactly as it is — the same signal chain you already run.</p>
     </div>
 
-    <div class="ba-scroll">
-      <div class="ba-schem" id="schem"></div>
-    </div>
+    <div class="ba-flow" id="flow"></div>
+    <p class="ba-caption rv">The smart production layer — the only two steps you add</p>
 
-    <div class="ba-legend" id="legend"></div>
+    <div class="ba-closer rv">
+      <div class="ba-reassure" id="reassure"></div>
+      <div class="ba-punch">Just a smarter production pipeline.</div>
+    </div>
   </div>
 </section>
 
 <script>
-  const ACCENT = "#00d46a", SLATE = "#4a5578";
+  const PRIMARY = "#4F46E5", SECONDARY = "#6b7280";
+  const chevron = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2L10 8L4 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const icons = {
-    camera: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="12" height="10" rx="1.5" stroke="${c}" stroke-width="1.5"/><path d="M14 9.5L20 6.5V15.5L14 12.5V9.5Z" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
-    sliders: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M4 6H18M4 11H18M4 16H18" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="4" width="4" height="4" rx="1" fill="${c}"/><rect x="12" y="9" width="4" height="4" rx="1" fill="${c}"/><rect x="5" y="14" width="4" height="4" rx="1" fill="${c}"/></svg>`,
-    sparkle: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 2.5L12.6 8.2L18 10L12.6 11.8L11 17.5L9.4 11.8L4 10L9.4 8.2L11 2.5Z" stroke="${c}" stroke-width="1.4" stroke-linejoin="round"/><path d="M17.5 15L18.2 17L20 17.7L18.2 18.4L17.5 20.4L16.8 18.4L15 17.7L16.8 17L17.5 15Z" fill="${c}"/></svg>`,
-    compress: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 2.5V6M11 2.5L9 4.5M11 2.5L13 4.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 19.5V16M11 19.5L9 17.5M11 19.5L13 17.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="8.5" width="14" height="5" rx="1" stroke="${c}" stroke-width="1.5"/></svg>`,
-    cloud: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M6.5 16C4 16 2.5 14.3 2.5 12.2C2.5 10.3 3.9 8.7 5.8 8.5C6.3 6 8.4 4.2 11 4.2C13.9 4.2 16.2 6.4 16.4 9.2C18.1 9.5 19.3 10.9 19.3 12.6C19.3 14.5 17.8 16 15.9 16H6.5Z" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
-    viewers: c => `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="4" width="17" height="11" rx="1.5" stroke="${c}" stroke-width="1.5"/><path d="M9.5 7.7L13 9.5L9.5 11.3V7.7Z" fill="${c}"/><path d="M7.5 18.5H14.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/></svg>`
+    camera: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="7" width="13" height="10" rx="2" stroke="${c}" stroke-width="1.6"/><path d="M15.5 10.5L21.5 7.5V16.5L15.5 13.5V10.5Z" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+    sliders: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7H20M4 12H20M4 17H20" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="7" r="2.4" stroke="${c}" stroke-width="1.6"/><circle cx="15" cy="12" r="2.4" stroke="${c}" stroke-width="1.6"/><circle cx="8" cy="17" r="2.4" stroke="${c}" stroke-width="1.6"/></svg>`,
+    sparkle: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3L13.8 9L19.5 10.8L13.8 12.6L12 18.5L10.2 12.6L4.5 10.8L10.2 9L12 3Z" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/><path d="M19 16L19.7 18L21.5 18.7L19.7 19.4L19 21.3L18.3 19.4L16.5 18.7L18.3 18L19 16Z" fill="${c}"/></svg>`,
+    compress: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3V6.5M12 3L10 5M12 3L14 5" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21V17.5M12 21L10 19M12 21L14 19" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="4.5" y="9.5" width="15" height="5" rx="1.4" stroke="${c}" stroke-width="1.6"/></svg>`,
+    cloud: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 17.5C4.5 17.5 3 15.8 3 13.7C3 11.8 4.4 10.2 6.3 10C6.8 7.5 8.9 5.7 11.5 5.7C14.4 5.7 16.7 7.9 16.9 10.7C18.6 11 19.8 12.4 19.8 14.1C19.8 16 18.3 17.5 16.4 17.5H7Z" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+    viewers: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="12" rx="2" stroke="${c}" stroke-width="1.6"/><path d="M10.5 8.5L14 10.5L10.5 12.5V8.5Z" fill="${c}"/><path d="M8.5 20H15.5" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/></svg>`
   };
 
   const stages = [
-    { icon: "camera",   code: "12G-SDI",  name: "HD Camera Feed", hi: false },
-    { icon: "sliders",  code: "SWITCH",   name: "Production Switching", hi: false },
-    { icon: "sparkle",  code: "RTX-VSR",  name: "NVIDIA RTX Video Super Resolution", hi: true },
-    { icon: "compress", code: "CABR",     name: "Beamr CABR Encoding", hi: true },
-    { icon: "cloud",    code: "HLS/DASH", name: "Packaging &amp; CDN", hi: false },
-    { icon: "viewers",  code: "PLAYOUT",  name: "Viewers", hi: false }
+    { icon: "camera",   name: "HD Camera Feed", kicker: "Capture", hi: false },
+    { icon: "sliders",  name: "Production Switching", kicker: "Live mix", hi: false },
+    { icon: "sparkle",  name: "NVIDIA RTX Video Super Resolution", kicker: "AI upscale", hi: true },
+    { icon: "compress", name: "Beamr CABR Encoding", kicker: "Optimize bitrate", hi: true },
+    { icon: "cloud",    name: "Packaging &amp; CDN", kicker: "Deliver", hi: false },
+    { icon: "viewers",  name: "Viewers", kicker: "Playback", hi: false }
   ];
-  const reassurances = [
-    { text: "No new cameras", emphasis: false },
-    { text: "No new delivery infrastructure", emphasis: false },
-    { text: "No player changes", emphasis: false },
-    { text: "Just a smarter production pipeline", emphasis: true }
-  ];
-  const THICK_NOTE = "FULL BITRATE";
-  const THIN_NOTE = "BITRATE ↓ 50% · QUALITY 100%";
-  const INSERT = "SMART PRODUCTION LAYER — the only thing you add";
+  const reassurances = ["No new cameras", "No new delivery infrastructure", "No player changes"];
 
-  const n = stages.length;
-  const centers = stages.map((_, i) => ((i + 0.5) / n) * 100);
-  const hiIdx = stages.map((s, i) => s.hi ? i : -1).filter(i => i >= 0);
-  const firstHi = hiIdx[0], lastHi = hiIdx[hiIdx.length - 1];
-
-  let html = "";
-  // ruler
-  html += `<div class="ba-ruler"><div class="ba-ruler-line"></div>`;
-  for (let i = 0; i < 25; i++) {
-    const major = i % 4 === 0;
-    html += `<div class="ba-tick" style="left:${(i/24)*100}%; top:${major?3:5}px; height:${major?6:4}px"></div>`;
-  }
-  html += `</div>`;
-  // bracket
-  html += `<div class="ba-bracket" style="left:${centers[firstHi]}%; width:${centers[lastHi]-centers[firstHi]}%"><span>${INSERT}</span></div>`;
-  // bus
-  html += `<div class="ba-bus-thick" style="left:${centers[0]}%; width:${centers[lastHi]-centers[0]}%"></div>`;
-  html += `<div class="ba-bus-thin" style="left:${centers[lastHi]}%; width:${centers[n-1]-centers[lastHi]}%"></div>`;
-  // notes
-  html += `<div class="ba-note slate" style="left:${(centers[0]+centers[lastHi])/2}%">${THICK_NOTE}</div>`;
-  html += `<div class="ba-note green" style="left:${(centers[lastHi]+centers[n-1])/2}%">${THIN_NOTE}</div>`;
-  // packet
-  html += `<div class="ba-packet"></div>`;
-  // nodes
-  stages.forEach((s, i) => {
-    const col = s.hi ? ACCENT : SLATE;
-    html += `
-      <div class="ba-node" style="left:${centers[i]}%">
-        <div class="ba-mod ${s.hi ? "hi" : ""}" style="animation-delay:${i*0.2}s">
-          <span class="ba-idx" style="color:${col}">${String(i+1).padStart(2,"0")}</span>
-          ${icons[s.icon](col)}
+  function cardHTML(s, i) {
+    const col = s.hi ? PRIMARY : SECONDARY;
+    return `
+      <div class="ba-card ${s.hi ? "hi" : ""}">
+        <div class="ba-ic">${icons[s.icon](col)}</div>
+        <div style="min-width:0">
+          <div class="ba-kick">${String(i+1).padStart(2,"0")} · ${s.kicker}</div>
+          <div class="ba-name">${s.name}</div>
         </div>
-        <span class="ba-code" style="color:${col}">${s.code}</span>
-        <span class="ba-name" style="color:${s.hi ? "#fff" : "#8b8ba3"}">${s.name}</span>
       </div>`;
-  });
-  document.getElementById("schem").innerHTML = html;
+  }
+  const conn = `<div class="ba-conn">${chevron}</div>`;
 
-  document.getElementById("legend").innerHTML = reassurances.map(r => `
-    <div class="ba-leg">
-      <span class="ba-sw ${r.emphasis ? "on" : ""}"></span>
-      <span class="ba-leg-t ${r.emphasis ? "on" : ""}">${r.text}</span>
-    </div>`).join("");
+  const hiIdx = stages.map((s,i)=> s.hi ? i : -1).filter(i=>i>=0);
+  const firstHi = hiIdx[0], lastHi = hiIdx[hiIdx.length-1];
+
+  let html = "", i = 0;
+  while (i < stages.length) {
+    if (i === firstHi) {
+      if (html) html += conn;
+      let inner = "";
+      for (let k = firstHi; k <= lastHi; k++) {
+        inner += `<div class="ba-item">${cardHTML(stages[k], k)}</div>`;
+        if (k < lastHi) inner += conn;
+      }
+      html += `<div class="ba-item" style="flex:${lastHi-firstHi+1} 1 0"><div class="ba-layer" style="flex:1 1 0"><span class="ba-layer-tab">Added by Beamr</span><div class="ba-layer-row">${inner}</div></div></div>`;
+      i = lastHi + 1;
+    } else {
+      if (html) html += conn;
+      html += `<div class="ba-item">${cardHTML(stages[i], i)}</div>`;
+      i++;
+    }
+  }
+  document.getElementById("flow").innerHTML = html;
+
+  document.getElementById("reassure").innerHTML = reassurances.map((r,k)=>
+    r + (k < reassurances.length-1 ? `<span class="sep">&nbsp;&nbsp;/&nbsp;&nbsp;</span>` : ".")
+  ).join("");
+
+  // staggered reveal
+  const items = [document.querySelector(".ba-head"), ...document.querySelectorAll("#flow .ba-item"), document.querySelector(".ba-caption"), document.querySelector(".ba-closer")];
+  document.querySelectorAll("#flow .ba-item").forEach(el => el.classList.add("rv"));
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ items.forEach((el,idx)=>{ if(el){ el.style.transitionDelay = (idx*0.07)+"s"; el.classList.add("in"); }}); io.disconnect(); }});
+  }, { threshold: 0.12 });
+  io.observe(document.querySelector(".ba-wrap"));
 </script>
