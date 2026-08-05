@@ -1,13 +1,12 @@
-// Beamr — "Schedule a Demo" CTA Section
-// Framer Code Component in Beamr's light brand. A closing call-to-action
-// card with the event facts and a scheduling button. Uses a dark ground
-// (#0f1117, from index.html) to give the page a confident close.
+// Beamr — "Schedule a Demo" CTA — photo split, dark ground
+// Framer Code Component in Beamr's light brand. A confident dark close:
+// content and booking CTA on one side, a photo on the other. No glow.
 
 import { addPropertyControls, ControlType } from "framer"
 import { useEffect, useRef, useState } from "react"
 
 interface Props {
-    eyebrow: string
+    kicker: string
     heading: string
     headingSize: number
     headingWeight: number
@@ -19,12 +18,14 @@ interface Props {
     dates: string
     location: string
     stand: string
-    note: string
+    photo: string
     bgColor: string
+    panelColor: string
     textColor: string
     secondaryColor: string
     primaryColor: string
     borderColor: string
+    placeholderBg: string
     fontFamily: string
     style?: React.CSSProperties
 }
@@ -36,9 +37,17 @@ function hexToRgba(hex: string, a: number) {
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
 }
 
+const imageGlyph = (c: string) => (
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+        <rect x="4" y="6" width="22" height="18" rx="2.5" stroke={c} strokeWidth="1.6" />
+        <circle cx="10.5" cy="12" r="2" stroke={c} strokeWidth="1.6" />
+        <path d="M5 21L11.5 15.5L16 19.5L20 16L25 20.5" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+)
+
 function EventScheduleCTA(props: Props) {
     const {
-        eyebrow = "SCHEDULE A DEMO",
+        kicker = "SCHEDULE A DEMO",
         heading = "Let's find the bits that don't matter — together",
         headingSize = 40,
         headingWeight = 800,
@@ -50,12 +59,14 @@ function EventScheduleCTA(props: Props) {
         dates = "11–14 September 2026",
         location = "RAI Amsterdam",
         stand = "Hall 5 · Stand 5.B29",
-        note = "Slots fill fast during show hours — book ahead to guarantee time with an engineer.",
+        photo = "",
         bgColor = "#0f1117",
+        panelColor = "#171a24",
         textColor = "#ffffff",
         secondaryColor = "#9ca3af",
         primaryColor = "#4F46E5",
         borderColor = "rgba(255,255,255,0.1)",
+        placeholderBg = "#1e2230",
         fontFamily = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         style,
     } = props
@@ -68,7 +79,7 @@ function EventScheduleCTA(props: Props) {
         const el = ref.current
         if (!el) return
         const ro = new ResizeObserver((e) => {
-            for (const en of e) setIsMobile(en.contentRect.width < 820)
+            for (const en of e) setIsMobile(en.contentRect.width < 860)
         })
         ro.observe(el)
         return () => ro.disconnect()
@@ -86,7 +97,7 @@ function EventScheduleCTA(props: Props) {
     const rv = (i: number): React.CSSProperties => ({
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(24px)",
-        transition: `opacity 0.7s ${ease} ${i * 0.1}s, transform 0.7s ${ease} ${i * 0.1}s`,
+        transition: `opacity 0.7s ${ease} ${i * 0.09}s, transform 0.7s ${ease} ${i * 0.09}s`,
     })
 
     const fact = (label: string, value: string) => (
@@ -97,29 +108,16 @@ function EventScheduleCTA(props: Props) {
     )
 
     return (
-        <section ref={ref} id="schedule" style={{ ...style, width: "100%", backgroundColor: bgColor, padding: isMobile ? "56px 22px" : "96px 32px", boxSizing: "border-box", fontFamily }}>
-            <div
-                style={{
-                    maxWidth: 1000,
-                    margin: "0 auto",
-                    background: hexToRgba("#ffffff", 0.03),
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: 24,
-                    padding: isMobile ? "36px 26px" : "56px 56px",
-                    position: "relative",
-                    overflow: "hidden",
-                }}
-            >
-                {/* soft glow */}
-                <div style={{ position: "absolute", top: -120, right: -80, width: 340, height: 340, borderRadius: "50%", background: `radial-gradient(circle, ${hexToRgba(primaryColor, 0.22)} 0%, transparent 70%)`, pointerEvents: "none" }} />
-
-                <div style={{ position: "relative" }}>
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 18, ...rv(0) }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: primaryColor }} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: hexToRgba("#ffffff", 0.7), textTransform: "uppercase", letterSpacing: "0.06em" }}>{eyebrow}</span>
+        <section ref={ref} id="schedule" style={{ ...style, width: "100%", backgroundColor: bgColor, padding: isMobile ? "56px 22px" : "100px 32px", boxSizing: "border-box", fontFamily }}>
+            <div style={{ maxWidth: 1120, margin: "0 auto", background: panelColor, border: `1px solid ${borderColor}`, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr" }}>
+                {/* content */}
+                <div style={{ padding: isMobile ? "36px 26px" : "56px 52px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, ...rv(0) }}>
+                        <span style={{ width: 28, height: 2, background: primaryColor, borderRadius: 2 }} />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: hexToRgba("#ffffff", 0.75), textTransform: "uppercase", letterSpacing: "0.14em" }}>{kicker}</span>
                     </div>
-                    <h2 style={{ fontSize: isMobile ? Math.round(headingSize * 0.72) : headingSize, fontWeight: headingWeight, color: textColor, margin: 0, lineHeight: 1.12, letterSpacing: "-0.03em", maxWidth: 620, ...rv(1) }}>{heading}</h2>
-                    <p style={{ fontSize: 16.5, color: secondaryColor, margin: "18px 0 0", lineHeight: 1.65, maxWidth: 560, ...rv(2) }}>{subtitle}</p>
+                    <h2 style={{ fontSize: isMobile ? Math.round(headingSize * 0.74) : headingSize, fontWeight: headingWeight, color: textColor, margin: "18px 0 0", lineHeight: 1.12, letterSpacing: "-0.03em", ...rv(1) }}>{heading}</h2>
+                    <p style={{ fontSize: 16, color: secondaryColor, margin: "16px 0 0", lineHeight: 1.65, maxWidth: 460, ...rv(2) }}>{subtitle}</p>
 
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 28, ...rv(3) }}>
                         <a href={primaryUrl} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: primaryColor, color: "#fff", padding: "15px 30px", borderRadius: 8, fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
@@ -131,23 +129,23 @@ function EventScheduleCTA(props: Props) {
                         </a>
                     </div>
 
-                    {/* event facts footer */}
-                    <div
-                        style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: isMobile ? 20 : 48,
-                            marginTop: 36,
-                            paddingTop: 28,
-                            borderTop: `1px solid ${borderColor}`,
-                            ...rv(4),
-                        }}
-                    >
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 20 : 40, marginTop: 34, paddingTop: 26, borderTop: `1px solid ${borderColor}`, ...rv(4) }}>
                         {fact("Dates", dates)}
                         {fact("Location", location)}
                         {fact("Stand", stand)}
                     </div>
-                    {note ? <p style={{ fontSize: 13, color: hexToRgba("#ffffff", 0.4), margin: "18px 0 0", ...rv(5) }}>{note}</p> : null}
+                </div>
+
+                {/* photo */}
+                <div style={{ position: "relative", minHeight: isMobile ? 200 : "auto", background: placeholderBg, ...rv(2) }}>
+                    {photo ? (
+                        <img src={photo} alt="Beamr at the show" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    ) : (
+                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                            {imageGlyph(hexToRgba("#ffffff", 0.22))}
+                            <span style={{ fontSize: 12, fontWeight: 500, color: hexToRgba("#ffffff", 0.4) }}>Booth / team photo</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>
@@ -155,7 +153,7 @@ function EventScheduleCTA(props: Props) {
 }
 
 addPropertyControls(EventScheduleCTA, {
-    eyebrow: { type: ControlType.String, title: "Eyebrow", defaultValue: "SCHEDULE A DEMO" },
+    kicker: { type: ControlType.String, title: "Kicker", defaultValue: "SCHEDULE A DEMO" },
     heading: { type: ControlType.String, title: "Heading", defaultValue: "Let's find the bits that don't matter — together", displayTextArea: true },
     headingSize: { type: ControlType.Number, title: "Heading Size", defaultValue: 40, min: 20, max: 72, step: 1 },
     headingWeight: { type: ControlType.Enum, title: "Heading Weight", options: [300, 400, 500, 600, 700, 800, 900], optionTitles: ["300", "400", "500", "600", "700", "800", "900"], defaultValue: 800 },
@@ -167,12 +165,14 @@ addPropertyControls(EventScheduleCTA, {
     dates: { type: ControlType.String, title: "Dates", defaultValue: "11–14 September 2026" },
     location: { type: ControlType.String, title: "Location", defaultValue: "RAI Amsterdam" },
     stand: { type: ControlType.String, title: "Stand", defaultValue: "Hall 5 · Stand 5.B29" },
-    note: { type: ControlType.String, title: "Note", defaultValue: "Slots fill fast during show hours — book ahead to guarantee time with an engineer.", displayTextArea: true },
+    photo: { type: ControlType.Image, title: "Photo" },
     bgColor: { type: ControlType.Color, title: "Background", defaultValue: "#0f1117" },
+    panelColor: { type: ControlType.Color, title: "Panel", defaultValue: "#171a24" },
     textColor: { type: ControlType.Color, title: "Text", defaultValue: "#ffffff" },
     secondaryColor: { type: ControlType.Color, title: "Secondary Text", defaultValue: "#9ca3af" },
     primaryColor: { type: ControlType.Color, title: "Primary", defaultValue: "#4F46E5" },
     borderColor: { type: ControlType.Color, title: "Border", defaultValue: "rgba(255,255,255,0.1)" },
+    placeholderBg: { type: ControlType.Color, title: "Placeholder BG", defaultValue: "#1e2230" },
     fontFamily: { type: ControlType.String, title: "Font", defaultValue: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" },
 })
 
