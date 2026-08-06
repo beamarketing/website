@@ -29,6 +29,27 @@ const { getMetrics, getAds, readCfg } = await import("./lib/metrics.mjs");
 const q = (req) => ({ start: req.query.start, end: req.query.end, compare: req.query.compare === "1", channel: req.query.channel, force: req.query.force === "1" });
 
 const app = express();
+
+// ---- Password gate (parity with the Vercel edge middleware) --------------
+// If DASHBOARD_PASSWORD is set, every request must carry HTTP Basic auth with
+// the right password, so the dashboard and its data are never open. If it is
+// NOT set, the server stays open (convenient for local dev on localhost).
+app.use((req, res, next) => {
+  const PASS = process.env.DASHBOARD_PASSWORD;
+  if (!PASS) return next();                            // no password configured → open (local dev)
+  const USER = process.env.DASHBOARD_USER || "beamr";
+  const header = req.headers.authorization || "";
+  if (header.startsWith("Basic ")) {
+    const decoded = Buffer.from(header.slice(6).trim(), "base64").toString("utf8");
+    const sep = decoded.indexOf(":");
+    const user = sep === -1 ? decoded : decoded.slice(0, sep);
+    const pass = sep === -1 ? "" : decoded.slice(sep + 1);
+    if (user === USER && pass === PASS) return next();
+  }
+  res.set("WWW-Authenticate", 'Basic realm="Beamr Dashboard", charset="UTF-8"');
+  return res.status(401).send("Authentication required.");
+});
+
 app.use("/api", (req, res, next) => {                 // allow a separately-hosted dashboard to call the API
   res.set("Access-Control-Allow-Origin", "*");
   next();
