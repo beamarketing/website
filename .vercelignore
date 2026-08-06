@@ -1,0 +1,7 @@
+# Keep the Vercel deployment focused on the dashboard + its API.
+# The dashboard (dashboard.html) and api/metrics.mjs (which imports
+# server/lib/metrics.mjs) are all that need to ship.
+code/
+index.html
+FRAMER-GUIDE.md
+server/node_modules

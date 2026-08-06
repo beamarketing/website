@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beamr Marketing — Campaign & KPI Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Beamr brand — blue accent, near-black ink on soft light surfaces, Poppins */
+    --bg:            #f5f8fc;
+    --surface-1:     #ffffff;
+    --surface-2:     #eef3f9;
+    --border:        #e3e9f2;
+    --border-light:  #d2dbe8;
+    --text:          #0b1524;   /* near-black, slight blue bias */
+    --text-2:        #45536b;
+    --muted:         #8593aa;
+    --accent:        #0091ff;   /* Beamr blue */
+    --accent-dim:    #007be0;
+
+    /* series (validated CVD-safe on the light surface) */
+    --series-fb:     #2a78d6;   /* Facebook = blue */
+    --series-li:     #eb6834;   /* LinkedIn = orange */
+    --series-3:      #1baf7a;   /* aqua */
+
+    /* status (pacing) */
+    --good:          #0ca30c;
+    --warn:          #c77a00;
+    --bad:           #d03b3b;
+
+    --grid:          #e9eef5;
+    --font: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 10px 28px rgba(16,24,40,.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 64px;
+  }
+  a { color: var(--accent); }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Top bar ---------- */
+  header.topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 24px; max-width: 1280px; margin: 0 auto;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand-logo { height: 26px; width: auto; display: block; }
+  .brand .divider { width: 1px; height: 26px; background: var(--border-light); margin: 0 4px; }
+  .brand h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -.01em; color: var(--text); }
+  .brand .sub { font-size: 12px; color: var(--muted); margin: 0; }
+
+  /* ---------- Control bar (date range + comparison) ---------- */
+  .controlbar { position: sticky; top: 61px; z-index: 40; background: rgba(255,255,255,.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .ctrl-inner { display: flex; align-items: center; gap: 14px; padding: 12px 24px; max-width: 1280px; margin: 0 auto; flex-wrap: wrap; }
+  .ctrl-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .presets { display: inline-flex; gap: 4px; background: var(--surface-2); border-radius: 10px; padding: 3px; flex-wrap: wrap; }
+  .preset { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-2); background: transparent; border: none; border-radius: 8px; padding: 6px 11px; cursor: pointer; transition: .12s; white-space: nowrap; }
+  .preset:hover { color: var(--text); }
+  .preset.active { background: var(--surface-1); color: var(--accent); box-shadow: 0 1px 2px rgba(16,24,40,.1); }
+  .custom-range { display: none; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); }
+  .custom-range.show { display: inline-flex; }
+  .custom-range input { font-family: var(--font); font-size: 13px; color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; padding: 5px 8px; background: var(--surface-1); }
+  .cmp-toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; user-select: none; }
+  .cmp-toggle input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+  .range-label { font-size: 12.5px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Delta chips (period comparison) ---------- */
+  .delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat { color: var(--muted); }
+  .delta.bad-up { color: var(--bad); } .delta.good-down { color: var(--good); }
+  .hero .stat .d .delta { margin-right: 6px; }
+  .cmp-prev { color: var(--muted); font-size: 12px; font-weight: 500; }
+  .metric .m-sub { font-size: 11.5px; margin: 3px 0 0; color: var(--muted); }
+
+  /* ---------- Ads table ---------- */
+  .chan-filter { display: inline-flex; gap: 4px; background: var(--surface-2); border-radius: 10px; padding: 3px; }
+  .chan-filter button { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-2); background: transparent; border: none; border-radius: 8px; padding: 5px 12px; cursor: pointer; }
+  .chan-filter button.active { background: var(--surface-1); color: var(--accent); box-shadow: 0 1px 2px rgba(16,24,40,.1); }
+  table.ads { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.ads th, table.ads td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.ads th:first-child, table.ads td:first-child { text-align: left; white-space: normal; min-width: 220px; }
+  table.ads thead th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--surface-1); }
+  table.ads thead th:hover { color: var(--text); }
+  table.ads thead th.sorted { color: var(--accent); }
+  table.ads tbody tr:hover { background: var(--surface-2); }
+  .ad-name { display: flex; align-items: center; gap: 9px; }
+  .ad-name .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .ad-name .txt { font-weight: 600; color: var(--text); }
+  .ads-wrap { max-height: 560px; overflow: auto; }
+  .ads-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13.5px; }
+  .ads-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
+  .ads-toolbar .ads-sort-label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+  .ads-sort { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .ads-sort button { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-2);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; cursor: pointer; }
+  .ads-sort button:hover { color: var(--text); border-color: var(--border-light); }
+  .ads-sort button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  button.btn {
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    color: var(--text-2); background: var(--surface-2);
+    border: 1px solid var(--border-light); border-radius: 9px;
+    padding: 8px 14px; cursor: pointer; transition: .15s;
+  }
+  button.btn:hover { border-color: var(--accent); color: var(--text); }
+  button.btn.primary { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+  button.btn.primary:hover { background: var(--accent-dim); }
+
+  /* ---------- Layout ---------- */
+  section { margin-top: 40px; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 19px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .section-head .hint { font-size: 12.5px; color: var(--muted); }
+  .tag {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-light);
+    color: var(--muted);
+  }
+  .tag.synced { color: var(--series-fb); border-color: rgba(57,135,229,.4); background: rgba(57,135,229,.08); }
+  .tag.manual { color: var(--warn); border-color: rgba(250,178,25,.35); background: rgba(250,178,25,.08); }
+
+  .grid { display: grid; gap: 16px; }
+  .cards { display: grid; gap: 16px; }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow);
+  }
+  .card h3 { font-size: 15px; margin: 0 0 4px; font-weight: 700; }
+  .card .card-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
+
+  /* ---------- Hero summary ---------- */
+  .hero {
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(0,145,255,.10), transparent 55%),
+      var(--surface-1);
+    border: 1px solid var(--border); border-radius: 20px; padding: 28px;
+    display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 28px; align-items: center;
+  }
+  .hero .lead .eyebrow { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .hero .lead .status-line { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+  .hero .lead .status-note { font-size: 13.5px; color: var(--text-2); margin: 10px 0 0; }
+  .hero .stat { border-left: 1px solid var(--border); padding-left: 24px; }
+  .hero .stat .k { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .hero .stat .v { font-size: 34px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+  .hero .stat .d { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+
+  /* ---------- KPI meters ---------- */
+  .kpi-col-head { display:flex; align-items:center; gap:10px; margin: 0 0 14px; }
+  .kpi-col-head .period { font-size: 15px; font-weight: 700; }
+  .kpi-col-head .elapsed { font-size: 12px; color: var(--muted); }
+
+  .kpi { padding: 16px 0; border-top: 1px solid var(--border); }
+  .kpi:first-of-type { border-top: none; }
+  .kpi-top { display:flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .kpi-name { font-size: 14px; font-weight: 700; }
+  .kpi-name .full { color: var(--muted); font-weight: 500; font-size: 12px; }
+  .kpi-vals { font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kpi-vals b { color: var(--text); font-weight: 700; }
+
+  .meter { position: relative; height: 12px; border-radius: 999px; background: var(--surface-2); margin: 10px 0 8px; overflow: hidden; }
+  .meter .fill { position:absolute; left:0; top:0; bottom:0; border-radius: 999px; transition: width .5s ease; }
+  .meter .pace {
+    position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text);
+    opacity: .85;
+  }
+  .kpi-foot { display:flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .pill.good { color: var(--good); background: rgba(12,163,12,.12); }
+  .pill.warn { color: var(--warn); background: rgba(199,122,0,.12); }
+  .pill.bad  { color: var(--bad);  background: rgba(208,59,59,.12); }
+  .pill.good .dot { background: var(--good);} .pill.warn .dot{background:var(--warn);} .pill.bad .dot{background:var(--bad);}
+  .kpi-proj { color: var(--muted); }
+  .kpi-proj b { color: var(--text-2); }
+
+  /* ---------- inputs ---------- */
+  input.ed {
+    font-family: var(--font); font-variant-numeric: tabular-nums;
+    background: transparent; border: none; border-bottom: 1px dashed var(--border-light);
+    color: var(--accent); font-weight: 700; font-size: inherit; width: 74px; text-align: right;
+    padding: 1px 2px; border-radius: 4px; transition: .12s;
+  }
+  input.ed:hover { border-bottom-color: var(--accent); }
+  input.ed:focus { outline: none; background: rgba(0,145,255,.08); border-bottom-color: var(--accent); }
+  input.ed.wide { width: 96px; }
+
+  /* ---------- channel cards ---------- */
+  .chan-grid { grid-template-columns: repeat(3, 1fr); }
+  .chan { position: relative; overflow: hidden; }
+  .chan .accent-bar { position:absolute; left:0; top:0; bottom:0; width:4px; }
+  .chan .chan-head { display:flex; align-items:center; gap:10px; margin-bottom: 18px; }
+  .chan .chan-head .logo { width: 26px; height:26px; border-radius: 7px; display:grid; place-items:center; font-weight:800; font-size:13px; color:#fff; }
+  .chan .chan-head .name { font-size: 15px; font-weight: 700; }
+  .metric-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .metric .m-k { font-size: 11.5px; color: var(--muted); margin: 0 0 3px; text-transform: uppercase; letter-spacing: .03em; }
+  .metric .m-v { font-size: 21px; font-weight: 700; letter-spacing: -.01em; margin: 0; font-variant-numeric: tabular-nums; }
+  .metric .m-v.editable-wrap { font-size: 18px; }
+
+  /* ---------- funnel ---------- */
+  .funnel svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .funnel-summary { display:flex; flex-wrap:wrap; gap: 10px 26px; margin-top: 16px;
+    padding-top: 16px; border-top: 1px solid var(--border); }
+  .funnel-summary .fs-item { display:flex; flex-direction:column; gap:2px; }
+  .funnel-summary .fs-k { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing:.03em; }
+  .funnel-summary .fs-v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  /* ---------- charts ---------- */
+  .charts-grid { grid-template-columns: 1fr 1fr; }
+  .chart-box svg { width: 100%; height: auto; display:block; overflow: visible; }
+  .legend { display:flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: var(--text-2); }
+  .legend .li { display:inline-flex; align-items:center; gap:7px; }
+  .legend .li .sw { width: 11px; height: 11px; border-radius: 3px; }
+
+  /* ---------- data table ---------- */
+  table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data th, table.data td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  table.data th:first-child, table.data td:first-child { text-align: left; }
+  table.data thead th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; }
+  table.data tfoot td { font-weight: 700; border-top: 2px solid var(--border-light); border-bottom: none; }
+  table.data .ro { color: var(--text-2); }
+
+  .note {
+    font-size: 12.5px; color: var(--muted); background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; line-height: 1.6;
+  }
+  .note b { color: var(--text-2); }
+  .note code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--accent); font-size: 12px; }
+
+  .foot { margin-top: 44px; font-size: 12px; color: var(--muted); text-align: center; }
+
+  @media (max-width: 1000px) {
+    .hero { grid-template-columns: 1fr; gap: 20px; }
+    .hero .stat { border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 18px; }
+    .chan-grid { grid-template-columns: 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 620px) {
+    .metric-list { grid-template-columns: 1fr 1fr; }
+    .funnel { grid-template-columns: 1fr 1fr; }
+    .hero .lead .status-line { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img class="brand-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIgdmVyc2lvbj0iMS4xIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEwMiIgdmlld0JveD0iMCAwIDQwMCAxMDIiPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwXzEiPgo8cGF0aCB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwtMSwwLDEwMikiIGQ9Ik0wIC4wODlINDAwVjEwMkgwWiIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+CjxnIGlua3NjYXBlOmdyb3VwbW9kZT0ibGF5ZXIiIGlua3NjYXBlOmxhYmVsPSJMYXllciAxIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXBfMSkiPgo8cGF0aCB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwtMSwzODMuNjk5LDUzLjU3NTYpIiBkPSJNMCAwIDEzLjg0Mi0yNS40MDVILS44MTJMLTE0LjM4NCAwWk0tMzEuMjk0LTI1LjQwNVYzMC4xODJILTguMzMxQy00LjE3IDMwLjE4Mi0uNTc4IDI5LjQzMSAyLjQ0NCAyNy45MjkgNS40ODMgMjYuNDQ2IDcuODI3IDI0LjMxMSA5LjQ3MyAyMS41MjQgMTEuMTIxIDE4Ljc1NSAxMS45NDQgMTUuNDcxIDExLjk0NCAxMS42NzEgMTEuOTQ0IDcuODE3IDExLjEwMSA0LjU0MiA5LjQxOSAxLjg0NiA3LjczNS0uODMyIDUuMzQ4LTIuODc3IDIuMjUzLTQuMjg4LS44NC01LjY4Mi00LjUwNC02LjM3OS04LjczOC02LjM3OUgtMjMuMjYxVjQuMjA3SC0xMS4yMzVDLTkuMjEgNC4yMDctNy41MTggNC40Ny02LjE2IDQuOTk0LTQuNzg0IDUuNTM3LTMuNzQ1IDYuMzUxLTMuMDM5IDcuNDM3LTIuMzMzIDguNTQxLTEuOTc5IDkuOTUyLTEuOTc5IDExLjY3MS0xLjk3OSAxMy4zOS0yLjMzMyAxNC44MTEtMy4wMzkgMTUuOTMyLTMuNzQ1IDE3LjA3My00Ljc4NCAxNy45MjMtNi4xNiAxOC40ODQtNy41MzYgMTkuMDYzLTkuMjI4IDE5LjM1My0xMS4yMzUgMTkuMzUzSC0xNy44NlYtMjUuNDA1Wk0tMTAxLjQ0OSAzMC4xODJILTg0LjgxTC03MC42OTUtNC4yMzRILTcwLjA0NUwtNTUuOTMxIDMwLjE4MkgtMzkuMjkxVi0yNS40MDVILTUyLjM3NFY4Ljc0SC01Mi44MzVMLTY2LjE5MS0yNS4wNTJILTc0LjU1TC04Ny45MDUgOC45M0gtODguMzY3Vi0yNS40MDVILTEwMS40NDlaTS0xNDkuOTM2LTMuNTI5SC0xMTkuNzU1MDA4Vi0xMy43MzRILTE0OS45MzZaTS0xNDguMDA5LTI1LjQwNUgtMTYyLjQ0OUwtMTQzLjY5NCAzMC4xODJILTEyNS44MDZMLTEwNy4wNTItMjUuNDA1SC0xMjEuNDlMLTEzNC41NDcgMTYuMTc3SC0xMzQuOTgxWk0tMjA2LjgyNS0yNS40MDVWMzAuMTgySC0xNjguMDY1VjE5LjI3MUgtMTkzLjM4OVY3Ljg3MUgtMTcwLjA0N1YtMy4wNjdILTE5My4zODlWLTE0LjQ5NEgtMTY4LjA2NVYtMjUuNDA1Wk0tMjQzLjc2MyA3LjMyOEgtMjM2LjMyNkMtMjM0Ljg2MSA3LjMyOC0yMzMuNTU4IDcuNTczLTIzMi40MTggOC4wNjEtMjMxLjI3OCA4LjU1LTIzMC4zOTEgOS4yNTYtMjI5Ljc1OCAxMC4xNzgtMjI5LjEwNiAxMS4xMDEtMjI4Ljc4MSAxMi4yMTQtMjI4Ljc4MSAxMy41MTctMjI4Ljc4MSAxNS4zODEtMjI5LjQ0MSAxNi44NDYtMjMwLjc2MiAxNy45MTQtMjMyLjA4MyAxOC45ODItMjMzLjg2NSAxOS41MTUtMjM2LjEwOSAxOS41MTVILTI0My43NjNaTS0yNDMuNzYzLTE0LjU3NkgtMjM1LjQ1OEMtMjMyLjU0NS0xNC41NzYtMjMwLjQtMTQuMDI0LTIyOS4wMjUtMTIuOTItMjI3LjYzMi0xMS44MTYtMjI2LjkzNS0xMC4yNzgtMjI2LjkzNS04LjMwNi0yMjYuOTM1LTYuODc2LTIyNy4yNy01LjY0Ni0yMjcuOTM5LTQuNjE0LTIyOC42MDktMy41NjUtMjI5LjU1OS0yLjc1OS0yMzAuNzg5LTIuMTk4LTIzMi4wMi0xLjYyLTIzMy40OTQtMS4zMy0yMzUuMjE0LTEuMzNILTI0My43NjNaTS0yNTcuMTk5LTI1LjQwNVYzMC4xODJILTIzNC4wMTlDLTIyOS44NTcgMzAuMTgyLTIyNi4zNzQgMjkuNTk0LTIyMy41NjkgMjguNDE4LTIyMC43NDcgMjcuMjQyLTIxOC42MjkgMjUuNTk1LTIxNy4yMTggMjMuNDc4LTIxNS43ODkgMjEuMzYxLTIxNS4wNzQgMTguOTA5LTIxNS4wNzQgMTYuMTIzLTIxNS4wNzQgMTQuMDA2LTIxNS41MTcgMTIuMTE1LTIxNi40MDQgMTAuNDUtMjE3LjI5MSA4LjgwMy0yMTguNTEyIDcuNDM3LTIyMC4wNjggNi4zNTEtMjIxLjYyNCA1LjI2Ni0yMjMuNDI1IDQuNTA2LTIyNS40NjkgNC4wNzFWMy41MjhDLTIyMy4yMjYgMy40Mi0yMjEuMTU0IDIuODE0LTIxOS4yNTQgMS43MS0yMTcuMzM2IC42MDYtMjE1Ljc5OC0uOTMyLTIxNC42NC0yLjkwNC0yMTMuNDgxLTQuODU5LTIxMi45MDMtNy4xNzUtMjEyLjkwMy05Ljg1My0yMTIuOTAzLTEyLjgzOC0yMTMuNjYzLTE1LjUwOC0yMTUuMTgyLTE3Ljg2LTIxNi43MDItMjAuMTk0LTIxOC45MDEtMjIuMDQtMjIxLjc3OC0yMy4zOTctMjI0LjY1NS0yNC43MzYtMjI4LjE0Ny0yNS40MDUtMjMyLjI1NS0yNS40MDVaIi8+CjxwYXRoIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLC0xLDEwLjE5MTEsMCkiIGQ9Ik0wIDBIODEuNTI5Qzg3LjE1NyAwIDkxLjcyLTQuNTYzIDkxLjcyLTEwLjE5MVYtOTEuNzJDOTEuNzItOTcuMzQ4IDg3LjE1Ny0xMDEuOTExIDgxLjUyOS0xMDEuOTExSDBDLTUuNjI4LTEwMS45MTEtMTAuMTkxLTk3LjM0OC0xMC4xOTEtOTEuNzJWLTEwLjE5MUMtMTAuMTkxLTQuNTYzLTUuNjI4IDAgMCAwIiBmaWxsPSIjMDA5OWZmIi8+CjxwYXRoIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLC0xLDUwLjk1NTQsNzEuMzM3NykiIGQ9Ik0wIDBDMTEuMjU3IDAgMjAuMzgyIDkuMTI1IDIwLjM4MiAyMC4zODIgMjAuMzgyIDMxLjYzOSAxMS4yNTcgNDAuNzY0IDAgNDAuNzY0LTExLjI1NyA0MC43NjQtMjAuMzgyIDMxLjYzOS0yMC4zODIgMjAuMzgyLTIwLjM4MiA5LjEyNS0xMS4yNTcgMCAwIDBNMzMuMTIxIDIwLjM4MkMzMy4xMjEgMi4wOSAxOC4yOTItMTIuNzM5IDAtMTIuNzM5LTE3LjUzMy0xMi43MzktMzEuODgzIC44ODQtMzMuMDQ1IDE4LjEyMi0zMy4wOTUgMTguNDQzLTMzLjEyMSAxOC43NzMtMzMuMTIxIDE5LjEwOFYyMC4zODIgNDcuMTM0Qy0zMy4xMjEgNTAuNjUxLTMwLjI2OSA1My41MDMtMjYuNzUyIDUzLjUwMy0yMy4yMzQgNTMuNTAzLTIwLjM4MiA1MC42NTEtMjAuMzgyIDQ3LjEzNFY0Ni40OTFDLTE0Ljc2MiA1MC44ODUtNy42ODcgNTMuNTAzIDAgNTMuNTAzIDE4LjI5MiA1My41MDMgMzMuMTIxIDM4LjY3NCAzMy4xMjEgMjAuMzgyIiBmaWxsPSIjZmZmZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4KPC9nPgo8L2c+Cjwvc3ZnPgo=" alt="Beamr" />
+      <div class="divider"></div>
+      <div>
+        <h1>Marketing Dashboard</h1>
+        <p class="sub">Campaigns vs. quarterly &amp; half-year objectives</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btn-refresh">↻ Refresh live</button>
+      <button class="btn" id="btn-export">Export</button>
+      <button class="btn" id="btn-import">Import</button>
+      <button class="btn" id="btn-print">Print / PDF</button>
+      <button class="btn" id="btn-reset">Reset data</button>
+    </div>
+  </div>
+</header>
+
+<div class="controlbar">
+  <div class="ctrl-inner">
+    <span class="ctrl-label">Period</span>
+    <div class="presets" id="presets">
+      <button class="preset" data-preset="7d">Last 7d</button>
+      <button class="preset" data-preset="30d">Last 30d</button>
+      <button class="preset" data-preset="90d">Last 90d</button>
+      <button class="preset" data-preset="quarter">This quarter</button>
+      <button class="preset" data-preset="half">This half</button>
+      <button class="preset" data-preset="ytd">YTD</button>
+      <button class="preset" data-preset="custom">Custom</button>
+    </div>
+    <span class="custom-range" id="custom-range">
+      <input type="date" id="cr-from" /> <span>→</span> <input type="date" id="cr-to" />
+    </span>
+    <label class="cmp-toggle"><input type="checkbox" id="cmp-toggle" /> Compare to previous period</label>
+    <span class="range-label" id="range-label"></span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section style="margin-top:32px;">
+    <div class="hero">
+      <div class="lead">
+        <p class="eyebrow" id="hero-eyebrow">This quarter · objectives</p>
+        <p class="status-line" id="hero-status">—</p>
+        <p class="status-note" id="hero-note">—</p>
+      </div>
+      <div class="stat">
+        <p class="k">Total leads · selected period</p>
+        <p class="v" data-out="hero-leads">—</p>
+        <p class="d" data-out="hero-leads-d">Facebook + LinkedIn</p>
+      </div>
+      <div class="stat">
+        <p class="k">Blended cost per lead</p>
+        <p class="v" data-out="hero-cpl">—</p>
+        <p class="d" data-out="hero-spend-d">—</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI OBJECTIVES -->
+  <section>
+    <div class="section-head">
+      <h2>Objectives &amp; pacing</h2>
+      <span class="hint">Targets and current actuals are editable. Pacing compares progress against the % of the period elapsed today.</span>
+    </div>
+    <div class="grid kpi-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="card" id="kpi-quarter"></div>
+      <div class="card" id="kpi-half"></div>
+    </div>
+  </section>
+
+  <!-- FUNNEL -->
+  <section>
+    <div class="section-head">
+      <h2>MQL → SQL → Opportunity funnel</h2>
+      <span class="hint" id="funnel-hint">This quarter · conversion rate between every stage</span>
+    </div>
+    <div class="card">
+      <div class="funnel" id="funnel"></div>
+      <div class="funnel-summary" id="funnel-summary"></div>
+    </div>
+  </section>
+
+  <!-- CHANNELS -->
+  <section>
+    <div class="section-head">
+      <h2>Channel performance</h2>
+      <span class="hint">Selected period</span>
+      <span id="chan-sources"></span>
+    </div>
+    <div class="cards chan-grid"></div>
+  </section>
+
+  <!-- CHARTS -->
+  <section>
+    <div class="section-head">
+      <h2>Trends</h2>
+      <span class="hint">Monthly, from the data table below</span>
+    </div>
+    <div class="grid charts-grid">
+      <div class="card chart-box">
+        <h3>Leads per month</h3>
+        <p class="card-sub">Facebook + LinkedIn, stacked</p>
+        <div id="chart-leads"></div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--series-fb)"></span>Facebook</span>
+          <span class="li"><span class="sw" style="background:var(--series-li)"></span>LinkedIn</span>
+        </div>
+      </div>
+      <div class="card chart-box">
+        <h3>Blended cost per lead</h3>
+        <p class="card-sub">Total spend ÷ total leads, by month</p>
+        <div id="chart-cpl"></div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--accent);border-radius:50%"></span>Blended CPL</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA TABLE -->
+  <section>
+    <div class="section-head">
+      <h2>Monthly data</h2>
+      <span class="hint">Read-only cells come from a connected channel; editable (blue) cells are manual.</span>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <table class="data" id="data-table"></table>
+    </div>
+  </section>
+
+  <!-- AD PERFORMANCE -->
+  <section>
+    <div class="section-head">
+      <h2>Ad performance</h2>
+      <span class="hint">Per-ad breakdown for the selected period — click a column to sort. Compare mode adds change vs. the previous period.</span>
+      <span class="chan-filter" id="ads-filter" style="margin-left:auto">
+        <button data-ch="all" class="active">All</button>
+        <button data-ch="facebook">Facebook</button>
+        <button data-ch="linkedin">LinkedIn</button>
+      </span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="ads-toolbar">
+        <span class="ads-sort-label">Quick sort</span>
+        <span class="ads-sort" id="ads-sort">
+          <button data-key="impressions">Top impressions</button>
+          <button data-key="clicks">Top clicks</button>
+          <button data-key="ctr">Top CTR</button>
+          <button data-key="leads">Top leads</button>
+        </span>
+      </div>
+      <div class="ads-wrap"><table class="ads" id="ads-table"></table></div>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section>
+    <div class="note" id="note-block"></div>
+  </section>
+
+  <div class="foot">
+    Beamr Marketing Dashboard · all edits saved locally in this browser (localStorage) · export regularly to keep a shareable copy.
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="application/json" style="display:none" />
+
+<script>
+/* ============================================================================
+   Beamr Marketing Dashboard
+   - Facebook figures baked in from the Meta Ads account "Beamr Marketing"
+     (USD), last synced on SYNC_DATE below. These are read-only in the UI.
+   - LinkedIn, KPI targets and KPI actuals are entered manually and persist
+     to localStorage.
+   - To refresh Facebook: ask Claude to re-pull the Meta data and update the
+     DEFAULT_DATA.channels.facebook block; your manual edits are preserved.
+   ========================================================================== */
+
+const STORAGE_KEY = "beamr_dashboard_v1";
+
+const DEFAULT_DATA = {
+  meta: { facebookSync: "2026-07-27", currency: "USD" },
+
+  // ---- Objectives: editable targets + manually-updated actuals ----
+  // NOTE: target/actual values below are EXAMPLE placeholders — replace with
+  // Beamr's real numbers (click any green value to edit).
+  kpis: {
+    quarter: {
+      label: "Q3 2026", start: "2026-07-01", end: "2026-09-30",
+      rows: [
+        { key: "mql",  name: "MQL",  full: "Marketing-qualified leads", target: 180, actual: 61 },
+        { key: "sql",  name: "SQL",  full: "Sales-qualified leads",      target: 60,  actual: 17 },
+        { key: "opps", name: "Opps", full: "Opportunities created",      target: 18,  actual: 4  }
+      ]
+    },
+    half: {
+      label: "H2 2026", start: "2026-07-01", end: "2026-12-31",
+      rows: [
+        { key: "mql",  name: "MQL",  full: "Marketing-qualified leads", target: 360, actual: 61 },
+        { key: "sql",  name: "SQL",  full: "Sales-qualified leads",      target: 120, actual: 17 },
+        { key: "opps", name: "Opps", full: "Opportunities created",      target: 40,  actual: 4  }
+      ]
+    }
+  },
+
+  // ---- Channels: current-quarter snapshot ----
+  channels: {
+    facebook: {
+      // synced snapshot (Q3-to-date, active lead-gen campaign)
+      current: { leads: 54, spend: 7888.39, impressions: 294571, clicks: 4409, reach: 121462, cpm: 26.78, cpc: 1.79, ctr: 1.50, cpl: 146.08 }
+    },
+    linkedin: {
+      // MANUAL — enter your LinkedIn quarter-to-date numbers
+      current: { leads: 0, spend: 0, impressions: 0, clicks: 0 }
+    }
+  },
+
+  // ---- Monthly series (drives the trend charts) ----
+  // Facebook rows come from Meta; LinkedIn columns are manual.
+  months: [
+    { m: "Feb 2026", fbLeads: 12,  fbSpend: 90.55,   liLeads: 0, liSpend: 0 },
+    { m: "Mar 2026", fbLeads: 0,   fbSpend: 0,       liLeads: 0, liSpend: 0 },
+    { m: "Apr 2026", fbLeads: 90,  fbSpend: 3245.41, liLeads: 0, liSpend: 0 },
+    { m: "May 2026", fbLeads: 109, fbSpend: 7954.56, liLeads: 0, liSpend: 0 },
+    { m: "Jun 2026", fbLeads: 38,  fbSpend: 8999.47, liLeads: 0, liSpend: 0 },
+    { m: "Jul 2026", fbLeads: 54,  fbSpend: 7888.39, liLeads: 0, liSpend: 0 }
+  ]
+};
+
+/* ------------------------------- state -------------------------------- */
+let state = load();
+// Per-channel data source, discovered from the backend at runtime:
+// "snapshot" (no backend reached), "live", "mock" (backend up, no creds), or "error: …".
+let live = { facebook: "snapshot", linkedin: "snapshot", syncedAt: null, reachable: false, window: null };
+
+/* --------------------- UI state: period + comparison ------------------ */
+const UI_KEY = "beamr_dashboard_ui_v1";
+function defaultUI(){ return { preset:"quarter", start:null, end:null, compare:false, adsChannel:"all", adsSort:{key:"spend",dir:-1} }; }
+let ui = (function(){ try{ const r=localStorage.getItem(UI_KEY); if(r) return Object.assign(defaultUI(), JSON.parse(r)); }catch(e){} return defaultUI(); })();
+function saveUI(){ try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){} }
+let prevData = null;                 // previous-window metrics (for deltas)
+let adsData = { ads: [], previous: [] };
+
+const fmtD = (d) => d.toISOString().slice(0,10);
+function computeRange(){
+  const now = new Date();
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const back = (days)=>{ const d=new Date(end); d.setUTCDate(d.getUTCDate()-(days-1)); return d; };
+  const y = end.getUTCFullYear(), mo = end.getUTCMonth();
+  let s = null, e = end;
+  switch(ui.preset){
+    case "7d":  s=back(7);  break;
+    case "30d": s=back(30); break;
+    case "90d": s=back(90); break;
+    case "quarter": { const qs=Math.floor(mo/3)*3; s=new Date(Date.UTC(y,qs,1)); e=new Date(Date.UTC(y,qs+3,0)); break; }
+    case "half":    { const hs=mo<6?0:6;          s=new Date(Date.UTC(y,hs,1)); e=new Date(Date.UTC(y,hs+6,0)); break; }
+    case "ytd": s=new Date(Date.UTC(y,0,1)); break;
+    case "custom": return (ui.start && ui.end) ? { start: ui.start, end: ui.end } : { start:null, end:null };
+    default: { const qs=Math.floor(mo/3)*3; s=new Date(Date.UTC(y,qs,1)); e=new Date(Date.UTC(y,qs+3,0)); }
+  }
+  return { start: fmtD(s), end: fmtD(e) };
+}
+function previousWindow(start, end){
+  const s=new Date(start+"T00:00:00Z"), e=new Date(end+"T00:00:00Z");
+  const days=Math.round((e-s)/86400000)+1;
+  const pe=new Date(s); pe.setUTCDate(pe.getUTCDate()-1);
+  const ps=new Date(pe); ps.setUTCDate(ps.getUTCDate()-(days-1));
+  return { start: fmtD(ps), end: fmtD(pe) };
+}
+function prettyRange(r){
+  if(!r || !r.start || !r.end) return "";
+  const f=(iso)=>new Date(iso+"T00:00:00Z").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"});
+  return `${f(r.start)} – ${f(r.end)}`;
+}
+
+/* --------------------------- delta helpers ---------------------------- */
+function pctDelta(cur, prev){ const c=num(cur), p=num(prev); if(!isFinite(p)||p===0) return null; return (c-p)/Math.abs(p); }
+// mode: true = higher is better (leads/impr), false = lower is better (cpl/cpm),
+// "neutral" = show change without good/bad coloring (spend).
+function deltaChip(cur, prev, mode){
+  if(!ui.compare || prev==null || prev===undefined) return "";
+  const c=num(cur), p=num(prev);
+  if(p===0) return c>0 ? `<span class="delta flat">new</span>` : "";
+  const d=(c-p)/Math.abs(p);
+  if(Math.abs(d)<0.0005) return `<span class="delta flat">0%</span>`;
+  const up=d>0;
+  const cls = mode==="neutral" ? "flat" : ((mode ? up : !up) ? "up" : "down");
+  return `<span class="delta ${cls}">${up?"▲":"▼"} ${Math.abs(d*100).toFixed(0)}%</span>`;
+}
+function prevCombined(){
+  if(!prevData) return null;
+  const f=prevData.facebook.current, l=prevData.linkedin.current;
+  const leads=num(f.leads)+num(l.leads), spend=num(f.spend)+num(l.spend), impr=num(f.impressions)+num(l.impressions);
+  return { leads, spend, impressions:impr, cpl: leads?spend/leads:null, cpm: impr?spend/impr*1000:null };
+}
+
+/* --------------------------- live backend ----------------------------- */
+// Fetches GET /api/metrics from the backend service (server/). On success,
+// live Facebook/LinkedIn figures overwrite the manual/snapshot values for any
+// channel the backend reports as "live"; manual KPI targets & actuals are never
+// touched. If the backend can't be reached (e.g. the standalone artifact), the
+// baked-in snapshot + your manual entries are used unchanged.
+async function fetchLive(force){
+  const range = computeRange();
+  live.window = range;
+  renderRangeLabel();
+  // Opened directly from disk (file://) — no backend to reach; stay on snapshot.
+  if(location.protocol === "file:"){ live.reachable = false; render(); return; }
+  if(!range.start || !range.end){ render(); return; }   // custom range not fully picked yet
+  const btn = document.getElementById("btn-refresh");
+  if(btn){ btn.disabled = true; btn.textContent = "↻ Refreshing…"; }
+  try {
+    const qs = new URLSearchParams({ start: range.start, end: range.end });
+    if(ui.compare) qs.set("compare","1");
+    if(force) qs.set("force","1");
+    const res = await fetch("/api/metrics?" + qs.toString(), { cache: "no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    applyLive(await res.json());
+  } catch(e) {
+    live.reachable = false;
+    live.facebook = "snapshot"; live.linkedin = "snapshot"; prevData = null;
+    render();                       // show snapshot + manual, with a clear status
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "↻ Refresh live"; }
+  }
+  fetchAds(force);                   // refresh the ad-level table for the same window
+}
+function applyLive(data){
+  live.reachable = true;
+  live.facebook = (data.sources && data.sources.facebook) || "snapshot";
+  live.linkedin = (data.sources && data.sources.linkedin) || "snapshot";
+  live.syncedAt = data.syncedAt || null;
+  live.window = data.window || live.window;
+  prevData = data.previous || null;
+  // Backend is authoritative for channel data when reachable (its snapshot is
+  // window-aware). Facebook has no manual path, so always take the backend value;
+  // LinkedIn is taken from the backend when live, else the manual value is kept.
+  if(data.facebook && data.facebook.current) state.channels.facebook.current = data.facebook.current;
+  if(live.linkedin === "live" && data.linkedin && data.linkedin.current) state.channels.linkedin.current = data.linkedin.current;
+  // For a live window the monthly series simply reflects the API's window rows.
+  if(Array.isArray(data.months)){
+    state.months = data.months.map(m => ({ m: m.label, fbLeads: m.fbLeads, fbSpend: m.fbSpend, liLeads: m.liLeads, liSpend: m.liSpend }));
+  }
+  if(data.syncedAt) state.meta.facebookSync = data.syncedAt.slice(0,10);
+  if(data.currency) state.meta.currency = data.currency;
+  save();
+  render();
+}
+function liEditable(){ return live.linkedin !== "live"; }   // manual inputs only when LinkedIn isn't live
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return deepMerge(clone(DEFAULT_DATA), JSON.parse(raw));
+  } catch (e) { console.warn("load failed", e); }
+  return clone(DEFAULT_DATA);
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.warn("save failed", e); }
+}
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function deepMerge(base, over) {
+  if (Array.isArray(base) && Array.isArray(over)) return over;
+  if (isObj(base) && isObj(over)) {
+    const out = {};
+    for (const k of new Set([...Object.keys(base), ...Object.keys(over)]))
+      out[k] = (k in over) ? deepMerge(base[k], over[k]) : base[k];
+    return out;
+  }
+  return over === undefined ? base : over;
+}
+function isObj(x){ return x && typeof x === "object" && !Array.isArray(x); }
+
+/* ----------------------------- formatting ----------------------------- */
+const CUR = () => state.meta.currency || "USD";
+const SYM = { USD: "$", ILS: "₪", EUR: "€", GBP: "£" };
+function cur(){ return SYM[CUR()] || "$"; }
+function int(n){ return (n==null||isNaN(n)) ? "—" : Math.round(n).toLocaleString("en-US"); }
+function money(n, dp){
+  if (n==null||isNaN(n)) return "—";
+  dp = dp==null ? (n>=1000?0:2) : dp;
+  return cur() + n.toLocaleString("en-US",{minimumFractionDigits:dp, maximumFractionDigits:dp});
+}
+function pct(n, dp){ return (n==null||isNaN(n)) ? "—" : (n*100).toFixed(dp==null?1:dp) + "%"; }
+
+/* ------------------------------- dates -------------------------------- */
+function today(){ return new Date(); }
+function daysBetween(a, b){ return (b - a) / 86400000; }
+function elapsedFrac(startISO, endISO){
+  const s = new Date(startISO+"T00:00:00"), e = new Date(endISO+"T23:59:59"), n = today();
+  if (n <= s) return 0;
+  if (n >= e) return 1;
+  return daysBetween(s, n) / daysBetween(s, e);
+}
+
+/* --------------------------- pacing logic ----------------------------- */
+function pacing(actual, target, startISO, endISO){
+  const el = elapsedFrac(startISO, endISO);
+  const prog = target > 0 ? actual / target : 0;
+  let status, label;
+  if (prog >= 1)            { status = "good"; label = "Achieved"; }
+  else {
+    const ratio = el > 0 ? prog / el : (prog > 0 ? 2 : 0);
+    if (ratio >= 0.95)      { status = "good"; label = "On track"; }
+    else if (ratio >= 0.75) { status = "warn"; label = "Slightly behind"; }
+    else                    { status = "bad";  label = "Behind"; }
+  }
+  const projected = el > 0 ? actual / el : actual;
+  return { el, prog, status, label, projected };
+}
+
+/* ------------------------- derived aggregates ------------------------- */
+function combined(){
+  const fb = state.channels.facebook.current, li = state.channels.linkedin.current;
+  const leads = num(fb.leads) + num(li.leads);
+  const spend = num(fb.spend) + num(li.spend);
+  const impr  = num(fb.impressions) + num(li.impressions);
+  const clicks= num(fb.clicks) + num(li.clicks);
+  return {
+    leads, spend, impressions: impr, clicks,
+    cpl: leads ? spend/leads : null,
+    cpm: impr ? spend/impr*1000 : null,
+    ctr: impr ? clicks/impr : null
+  };
+}
+function num(x){ const n = parseFloat(x); return isNaN(n)?0:n; }
+
+/* ================================ RENDER =============================== */
+function render(){
+  renderKPIcard("kpi-quarter", state.kpis.quarter);
+  renderKPIcard("kpi-half", state.kpis.half);
+  renderChannels();
+  renderTable();
+  renderNote();
+  updateDerived();
+}
+
+/* ---- KPI cards ---- */
+function renderKPIcard(id, period){
+  const el = document.getElementById(id);
+  const efrac = elapsedFrac(period.start, period.end);
+  let html = `<div class="kpi-col-head">
+      <span class="period">${period.label}</span>
+      <span class="elapsed">· ${Math.round(efrac*100)}% of period elapsed</span>
+    </div>`;
+  period.rows.forEach((r, i) => {
+    html += `<div class="kpi" data-kpi="${id}:${i}"></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function paintKPIrow(node, period, r, idx, pathBase){
+  const p = pacing(num(r.actual), num(r.target), period.start, period.end);
+  const fillColor = p.status==="good"?"var(--good)":p.status==="warn"?"var(--warn)":"var(--bad)";
+  const w = Math.max(0, Math.min(1, p.prog)) * 100;
+  node.innerHTML = `
+    <div class="kpi-top">
+      <div class="kpi-name">${r.name} <span class="full">${r.full}</span></div>
+      <div class="kpi-vals">
+        <b><input class="ed" type="number" min="0" step="1" data-path="${pathBase}.actual" value="${r.actual}"></b>
+        <span> / </span>
+        <input class="ed" type="number" min="0" step="1" data-path="${pathBase}.target" value="${r.target}">
+        <span data-out="${pathBase}.pctwrap"></span>
+      </div>
+    </div>
+    <div class="meter">
+      <div class="fill" style="width:${w}%;background:${fillColor}"></div>
+      <div class="pace" style="left:${p.el*100}%"></div>
+    </div>
+    <div class="kpi-foot">
+      <span class="pill ${p.status}"><span class="dot"></span>${p.label}</span>
+      <span class="kpi-proj">Projected: <b>${int(p.projected)}</b> · pace marker = ${Math.round(p.el*100)}%</span>
+    </div>`;
+}
+
+/* ---- Channels ---- */
+function renderChannels(){
+  const host = document.querySelector(".chan-grid");
+  const fb = state.channels.facebook.current;
+  const li = state.channels.linkedin.current;
+  const c = combined();
+  host.innerHTML = `
+    <div class="card chan">
+      <div class="accent-bar" style="background:var(--series-fb)"></div>
+      <div class="chan-head">
+        <div class="logo" style="background:var(--series-fb)">f</div>
+        <div class="name">Facebook / Meta</div>
+        <span class="tag ${live.facebook==='live'?'synced':'manual'}" style="margin-left:auto">${live.facebook==='live'?'live':'snapshot'}</span>
+      </div>
+      <div class="metric-list">
+        ${metricRO("Leads", int(fb.leads), "d.fb.leads")}
+        ${metricRO("Cost / lead", money(fb.cpl), "d.fb.cpl")}
+        ${metricRO("Spend", money(fb.spend,0), "d.fb.spend")}
+        ${metricRO("CPM", money(fb.cpm))}
+        ${metricRO("Impressions", int(fb.impressions))}
+        ${metricRO("CTR", pct(fb.ctr/100))}
+      </div>
+    </div>
+
+    <div class="card chan">
+      <div class="accent-bar" style="background:var(--series-li)"></div>
+      <div class="chan-head">
+        <div class="logo" style="background:var(--series-li)">in</div>
+        <div class="name">LinkedIn</div>
+        <span class="tag ${liEditable()?'manual':'synced'}" style="margin-left:auto">${liEditable()?'manual':'live'}</span>
+      </div>
+      <div class="metric-list">
+        ${liEditable() ? metricEd("Leads", "channels.linkedin.current.leads", 1, "d.li.leads") : metricRO("Leads", int(li.leads), "d.li.leads")}
+        ${metricRO("Cost / lead", `<span data-out="li.cpl">—</span>`, "d.li.cpl")}
+        ${liEditable() ? metricEd("Spend", "channels.linkedin.current.spend", 1, "d.li.spend") : metricRO("Spend", money(li.spend,0), "d.li.spend")}
+        ${metricRO("CPM", `<span data-out="li.cpm">—</span>`)}
+        ${liEditable() ? metricEd("Impressions", "channels.linkedin.current.impressions", 1) : metricRO("Impressions", int(li.impressions))}
+        ${liEditable() ? metricEd("Clicks", "channels.linkedin.current.clicks", 1) : metricRO("Clicks", int(li.clicks))}
+      </div>
+    </div>
+
+    <div class="card chan">
+      <div class="accent-bar" style="background:var(--accent)"></div>
+      <div class="chan-head">
+        <div class="logo" style="background:var(--accent);color:#04120a">Σ</div>
+        <div class="name">Combined</div>
+      </div>
+      <div class="metric-list">
+        ${metricRO("Leads", `<span data-out="c.leads">—</span>`, "d.c.leads")}
+        ${metricRO("Blended CPL", `<span data-out="c.cpl">—</span>`, "d.c.cpl")}
+        ${metricRO("Spend", `<span data-out="c.spend">—</span>`, "d.c.spend")}
+        ${metricRO("Blended CPM", `<span data-out="c.cpm">—</span>`)}
+        ${metricRO("Impressions", `<span data-out="c.impr">—</span>`)}
+        ${metricRO("CTR", `<span data-out="c.ctr">—</span>`)}
+      </div>
+    </div>`;
+}
+function metricRO(k, v, subKey){ return `<div class="metric"><p class="m-k">${k}</p><p class="m-v ro">${v}</p>${subKey?`<p class="m-sub" data-out="${subKey}"></p>`:""}</div>`; }
+function metricEd(k, path, step, subKey){
+  return `<div class="metric"><p class="m-k">${k}</p>
+    <p class="m-v editable-wrap"><input class="ed wide" type="number" min="0" step="${step||1}" data-path="${path}" value="${getPath(path)}"></p>${subKey?`<p class="m-sub" data-out="${subKey}"></p>`:""}</div>`;
+}
+
+/* ---- Data table ---- */
+function renderTable(){
+  const t = document.getElementById("data-table");
+  let rows = "";
+  state.months.forEach((mo, i) => {
+    const tot = num(mo.fbLeads)+num(mo.liLeads);
+    const spend = num(mo.fbSpend)+num(mo.liSpend);
+    const liLeadCell = liEditable()
+      ? `<input class="ed" type="number" min="0" step="1" data-path="months.${i}.liLeads" value="${mo.liLeads}">`
+      : int(mo.liLeads);
+    const liSpendCell = liEditable()
+      ? `<input class="ed" type="number" min="0" step="1" data-path="months.${i}.liSpend" value="${mo.liSpend}">`
+      : money(mo.liSpend,0);
+    rows += `<tr>
+      <td>${mo.m}</td>
+      <td class="ro">${int(mo.fbLeads)}</td>
+      <td class="${liEditable()?'':'ro'}">${liLeadCell}</td>
+      <td class="ro">${money(mo.fbSpend,0)}</td>
+      <td class="${liEditable()?'':'ro'}">${liSpendCell}</td>
+      <td class="ro" data-out="row.${i}.leads">${int(tot)}</td>
+      <td class="ro" data-out="row.${i}.cpl">${tot?money(spend/tot):"—"}</td>
+    </tr>`;
+  });
+  t.innerHTML = `
+    <thead><tr>
+      <th>Month</th>
+      <th>FB leads</th><th>LI leads</th>
+      <th>FB spend</th><th>LI spend</th>
+      <th>Total leads</th><th>Blended CPL</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td>Total</td>
+      <td class="ro" data-out="tf.fbleads"></td>
+      <td class="ro" data-out="tf.lileads"></td>
+      <td class="ro" data-out="tf.fbspend"></td>
+      <td class="ro" data-out="tf.lispend"></td>
+      <td class="ro" data-out="tf.leads"></td>
+      <td class="ro" data-out="tf.cpl"></td>
+    </tr></tfoot>`;
+}
+
+/* ---- Notes ---- */
+function renderNote(){
+  document.getElementById("note-block").innerHTML = `
+    <b>How this dashboard works.</b>
+    When served by the backend (<code>server/</code>), <b>Facebook / Meta</b> and <b>LinkedIn</b>
+    figures are fetched live from the ad platforms on every load and cached for a few hours, so they
+    refresh several times a day on their own. Channels shown as <span class="tag synced">live</span>
+    are read-only; any channel without credentials yet shows as
+    <span class="tag manual">snapshot</span> and its numbers stay editable by hand.
+    Every <b>MQL / SQL / Opportunity</b> target and actual is always manual — click any
+    <span style="color:var(--accent);font-weight:700">blue value</span> to edit. Manual entries
+    save in this browser automatically and are never overwritten by a live channel.
+    <br><br>
+    <b>Opened as the standalone artifact?</b> There’s no backend to reach, so you’ll see
+    “backend offline — saved snapshot”: the baked-in Facebook snapshot plus your manual entries.
+    Use the deployed backend URL for live data.
+    <br><br>
+    <b>Pacing.</b> The white marker on each bar shows how far through the period we are today.
+    If the colored fill is at or past the marker, we’re on track; the “Projected” figure is a simple
+    run-rate estimate of where the number lands at period end if the current pace holds.
+    <br><br>
+    <b>Backup.</b> Use <b>Export</b> to download a JSON snapshot and <b>Import</b> to restore it.
+    <b>Refresh live</b> (top right) forces an immediate re-pull from the backend.`;
+}
+
+/* ---- derived outputs (no input re-render → no focus loss) ---- */
+function updateDerived(){
+  // KPI rows (re-paint fully; inputs live inside but we only repaint on structural render + value inputs handled separately)
+  ["quarter","half"].forEach(pk => {
+    const id = pk==="quarter" ? "kpi-quarter" : "kpi-half";
+    const period = state.kpis[pk];
+    period.rows.forEach((r, i) => {
+      const node = document.querySelector(`[data-kpi="${id}:${i}"]`);
+      if (node && !node.querySelector("input:focus"))
+        paintKPIrow(node, period, r, i, `kpis.${pk}.rows.${i}`);
+    });
+  });
+
+  // Hero
+  const c = combined();
+  const pc = prevCombined();
+  setOut("hero-leads", int(c.leads));
+  setOut("hero-cpl", c.cpl!=null ? money(c.cpl) : "—");
+  setOut("hero-leads-d", (ui.compare && pc)
+    ? `${deltaChip(c.leads, pc.leads, true)} <span class="cmp-prev">vs ${int(pc.leads)} prev</span>`
+    : "Facebook + LinkedIn");
+  setOut("hero-spend-d", (ui.compare && pc)
+    ? `${deltaChip(c.cpl, pc.cpl, false)} <span class="cmp-prev">vs ${pc.cpl!=null?money(pc.cpl):"—"} prev</span> · ${money(c.spend,0)} spent`
+    : `${money(c.spend,0)} spent`);
+  const q = state.kpis.quarter;
+  const paces = q.rows.map(r => pacing(num(r.actual), num(r.target), q.start, q.end));
+  const onTrack = paces.filter(p => p.status==="good").length;
+  const behind = paces.filter(p => p.status==="bad").length;
+  const heroStatus = document.getElementById("hero-status");
+  const heroNote = document.getElementById("hero-note");
+  document.getElementById("hero-eyebrow").textContent = `${q.label} · objectives (${Math.round(elapsedFrac(q.start,q.end)*100)}% elapsed)`;
+  heroStatus.textContent = `${onTrack} of ${q.rows.length} objectives on track`;
+  const worst = behind>0 ? "bad" : (onTrack < q.rows.length ? "warn" : "good");
+  heroStatus.style.color = worst==="good"?"var(--good)":worst==="warn"?"var(--warn)":"var(--bad)";
+  heroNote.innerHTML = q.rows.map((r,i)=>`${r.name} ${Math.round(paces[i].prog*100)}%`).join(" · ")
+     + (behind>0 ? ` — ${behind} behind pace` : "");
+
+  // LinkedIn + combined metrics
+  const fb = state.channels.facebook.current, li = state.channels.linkedin.current;
+  setOut("li.cpl", num(li.leads)?money(num(li.spend)/num(li.leads)):"—");
+  setOut("li.cpm", num(li.impressions)?money(num(li.spend)/num(li.impressions)*1000):"—");
+  setOut("c.leads", int(c.leads));
+  setOut("c.cpl", c.cpl!=null?money(c.cpl):"—");
+  setOut("c.spend", money(c.spend,0));
+  setOut("c.cpm", c.cpm!=null?money(c.cpm):"—");
+  setOut("c.impr", int(c.impressions));
+  setOut("c.ctr", c.ctr!=null?pct(c.ctr):"—");
+
+  // period-over-period deltas (filled only when compare is on)
+  const pf = prevData ? prevData.facebook.current : null;
+  const pl = prevData ? prevData.linkedin.current : null;
+  const liCpl = num(li.leads) ? num(li.spend)/num(li.leads) : null;
+  const plCpl = pl && num(pl.leads) ? num(pl.spend)/num(pl.leads) : null;
+  setOut("d.fb.leads", deltaChip(fb.leads, pf&&pf.leads, true));
+  setOut("d.fb.cpl",   deltaChip(fb.cpl,   pf&&pf.cpl, false));
+  setOut("d.fb.spend", deltaChip(fb.spend, pf&&pf.spend, "neutral"));
+  setOut("d.li.leads", deltaChip(li.leads, pl&&pl.leads, true));
+  setOut("d.li.cpl",   deltaChip(liCpl,    plCpl, false));
+  setOut("d.li.spend", deltaChip(li.spend, pl&&pl.spend, "neutral"));
+  setOut("d.c.leads",  deltaChip(c.leads,  pc&&pc.leads, true));
+  setOut("d.c.cpl",    deltaChip(c.cpl,    pc&&pc.cpl, false));
+  setOut("d.c.spend",  deltaChip(c.spend,  pc&&pc.spend, "neutral"));
+  renderRangeLabel();
+  renderSourceStatus();
+
+  // Funnel (quarter actuals)
+  renderFunnel();
+
+  // Table totals + derived cells
+  let tfb=0,tli=0,tfs=0,tls=0;
+  state.months.forEach((mo,i)=>{
+    const tot=num(mo.fbLeads)+num(mo.liLeads), sp=num(mo.fbSpend)+num(mo.liSpend);
+    setOut(`row.${i}.leads`, int(tot));
+    setOut(`row.${i}.cpl`, tot?money(sp/tot):"—");
+    tfb+=num(mo.fbLeads); tli+=num(mo.liLeads); tfs+=num(mo.fbSpend); tls+=num(mo.liSpend);
+  });
+  setOut("tf.fbleads",int(tfb)); setOut("tf.lileads",int(tli));
+  setOut("tf.fbspend",money(tfs,0)); setOut("tf.lispend",money(tls,0));
+  setOut("tf.leads",int(tfb+tli)); setOut("tf.cpl",(tfb+tli)?money((tfs+tls)/(tfb+tli)):"—");
+
+  // Charts
+  drawLeadsChart();
+  drawCPLChart();
+}
+function setOut(key,val){ document.querySelectorAll(`[data-out="${key}"]`).forEach(n=>n.innerHTML=val); }
+
+// Per-channel data-source badges (live / snapshot / mock / error).
+function sourceBadge(label, src){
+  const map = {
+    live:     ["synced", "live"],
+    mock:     ["manual", "snapshot"],
+    snapshot: ["manual", "snapshot"],
+  };
+  const spec = src && src.startsWith("error") ? ["manual","error"] : (map[src] || ["manual","snapshot"]);
+  return `<span class="tag ${spec[0]}">${label}: ${spec[1]}</span>`;
+}
+function renderSourceStatus(){
+  const host = document.getElementById("chan-sources");
+  if(!host) return;
+  const synced = state.meta.facebookSync ? ` · synced ${state.meta.facebookSync}` : "";
+  const offline = live.reachable ? "" : `<span class="tag manual">backend offline — saved snapshot</span> `;
+  host.innerHTML = offline + sourceBadge("Facebook", live.facebook) + " " + sourceBadge("LinkedIn", live.linkedin)
+    + `<span class="hint" style="margin-left:8px">${synced.replace(/^ · /,"")}</span>`;
+}
+
+/* ---- Funnel ---- */
+// Tapering SVG funnel: MQL → SQL → Opportunity, with the stage-to-stage
+// conversion rate rendered on every boundary.
+function renderFunnel(){
+  const q = state.kpis.quarter.rows;
+  const mql = num(q.find(r=>r.key==="mql").actual);
+  const sql = num(q.find(r=>r.key==="sql").actual);
+  const opp = num(q.find(r=>r.key==="opps").actual);
+  const stages = [
+    { k:"MQL",           v:mql, col:"var(--series-3)" },
+    { k:"SQL",           v:sql, col:"var(--warn)" },
+    { k:"Opportunities", v:opp, col:"var(--accent)" }
+  ];
+  const n = stages.length;
+  const max = Math.max(1, ...stages.map(s=>s.v));
+  const W=960, H=320, padX=16, topPad=66, botPad=52;
+  const innerH = H - topPad - botPad;
+  const gap = 74;                                   // room for the conversion badge
+  const segW = (W - padX*2 - gap*(n-1)) / n;
+  const midY = topPad + innerH/2;
+  const hOf = v => Math.max(10, (v/max)*innerH);
+  let x = padX, svg = "";
+  stages.forEach((s,i)=>{
+    const hL = hOf(s.v);
+    const hR = hOf(i<n-1 ? stages[i+1].v : s.v);
+    const yTL=midY-hL/2, yBL=midY+hL/2, yTR=midY-hR/2, yBR=midY+hR/2;
+    svg += `<path d="M${x} ${yTL} L${x+segW} ${yTR} L${x+segW} ${yBR} L${x} ${yBL} Z" fill="${s.col}" opacity="0.94"/>`;
+    const cx = x+segW/2;
+    // stage name + value above the shape
+    svg += `<text x="${cx}" y="${topPad-40}" text-anchor="middle" fill="var(--muted)" font-size="12" font-weight="700" letter-spacing="0.4">${s.k.toUpperCase()}</text>`;
+    svg += `<text x="${cx}" y="${topPad-14}" text-anchor="middle" fill="var(--text)" font-size="27" font-weight="800">${int(s.v)}</text>`;
+    // share of MQL, below the shape
+    const pctBase = stages[0].v ? s.v/stages[0].v : null;
+    svg += `<text x="${cx}" y="${topPad+innerH+30}" text-anchor="middle" fill="var(--text-2)" font-size="12">${i===0?"100% of MQL":(pctBase!=null?pct(pctBase,1)+" of MQL":"—")}</text>`;
+    // conversion badge on the boundary to the next stage
+    if(i<n-1){
+      const conv = s.v ? stages[i+1].v/s.v : null;
+      const bx = x+segW+gap/2, bw=60, bh=26;
+      svg += `<line x1="${x+segW}" y1="${midY}" x2="${x+segW+gap}" y2="${midY}" stroke="var(--border-light)" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+      svg += `<rect x="${bx-bw/2}" y="${midY-bh/2}" width="${bw}" height="${bh}" rx="13" fill="var(--surface-1)" stroke="var(--border-light)" stroke-width="1.5"/>`;
+      svg += `<text x="${bx}" y="${midY+4}" text-anchor="middle" fill="var(--text)" font-size="12.5" font-weight="800">${conv!=null?pct(conv,0):"—"}</text>`;
+    }
+    x += segW+gap;
+  });
+  document.getElementById("funnel").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Lead to opportunity funnel with stage conversion rates">${svg}</svg>`;
+
+  // summary strip — every stage-to-stage rate plus the end-to-end rate
+  const rate=(a,b)=> a ? pct(b/a,1) : "—";
+  const items = [
+    { k:"MQL → SQL",  v: rate(stages[0].v, stages[1].v) },
+    { k:"SQL → Opp.", v: rate(stages[1].v, stages[2].v) },
+    { k:"MQL → Opp. (overall)", v: rate(stages[0].v, stages[2].v) }
+  ];
+  const sum = document.getElementById("funnel-summary");
+  if(sum) sum.innerHTML = items.map(it=>`<div class="fs-item"><span class="fs-k">${it.k}</span><span class="fs-v">${it.v}</span></div>`).join("");
+}
+
+/* =============================== CHARTS ================================ */
+function drawLeadsChart(){
+  const data = state.months.map(m=>({label:m.m.replace(/ \d{4}$/,""), fb:num(m.fbLeads), li:num(m.liLeads)}));
+  const W=560, H=260, P={t:20,r:16,b:34,l:40};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const max = Math.max(1, ...data.map(d=>d.fb+d.li));
+  const step = niceStep(max);
+  const top = Math.ceil(max/step)*step;
+  const n=data.length, band=iw/n, bw=Math.min(34, band*0.55);
+  const y=v=>P.t+ih-(v/top)*ih;
+  let g="";
+  for(let t=0;t<=top+1e-9;t+=step){ const yy=y(t);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${P.l+iw}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+    g+=`<text x="${P.l-8}" y="${yy+4}" text-anchor="end" fill="var(--muted)" font-size="11">${int(t)}</text>`;
+  }
+  let bars="";
+  data.forEach((d,i)=>{
+    const cx=P.l+band*i+band/2, x=cx-bw/2;
+    const hFb=(d.fb/top)*ih, hLi=(d.li/top)*ih;
+    const yFbTop=P.t+ih-hFb;
+    // Facebook (bottom), square base + rounded top only if no LI on top
+    bars+=roundedBar(x,yFbTop,bw,hFb,"var(--series-fb)", d.li>0?false:true);
+    if(d.li>0){
+      const yLiTop=yFbTop-hLi-2; // 2px surface gap
+      bars+=roundedBar(x,yLiTop,bw,hLi,"var(--series-li)", true);
+    }
+    const totV=d.fb+d.li;
+    if(totV>0) bars+=`<text x="${cx}" y="${(d.li>0?yFbTop-hLi-2:yFbTop)-7}" text-anchor="middle" fill="var(--text-2)" font-size="11" font-weight="700">${int(totV)}</text>`;
+    bars+=`<text x="${cx}" y="${P.t+ih+18}" text-anchor="middle" fill="var(--muted)" font-size="11">${d.label}</text>`;
+  });
+  document.getElementById("chart-leads").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Leads per month, Facebook and LinkedIn stacked">${g}${bars}</svg>`;
+}
+
+function drawCPLChart(){
+  const data = state.months.map(m=>{
+    const leads=num(m.fbLeads)+num(m.liLeads), spend=num(m.fbSpend)+num(m.liSpend);
+    return {label:m.m.replace(/ \d{4}$/,""), cpl: leads?spend/leads:null};
+  });
+  const W=560,H=260,P={t:20,r:20,b:34,l:46};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const vals=data.map(d=>d.cpl).filter(v=>v!=null);
+  const max=Math.max(1,...vals);
+  const step=niceStep(max); const top=Math.ceil(max/step)*step;
+  const n=data.length, band=iw/n;
+  const x=i=>P.l+band*i+band/2, y=v=>P.t+ih-(v/top)*ih;
+  let g="";
+  for(let t=0;t<=top+1e-9;t+=step){ const yy=y(t);
+    g+=`<line x1="${P.l}" y1="${yy}" x2="${P.l+iw}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+    g+=`<text x="${P.l-8}" y="${yy+4}" text-anchor="end" fill="var(--muted)" font-size="11">${cur()}${int(t)}</text>`;
+  }
+  // line across points that have a value
+  const pts=data.map((d,i)=>d.cpl!=null?{x:x(i),y:y(d.cpl),d}:null).filter(Boolean);
+  let path="";
+  pts.forEach((p,i)=>path+=(i?"L":"M")+p.x+" "+p.y+" ");
+  let line = pts.length>1?`<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`:"";
+  let dots="";
+  pts.forEach((p,i)=>{
+    dots+=`<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="var(--accent)" stroke="var(--surface-1)" stroke-width="2"/>`;
+    if(i===pts.length-1) dots+=`<text x="${p.x}" y="${p.y-11}" text-anchor="middle" fill="var(--text)" font-size="11" font-weight="700">${money(p.d.cpl)}</text>`;
+  });
+  let labels="";
+  data.forEach((d,i)=>labels+=`<text x="${x(i)}" y="${P.t+ih+18}" text-anchor="middle" fill="var(--muted)" font-size="11">${d.label}</text>`);
+  document.getElementById("chart-cpl").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Blended cost per lead by month">${g}${line}${dots}${labels}</svg>`;
+}
+
+function roundedBar(x,y,w,h,fill,roundTop){
+  if(h<=0) return "";
+  const r=Math.min(4,w/2,h);
+  if(!roundTop||h<r) return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;
+  return `<path d="M${x} ${y+h} L${x} ${y+r} Q${x} ${y} ${x+r} ${y} L${x+w-r} ${y} Q${x+w} ${y} ${x+w} ${y+r} L${x+w} ${y+h} Z" fill="${fill}"/>`;
+}
+function niceStep(max){
+  const raw=max/4; const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const n=raw/mag;
+  const s=n<1.5?1:n<3?2:n<7?5:10;
+  return s*mag;
+}
+
+/* ============================ INPUT BINDING =========================== */
+function getPath(path){
+  return path.split(".").reduce((o,k)=> (o==null?undefined:o[k]), state);
+}
+function setPath(path,val){
+  const keys=path.split("."); let o=state;
+  for(let i=0;i<keys.length-1;i++) o=o[keys[i]];
+  o[keys[keys.length-1]]=val;
+}
+// Delegated listeners (attached once) so dynamically re-painted inputs keep working.
+document.addEventListener("input", (e)=>{
+  const inp = e.target.closest ? e.target.closest("input.ed") : null;
+  if(!inp || !inp.dataset.path) return;
+  const v = inp.value==="" ? 0 : parseFloat(inp.value);
+  setPath(inp.dataset.path, isNaN(v)?0:v);
+  save();
+  updateDerived();            // focused KPI row is skipped in updateDerived → focus/cursor preserved
+});
+document.addEventListener("focusout", (e)=>{
+  const inp = e.target.closest ? e.target.closest("input.ed") : null;
+  if(inp) setTimeout(updateDerived, 0);   // refresh the just-edited row once focus has left
+});
+
+/* ---- control bar + range label ---- */
+function renderRangeLabel(){
+  const el=document.getElementById("range-label"); if(!el) return;
+  const r = (live.window && live.window.start) ? live.window : computeRange();
+  el.textContent = prettyRange(r) + (ui.compare ? "  ·  vs previous period" : "");
+}
+function syncControlBar(){
+  document.querySelectorAll("#presets .preset").forEach(b => b.classList.toggle("active", b.dataset.preset===ui.preset));
+  document.getElementById("custom-range").classList.toggle("show", ui.preset==="custom");
+  const from=document.getElementById("cr-from"), to=document.getElementById("cr-to");
+  if(ui.start) from.value=ui.start;
+  if(ui.end) to.value=ui.end;
+  document.getElementById("cmp-toggle").checked = !!ui.compare;
+  document.querySelectorAll("#ads-filter button").forEach(b => b.classList.toggle("active", b.dataset.ch===ui.adsChannel));
+  renderRangeLabel();
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+
+/* ---- ad-level table ---- */
+async function fetchAds(force){
+  if(location.protocol === "file:"){ adsData={ads:[],previous:[]}; renderAdsTable(); return; }
+  const range = computeRange();
+  if(!range.start || !range.end){ adsData={ads:[],previous:[]}; renderAdsTable(); return; }
+  try {
+    const qs=new URLSearchParams({ start:range.start, end:range.end, channel:ui.adsChannel });
+    if(force) qs.set("force","1");
+    const res=await fetch("/api/ads?"+qs.toString(), {cache:"no-store"});
+    const cur = res.ok ? await res.json() : { ads:[] };
+    let previous=[];
+    if(ui.compare){
+      const pw=previousWindow(range.start, range.end);
+      const pqs=new URLSearchParams({ start:pw.start, end:pw.end, channel:ui.adsChannel });
+      if(force) pqs.set("force","1");
+      const pres=await fetch("/api/ads?"+pqs.toString(), {cache:"no-store"});
+      if(pres.ok) previous=(await pres.json()).ads||[];
+    }
+    adsData={ ads: cur.ads||[], previous };
+  } catch(e){ adsData={ads:[],previous:[]}; }
+  renderAdsTable();
+}
+const AD_COLS = [
+  { key:"name", label:"Ad" },
+  { key:"impressions", label:"Impr." },
+  { key:"clicks", label:"Clicks" },
+  { key:"ctr", label:"CTR" },
+  { key:"spend", label:"Spend" },
+  { key:"leads", label:"Leads" },
+  { key:"cpl", label:"CPL" },
+  { key:"cpm", label:"CPM" },
+];
+function renderAdsTable(){
+  const t=document.getElementById("ads-table"); if(!t) return;
+  const chColor=(ch)=> ch==="facebook" ? "var(--series-fb)" : "var(--series-li)";
+  const prevMap=new Map(adsData.previous.map(a=>[a.channel+"|"+a.name, a]));
+  const sk=ui.adsSort.key, dir=ui.adsSort.dir;
+  // reflect the active quick-sort chip (only when sorting top-down)
+  document.querySelectorAll("#ads-sort button").forEach(b=>b.classList.toggle("active", b.dataset.key===sk && dir<0));
+  const ads=adsData.ads.slice().sort((a,b)=>{
+    if(sk==="name"){ const va=(a.name||"").toLowerCase(), vb=(b.name||"").toLowerCase(); return dir*(va<vb?-1:va>vb?1:0); }
+    const va=a[sk]==null?-Infinity:a[sk], vb=b[sk]==null?-Infinity:b[sk]; return dir*(va-vb);
+  });
+  const head = `<thead><tr>${AD_COLS.map(c=>`<th data-sort="${c.key}" class="${sk===c.key?'sorted':''}">${c.label}${sk===c.key?(dir<0?" ▾":" ▴"):""}</th>`).join("")}</tr></thead>`;
+  if(!ads.length){
+    t.innerHTML = head + `<tbody><tr><td colspan="${AD_COLS.length}"><div class="ads-empty">${live.reachable ? "No ad-level data for this period / channel." : "Ad-level data loads from the deployed backend (open the Vercel URL)."}</div></td></tr></tbody>`;
+    return;
+  }
+  const rows = ads.map(a=>{
+    const p = prevMap.get(a.channel+"|"+a.name);
+    const dSpend = (ui.compare && p) ? " "+deltaChip(a.spend, p.spend, "neutral") : "";
+    const dLeads = (ui.compare && p) ? " "+deltaChip(a.leads, p.leads, true) : "";
+    const dCPL   = (ui.compare && p) ? " "+deltaChip(a.cpl, p.cpl, false) : "";
+    return `<tr>
+      <td><span class="ad-name"><span class="dot" style="background:${chColor(a.channel)}"></span><span class="txt">${escapeHtml(a.name)}</span></span></td>
+      <td>${int(a.impressions)}</td>
+      <td>${int(a.clicks)}</td>
+      <td>${a.ctr!=null?a.ctr.toFixed(2)+"%":"—"}</td>
+      <td>${money(a.spend,0)}${dSpend}</td>
+      <td>${int(a.leads)}${dLeads}</td>
+      <td>${a.cpl!=null?money(a.cpl):"—"}${dCPL}</td>
+      <td>${a.cpm!=null?money(a.cpm):"—"}</td>
+    </tr>`;
+  }).join("");
+  t.innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+
+/* ---- control bar events ---- */
+document.getElementById("presets").addEventListener("click", (e)=>{
+  const btn=e.target.closest(".preset"); if(!btn) return;
+  ui.preset=btn.dataset.preset;
+  if(ui.preset==="custom" && (!ui.start || !ui.end)){ const r=computeRange(); ui.start=r.start||fmtD(new Date()); ui.end=r.end||fmtD(new Date()); }
+  saveUI(); syncControlBar();
+  if(ui.preset!=="custom" || (ui.start && ui.end)) fetchLive();
+});
+document.getElementById("cr-from").addEventListener("change", (e)=>{ ui.start=e.target.value; saveUI(); if(ui.end) fetchLive(); });
+document.getElementById("cr-to").addEventListener("change", (e)=>{ ui.end=e.target.value; saveUI(); if(ui.start) fetchLive(); });
+document.getElementById("cmp-toggle").addEventListener("change", (e)=>{ ui.compare=e.target.checked; saveUI(); renderRangeLabel(); fetchLive(); });
+document.getElementById("ads-filter").addEventListener("click", (e)=>{
+  const btn=e.target.closest("button"); if(!btn) return;
+  ui.adsChannel=btn.dataset.ch; saveUI(); syncControlBar(); fetchAds();
+});
+document.getElementById("ads-table").addEventListener("click", (e)=>{
+  const th=e.target.closest("th[data-sort]"); if(!th) return;
+  const key=th.dataset.sort;
+  if(ui.adsSort.key===key) ui.adsSort.dir*=-1; else ui.adsSort={ key, dir: key==="name"?1:-1 };
+  saveUI(); renderAdsTable();
+});
+document.getElementById("ads-sort").addEventListener("click", (e)=>{
+  const btn=e.target.closest("button[data-key]"); if(!btn) return;
+  ui.adsSort={ key: btn.dataset.key, dir: -1 };   // quick sorts always show the top performers first
+  saveUI(); renderAdsTable();
+});
+
+/* ============================== TOOLBAR =============================== */
+document.getElementById("btn-reset").onclick=()=>{
+  if(confirm("Reset all manual entries (LinkedIn, KPI targets & actuals) back to the synced defaults? This cannot be undone.")){
+    localStorage.removeItem(STORAGE_KEY); state=clone(DEFAULT_DATA); render();
+  }
+};
+document.getElementById("btn-export").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="beamr-dashboard-"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("btn-import").onclick=()=>document.getElementById("file-input").click();
+document.getElementById("file-input").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ state=deepMerge(clone(DEFAULT_DATA),JSON.parse(r.result)); save(); render(); }
+    catch(err){ alert("Could not read that file: "+err.message); } };
+  r.readAsText(f); e.target.value="";
+};
+document.getElementById("btn-print").onclick=()=>window.print();
+document.getElementById("btn-refresh").onclick=()=>fetchLive(true);
+
+/* ================================ GO ================================= */
+syncControlBar();   // reflect saved period / comparison / channel selection
+renderAdsTable();   // empty state until the ads fetch resolves
+render();           // paint immediately from snapshot + saved manual data
+fetchLive();        // then try the backend for the selected window (also fetches ads)
+</script>
+</body>
+</html>
