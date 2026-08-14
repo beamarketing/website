@@ -966,164 +966,122 @@ function drawConstraint(o,s,y,hw,t){
   }
 }
 
-/* --- the car: a rear three-quarter view of the AV test vehicle ----------
-   The camera sits behind and slightly above, so we mostly see the roof (with
-   its sensor rack) receding away, the rear window, and the tailgate + tail
-   lights facing us. Perspective is faked with trapezoids that taper toward
-   the far (front) end, giving the body real volume instead of a flat plan. */
+/* --- the car: a rear ELEVATION of the AV test vehicle -------------------
+   We're driving away from the camera, so we see the back of the car head-on
+   and slightly above: rounded cabin + tinted rear window up top, tail-light
+   clusters and a chrome line across the body, bumper + plate below, wheels
+   peeking at the corners, wing mirrors at the sides — plus a small sensor
+   pod on the roof that grows as the sensor stack is added. */
 function drawCar(t){
   const s=sOf(CAR_Z), y=yOf(CAR_Z), x=xOf(S.car.u,CAR_Z,s);
-  const w=Math.max(22,pxw(S.car.uw,s)), h=w*1.55, top=-h;
-  const ty=f=>top+h*f, L=w*0.5;
-  const hwf=f=>L*(0.70+0.30*f);                 // half-width: narrow far -> wide near
-  const quad=(f0,f1,fill)=>{ const a=hwf(f0),b=hwf(f1);
-    ctx.beginPath(); ctx.moveTo(-a,ty(f0)); ctx.lineTo(a,ty(f0));
-    ctx.lineTo(b,ty(f1)); ctx.lineTo(-b,ty(f1)); ctx.closePath();
-    if(fill) ctx.fillStyle=fill; ctx.fill(); };
+  const w=Math.max(22,pxw(S.car.uw,s)), h=w*0.95, top=-h;
+  const ty=f=>top+h*f, L=w*0.5, CHW=L*0.78;   // body half-width / cabin half-width
 
   /* orient to the road (curvature + damped convergence); steering only adds
-     a small temporary yaw so the car never slides diagonally across the lane */
+     a small temporary lean so the car never slides diagonally across the lane */
   const zc=CAR_Z, zf=CAR_Z+0.28;
   const roadA=Math.atan2((cOf(zf)-cOf(zc))+S.car.u*roadW()*(sOf(zf)-sOf(zc))*0.5, -(yOf(zf)-yOf(zc)));
-  const yaw=clamp(roadA + S.car.bank*0.14, -0.6, 0.6);
+  const yaw=clamp(roadA + S.car.bank*0.14, -0.45, 0.45);
 
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(yaw);
 
-  /* soft road wash ahead — we're behind the car, so no beams toward camera */
-  const rg=ctx.createRadialGradient(0,ty(0)-h*0.5,2,0,ty(0)-h*0.5,w*1.5);
-  rg.addColorStop(0,'rgba(205,222,255,.13)'); rg.addColorStop(1,'rgba(205,222,255,0)');
-  ctx.fillStyle=rg; ctx.beginPath();
-  ctx.moveTo(-w*0.28,ty(0.05)); ctx.lineTo(-w*0.62,ty(0)-h*1.0);
-  ctx.lineTo(w*0.62,ty(0)-h*1.0); ctx.lineTo(w*0.28,ty(0.05)); ctx.closePath(); ctx.fill();
-
+  const braking=!!keys.down;
   /* brake-light bloom on the tarmac — grows when braking */
-  const braking=!!keys.down, bR=w*(braking?1.15:0.85);
-  const tg=ctx.createRadialGradient(0,h*0.05,2,0,h*0.05,bR);
-  tg.addColorStop(0,'rgba(255,60,80,'+(braking?0.5:0.26)+')'); tg.addColorStop(1,'rgba(255,60,80,0)');
-  ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(0,h*0.05,bR,0,7); ctx.fill();
-
+  const bR=w*(braking?1.0:0.72);
+  const tg=ctx.createRadialGradient(0,ty(0.72),2,0,ty(0.72),bR);
+  tg.addColorStop(0,'rgba(255,60,80,'+(braking?0.5:0.24)+')'); tg.addColorStop(1,'rgba(255,60,80,0)');
+  ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(0,ty(0.72),bR,0,7); ctx.fill();
   /* ground shadow */
-  ctx.fillStyle='rgba(2,3,8,.6)';
-  ctx.beginPath(); ctx.ellipse(0,h*0.03,w*0.62,h*0.10,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(2,3,8,.55)';
+  ctx.beginPath(); ctx.ellipse(0,ty(0.98),w*0.60,h*0.09,0,0,7); ctx.fill();
 
-  /* wheels — rears near/large, fronts far/small, tucked at the flanks */
-  const wheel=(f0,f1,out)=>{ const yc0=ty(f0),yc1=ty(f1),hh=yc0-yc1;
-    [-1,1].forEach(sg=>{ const cx=sg*hwf((f0+f1)/2)*out;
-      ctx.fillStyle='#05070d'; rr(cx-hh*0.30,yc1,hh*0.60,hh,hh*0.28); ctx.fill();
-      ctx.fillStyle='#222a42'; rr(cx-hh*0.16,yc1+hh*0.16,hh*0.32,hh*0.66,hh*0.14); ctx.fill();
-    });
-  };
-  wheel(0.66,0.86,1.0);        // rear
-  wheel(0.16,0.30,0.95);       // front (mostly hidden)
+  /* wheels peeking at the corners */
+  ctx.fillStyle='#05070d';
+  [-1,1].forEach(sg=>{ rr(sg*L*0.74-w*0.11,ty(0.86),w*0.22,h*0.17,w*0.05); ctx.fill(); });
+  ctx.fillStyle='#242c45';
+  [-1,1].forEach(sg=>{ rr(sg*L*0.74-w*0.06,ty(0.885),w*0.12,h*0.11,w*0.03); ctx.fill(); });
 
-  /* dark underbody / silhouette */
-  quad(0.05,1.0,'#05070e');
+  /* dark silhouette behind body + cabin */
+  ctx.fillStyle='#05070e';
+  rr(-L-1.5,ty(0.44)-1.5,w+3,h*0.52+3,w*0.13); ctx.fill();
+  rr(-CHW-1.5,ty(0)-1.5,CHW*2+3,h*0.52+3,w*0.15); ctx.fill();
 
-  /* ROOF — top surface receding away, bright metallic sheen */
-  quad(0.05,0.55,grad(-L,0,L,0,[[0,'#6b7593'],[0.22,'#c3cce2'],[0.5,'#ffffff'],[0.78,'#b9c2da'],[1,'#5a6280']]));
-  ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=Math.max(1,w*0.01);
-  ctx.beginPath(); ctx.moveTo(0,ty(0.09)); ctx.lineTo(0,ty(0.54)); ctx.stroke();
+  /* cabin (greenhouse) — narrower, rounded top */
+  ctx.fillStyle=grad(-CHW,0,CHW,0,[[0,'#6b7391'],[0.2,'#c8d0e6'],[0.5,'#ffffff'],[0.8,'#c8d0e6'],[1,'#6b7391']]);
+  rr(-CHW,ty(0),CHW*2,h*0.52,w*0.14); ctx.fill();
+  /* lower body — full width */
+  ctx.fillStyle=grad(-L,0,L,0,[[0,'#565e7c'],[0.16,'#aeb6d2'],[0.5,'#f2f5ff'],[0.84,'#aeb6d2'],[1,'#565e7c']]);
+  rr(-L,ty(0.44),w,h*0.52,w*0.13); ctx.fill();
 
-  /* roof rack — the sensor deck */
-  ctx.fillStyle='#12182a';
-  ctx.beginPath();
-  ctx.moveTo(-hwf(0.13)*0.84,ty(0.13)); ctx.lineTo(hwf(0.13)*0.84,ty(0.13));
-  ctx.lineTo(hwf(0.53)*0.84,ty(0.53)); ctx.lineTo(-hwf(0.53)*0.84,ty(0.53)); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='rgba(77,227,245,.30)'; ctx.lineWidth=Math.max(1,w*0.014); ctx.stroke();
-
-  /* ---------- sensors, one per tier, all on the roof rack ---------- */
-  const tier=S.tier;
-  /* t0 stereo pair at the rack's leading edge */
-  ctx.fillStyle='#3d4666'; rr(-w*0.15,ty(0.15),w*0.30,h*0.03,2); ctx.fill();
-  ctx.fillStyle=C.cyan;
-  ctx.fillRect(-w*0.11,ty(0.156),w*0.05,Math.max(1,h*0.016));
-  ctx.fillRect( w*0.06,ty(0.156),w*0.05,Math.max(1,h*0.016));
-  if(tier>=1) [-1,1].forEach(sg=>{
-    ctx.fillStyle='#3d4666'; rr(sg*hwf(0.24)*0.78-(sg<0?0:w*0.05),ty(0.24),w*0.05,h*0.045,1); ctx.fill();
-    ctx.fillStyle=blink(260)?C.cyan:C.cyanD;
-    ctx.fillRect(sg*hwf(0.24)*0.78-(sg<0?-w*0.006:w*0.044),ty(0.25),w*0.03,Math.max(1,h*0.018));
-  });
-  if(tier>=2){
-    const R=w*0.13, cy=ty(0.35);
-    ctx.save(); ctx.beginPath(); ctx.arc(0,cy,R*1.9,0,7); ctx.clip();
-    const a=t*4.4; ctx.strokeStyle='rgba(255,95,158,.30)'; ctx.lineWidth=Math.max(1,w*0.05);
-    ctx.beginPath(); ctx.arc(0,cy,R*1.45,a,a+1.2); ctx.stroke(); ctx.restore();
-    ctx.fillStyle=grad(-R,cy-R,R,cy+R,[[0,'#f2f6ff'],[1,'#7b85a8']]);
-    ctx.beginPath(); ctx.arc(0,cy,R,0,7); ctx.fill();
-    ctx.strokeStyle='#2a3350'; ctx.lineWidth=Math.max(1,w*0.02); ctx.stroke();
-    ctx.fillStyle=C.mag; ctx.beginPath();
-    ctx.arc(Math.cos(t*4.4)*R*0.55,cy+Math.sin(t*4.4)*R*0.3,Math.max(1.5,w*0.04),0,7); ctx.fill();
-  }
-  if(tier>=3){ ctx.fillStyle=blink(200)?C.yel:C.yelD; rr(-w*0.07,ty(0.05),w*0.14,h*0.024,2); ctx.fill(); }
-  if(tier>=4) for(let i=-1;i<2;i++){
-    ctx.fillStyle='#3d4666'; rr(i*w*0.20-w*0.05,ty(0.46),w*0.10,h*0.035,2); ctx.fill();
-    ctx.fillStyle=C.cyan; ctx.fillRect(i*w*0.20-w*0.016,ty(0.468),w*0.032,Math.max(1,h*0.016));
-  }
-  if(tier>=5) [-1,1].forEach(sg=>{
-    ctx.fillStyle='#cdd5ee'; rr(sg*hwf(0.2)*0.66-w*0.05,ty(0.195),w*0.10,h*0.05,2); ctx.fill();
-    if(blink(150)){ ctx.fillStyle=C.mag; ctx.fillRect(sg*hwf(0.2)*0.66-w*0.02,ty(0.21),w*0.04,Math.max(1,h*0.02)); }
-  });
-  if(tier>=6){ ctx.fillStyle='#5f2029'; rr(-w*0.10,ty(0.50),w*0.20,h*0.032,2); ctx.fill();
-    if(blink(210)){ ctx.fillStyle=C.red; ctx.fillRect(-w*0.055,ty(0.508),w*0.11,Math.max(1,h*0.016)); } }
-
-  /* roof spoiler lip at the rear edge of the roof */
-  quad(0.55,0.575,'#0c0f1a');
-
-  /* rear window (backlight) */
-  quad(0.575,0.67,grad(0,ty(0.575),0,ty(0.67),[[0,'#0d1a2e'],[1,'#33597f']]));
-  ctx.fillStyle='rgba(180,215,255,.16)';
-  ctx.beginPath(); ctx.moveTo(-hwf(0.59)*0.78,ty(0.59)); ctx.lineTo(hwf(0.59)*0.15,ty(0.59));
-  ctx.lineTo(hwf(0.64)*0.15,ty(0.64)); ctx.lineTo(-hwf(0.64)*0.78,ty(0.64)); ctx.closePath(); ctx.fill();
-
-  /* tailgate / rear face (near-vertical, darker than the roof) */
-  quad(0.67,0.90,grad(-L,0,L,0,[[0,'#3c4362'],[0.5,'#9aa2bf'],[1,'#333a56']]));
-  /* shoulder shading down each side edge */
-  ctx.fillStyle='rgba(6,9,18,.35)';
-  [-1,1].forEach(sg=>{ ctx.beginPath();
-    ctx.moveTo(sg*hwf(0.67),ty(0.67)); ctx.lineTo(sg*hwf(0.67)*0.85,ty(0.67));
-    ctx.lineTo(sg*hwf(0.9)*0.85,ty(0.9)); ctx.lineTo(sg*hwf(0.9),ty(0.9)); ctx.closePath(); ctx.fill(); });
-
-  /* full-width tail-light bar with brake glow */
-  const tly=ty(0.72), tlh=h*0.045, tlw=hwf(0.72)*0.92;
-  ctx.save();
-  if(braking||blink(160)){ ctx.shadowColor='rgba(255,60,80,.9)'; ctx.shadowBlur=(braking?18:8)+8*s; }
-  ctx.fillStyle=braking?'#ff5566':'#7a1f2b';
-  rr(-tlw,tly,tlw*2,tlh,tlh*0.4); ctx.fill();
-  ctx.fillStyle=braking?'#ff8a97':'#c23444';
-  rr(-tlw,tly,tlw*0.52,tlh,tlh*0.4); ctx.fill();
-  rr(tlw*0.48,tly,tlw*0.52,tlh,tlh*0.4); ctx.fill();
+  /* rear window (tinted), trapezoid narrower at the top, with reflections */
+  const wt=CHW*0.66, wb=CHW*0.88;
+  ctx.fillStyle=grad(0,ty(0.07),0,ty(0.45),[[0,'#12203a'],[0.5,'#0c1626'],[1,'#182a44']]);
+  ctx.beginPath(); ctx.moveTo(-wt,ty(0.08)); ctx.lineTo(wt,ty(0.08));
+  ctx.lineTo(wb,ty(0.44)); ctx.lineTo(-wb,ty(0.44)); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.moveTo(-wt,ty(0.08)); ctx.lineTo(wt,ty(0.08));
+  ctx.lineTo(wb,ty(0.44)); ctx.lineTo(-wb,ty(0.44)); ctx.closePath(); ctx.clip();
+  ctx.fillStyle='rgba(150,190,240,.14)';
+  [-0.2,0.4].forEach(o=>{ ctx.beginPath();
+    ctx.moveTo(-wb+o*w,ty(0.44)); ctx.lineTo(-wb+o*w+w*0.16,ty(0.44));
+    ctx.lineTo(-wt+o*w+w*0.34,ty(0.08)); ctx.lineTo(-wt+o*w+w*0.18,ty(0.08)); ctx.closePath(); ctx.fill(); });
   ctx.restore();
 
-  /* badge + license plate (plate gives way to the ML-safe decal) */
-  ctx.fillStyle='rgba(210,220,245,.85)'; ctx.beginPath(); ctx.arc(0,ty(0.785),Math.max(2,w*0.028),0,7); ctx.fill();
+  /* tail-light clusters, left + right, with brake glow */
+  const on=braking||blink(150);
+  [-1,1].forEach(sg=>{
+    const cx=sg*L*0.60, tyy=ty(0.52), th=h*0.11, tw=w*0.30;
+    ctx.fillStyle='#141019'; rr(cx-tw/2,tyy,tw,th,th*0.3); ctx.fill();
+    ctx.save(); if(on){ ctx.shadowColor='rgba(255,60,80,.9)'; ctx.shadowBlur=(braking?16:7)+7*s; }
+    ctx.fillStyle=braking?'#ff6474':'#d63b48';
+    [-1,1].forEach(d=>{ ctx.beginPath(); ctx.arc(cx+d*tw*0.22,tyy+th/2,th*0.30,0,7); ctx.fill(); });
+    ctx.restore();
+  });
+
+  /* chrome / livery line across the tailgate */
+  ctx.fillStyle='rgba(77,227,245,.55)'; rr(-L*0.9,ty(0.63),w*0.9,Math.max(1,h*0.014),1); ctx.fill();
+
+  /* license plate — or the ML-safe decal in ML-safe mode */
   if(S.mlsafe){
-    ctx.fillStyle='rgba(10,44,28,.95)'; rr(-w*0.21,ty(0.83),w*0.42,h*0.05,3); ctx.fill();
-    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,w*0.02); rr(-w*0.21,ty(0.83),w*0.42,h*0.05,3); ctx.stroke();
-    txt('ML-SAFE',0,ty(0.867),C.grn,Math.max(6,w*0.095),'center');
+    ctx.fillStyle='rgba(10,44,28,.95)'; rr(-w*0.19,ty(0.70),w*0.38,h*0.075,3); ctx.fill();
+    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,w*0.02); rr(-w*0.19,ty(0.70),w*0.38,h*0.075,3); ctx.stroke();
+    txt('ML-SAFE',0,ty(0.752),C.grn,Math.max(6,w*0.10),'center');
   } else {
-    ctx.fillStyle='#e8ecf5'; rr(-w*0.15,ty(0.835),w*0.30,h*0.032,2); ctx.fill();
+    ctx.fillStyle='#e8ecf5'; rr(-w*0.15,ty(0.71),w*0.30,h*0.06,2); ctx.fill();
+    ctx.fillStyle='#9aa2bf'; rr(-w*0.13,ty(0.725),w*0.26,Math.max(1,h*0.02),1); ctx.fill();
   }
 
-  /* rear bumper (closest) + diffuser + reflectors */
-  quad(0.90,1.0,grad(-L,0,L,0,[[0,'#191d2e'],[0.5,'#2b3149'],[1,'#191d2e']]));
-  ctx.fillStyle='rgba(4,6,12,.8)';
-  for(let i=-2;i<=2;i++){ rr(i*w*0.12-w*0.015,ty(0.93),w*0.03,h*0.05,1); ctx.fill(); }
-  ctx.fillStyle='rgba(255,80,90,.5)';
-  rr(-hwf(0.95)*0.9,ty(0.945),w*0.05,h*0.02,1); ctx.fill();
-  rr( hwf(0.95)*0.9-w*0.05,ty(0.945),w*0.05,h*0.02,1); ctx.fill();
+  /* rear bumper band + exhaust */
+  ctx.fillStyle=grad(0,ty(0.82),0,ty(0.96),[[0,'#454d69'],[1,'#1c2236']]);
+  rr(-L,ty(0.82),w,h*0.15,w*0.11); ctx.fill();
+  ctx.fillStyle='rgba(210,220,245,.22)'; rr(-L*0.88,ty(0.835),w*0.88,Math.max(1,h*0.014),1); ctx.fill();
+  ctx.fillStyle='#0a0d16'; ctx.beginPath(); ctx.arc(L*0.6,ty(0.93),Math.max(2,w*0.045),0,7); ctx.fill();
 
-  /* AV livery accent down each flank */
-  ctx.fillStyle='rgba(77,227,245,.8)';
-  [-1,1].forEach(sg=>{ ctx.beginPath();
-    ctx.moveTo(sg*hwf(0.30)*0.98,ty(0.30)); ctx.lineTo(sg*hwf(0.30)*0.92,ty(0.30));
-    ctx.lineTo(sg*hwf(0.88)*0.92,ty(0.88)); ctx.lineTo(sg*hwf(0.88)*0.98,ty(0.88));
-    ctx.closePath(); ctx.fill(); });
-
-  /* wing mirrors at the cabin sides */
+  /* wing mirrors at the shoulder, sticking out past the body */
   ctx.fillStyle='#8e98b8';
-  [-1,1].forEach(sg=>{ rr(sg*hwf(0.34)-(sg<0?w*0.10:0),ty(0.34),w*0.10,h*0.035,2); ctx.fill(); });
+  [-1,1].forEach(sg=>{ rr(sg*CHW-(sg<0?w*0.06:-w*0.02),ty(0.40),w*0.08,h*0.06,2); ctx.fill(); });
+
+  /* ---------- roof sensor pod — small, grows with the sensor stack ------- */
+  const tier=S.tier;
+  const podw=w*0.50, podh=h*0.085, pody=ty(0)-podh*0.55, podx=-podw/2;
+  ctx.fillStyle='#12182a'; rr(podx,pody,podw,podh,podh*0.3); ctx.fill();
+  ctx.strokeStyle='rgba(77,227,245,.45)'; ctx.lineWidth=Math.max(1,w*0.012); rr(podx,pody,podw,podh,podh*0.3); ctx.stroke();
+  /* t0 forward camera lens (always present) */
+  ctx.fillStyle=blink(600)?C.cyan:C.cyanD; rr(-podw*0.15,pody+podh*0.3,podw*0.30,podh*0.4,1); ctx.fill();
+  /* spinning LiDAR dome from tier 2 */
+  if(tier>=2){ const R=w*0.095, cy=pody-R*0.55;
+    ctx.fillStyle=grad(-R,cy-R,R,cy+R,[[0,'#f2f6ff'],[1,'#7b85a8']]);
+    ctx.beginPath(); ctx.arc(0,cy,R,0,7); ctx.fill();
+    ctx.strokeStyle='#2a3350'; ctx.lineWidth=Math.max(1,w*0.018); ctx.stroke();
+    ctx.fillStyle=C.mag; ctx.beginPath(); ctx.arc(Math.cos(t*4)*R*0.5,cy+Math.sin(t*4)*R*0.25,Math.max(1.2,w*0.03),0,7); ctx.fill();
+  }
+  /* additional sensor modules light up along the pod as the stack grows */
+  [[1,-0.36,C.cyan],[3,0.36,C.yel],[4,-0.22,C.cyan],[5,0.22,C.mag],[6,0.0,C.red]].forEach(([tr,fx,col])=>{
+    if(tier<tr) return; const mx=fx*podw;
+    ctx.fillStyle='#2b3350'; rr(mx-w*0.028,pody-podh*0.34,w*0.056,podh*0.5,1); ctx.fill();
+    ctx.fillStyle=blink(220)?col:'rgba(120,134,180,.5)'; ctx.fillRect(mx-w*0.016,pody-podh*0.2,w*0.032,Math.max(1,podh*0.22));
+  });
 
   ctx.restore();
 }
