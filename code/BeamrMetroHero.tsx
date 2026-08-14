@@ -68,7 +68,16 @@ export default function BeamrMetroHero(p: any) {
         subheadColor, subheadSize, subheadWeight,
         ctaColor, ctaSize, ctaWeight, ctaBg,
         lineWidth, lineRadius, lineOpacity,
+        animateLines,
     } = p
+
+    // When the draw-on is off, paths render fully drawn immediately. This is
+    // the default so the Framer canvas (which re-mounts the component on every
+    // edit and would otherwise freeze the entrance mid-draw) always shows the
+    // complete, full-height lines. Turn it on for the draw-on entrance.
+    const draw = animateLines
+        ? { initial: { pathLength: 0 }, animate: { pathLength: 1 } }
+        : { initial: { pathLength: 1 }, animate: { pathLength: 1 } }
 
     const css = `.r{width:100%;min-height:92vh;display:flex;align-items:center;position:relative;padding:72px 0 56px;background:${blue};overflow:hidden;font-family:${fontFamily};box-sizing:border-box}
     .w{width:min(1180px,calc(100% - 48px));margin:auto;position:relative;z-index:3}
@@ -142,8 +151,8 @@ export default function BeamrMetroHero(p: any) {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         vectorEffect="non-scaling-stroke"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
+                        initial={draw.initial}
+                        animate={draw.animate}
                         transition={{ duration: 1.2, ease: "easeInOut" }}
                     />
 
@@ -155,8 +164,8 @@ export default function BeamrMetroHero(p: any) {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         vectorEffect="non-scaling-stroke"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
+                        initial={draw.initial}
+                        animate={draw.animate}
                         transition={{ duration: 1.35, delay: 0.08, ease: "easeInOut" }}
                     />
 
@@ -168,8 +177,8 @@ export default function BeamrMetroHero(p: any) {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         vectorEffect="non-scaling-stroke"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
+                        initial={draw.initial}
+                        animate={draw.animate}
                         transition={{ duration: 1.12, delay: 0.16, ease: "easeInOut" }}
                     />
                 </svg>
@@ -226,6 +235,7 @@ BeamrMetroHero.defaultProps = {
     lineWidth: 62,
     lineRadius: 76,
     lineOpacity: 1,
+    animateLines: false,
 }
 
 addPropertyControls(BeamrMetroHero, {
@@ -269,4 +279,5 @@ addPropertyControls(BeamrMetroHero, {
     lineWidth: { type: ControlType.Number, title: "All Line Width", min: 20, max: 140, step: 2 },
     lineRadius: { type: ControlType.Number, title: "Corner Radius", min: 20, max: 130, step: 2 },
     lineOpacity: { type: ControlType.Number, title: "Line Opacity", min: 0, max: 1, step: 0.05 },
+    animateLines: { type: ControlType.Boolean, title: "Draw-On Animation", enabledTitle: "On", disabledTitle: "Off" },
 })
