@@ -119,7 +119,7 @@
       <button class="btn ghost" id="t-replay">REPLAY FROM SCRATCH</button>
     </div>
   </div>
-  <div id="hint">LEFT / RIGHT OR A / D TO STEER &nbsp;·&nbsp; SPACE = CONFIRM &nbsp;·&nbsp; M = MUTE &nbsp;·&nbsp; COLLECT VIDEO · CLEAR THE PIPELINE</div>
+  <div id="hint">STEER LEFT / RIGHT (A / D) &nbsp;·&nbsp; SPEED UP / DOWN (W / S) &nbsp;·&nbsp; SPACE = CONFIRM &nbsp;·&nbsp; M = MUTE</div>
 </div>
 
 <script>
@@ -133,9 +133,14 @@
    question is not whether to reduce the data — it is how to reduce it
    without materially changing model behavior.
 
-   >>> LEADS: set LEAD_ENDPOINT to any URL accepting a JSON POST
-       (Formspree / Zapier / HubSpot / your own /api/lead). Leave "" to
-       stay client-side; every submission also lands in window.__LEADS.
+   >>> HUBSPOT: set HUBSPOT_PORTAL_ID + HUBSPOT_FORM_GUID and submissions
+       POST to HubSpot's Forms API (no HubSpot JS needed, CORS-enabled).
+       The field internal names the game sends are listed in HS_FIELDS
+       below — create matching contact properties in HubSpot. Leave the
+       IDs "" to skip HubSpot and stay client-side.
+   >>> LEADS: LEAD_ENDPOINT is an optional extra JSON POST target
+       (Formspree / Zapier / your own /api/lead). Independent of HubSpot.
+       Every submission also lands in window.__LEADS.
    >>> BLUEPRINT_URL: destination for the "Explore your ML-safe range"
        CTA on the result screen. Leave "" to keep it inert.
    >>> MLSAFE_REDUCTION: illustrative benchmark reduction used for the
@@ -143,6 +148,8 @@
    >>> COPY: player-facing text lives in SENSORS, PRESSURE, CONSTRAINTS,
        DATA_LABELS, LOAD_ALERTS, OVERS and the scr* screen functions.
    ===================================================================== */
+const HUBSPOT_PORTAL_ID = "";    // e.g. "1234567"  (HubSpot account/portal id)
+const HUBSPOT_FORM_GUID = "";    // e.g. "a1b2c3d4-...."  (the form's GUID)
 const LEAD_ENDPOINT = "";
 const BLUEPRINT_URL = "";
 const MLSAFE_REDUCTION = 0.50;   // illustrative Beamr AV benchmark scenario
@@ -465,7 +472,7 @@ function newGame(mlsafe){
   S={
     st: mlsafe?'mlsafe':'play', mlsafe:!!mlsafe,
     t:0, tier:0, tierT:0, spawnT:0.5, neckT:2.6, dist:0, curve:0, curveT:0,
-    car:{u:0,vu:0,uw:CARU[0]/2,bank:0},
+    car:{u:0,vu:0,uw:CARU[0]/2,bank:0,spd:1,pitch:0},
     obj:[], parts:[], pops:[], rings:[], props:[],
     load: mlsafe?16:0, maxLoad:mlsafe?16:0,
     mb:0, grabbed:0, hits:0, pressureHits:0, pressureGB:0, combo:0, mult:1, bestCombo:0, nears:0,
@@ -482,7 +489,8 @@ function note(s,c,d){ S.note={s,c:c||C.wht}; S.noteT=d||1.7; }
 
 const prog=()=>clamp(S.t/RAMP,0,1);
 const val=(r)=>lerp(r[0],r[1],prog());
-const speed=()=>val(SPDZ)*(S.mlsafe?1.12:1);
+const THROTTLE=[0.55,1.7];      // player speed multiplier: brake .. accelerate
+const speed=()=>val(SPDZ)*(S.mlsafe?1.12:1)*(S&&S.car?S.car.spd:1);
 const roadW=()=>S.mlsafe?lerp(ROADW[0],ROADW[1],prog()*0.3):val(ROADW);
 const floorLoad=()=>S.mlsafe?12:val(FLOOR);
 
@@ -527,6 +535,11 @@ function update(dt){
   if(S.car.u<-lim){ S.car.u=-lim; S.car.vu*=-0.3; }
   if(S.car.u> lim){ S.car.u= lim; S.car.vu*=-0.3; }
   S.car.bank=lerp(S.car.bank, clamp(S.car.vu/CARMAX,-1,1), Math.min(1,dt*9));
+
+  /* throttle: UP accelerates, DOWN brakes; eases back to cruise on release */
+  const thr = keys.up?THROTTLE[1] : keys.down?THROTTLE[0] : 1;
+  S.car.spd = lerp(S.car.spd, thr, Math.min(1, dt*(keys.down?6:3.2)));
+  S.car.pitch = lerp(S.car.pitch, (keys.up?1:0)-(keys.down?1:0), Math.min(1,dt*6));
 
   /* the tide — recording never stops. In ML-safe mode the same footage
      still enters the pipeline, just at half the volume. */
@@ -953,161 +966,165 @@ function drawConstraint(o,s,y,hw,t){
   }
 }
 
-/* --- the car --- */
+/* --- the car: a rear three-quarter view of the AV test vehicle ----------
+   The camera sits behind and slightly above, so we mostly see the roof (with
+   its sensor rack) receding away, the rear window, and the tailgate + tail
+   lights facing us. Perspective is faked with trapezoids that taper toward
+   the far (front) end, giving the body real volume instead of a flat plan. */
 function drawCar(t){
   const s=sOf(CAR_Z), y=yOf(CAR_Z), x=xOf(S.car.u,CAR_Z,s);
-  const w=Math.max(22,pxw(S.car.uw,s)), h=w*1.5, top=-h;
+  const w=Math.max(22,pxw(S.car.uw,s)), h=w*1.55, top=-h;
   const ty=f=>top+h*f, L=w*0.5;
+  const hwf=f=>L*(0.70+0.30*f);                 // half-width: narrow far -> wide near
+  const quad=(f0,f1,fill)=>{ const a=hwf(f0),b=hwf(f1);
+    ctx.beginPath(); ctx.moveTo(-a,ty(f0)); ctx.lineTo(a,ty(f0));
+    ctx.lineTo(b,ty(f1)); ctx.lineTo(-b,ty(f1)); ctx.closePath();
+    if(fill) ctx.fillStyle=fill; ctx.fill(); };
 
-  /* --- orient to the road, not to the steering input ---
-     Sample the road a little ahead and align the car's nose (which points
-     up-screen, away from the camera) with that local heading. Steering only
-     adds a small temporary yaw on top, so the car stays planted on the
-     tarmac and pointed toward the vanishing direction instead of sliding
-     diagonally across the lane. */
+  /* orient to the road (curvature + damped convergence); steering only adds
+     a small temporary yaw so the car never slides diagonally across the lane */
   const zc=CAR_Z, zf=CAR_Z+0.28;
-  const dxCurve=cOf(zf)-cOf(zc);                         // road curvature
-  const dxConv =S.car.u*roadW()*(sOf(zf)-sOf(zc))*0.5;   // damped lane convergence
-  const dyHead =yOf(zf)-yOf(zc);                         // negative: up the road
-  const roadA=Math.atan2(dxCurve+dxConv, -dyHead);
+  const roadA=Math.atan2((cOf(zf)-cOf(zc))+S.car.u*roadW()*(sOf(zf)-sOf(zc))*0.5, -(yOf(zf)-yOf(zc)));
   const yaw=clamp(roadA + S.car.bank*0.14, -0.6, 0.6);
 
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(yaw);
 
-  /* subtle road illumination ahead of the vehicle. We sit behind the car,
-     so there are no forward headlight beams pointed back at the camera —
-     just a soft wash on the tarmac in the direction it's driving. */
-  const rg=ctx.createRadialGradient(0,ty(0)-h*0.55,2,0,ty(0)-h*0.55,w*1.5);
-  rg.addColorStop(0,'rgba(205,222,255,.15)'); rg.addColorStop(1,'rgba(205,222,255,0)');
-  ctx.fillStyle=rg;
-  ctx.beginPath();
-  ctx.moveTo(-w*0.32,ty(0.02)); ctx.lineTo(-w*0.72,ty(0)-h*1.1);
-  ctx.lineTo(w*0.72,ty(0)-h*1.1); ctx.lineTo(w*0.32,ty(0.02));
-  ctx.closePath(); ctx.fill();
+  /* soft road wash ahead — we're behind the car, so no beams toward camera */
+  const rg=ctx.createRadialGradient(0,ty(0)-h*0.5,2,0,ty(0)-h*0.5,w*1.5);
+  rg.addColorStop(0,'rgba(205,222,255,.13)'); rg.addColorStop(1,'rgba(205,222,255,0)');
+  ctx.fillStyle=rg; ctx.beginPath();
+  ctx.moveTo(-w*0.28,ty(0.05)); ctx.lineTo(-w*0.62,ty(0)-h*1.0);
+  ctx.lineTo(w*0.62,ty(0)-h*1.0); ctx.lineTo(w*0.28,ty(0.05)); ctx.closePath(); ctx.fill();
 
-  /* tail-light bloom on the tarmac */
-  const tg=ctx.createRadialGradient(0,h*0.06,2,0,h*0.06,w*0.9);
-  tg.addColorStop(0,'rgba(255,70,90,.30)'); tg.addColorStop(1,'rgba(255,70,90,0)');
-  ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(0,h*0.06,w*0.9,0,7); ctx.fill();
+  /* brake-light bloom on the tarmac — grows when braking */
+  const braking=!!keys.down, bR=w*(braking?1.15:0.85);
+  const tg=ctx.createRadialGradient(0,h*0.05,2,0,h*0.05,bR);
+  tg.addColorStop(0,'rgba(255,60,80,'+(braking?0.5:0.26)+')'); tg.addColorStop(1,'rgba(255,60,80,0)');
+  ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(0,h*0.05,bR,0,7); ctx.fill();
+
   /* ground shadow */
   ctx.fillStyle='rgba(2,3,8,.6)';
-  ctx.beginPath(); ctx.ellipse(0,h*0.02,w*0.6,h*0.11,0,0,7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,h*0.03,w*0.62,h*0.10,0,0,7); ctx.fill();
 
-  /* wheels, behind the shell */
-  ctx.fillStyle='#080b12';
-  [0.13,0.65].forEach(f=>{
-    rr(-L-w*0.07, ty(f), w*0.13, h*0.19, w*0.045); ctx.fill();
-    rr( L-w*0.06, ty(f), w*0.13, h*0.19, w*0.045); ctx.fill();
-  });
-  ctx.fillStyle='#2b3350';
-  [0.13,0.65].forEach(f=>{
-    rr(-L-w*0.04, ty(f)+h*0.03, w*0.07, h*0.13, w*0.03); ctx.fill();
-    rr( L-w*0.03, ty(f)+h*0.03, w*0.07, h*0.13, w*0.03); ctx.fill();
-  });
+  /* wheels — rears near/large, fronts far/small, tucked at the flanks */
+  const wheel=(f0,f1,out)=>{ const yc0=ty(f0),yc1=ty(f1),hh=yc0-yc1;
+    [-1,1].forEach(sg=>{ const cx=sg*hwf((f0+f1)/2)*out;
+      ctx.fillStyle='#05070d'; rr(cx-hh*0.30,yc1,hh*0.60,hh,hh*0.28); ctx.fill();
+      ctx.fillStyle='#222a42'; rr(cx-hh*0.16,yc1+hh*0.16,hh*0.32,hh*0.66,hh*0.14); ctx.fill();
+    });
+  };
+  wheel(0.66,0.86,1.0);        // rear
+  wheel(0.16,0.30,0.95);       // front (mostly hidden)
 
-  /* shell */
-  ctx.fillStyle='#070a12'; rr(-L-1.5,top-1.5,w+3,h+3,w*0.21); ctx.fill();
-  ctx.fillStyle=grad(-L,top,L,0,[[0,'#ffffff'],[0.26,'#dbe2f3'],[0.58,'#a3adcc'],[0.86,'#6b7593'],[1,'#4a5273']]);
-  rr(-L,top,w,h,w*0.2); ctx.fill();
-  /* flank livery */
-  ctx.fillStyle='rgba(77,227,245,.85)';
-  ctx.fillRect(-L+w*0.03,ty(0.30),Math.max(1,w*0.045),h*0.46);
-  ctx.fillRect( L-w*0.075,ty(0.30),Math.max(1,w*0.045),h*0.46);
+  /* dark underbody / silhouette */
+  quad(0.05,1.0,'#05070e');
 
-  /* front end — faces away from the camera, so the lamps read as dim
-     housings rather than beams pointed back at the viewer */
-  ctx.fillStyle='#2e3550'; rr(-w*0.42,ty(0.005),w*0.84,h*0.055,w*0.03); ctx.fill();
-  [-1,1].forEach(sg=>{
-    ctx.fillStyle='rgba(255,240,195,.32)';
-    rr(sg*w*0.28-w*0.085,ty(0.012),w*0.17,h*0.03,2); ctx.fill();
-  });
-  /* hood crease */
-  ctx.fillStyle='rgba(120,132,170,.55)'; ctx.fillRect(-w*0.008,ty(0.07),Math.max(1,w*0.016),h*0.12);
+  /* ROOF — top surface receding away, bright metallic sheen */
+  quad(0.05,0.55,grad(-L,0,L,0,[[0,'#6b7593'],[0.22,'#c3cce2'],[0.5,'#ffffff'],[0.78,'#b9c2da'],[1,'#5a6280']]));
+  ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=Math.max(1,w*0.01);
+  ctx.beginPath(); ctx.moveTo(0,ty(0.09)); ctx.lineTo(0,ty(0.54)); ctx.stroke();
 
-  /* glass: windshield */
-  ctx.fillStyle=grad(0,ty(0.20),0,ty(0.40),[[0,'#a9e0ff'],[0.35,'#2c6ba8'],[1,'#0d2540']]);
-  rr(-w*0.37,ty(0.20),w*0.74,h*0.20,w*0.07); ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.40)';
-  rr(-w*0.31,ty(0.215),w*0.28,h*0.05,w*0.03); ctx.fill();
+  /* roof rack — the sensor deck */
+  ctx.fillStyle='#12182a';
+  ctx.beginPath();
+  ctx.moveTo(-hwf(0.13)*0.84,ty(0.13)); ctx.lineTo(hwf(0.13)*0.84,ty(0.13));
+  ctx.lineTo(hwf(0.53)*0.84,ty(0.53)); ctx.lineTo(-hwf(0.53)*0.84,ty(0.53)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(77,227,245,.30)'; ctx.lineWidth=Math.max(1,w*0.014); ctx.stroke();
 
-  /* dark roof rack — every sensor mounts here */
-  ctx.fillStyle='#141a2b'; rr(-w*0.40,ty(0.41),w*0.80,h*0.27,w*0.05); ctx.fill();
-  ctx.strokeStyle='rgba(77,227,245,.35)'; ctx.lineWidth=Math.max(1,w*0.016);
-  rr(-w*0.40,ty(0.41),w*0.80,h*0.27,w*0.05); ctx.stroke();
-
-  /* rear glass + deck */
-  ctx.fillStyle=grad(0,ty(0.69),0,ty(0.83),[[0,'#2b4a6c'],[1,'#0e1a2c']]);
-  rr(-w*0.36,ty(0.69),w*0.72,h*0.14,w*0.05); ctx.fill();
-  ctx.fillStyle='#b6c0dc'; rr(-w*0.44,ty(0.85),w*0.88,h*0.07,w*0.03); ctx.fill();
-  ctx.fillStyle='#2e3550'; rr(-w*0.42,ty(0.93),w*0.84,h*0.055,w*0.03); ctx.fill();
-  const bl=blink(150);
-  ctx.save(); if(bl){ ctx.shadowColor='rgba(255,70,90,.9)'; ctx.shadowBlur=10+10*s; }
-  ctx.fillStyle=bl?'#ff5566':'#8e2833';
-  rr(-w*0.38,ty(0.94),w*0.26,h*0.035,2); ctx.fill();
-  rr( w*0.12,ty(0.94),w*0.26,h*0.035,2); ctx.fill();
-  ctx.restore();
-  /* mirrors */
-  ctx.fillStyle='#8e98b8';
-  rr(-L-w*0.09,ty(0.27),w*0.10,h*0.04,2); ctx.fill();
-  rr( L-w*0.01,ty(0.27),w*0.10,h*0.04,2); ctx.fill();
-
-  /* ---------- sensors, one per tier, all on the rack ---------- */
+  /* ---------- sensors, one per tier, all on the roof rack ---------- */
   const tier=S.tier;
   /* t0 stereo pair at the rack's leading edge */
-  ctx.fillStyle='#3d4666'; rr(-w*0.15,ty(0.425),w*0.30,h*0.035,2); ctx.fill();
+  ctx.fillStyle='#3d4666'; rr(-w*0.15,ty(0.15),w*0.30,h*0.03,2); ctx.fill();
   ctx.fillStyle=C.cyan;
-  ctx.fillRect(-w*0.11,ty(0.432),w*0.05,Math.max(1,h*0.018));
-  ctx.fillRect( w*0.06,ty(0.432),w*0.05,Math.max(1,h*0.018));
-  if(tier>=1){
-    [-1,1].forEach(sg=>{
-      ctx.fillStyle='#3d4666';
-      rr(sg*L-(sg<0?0:w*0.05),ty(0.46),w*0.05,h*0.05,1); ctx.fill();
-      ctx.fillStyle=blink(260)?C.cyan:C.cyanD;
-      ctx.fillRect(sg*L-(sg<0?-w*0.008:w*0.042),ty(0.472),w*0.03,Math.max(1,h*0.02));
-    });
-  }
+  ctx.fillRect(-w*0.11,ty(0.156),w*0.05,Math.max(1,h*0.016));
+  ctx.fillRect( w*0.06,ty(0.156),w*0.05,Math.max(1,h*0.016));
+  if(tier>=1) [-1,1].forEach(sg=>{
+    ctx.fillStyle='#3d4666'; rr(sg*hwf(0.24)*0.78-(sg<0?0:w*0.05),ty(0.24),w*0.05,h*0.045,1); ctx.fill();
+    ctx.fillStyle=blink(260)?C.cyan:C.cyanD;
+    ctx.fillRect(sg*hwf(0.24)*0.78-(sg<0?-w*0.006:w*0.044),ty(0.25),w*0.03,Math.max(1,h*0.018));
+  });
   if(tier>=2){
-    const R=w*0.135, cy=ty(0.545);
-    ctx.save();
-    ctx.beginPath(); ctx.arc(0,cy,R*1.9,0,7); ctx.clip();
-    const a=t*4.4;
-    ctx.strokeStyle='rgba(255,95,158,.30)'; ctx.lineWidth=Math.max(1,w*0.05);
-    ctx.beginPath(); ctx.arc(0,cy,R*1.45,a,a+1.2); ctx.stroke();
-    ctx.restore();
+    const R=w*0.13, cy=ty(0.35);
+    ctx.save(); ctx.beginPath(); ctx.arc(0,cy,R*1.9,0,7); ctx.clip();
+    const a=t*4.4; ctx.strokeStyle='rgba(255,95,158,.30)'; ctx.lineWidth=Math.max(1,w*0.05);
+    ctx.beginPath(); ctx.arc(0,cy,R*1.45,a,a+1.2); ctx.stroke(); ctx.restore();
     ctx.fillStyle=grad(-R,cy-R,R,cy+R,[[0,'#f2f6ff'],[1,'#7b85a8']]);
     ctx.beginPath(); ctx.arc(0,cy,R,0,7); ctx.fill();
     ctx.strokeStyle='#2a3350'; ctx.lineWidth=Math.max(1,w*0.02); ctx.stroke();
-    const a2=t*4.4;
-    ctx.fillStyle=C.mag;
-    ctx.beginPath(); ctx.arc(Math.cos(a2)*R*0.55,cy+Math.sin(a2)*R*0.3,Math.max(1.5,w*0.04),0,7); ctx.fill();
+    ctx.fillStyle=C.mag; ctx.beginPath();
+    ctx.arc(Math.cos(t*4.4)*R*0.55,cy+Math.sin(t*4.4)*R*0.3,Math.max(1.5,w*0.04),0,7); ctx.fill();
   }
-  if(tier>=3){
-    ctx.fillStyle=blink(200)?C.yel:C.yelD;
-    rr(-w*0.08,ty(-0.012),w*0.16,h*0.026,2); ctx.fill();
+  if(tier>=3){ ctx.fillStyle=blink(200)?C.yel:C.yelD; rr(-w*0.07,ty(0.05),w*0.14,h*0.024,2); ctx.fill(); }
+  if(tier>=4) for(let i=-1;i<2;i++){
+    ctx.fillStyle='#3d4666'; rr(i*w*0.20-w*0.05,ty(0.46),w*0.10,h*0.035,2); ctx.fill();
+    ctx.fillStyle=C.cyan; ctx.fillRect(i*w*0.20-w*0.016,ty(0.468),w*0.032,Math.max(1,h*0.016));
   }
-  if(tier>=4){
-    for(let i=-1;i<2;i++){
-      ctx.fillStyle='#3d4666'; rr(i*w*0.22-w*0.055,ty(0.615),w*0.11,h*0.04,2); ctx.fill();
-      ctx.fillStyle=C.cyan; ctx.fillRect(i*w*0.22-w*0.018,ty(0.625),w*0.036,Math.max(1,h*0.018));
-    }
-  }
-  if(tier>=5){
-    [-1,1].forEach(sg=>{
-      ctx.fillStyle='#cdd5ee'; rr(sg*w*0.30-w*0.055,ty(0.435),w*0.11,h*0.055,2); ctx.fill();
-      if(blink(150)){ ctx.fillStyle=C.mag; ctx.fillRect(sg*w*0.30-w*0.022,ty(0.45),w*0.045,Math.max(1,h*0.022)); }
-    });
-  }
-  if(tier>=6){
-    ctx.fillStyle='#5f2029'; rr(-w*0.10,ty(0.655),w*0.20,h*0.04,2); ctx.fill();
-    if(blink(210)){ ctx.fillStyle=C.red; ctx.fillRect(-w*0.055,ty(0.665),w*0.11,Math.max(1,h*0.018)); }
-  }
+  if(tier>=5) [-1,1].forEach(sg=>{
+    ctx.fillStyle='#cdd5ee'; rr(sg*hwf(0.2)*0.66-w*0.05,ty(0.195),w*0.10,h*0.05,2); ctx.fill();
+    if(blink(150)){ ctx.fillStyle=C.mag; ctx.fillRect(sg*hwf(0.2)*0.66-w*0.02,ty(0.21),w*0.04,Math.max(1,h*0.02)); }
+  });
+  if(tier>=6){ ctx.fillStyle='#5f2029'; rr(-w*0.10,ty(0.50),w*0.20,h*0.032,2); ctx.fill();
+    if(blink(210)){ ctx.fillStyle=C.red; ctx.fillRect(-w*0.055,ty(0.508),w*0.11,Math.max(1,h*0.016)); } }
+
+  /* roof spoiler lip at the rear edge of the roof */
+  quad(0.55,0.575,'#0c0f1a');
+
+  /* rear window (backlight) */
+  quad(0.575,0.67,grad(0,ty(0.575),0,ty(0.67),[[0,'#0d1a2e'],[1,'#33597f']]));
+  ctx.fillStyle='rgba(180,215,255,.16)';
+  ctx.beginPath(); ctx.moveTo(-hwf(0.59)*0.78,ty(0.59)); ctx.lineTo(hwf(0.59)*0.15,ty(0.59));
+  ctx.lineTo(hwf(0.64)*0.15,ty(0.64)); ctx.lineTo(-hwf(0.64)*0.78,ty(0.64)); ctx.closePath(); ctx.fill();
+
+  /* tailgate / rear face (near-vertical, darker than the roof) */
+  quad(0.67,0.90,grad(-L,0,L,0,[[0,'#3c4362'],[0.5,'#9aa2bf'],[1,'#333a56']]));
+  /* shoulder shading down each side edge */
+  ctx.fillStyle='rgba(6,9,18,.35)';
+  [-1,1].forEach(sg=>{ ctx.beginPath();
+    ctx.moveTo(sg*hwf(0.67),ty(0.67)); ctx.lineTo(sg*hwf(0.67)*0.85,ty(0.67));
+    ctx.lineTo(sg*hwf(0.9)*0.85,ty(0.9)); ctx.lineTo(sg*hwf(0.9),ty(0.9)); ctx.closePath(); ctx.fill(); });
+
+  /* full-width tail-light bar with brake glow */
+  const tly=ty(0.72), tlh=h*0.045, tlw=hwf(0.72)*0.92;
+  ctx.save();
+  if(braking||blink(160)){ ctx.shadowColor='rgba(255,60,80,.9)'; ctx.shadowBlur=(braking?18:8)+8*s; }
+  ctx.fillStyle=braking?'#ff5566':'#7a1f2b';
+  rr(-tlw,tly,tlw*2,tlh,tlh*0.4); ctx.fill();
+  ctx.fillStyle=braking?'#ff8a97':'#c23444';
+  rr(-tlw,tly,tlw*0.52,tlh,tlh*0.4); ctx.fill();
+  rr(tlw*0.48,tly,tlw*0.52,tlh,tlh*0.4); ctx.fill();
+  ctx.restore();
+
+  /* badge + license plate (plate gives way to the ML-safe decal) */
+  ctx.fillStyle='rgba(210,220,245,.85)'; ctx.beginPath(); ctx.arc(0,ty(0.785),Math.max(2,w*0.028),0,7); ctx.fill();
   if(S.mlsafe){
-    ctx.fillStyle='rgba(10,44,28,.95)'; rr(-w*0.19,ty(0.855),w*0.38,h*0.062,3); ctx.fill();
-    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,w*0.02); ctx.stroke();
-    txt('ML-SAFE',0,ty(0.90),C.grn,Math.max(6,w*0.10),'center');
+    ctx.fillStyle='rgba(10,44,28,.95)'; rr(-w*0.21,ty(0.83),w*0.42,h*0.05,3); ctx.fill();
+    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,w*0.02); rr(-w*0.21,ty(0.83),w*0.42,h*0.05,3); ctx.stroke();
+    txt('ML-SAFE',0,ty(0.867),C.grn,Math.max(6,w*0.095),'center');
+  } else {
+    ctx.fillStyle='#e8ecf5'; rr(-w*0.15,ty(0.835),w*0.30,h*0.032,2); ctx.fill();
   }
+
+  /* rear bumper (closest) + diffuser + reflectors */
+  quad(0.90,1.0,grad(-L,0,L,0,[[0,'#191d2e'],[0.5,'#2b3149'],[1,'#191d2e']]));
+  ctx.fillStyle='rgba(4,6,12,.8)';
+  for(let i=-2;i<=2;i++){ rr(i*w*0.12-w*0.015,ty(0.93),w*0.03,h*0.05,1); ctx.fill(); }
+  ctx.fillStyle='rgba(255,80,90,.5)';
+  rr(-hwf(0.95)*0.9,ty(0.945),w*0.05,h*0.02,1); ctx.fill();
+  rr( hwf(0.95)*0.9-w*0.05,ty(0.945),w*0.05,h*0.02,1); ctx.fill();
+
+  /* AV livery accent down each flank */
+  ctx.fillStyle='rgba(77,227,245,.8)';
+  [-1,1].forEach(sg=>{ ctx.beginPath();
+    ctx.moveTo(sg*hwf(0.30)*0.98,ty(0.30)); ctx.lineTo(sg*hwf(0.30)*0.92,ty(0.30));
+    ctx.lineTo(sg*hwf(0.88)*0.92,ty(0.88)); ctx.lineTo(sg*hwf(0.88)*0.98,ty(0.88));
+    ctx.closePath(); ctx.fill(); });
+
+  /* wing mirrors at the cabin sides */
+  ctx.fillStyle='#8e98b8';
+  [-1,1].forEach(sg=>{ rr(sg*hwf(0.34)-(sg<0?w*0.10:0),ty(0.34),w*0.10,h*0.035,2); ctx.fill(); });
+
   ctx.restore();
 }
 
@@ -1174,6 +1191,8 @@ function hud(t){
         crit?['#ff7a5e','#ff4d5e']:(S.load>55?['#ffcb4d','#ff8a4d']:['#4de3f5','#8b6cff']),
         floorLoad()/100, S.load>=92);
   if(S.mlsafe) txt('ML-SAFE MODE · DATA -'+Math.round(MLSAFE_REDUCTION*100)+'%*',515,66,C.grn,8,'center');
+  else { const lab=keys.up?'ACCEL':keys.down?'BRAKE':'CRUISE';
+         txt('SPEED '+S.car.spd.toFixed(1)+'x · '+lab,515,66,keys.down?C.yel:(keys.up?C.grn:C.dim2),8,'center'); }
 
   txt('DATA COLLECTED',W-18,24,C.dim,9,'right');
   txt(Math.floor(S.mb)+' MB',W-18,47,C.wht,19,'right','rgba(92,224,138,.5)');
@@ -1249,7 +1268,7 @@ function scrTitle(t){
   txtC('HOW LONG CAN YOUR PIPELINE KEEP UP?',424,C.wht,13);
   if(blink(430)) txtC('>  START THE PRESSURE TEST  <',462,C.yel,15,'rgba(255,203,77,.7)');
   if(App.best) txtC('BEST  '+App.best+' MB   ·   BEST COMBO x'+App.bestCombo,494,C.grn,11);
-  txt('LEFT RIGHT / A D  STEER',18,H-14,C.dim2,10);
+  txt('STEER A / D   ·   SPEED W / S',18,H-14,C.dim2,10);
   txt('M  MUTE',W-18,H-14,C.dim2,10,'right');
   scanlines();
 }
@@ -1369,31 +1388,55 @@ function scrResult(t){
     txt(tl[1],x+tw/2,y+47,tl[2],16,'center');
   });
 
-  txtC('WHAT ML-SAFE REDUCTION COULD MEAN',184,C.wht,13);
+  txtC('LESS DATA — WITHOUT CHANGING HOW THE MODEL BEHAVES',156,C.wht,12);
 
-  const barX=200, barW=W-400, barY=300, barH=24;
-  txt('YOUR RUN',barX,224,C.dim,9);
-  txt('AT '+Math.round(MLSAFE_REDUCTION*100)+'% LESS DATA',W-barX,224,C.grn,9,'right');
-  txtC(fmtData(shown),268,C.grn,40,'rgba(92,224,138,.55)');
+  const py=174, ph=176, pw=372, lpx=96, rpx=492;
+  const panel=(px,accent)=>{ ctx.fillStyle='rgba(12,18,34,.9)'; rr(px,py,pw,ph,7); ctx.fill();
+    ctx.strokeStyle='rgba(120,134,180,.22)'; ctx.lineWidth=1; rr(px,py,pw,ph,7); ctx.stroke();
+    ctx.fillStyle=accent; rr(px,py,pw,3,2); ctx.fill(); };
 
-  ctx.fillStyle='rgba(4,6,14,.85)'; rr(barX,barY,barW,barH,barH/2); ctx.fill();
-  ctx.strokeStyle='rgba(120,134,180,.3)'; ctx.lineWidth=1; rr(barX,barY,barW,barH,barH/2); ctx.stroke();
-  const fw=barW*(1-MLSAFE_REDUCTION*anim);
-  ctx.save(); rr(barX+2,barY+2,barW-4,barH-4,(barH-4)/2); ctx.clip();
-  ctx.fillStyle=grad(barX,0,barX+barW,0,[[0,C.grn],[0.6,C.cyan],[1,C.violet]]);
-  ctx.fillRect(barX+2,barY+2,Math.max(0,fw-4),barH-4);
+  /* -------- LEFT: DATA, halved -------- */
+  panel(lpx,C.grn);
+  txt('DATA',lpx+22,py+27,C.grn,12);
+  txt('AT '+Math.round(MLSAFE_REDUCTION*100)+'% LESS',lpx+pw-22,py+27,C.dim,8,'right');
+  txt(fmtData(shown),lpx+pw/2,py+82,C.grn,30,'center','rgba(92,224,138,.5)');
+  const bx=lpx+28, bw=pw-56, by=py+104, bh=18;
+  ctx.fillStyle='rgba(4,6,14,.85)'; rr(bx,by,bw,bh,bh/2); ctx.fill();
+  ctx.save(); rr(bx+2,by+2,bw-4,bh-4,(bh-4)/2); ctx.clip();
+  ctx.fillStyle=grad(bx,0,bx+bw,0,[[0,C.grn],[1,C.cyan]]);
+  ctx.fillRect(bx+2,by+2,Math.max(0,bw*(1-MLSAFE_REDUCTION*anim)-4),bh-4);
   ctx.restore();
-  const mx=barX+barW*keep;                                   // 50% target tick
-  ctx.fillStyle='rgba(230,238,255,.5)'; ctx.fillRect(mx-1,barY-4,2,barH+8);
+  const mtick=bx+bw*keep; ctx.fillStyle='rgba(230,238,255,.5)'; ctx.fillRect(mtick-1,by-4,2,bh+8);
+  txt(anim>=1?('- '+fmtData(avoided)+' TO STORE, MOVE & PROCESS'):'REDUCING…',lpx+pw/2,py+150,anim>=1?C.grn:C.dim,10,'center');
 
-  if(anim>=1){
-    txtC('- '+fmtData(avoided)+' DATA PRESSURE',360,C.grn,17,'rgba(92,224,138,.5)');
-    txtC('SAME RUN. HALF THE DATA LOAD.',388,C.dim,12);
-  }
-  txtC('Illustrative '+Math.round(MLSAFE_REDUCTION*100)+'% reduction based on Beamr AV benchmark results.',430,C.dim2,9);
-  txtC('Actual safe reduction depends on your video and models.',446,C.dim2,9);
+  /* -------- RIGHT: MODEL BEHAVIOR (mAP), within variance -------- */
+  panel(rpx,C.cyan);
+  txt('MODEL BEHAVIOR (mAP)',rpx+pw/2,py+27,C.cyan,11,'center');
+  const vx=rpx+28, vw=pw-56, vy=py+68, vh=16;
+  txt('VARIANCE THE MODEL ALREADY TOLERATES',rpx+pw/2,vy-9,C.dim,8,'center');
+  /* track */
+  ctx.fillStyle='rgba(4,6,14,.85)'; rr(vx,vy,vw,vh,vh/2); ctx.fill();
+  /* tolerated-variance envelope (green zone) */
+  const e0=vx+vw*0.24, e1=vx+vw*0.76;
+  ctx.save(); rr(vx+2,vy+2,vw-4,vh-4,(vh-4)/2); ctx.clip();
+  ctx.fillStyle='rgba(92,224,138,.22)'; ctx.fillRect(e0,vy,e1-e0,vh);
+  ctx.restore();
+  ctx.fillStyle='rgba(92,224,138,.6)';
+  ctx.fillRect(e0,vy-3,2,vh+6); ctx.fillRect(e1-2,vy-3,2,vh+6);
+  /* the measured change — a marker that settles inside the band */
+  const mkx=vx+vw*0.5+(1-anim)*vw*0.28, mky=vy+vh/2;
+  ctx.save(); ctx.shadowColor='rgba(77,227,245,.9)'; ctx.shadowBlur=10;
+  ctx.fillStyle=C.cyan; ctx.beginPath();
+  ctx.moveTo(mkx,mky-vh*0.62); ctx.lineTo(mkx+vh*0.5,mky); ctx.lineTo(mkx,mky+vh*0.62); ctx.lineTo(mkx-vh*0.5,mky);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+  txt('MEASURED CHANGE',mkx,vy+vh+14,C.cyan,7,'center');
+  txt(anim>=1?'WITHIN NORMAL VARIANCE':'MEASURING...',rpx+pw/2,py+130,anim>=1?C.grn:C.dim,12,'center');
+  txt('CHANGE INDISTINGUISHABLE FROM CAMERA-NOISE VARIANCE',rpx+pw/2,py+152,C.dim2,7,'center');
 
-  if(T>2.8&&blink(430)) txtC('>  PRESS SPACE TO CONTINUE  <',484,C.yel,14);
+  txtC('BLIND COMPRESSION ONLY SHRINKS THE DATA. ML-SAFE ALSO MEASURES THE MODEL.',376,C.wht,11);
+  txtC('Illustrative '+Math.round(MLSAFE_REDUCTION*100)+'% Beamr AV benchmark scenario. Actual safe reduction depends on your video and models.',400,C.dim2,8);
+
+  if(T>2.8&&blink(430)) txtC('>  PRESS SPACE TO CONTINUE  <',432,C.yel,14);
   scanlines();
 }
 
@@ -1441,6 +1484,8 @@ function toResult(){ S.st='result'; S.resultT=0; AUDIO.setIntensity(0.35); }
 function act(k,down){
   if(k==='ArrowLeft'||k==='a'||k==='A')  keys.left=down;
   if(k==='ArrowRight'||k==='d'||k==='D') keys.right=down;
+  if(k==='ArrowUp'||k==='w'||k==='W')    keys.up=down;
+  if(k==='ArrowDown'||k==='s'||k==='S')  keys.down=down;
   if(!down) return;
   AUDIO.ensure();
   if(App.st==='title'){ if(k===' '||k==='Enter') start(); return; }
@@ -1464,7 +1509,7 @@ window.addEventListener('keydown',e=>{
   act(e.key,true);
 });
 window.addEventListener('keyup',e=>act(e.key,false));
-window.addEventListener('blur',()=>{keys.left=keys.right=false;});
+window.addEventListener('blur',()=>{keys.left=keys.right=keys.up=keys.down=false;});
 
 let dragging=false;
 const cpos=(e)=>{ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*(W/r.width),y:(e.clientY-r.top)*(H/r.height)}; };
@@ -1491,10 +1536,43 @@ cv.addEventListener('pointermove',e=>{ if(dragging) steerTo(cpos(e).x); });
 cv.addEventListener('pointerup',()=>{dragging=false;keys.left=keys.right=false;});
 cv.addEventListener('pointercancel',()=>{dragging=false;keys.left=keys.right=false;});
 
-/* ---------- leads ---------- */
+/* ---------- leads ----------
+   HubSpot contact/property internal names this game submits. Create these
+   fields on the HubSpot form (contact properties) so they map cleanly:
+     firstname, lastname, email, company            (default HubSpot props)
+     av_data_per_day            (dropdown)          — "DATA PER DAY"
+     biggest_data_constraint    (dropdown)          — "BIGGEST DATA CONSTRAINT"
+     game_data_collected_mb     (number)            — MB collected in the run
+     game_run_seconds           (number)            — run length in seconds
+     game_sensor_stack          (number, 1-7)       — sensors bolted on
+     game_peak_load             (number, %)         — peak pipeline load
+     game_mlsafe_scenario_mb    (number)            — illustrative reduced MB
+     game_ending                (single-line text)  — "del" or "crush"
+   The game only sends fields that exist; extra game_* props are optional. */
 window.__LEADS=[];
+function submitHubSpot(l){
+  if(!HUBSPOT_PORTAL_ID||!HUBSPOT_FORM_GUID) return;
+  const parts=(l.name||'').trim().split(/\s+/);
+  const first=parts.shift()||(l.name||'');
+  const last=parts.join(' ')||'-';
+  const r=l.run||{};
+  const map=[
+    ['email',l.email],['firstname',first],['lastname',last],['company',l.company],
+    ['av_data_per_day',l.volume],['biggest_data_constraint',l.constraint],
+    ['game_data_collected_mb',r.mb],['game_run_seconds',r.secs],
+    ['game_sensor_stack',r.sensors],['game_peak_load',r.maxLoad],
+    ['game_mlsafe_scenario_mb', r.mb!=null?Math.round(r.mb*(1-MLSAFE_REDUCTION)):''],
+    ['game_ending',r.ending]
+  ];
+  const fields=map.filter(f=>f[1]!=null&&f[1]!=='').map(f=>({name:f[0],value:String(f[1])}));
+  const body={fields,context:{pageUri:(typeof location!=='undefined'&&location.href)||'',pageName:'Pipeline Overload'}};
+  const url='https://api.hsforms.com/submissions/v3/integration/submit/'+
+            encodeURIComponent(HUBSPOT_PORTAL_ID)+'/'+encodeURIComponent(HUBSPOT_FORM_GUID);
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{});
+}
 function submitLead(l){
   window.__LEADS.push(l);
+  submitHubSpot(l);
   if(LEAD_ENDPOINT) fetch(LEAD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(l)}).catch(()=>{});
   if(window.dataLayer) window.dataLayer.push({event:'pipeline_overload_lead',...l});
 }
