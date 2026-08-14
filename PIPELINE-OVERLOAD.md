@@ -1,8 +1,17 @@
 # Pipeline Overload — the AV data pressure test
 
 A single-file, no-dependency HTML game used as an AV/ML lead magnet for Beamr.
-Everything lives in [`pipeline-overload.html`](./pipeline-overload.html)
-(HTML + CSS + JS + embedded font, no external assets).
+Everything lives in one file (HTML + CSS + JS + embedded font, no external
+assets). Two builds, identical gameplay / story / lead flow:
+
+- [`pipeline-overload.html`](./pipeline-overload.html) — the original
+  arcade/synthwave pixel look.
+- [`pipeline-overload-hd.html`](./pipeline-overload-hd.html) — **HD remaster**
+  in a mid-2000s casual-PC-game style: 2× supersampled render, smooth bevelled
+  UI, soft bloom, god-rays, a glossy halo sun, wet reflective road, and
+  reflective glass on the car. Same constants, HubSpot wiring, and screens.
+
+Everything below applies to both files.
 
 ## Controls
 
