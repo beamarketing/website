@@ -71,14 +71,6 @@ export default function BeamrMetroHero(p: any) {
         animateLines,
     } = p
 
-    // When the draw-on is off, paths render fully drawn immediately. This is
-    // the default so the Framer canvas (which re-mounts the component on every
-    // edit and would otherwise freeze the entrance mid-draw) always shows the
-    // complete, full-height lines. Turn it on for the draw-on entrance.
-    const draw = animateLines
-        ? { initial: { pathLength: 0 }, animate: { pathLength: 1 } }
-        : { initial: { pathLength: 1 }, animate: { pathLength: 1 } }
-
     const css = `.r{width:100%;min-height:92vh;display:flex;align-items:center;position:relative;padding:72px 0 56px;background:${blue};overflow:hidden;font-family:${fontFamily};box-sizing:border-box}
     .w{width:min(1180px,calc(100% - 48px));margin:auto;position:relative;z-index:3}
     .k{font-size:${eyebrowSize}px;font-weight:${eyebrowWeight};color:${eyebrowColor};letter-spacing:.18em;text-transform:uppercase;margin-bottom:24px}
@@ -124,9 +116,12 @@ export default function BeamrMetroHero(p: any) {
         [1000, BOTTOM],
     ]
 
-    const navyPath = roundedPath(navyRoute, lineRadius)
-    const whitePath = roundedPath(whiteRoute, lineRadius)
-    const pinkPath = roundedPath(pinkRoute, lineRadius)
+    // Draw order: navy, then pink, then white on top.
+    const lines = [
+        { d: roundedPath(navyRoute, lineRadius), stroke: navy, duration: 1.2, delay: 0 },
+        { d: roundedPath(pinkRoute, lineRadius), stroke: pink, duration: 1.35, delay: 0.08 },
+        { d: roundedPath(whiteRoute, lineRadius), stroke: white, duration: 1.12, delay: 0.16 },
+    ]
 
     return (
         <section className="r">
@@ -143,44 +138,39 @@ export default function BeamrMetroHero(p: any) {
                     preserveAspectRatio="xMidYMid slice"
                     aria-hidden="true"
                 >
-                    <motion.path
-                        d={navyPath}
-                        fill="none"
-                        stroke={navy}
-                        strokeWidth={lineWidth}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                        initial={draw.initial}
-                        animate={draw.animate}
-                        transition={{ duration: 1.2, ease: "easeInOut" }}
-                    />
-
-                    <motion.path
-                        d={pinkPath}
-                        fill="none"
-                        stroke={pink}
-                        strokeWidth={lineWidth}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                        initial={draw.initial}
-                        animate={draw.animate}
-                        transition={{ duration: 1.35, delay: 0.08, ease: "easeInOut" }}
-                    />
-
-                    <motion.path
-                        d={whitePath}
-                        fill="none"
-                        stroke={white}
-                        strokeWidth={lineWidth}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                        initial={draw.initial}
-                        animate={draw.animate}
-                        transition={{ duration: 1.12, delay: 0.16, ease: "easeInOut" }}
-                    />
+                    {lines.map((ln, i) =>
+                        animateLines ? (
+                            // Draw-on entrance. pathLength animates 0 -> 1.
+                            <motion.path
+                                key={i}
+                                d={ln.d}
+                                fill="none"
+                                stroke={ln.stroke}
+                                strokeWidth={lineWidth}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                vectorEffect="non-scaling-stroke"
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{ duration: ln.duration, delay: ln.delay, ease: "easeInOut" }}
+                            />
+                        ) : (
+                            // Static: a plain, fully-stroked path. No pathLength,
+                            // so it can never render partially drawn (which is
+                            // what left the rounded caps mid-section on the
+                            // Framer canvas).
+                            <path
+                                key={i}
+                                d={ln.d}
+                                fill="none"
+                                stroke={ln.stroke}
+                                strokeWidth={lineWidth}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                vectorEffect="non-scaling-stroke"
+                            />
+                        )
+                    )}
                 </svg>
             </motion.div>
 
