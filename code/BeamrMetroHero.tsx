@@ -87,26 +87,32 @@ export default function BeamrMetroHero(p: any) {
 
     // Each route runs from above the top edge to below the bottom edge and is
     // monotonic in y (never turns back upward), so it always spans the full
-    // height whatever `slice` crops. Horizontal jogs give the "metro" step.
+    // height whatever `slice` crops — including the wide, short hero ratios
+    // where most of the vertical overshoot is cropped away.
+    //
+    // Navy and white run as a parallel pair: down from the top-right, a matching
+    // jog to the left, then a long clean vertical exit straight through the
+    // bottom edge (no low "hook" that reads as a dead end). Their corners are
+    // offset in y so the horizontal runs sit parallel rather than colliding.
     const navyRoute = [
         [1120, TOP],
-        [1120, 300],
-        [820, 300],
-        [820, BOTTOM],
+        [1120, 260],
+        [700, 260],
+        [700, BOTTOM],
     ]
 
     const whiteRoute = [
-        [540, TOP],
-        [540, 640],
-        [960, 640],
-        [960, BOTTOM],
+        [1240, TOP],
+        [1240, 380],
+        [820, 380],
+        [820, BOTTOM],
     ]
 
-    // Pink runs straight down, then breaks into a clean diagonal to the floor.
+    // Pink is the diagonal accent, peeling off down the right-hand side.
     const pinkRoute = [
-        [1340, TOP],
-        [1340, 420],
-        [660, BOTTOM],
+        [1380, TOP],
+        [1380, 560],
+        [1000, BOTTOM],
     ]
 
     const navyPath = roundedPath(navyRoute, lineRadius)
