@@ -4,8 +4,14 @@ A single-file, no-dependency HTML game used as an AV/ML lead magnet for Beamr.
 Everything lives in one file (HTML + CSS + JS + embedded font, no external
 assets). Two builds, identical gameplay / story / lead flow:
 
-- [`pipeline-overload.html`](./pipeline-overload.html) — the original
-  arcade/synthwave pixel look.
+- [`pipeline-overload.html`](./pipeline-overload.html) — the main build. A
+  bright **golden-hour cartoon** look (Wacky-Wheels reference) built on the
+  **Beamr AV road-sign design line**: collectibles are green highway guide
+  signs (VIDEO / +MB), pressure is orange diamond warnings (green once
+  ML-encoded) with +LOAD plates, constraints are overhead green gantry guide
+  signs, the highway is lined with Beamr brand signs (UP TO 50 shields, CONTROL
+  YOUR DATA, KEEP INTEGRITY, PRESERVE ML ACCURACY), and the HUD is styled as
+  highway signage.
 - [`pipeline-overload-hd.html`](./pipeline-overload-hd.html) — **HD remaster**
   in a mid-2000s casual-PC-game style: 2× supersampled render, smooth bevelled
   UI, soft bloom, god-rays, a glossy halo sun, wet reflective road, and

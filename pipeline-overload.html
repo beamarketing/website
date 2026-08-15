@@ -700,61 +700,52 @@ function spawnConstraint(){
    RENDER — world
    ===================================================================== */
 let SKY=null, SKYH=0;
+function puff(x,y,r){
+  ctx.beginPath();
+  ctx.arc(x-r,y,r*0.7,0,7); ctx.arc(x-r*0.2,y-r*0.55,r,0,7);
+  ctx.arc(x+r,y-r*0.15,r*0.82,0,7); ctx.arc(x+r*0.3,y+r*0.05,r*0.72,0,7);
+  ctx.ellipse(x,y+r*0.32,r*1.8,r*0.6,0,0,7); ctx.fill();
+}
+function cloudLayer(off,sc,y,xs){
+  xs.forEach(k=>{
+    let cx=((k*280 - off)%(W+260)); if(cx<-130) cx+=W+260;
+    const cy=y+(k%3)*16, r=24*sc;
+    ctx.fillStyle='rgba(255,255,255,.94)'; puff(cx,cy,r);
+    ctx.fillStyle='rgba(255,232,200,.6)'; ctx.beginPath();
+    ctx.ellipse(cx,cy+r*0.5,r*1.5,r*0.34,0,0,7); ctx.fill();
+  });
+}
+function hillLayer(off,base,r,cDark,cLight){
+  const step=r*1.5;
+  for(let x=-(off%step)-step; x<W+step; x+=step){
+    ctx.fillStyle=cDark;
+    ctx.beginPath(); ctx.ellipse(x,base,r,r*0.72,0,Math.PI,2*Math.PI); ctx.fill();
+    ctx.fillStyle=cLight;
+    ctx.beginPath(); ctx.ellipse(x-r*0.28,base,r*0.66,r*0.48,0,Math.PI,2*Math.PI); ctx.fill();
+  }
+}
 function sky(t){
   if(!SKY||SKYH!==HZ){
-    SKY=grad(0,HUD_H,0,HZ+40,[[0,'#0a0a1e'],[0.42,'#2a1450'],[0.72,'#6d2560'],[0.9,'#c04a5a'],[1,'#ff8a55']]);
+    SKY=grad(0,HUD_H,0,HZ+40,[[0,'#6fa8e0'],[0.34,'#a9cfe8'],[0.6,'#ffe3ad'],[0.82,'#ffbf72'],[1,'#ff9d54']]);
     SKYH=HZ;
   }
   ctx.fillStyle=SKY; ctx.fillRect(0,HUD_H,W,HZ+40-HUD_H);
 
-  /* stars */
-  for(let i=0;i<70;i++){
-    const x=(i*137.7)%W, y=HUD_H+((i*53.3)%(HZ-HUD_H-30));
-    const a=0.25+0.6*Math.abs(Math.sin(t*0.7+i));
-    ctx.fillStyle='rgba(220,230,255,'+(a*(1-(y-HUD_H)/(HZ-HUD_H))).toFixed(3)+')';
-    ctx.fillRect(x,y,i%7?1:2,i%7?1:2);
-  }
-  /* the sun, with synthwave slats */
-  const sx=CX-S.curve*40, sy=HZ-58, R=64;
-  const sg=ctx.createRadialGradient(sx,sy,4,sx,sy,R);
-  sg.addColorStop(0,'#fff2c0'); sg.addColorStop(0.45,'#ffb347');
-  sg.addColorStop(1,'rgba(255,90,120,0)');
-  ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,R,0,7); ctx.fill();
-  ctx.save(); ctx.beginPath(); ctx.arc(sx,sy,R-2,0,7); ctx.clip();
-  for(let i=0;i<8;i++){
-    const yy=sy-R+18+i*7;
-    ctx.fillStyle='rgba(20,8,30,'+(0.25+i*0.07).toFixed(2)+')';
-    ctx.fillRect(sx-R,yy,R*2,Math.max(1,i*0.7));
-  }
-  ctx.restore();
+  /* puffy drifting clouds */
+  cloudLayer(t*7,0.95,HUD_H+34,[1,4,7,10]);
+  cloudLayer(t*13,1.25,HUD_H+78,[2,6,9]);
 
-  /* two parallax skylines of data centres */
-  const layer=(off,h,col,speed,lights)=>{
-    ctx.fillStyle=col;
-    const shift=(S.dist*speed)%160;
-    for(let i=-1;i<8;i++){
-      const bx=i*160-shift+off, bw=52+((i*37)%40);
-      const bh=h+((i*29)%(h*0.7));
-      ctx.fillRect(bx,HZ-bh,bw,bh);
-      ctx.fillRect(bx+bw*0.35,HZ-bh-10-((i*13)%14),4,12);
-      if(lights){
-        for(let r=0;r<3;r++)
-          for(let cc=0;cc<3;cc++){
-            const on=((i*7+r*3+cc)%5)!==0;
-            ctx.fillStyle=on?'rgba(120,190,255,.30)':'rgba(255,180,90,.35)';
-            ctx.fillRect(bx+8+cc*14,HZ-bh+9+r*11,6,4);
-            ctx.fillStyle=col;
-          }
-        if(blink(700+((i*97)%600))){
-          ctx.fillStyle='rgba(255,90,110,.85)';
-          ctx.fillRect(bx+bw*0.35,HZ-bh-12-((i*13)%14),4,3);
-          ctx.fillStyle=col;
-        }
-      }
-    }
-  };
-  layer(0,44,'#1b0f33',7,false);
-  layer(70,30,'#120a24',14,true);
+  /* big warm cartoon sun near the horizon */
+  const sx=CX-S.curve*40, sy=HZ-34, R=68;
+  let g=ctx.createRadialGradient(sx,sy,R*0.5,sx,sy,R*2.6);
+  g.addColorStop(0,'rgba(255,226,150,.6)'); g.addColorStop(1,'rgba(255,200,120,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx,sy,R*2.6,0,7); ctx.fill();
+  ctx.fillStyle='#fff3c9'; ctx.beginPath(); ctx.arc(sx,sy,R,0,7); ctx.fill();
+  ctx.lineWidth=4; ctx.strokeStyle='rgba(255,193,88,.95)'; ctx.beginPath(); ctx.arc(sx,sy,R,0,7); ctx.stroke();
+
+  /* rolling parallax hills along the horizon (sun sets behind them) */
+  hillLayer((S.dist*9)%1000,  HZ+2, 66, '#3f8a3a','#5aa844');
+  hillLayer((S.dist*17)%1000, HZ+3, 44, '#57a63f','#72c452');
 }
 
 function road(t){
@@ -766,29 +757,32 @@ function road(t){
     const hw=hw0*s, cx=CX+cOf(z);
     const band=Math.floor(z*3.2-scroll)&1;
 
-    /* verge */
-    ctx.fillStyle=band?'#123021':'#0d2418';
+    /* bright cartoon grass verge */
+    ctx.fillStyle=band?'#63b043':'#57a337';
     ctx.fillRect(0,y,W,2);
-    /* rumble strips */
-    const rb=Math.max(2,hw*0.09);
-    ctx.fillStyle=band?'#e8ecf5':'#d0424a';
+    const rb=Math.max(2,hw*0.10);
+    /* chunky dark shoulder outline */
+    ctx.fillStyle='#274a1f';
+    ctx.fillRect(cx-hw-rb-Math.max(1,2*s),y,Math.max(1,2*s),2);
+    ctx.fillRect(cx+hw+rb,y,Math.max(1,2*s),2);
+    /* red / white rumble strips */
+    ctx.fillStyle=band?'#f4f6fa':'#e2464e';
     ctx.fillRect(cx-hw-rb,y,rb,2); ctx.fillRect(cx+hw,y,rb,2);
-    /* tarmac */
-    ctx.fillStyle=band?'#242a41':'#1e2337';
+    /* warm asphalt */
+    ctx.fillStyle=band?'#5c6175':'#53596b';
     ctx.fillRect(cx-hw,y,hw*2,2);
-    /* lane dashes + edge lines */
+    /* yellow centre dashes + white edge lines */
     if(band){
-      ctx.fillStyle='rgba(210,220,250,.42)';
-      ctx.fillRect(cx-hw/3-hw*0.008,y,Math.max(1,hw*0.016),2);
-      ctx.fillRect(cx+hw/3-hw*0.008,y,Math.max(1,hw*0.016),2);
+      ctx.fillStyle='rgba(255,208,60,.92)';
+      ctx.fillRect(cx-Math.max(1,hw*0.018),y,Math.max(1,hw*0.036),2);
     }
-    ctx.fillStyle='rgba(230,238,255,.20)';
-    ctx.fillRect(cx-hw+rb*0.2,y,Math.max(1,hw*0.012),2);
-    ctx.fillRect(cx+hw-rb*0.2-Math.max(1,hw*0.012),y,Math.max(1,hw*0.012),2);
+    ctx.fillStyle='rgba(245,248,255,.55)';
+    ctx.fillRect(cx-hw+rb*0.2,y,Math.max(1,hw*0.015),2);
+    ctx.fillRect(cx+hw-rb*0.2-Math.max(1,hw*0.015),y,Math.max(1,hw*0.015),2);
   }
-  /* haze at the vanishing point */
-  const g=grad(0,HZ,0,HZ+150,[[0,'rgba(150,75,105,.55)'],[0.4,'rgba(90,45,90,.22)'],[1,'rgba(40,20,60,0)']]);
-  ctx.fillStyle=g; ctx.fillRect(0,HZ,W,150);
+  /* warm golden haze at the vanishing point */
+  const g=grad(0,HZ,0,HZ+140,[[0,'rgba(255,206,132,.55)'],[0.5,'rgba(255,184,116,.2)'],[1,'rgba(255,184,116,0)']]);
+  ctx.fillStyle=g; ctx.fillRect(0,HZ,W,140);
 }
 
 /* --- roadside props --- */
@@ -798,52 +792,53 @@ function propTree(x,ybase,s,k){
   const v=k%3;
   ctx.fillStyle='rgba(4,8,6,.45)';
   ctx.beginPath(); ctx.ellipse(x,ybase,wid*0.42,Math.max(1,hgt*0.05),0,0,7); ctx.fill();
-  ctx.fillStyle='#3a2a1b';
-  ctx.fillRect(x-Math.max(1,wid*0.055),ybase-hgt*0.42,Math.max(1,wid*0.11),hgt*0.42);
-  const g=ctx.createLinearGradient(x-wid/2,ybase-hgt,x+wid/2,ybase);
-  if(v===1){ g.addColorStop(0,'#2f7343'); g.addColorStop(1,'#0f2b1a'); }
-  else     { g.addColorStop(0,'#3a8a4d'); g.addColorStop(1,'#11301c'); }
-  ctx.fillStyle=g;
-  if(v===1){                                  /* conifer */
-    for(let i=0;i<4;i++){
-      const yy=ybase-hgt*0.38-i*hgt*0.16, ww=wid*(0.52-i*0.11);
-      ctx.beginPath(); ctx.moveTo(x,yy-hgt*0.22); ctx.lineTo(x-ww,yy); ctx.lineTo(x+ww,yy);
-      ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#7a4a24';
+  const trunkW=Math.max(1,wid*0.13);
+  ctx.fillRect(x-trunkW/2,ybase-hgt*0.42,trunkW,hgt*0.42);
+  ctx.strokeStyle='#24331c'; ctx.lineWidth=Math.max(1,wid*0.05); ctx.lineJoin='round';
+  const canopy=(cLight,cDark)=>{
+    if(v===1){                                /* conifer */
+      for(let i=0;i<4;i++){
+        const yy=ybase-hgt*0.38-i*hgt*0.16, ww=wid*(0.54-i*0.11);
+        ctx.beginPath(); ctx.moveTo(x,yy-hgt*0.24); ctx.lineTo(x-ww,yy); ctx.lineTo(x+ww,yy); ctx.closePath();
+        ctx.fillStyle=i%2?cDark:cLight; ctx.fill(); if(hgt>20)ctx.stroke();
+      }
+    } else if(v===0){                         /* broadleaf */
+      ctx.fillStyle=cDark;
+      ctx.beginPath(); ctx.ellipse(x,ybase-hgt*0.64,wid*0.5,hgt*0.34,0,0,7); ctx.fill(); if(hgt>20)ctx.stroke();
+      ctx.fillStyle=cLight;
+      ctx.beginPath(); ctx.ellipse(x-wid*0.14,ybase-hgt*0.72,wid*0.3,hgt*0.2,0,0,7); ctx.fill();
+    } else {                                  /* twin bush */
+      ctx.fillStyle=cDark;
+      ctx.beginPath(); ctx.ellipse(x-wid*0.2,ybase-hgt*0.34,wid*0.34,hgt*0.24,0,0,7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x+wid*0.18,ybase-hgt*0.48,wid*0.38,hgt*0.28,0,0,7); ctx.fill(); if(hgt>20)ctx.stroke();
+      ctx.fillStyle=cLight;
+      ctx.beginPath(); ctx.ellipse(x+wid*0.1,ybase-hgt*0.56,wid*0.22,hgt*0.16,0,0,7); ctx.fill();
     }
-  } else if(v===0){                           /* broadleaf */
-    ctx.beginPath(); ctx.ellipse(x,ybase-hgt*0.66,wid*0.46,hgt*0.30,0,0,7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x-wid*0.22,ybase-hgt*0.52,wid*0.27,hgt*0.19,0,0,7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x+wid*0.24,ybase-hgt*0.56,wid*0.25,hgt*0.17,0,0,7); ctx.fill();
-  } else {                                    /* twin bush */
-    ctx.beginPath(); ctx.ellipse(x-wid*0.2,ybase-hgt*0.34,wid*0.3,hgt*0.22,0,0,7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x+wid*0.18,ybase-hgt*0.46,wid*0.33,hgt*0.26,0,0,7); ctx.fill();
-  }
-  if(hgt>26){
-    ctx.fillStyle='rgba(190,255,200,.14)';
-    ctx.beginPath(); ctx.ellipse(x-wid*0.18,ybase-hgt*0.74,wid*0.16,hgt*0.09,0,0,7); ctx.fill();
-  }
+  };
+  canopy(v===1?'#5aa844':'#69bf4a', v===1?'#357f34':'#3f8f3c');
 }
 function propLamp(x,ybase,s,side){
   const hgt=150*s; if(hgt<6) return;
   const armW=34*s*(side<0?1:-1);
-  ctx.fillStyle='#3b4260';
+  ctx.fillStyle='#8b929c';
   ctx.fillRect(x-Math.max(1,2*s),ybase-hgt,Math.max(1,4*s),hgt);
-  ctx.fillRect(Math.min(x,x+armW),ybase-hgt,Math.abs(armW),Math.max(1,3*s));
+  ctx.fillStyle='#5c636d'; ctx.fillRect(x-Math.max(1,2*s),ybase-hgt,Math.max(1,1.6*s),hgt);
+  ctx.fillStyle='#8b929c'; ctx.fillRect(Math.min(x,x+armW),ybase-hgt,Math.abs(armW),Math.max(1,3*s));
   const lx=x+armW;
-  ctx.fillStyle='#ffe9a8'; ctx.fillRect(lx-4*s,ybase-hgt,8*s,4*s);
-  const g=ctx.createRadialGradient(lx,ybase-hgt+3*s,2,lx,ybase-hgt+3*s,62*s);
-  g.addColorStop(0,'rgba(255,214,130,.30)'); g.addColorStop(1,'rgba(255,180,80,0)');
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(lx,ybase-hgt+3*s,62*s,0,7); ctx.fill();
+  ctx.fillStyle='#2c313b'; ctx.fillRect(lx-5*s,ybase-hgt,10*s,Math.max(1,4*s));
 }
-function propJunk(x,ybase,s,side,k){
-  const hgt=90*s, wid=(side<0?150:90)*s; if(hgt<4) return;
-  ctx.fillStyle=side<0?'#221a33':'#2a1526';
-  ctx.fillRect(x-wid/2,ybase-hgt,wid,hgt);
-  ctx.fillStyle=side<0?'#33264d':'#3c2035';
-  ctx.fillRect(x-wid/2,ybase-hgt,wid,Math.max(1,hgt*0.14));
-  if(hgt>34){
-    const tags=side<0?['4K','RAW','LOG','TB']:['GB','FPS','CAM','PB'];
-    txt(tags[k%4], x, ybase-hgt*0.42, side<0?'#4b3b70':'#5d3550', Math.max(8,hgt*0.24),'center');
+/* Beamr AV roadside signs — the brand's road-sign design line */
+function propSign(x,ybase,s,k,side){
+  const postH=Math.max(6,64*s), pw=Math.max(2,5*s);
+  const place=(w,h,draw)=>{ const cy=ybase-postH-h/2; signPost(x,cy+h/2,ybase,pw); draw(x,cy,w); };
+  switch(k%6){
+    case 0: { const w=Math.max(14,58*s); place(w,w*1.02,(X,Y,W)=>signShield(X,Y,W,'UP TO','50')); break; }
+    case 1: { const w=Math.max(16,84*s); place(w,w*0.62,(X,Y,W)=>signInfo(X,Y,W,['KEEP','INTEGRITY'])); break; }
+    case 2: { const w=Math.max(16,90*s); place(w,w*0.42,(X,Y,W)=>signArrow(X,Y,W,'ML ACCURACY',side<0?1:-1)); break; }
+    case 3: { const w=Math.max(16,84*s); place(w,w*1.02,(X,Y,W)=>signDiamond(X,Y,W,['CONTROL','YOUR DATA'])); break; }
+    case 4: { const w=Math.max(16,92*s); place(w,w*0.66,(X,Y,W)=>signGuide(X,Y,W,['VIDEO RULES','THE WORLD'])); break; }
+    default:{ const w=Math.max(16,84*s); place(w,w*0.66,(X,Y,W)=>signGuide(X,Y,W,['REDUCE','THE DATA'])); }
   }
 }
 function props(){
@@ -855,9 +850,89 @@ function props(){
     const x=xOf(u,pr.z,s);
     if(x<-200||x>W+200) return;
     if(pr.k%9===0) propLamp(x,y,s,pr.side);
-    else if(pr.k%7===0) propJunk(xOf(pr.side<0?-(pr.u+0.55):(pr.u+0.55),pr.z,s),y,s,pr.side,pr.k);
+    else if(pr.k%3===0) propSign(xOf(pr.side<0?-(pr.u+0.42):(pr.u+0.42),pr.z,s),y,s,pr.k,pr.side);
     else propTree(x,y,s,pr.k);
   });
+}
+
+/* =====================================================================
+   BEAMR ROAD-SIGN SYSTEM — reusable cartoon sign drawers (bold outline)
+   Every collectible, obstacle and roadside prop is one of these signs.
+   ===================================================================== */
+const SIGN_INK='#1c2029';
+function panel(x,y,w,h,r,fill,key){
+  const o=Math.max(2,w*0.05), f=Math.max(2,w*0.06);
+  ctx.lineJoin='round';
+  ctx.fillStyle=SIGN_INK; rr(x-w/2-o,y-h/2-o,w+2*o,h+2*o,r+o*0.7); ctx.fill();     // chunky border
+  ctx.fillStyle=fill;     rr(x-w/2,y-h/2,w,h,r); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.16)'; rr(x-w/2+f,y-h/2+f*0.8,w-2*f,h*0.24,r*0.5); ctx.fill();  // top gloss
+  if(key){ ctx.strokeStyle=key; ctx.lineWidth=Math.max(1,w*0.03); rr(x-w/2+f,y-h/2+f,w-2*f,h-2*f,Math.max(1,r-o)); ctx.stroke(); }
+}
+function signText(x,y,w,h,lines,col){
+  const n=lines.length, longest=Math.max(1,...lines.map(l=>l.length));
+  const fs=Math.max(5, Math.min(w*0.84/(longest*1.02), h*0.74/(n*1.18)));
+  const lh=fs*1.18, y0=y-(n-1)*lh/2+fs*0.34;
+  for(let i=0;i<n;i++) txt(lines[i],x,y0+i*lh,col,fs,'center');
+}
+function arrowGlyph(x,y,w,col){                        // down chevron for gantries
+  ctx.fillStyle=col; ctx.strokeStyle=SIGN_INK; ctx.lineWidth=Math.max(1,w*0.09); ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(x-w/2,y-w*0.28); ctx.lineTo(x+w/2,y-w*0.28); ctx.lineTo(x,y+w*0.42); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+}
+/* green highway guide sign — the workhorse (DATA + gantries) */
+function signGuide(x,y,w,lines,opt){ opt=opt||{};
+  const h=opt.h||w*(lines.length>1?0.66:0.5);
+  panel(x,y,w,h,Math.max(3,w*0.07),opt.fill||'#1f9d4e','#f4f8ff');
+  signText(x,y,w,h,lines,'#ffffff');
+}
+/* orange diamond warning — the load pressure (green when ML-encoded) */
+function signDiamond(x,y,w,lines,opt){ opt=opt||{};
+  const col=opt.enc?'#54c47f':'#ff9f2e', sz=w*0.72, o=Math.max(2,w*0.05);
+  ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.lineJoin='round';
+  ctx.fillStyle=SIGN_INK; rr(-sz/2-o,-sz/2-o,sz+2*o,sz+2*o,w*0.06); ctx.fill();
+  ctx.fillStyle=col;      rr(-sz/2,-sz/2,sz,sz,w*0.05); ctx.fill();
+  ctx.strokeStyle=SIGN_INK; ctx.lineWidth=Math.max(1,w*0.035); rr(-sz/2+w*0.05,-sz/2+w*0.05,sz-w*0.1,sz-w*0.1,w*0.03); ctx.stroke();
+  ctx.restore();
+  signText(x,y,sz*0.98,sz*0.92,lines,'#1c2029');
+}
+/* US route shield — roadside brand + tier badge */
+function signShield(x,y,w,top,num){
+  const h=w*1.02, o=Math.max(2,w*0.05);
+  const path=(pad)=>{ const ww=w/2+pad, hh=h/2+pad; ctx.beginPath();
+    ctx.moveTo(x-ww*0.92,y-hh); ctx.lineTo(x+ww*0.92,y-hh);
+    ctx.quadraticCurveTo(x+ww,y-hh,x+ww,y-hh+ww*0.55);
+    ctx.lineTo(x+ww*0.66,y+hh*0.18);
+    ctx.quadraticCurveTo(x+ww*0.5,y+hh*0.7,x,y+hh);
+    ctx.quadraticCurveTo(x-ww*0.5,y+hh*0.7,x-ww*0.66,y+hh*0.18);
+    ctx.lineTo(x-ww,y-hh+ww*0.55);
+    ctx.quadraticCurveTo(x-ww,y-hh,x-ww*0.92,y-hh); ctx.closePath(); };
+  ctx.lineJoin='round'; ctx.fillStyle=SIGN_INK; path(o); ctx.fill();
+  ctx.fillStyle='#f4f7ff'; path(0); ctx.fill();
+  txt(top||'BEAMR',x,y-h*0.2,'#1c2029',Math.max(5,w*0.15),'center');
+  txt(num||'50', x,y+h*0.28,'#1c2029',Math.max(8,w*0.46),'center');
+}
+/* white directional arrow sign — dir:1 right, -1 left */
+function signArrow(x,y,w,text,dir){
+  const h=w*0.42, o=Math.max(2,w*0.05);
+  const path=(pad)=>{ const ww=w/2+pad, hh=h/2+pad; ctx.beginPath();
+    if(dir>0){ ctx.moveTo(x-ww,y-hh); ctx.lineTo(x+ww-hh,y-hh); ctx.lineTo(x+ww,y); ctx.lineTo(x+ww-hh,y+hh); ctx.lineTo(x-ww,y+hh); }
+    else{ ctx.moveTo(x+ww,y-hh); ctx.lineTo(x-ww+hh,y-hh); ctx.lineTo(x-ww,y); ctx.lineTo(x-ww+hh,y+hh); ctx.lineTo(x+ww,y+hh); }
+    ctx.closePath(); };
+  ctx.lineJoin='round'; ctx.fillStyle=SIGN_INK; path(o); ctx.fill();
+  ctx.fillStyle='#f4f7ff'; path(0); ctx.fill();
+  signText(x-dir*h*0.16,y,w*1.05,h,[text],'#1c2029');
+}
+/* blue info sign */
+function signInfo(x,y,w,lines){
+  const h=w*(lines.length>1?0.62:0.46);
+  panel(x,y,w,h,Math.max(3,w*0.06),'#2b6fd6','#f4f8ff'); signText(x,y,w,h,lines,'#ffffff');
+}
+/* grey post from a sign's bottom edge down to the ground */
+function signPost(x,yTop,yBase,wpx){
+  const pw=Math.max(1,wpx);
+  ctx.fillStyle='#8b929c'; ctx.fillRect(x-pw/2,yTop,pw,yBase-yTop);
+  ctx.fillStyle='#5c636d'; ctx.fillRect(x-pw/2,yTop,Math.max(1,pw*0.4),yBase-yTop);
+  ctx.fillStyle='#3f4650'; ctx.fillRect(x-pw*0.9,yBase-Math.max(1,pw*0.5),pw*1.8,Math.max(1,pw*0.5));
 }
 
 /* --- obstacles --- */
@@ -878,91 +953,59 @@ function shadowOval(x,y,w,h){
   ctx.fillStyle='rgba(3,4,10,.5)';
   ctx.beginPath(); ctx.ellipse(x,y,w,h,0,0,7); ctx.fill();
 }
+/* DATA — a green highway guide sign floating over the road (collect it) */
 function drawData(x,y,s,o,t){
-  const D=Math.max(6,pxw(o.uw,s)), R=D/2, green=S.mlsafe, c=green?C.grn:C.cyan;
-  const bob=Math.sin(t*3+o.u*9)*D*0.22, cy=y-R*1.25+bob;
-  shadowOval(x,y,R*0.8,R*0.24);
-  const g=ctx.createRadialGradient(x,cy,1,x,cy,R*3);
-  g.addColorStop(0,green?'rgba(92,224,138,.5)':'rgba(77,227,245,.5)');
-  g.addColorStop(1,'rgba(77,227,245,0)');
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,cy,R*3,0,7); ctx.fill();
-  ctx.save(); ctx.translate(x,cy); ctx.rotate(Math.sin(o.spin)*0.25);
-  ctx.fillStyle='rgba(6,20,26,.92)'; rr(-R,-R,D,D,R*0.32); ctx.fill();
-  ctx.strokeStyle=c; ctx.lineWidth=Math.max(1,D*0.09); ctx.stroke();
-  ctx.fillStyle=c;
-  ctx.fillRect(-R*0.58,-R*0.58,D*0.58,Math.max(1,D*0.13));
-  ctx.globalAlpha*=0.75;
-  ctx.fillRect(-R*0.58,-R*0.08,D*0.58,Math.max(1,D*0.09));
-  ctx.fillRect(-R*0.58, R*0.26,D*0.4, Math.max(1,D*0.09));
-  ctx.restore();
-  if(o.label && D>26) txt(o.label,x,y+D*0.34,c,Math.max(7,D*0.24),'center');
+  const w=Math.max(18,pxw(o.uw,s)*2.7);
+  const bob=Math.sin(t*3+o.u*9)*w*0.05, cy=y-w*0.44+bob;
+  shadowOval(x,y,w*0.34,w*0.1);
+  const g=ctx.createRadialGradient(x,cy,2,x,cy,w*1.15);
+  g.addColorStop(0,'rgba(120,232,150,.42)'); g.addColorStop(1,'rgba(120,232,150,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,cy,w*1.15,0,7); ctx.fill();
+  signGuide(x,cy,w,[o.label,'+'+o.mb+' MB']);
 }
+/* PRESSURE — an orange diamond warning (green once ML-encoded) + LOAD plate */
 function drawPressure(x,y,s,o){
-  const w=Math.max(10,pxw(o.uw,s)), h=w*0.92, top=y-h;
-  const enc=o.reduced;                       // encoded by ML-safe before ingest
-  const edge = enc?'rgba(140,240,180,.95)':'rgba(255,150,200,.95)';
-  const face1= enc?'#8fe6b0':'#ff8ab8', face2=enc?'#2f9c63':'#b53064', face3=enc?'#0f3a24':'#4f1029';
-  shadowOval(x,y,w*0.58,h*0.14);
-  /* incoming data-load glow */
-  const gl=ctx.createRadialGradient(x,y-h*0.5,2,x,y-h*0.5,w*1.5);
-  gl.addColorStop(0, enc?'rgba(92,224,138,.35)':'rgba(255,95,158,.35)');
-  gl.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(x,y-h*0.5,w*1.5,0,7); ctx.fill();
-  /* the payload block — reads as a server / data cube */
-  ctx.fillStyle=grad(x-w/2,top,x+w/2,y,[[0,face1],[0.5,face2],[1,face3]]);
-  rr(x-w/2,top,w,h,w*0.08); ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.22)'; ctx.fillRect(x-w/2+w*0.03,top+h*0.03,w*0.94,Math.max(1,h*0.09));
-  ctx.strokeStyle=edge; ctx.lineWidth=Math.max(1,w*0.04); rr(x-w/2,top,w,h,w*0.08); ctx.stroke();
-  /* rack slats with drive LEDs */
-  for(let i=0;i<4;i++){
-    const ry=top+h*(0.16+i*0.13);
-    ctx.fillStyle='rgba(6,10,20,.35)'; ctx.fillRect(x-w*0.42,ry,w*0.84,Math.max(1,h*0.05));
-    ctx.fillStyle=enc?'rgba(140,240,180,.85)':'rgba(255,190,215,.85)';
-    ctx.fillRect(x-w*0.40,ry,Math.max(1,w*0.05),Math.max(1,h*0.05));
-  }
-  /* short label plate */
-  if(h>26){
-    ctx.fillStyle='rgba(6,10,20,.9)'; rr(x-w*0.46,y-h*0.62,w*0.92,h*0.24,w*0.05); ctx.fill();
-    txt(o.tag,x,y-h*0.45,C.wht,Math.max(7,h*0.16),'center');
-  }
-  /* +XX LOAD readout (shows the reduced figure once encoded) */
-  if(h>36){
-    const lbl=enc?('+'+Math.round(o.load*(1-MLSAFE_REDUCTION))+' LOAD'):('+'+o.load+' LOAD');
-    txt(lbl,x,y-h*0.16,enc?C.grn:C.mag,Math.max(7,h*0.15),'center');
+  const w=Math.max(14,pxw(o.uw,s)*2.3), enc=o.reduced;
+  shadowOval(x,y,w*0.4,w*0.12);
+  const cy=y-w*0.52;
+  const gl=ctx.createRadialGradient(x,cy,2,x,cy,w*1.3);
+  gl.addColorStop(0, enc?'rgba(92,224,138,.3)':'rgba(255,170,80,.32)'); gl.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(x,cy,w*1.3,0,7); ctx.fill();
+  signDiamond(x,cy,w,o.tag.split(' '),{enc});
+  if(w>44){
+    const lbl='+'+(enc?Math.round(o.load*(1-MLSAFE_REDUCTION)):o.load)+' LOAD';
+    const py=cy+w*0.52, pw=w*0.92, ph=w*0.24;
+    panel(x,py,pw,ph,Math.max(2,w*0.04), enc?'#178a4f':'#c2551a','#ffffff');
+    signText(x,py,pw,ph,[lbl],'#ffffff');
   }
 }
+/* CONSTRAINT — guardrail barriers with a drivable gap, under an overhead
+   green gantry guide sign naming the pipeline stage + a white gap arrow */
 function drawConstraint(o,s,y,hw,t){
   const cx=CX+cOf(o.z), h=118*s;
-  const seg=(u0,u1)=>{
+  const barrier=(u0,u1)=>{
     const a=cx+u0*hw, b=cx+u1*hw; if(b-a<2) return;
-    ctx.fillStyle=grad(a,y-h,a,y,[[0,'#6b7490'],[0.35,'#4a5270'],[1,'#232941']]);
-    ctx.fillRect(a,y-h,b-a,h);
-    ctx.fillStyle='rgba(255,255,255,.2)'; ctx.fillRect(a,y-h,b-a,Math.max(1,h*0.09));
+    ctx.fillStyle='#39414f'; ctx.fillRect(a,y-h,b-a,h);
     const step=Math.max(6,26*s);
     for(let xx=a;xx<b;xx+=step*2){
-      ctx.fillStyle='#d0424a'; ctx.fillRect(xx,y-h*0.72,Math.min(step,b-xx),h*0.55);
-      if(xx+step<b){ ctx.fillStyle='#e8ecf5'; ctx.fillRect(xx+step,y-h*0.72,Math.min(step,b-xx-step),h*0.55); }
+      ctx.fillStyle='#e2464e'; ctx.fillRect(xx,y-h*0.72,Math.min(step,b-xx),h*0.5);
+      if(xx+step<b){ ctx.fillStyle='#f4f6fa'; ctx.fillRect(xx+step,y-h*0.72,Math.min(step,b-xx-step),h*0.5); }
     }
-    ctx.strokeStyle='rgba(10,12,22,.8)'; ctx.lineWidth=Math.max(1,2*s);
-    ctx.strokeRect(a,y-h,b-a,h);
+    ctx.strokeStyle=SIGN_INK; ctx.lineWidth=Math.max(1,2*s); ctx.strokeRect(a,y-h,b-a,h);
   };
-  seg(-1,o.g); seg(o.g+o.gw,1);
-  /* the gap: light beams and a label */
-  const ga=cx+o.g*hw, gb=cx+(o.g+o.gw)*hw;
-  const g=grad(ga,y-h*1.6,ga,y,[[0,'rgba(92,224,138,0)'],[1,'rgba(92,224,138,.30)']]);
-  ctx.fillStyle=g; ctx.fillRect(ga,y-h*1.6,gb-ga,h*1.6);
+  barrier(-1,o.g); barrier(o.g+o.gw,1);
+  const ga=cx+o.g*hw, gb=cx+(o.g+o.gw)*hw, gc=(ga+gb)/2;
+  /* green go-beams framing the gap */
   ctx.fillStyle=C.grn;
-  ctx.fillRect(ga-Math.max(1,2*s),y-h*1.15,Math.max(1,3*s),h*1.15);
-  ctx.fillRect(gb-Math.max(1,1*s),y-h*1.15,Math.max(1,3*s),h*1.15);
-  if(h>40){
-    const gc=(ga+gb)/2;
-    for(let i=0;i<3;i++){
-      const a=(blink(150)?0.9:0.4)-i*0.22;
-      ctx.fillStyle='rgba(92,224,138,'+a.toFixed(2)+')';
-      ctx.fillRect(gc-(14-i*4)*s, y-h*1.3+i*7*s, (28-i*8)*s, Math.max(1,3*s));
-    }
-    const fs=Math.max(8,(o.label.length>7?12:16)*s);
-    txt(o.label,gc,y-h*1.4,C.grn,fs,'center','rgba(92,224,138,.9)');
+  ctx.fillRect(ga-Math.max(1,2*s),y-h*1.05,Math.max(1,3*s),h*1.05);
+  ctx.fillRect(gb-Math.max(1,1*s),y-h*1.05,Math.max(1,3*s),h*1.05);
+  /* overhead gantry guide sign across the whole road */
+  if(h>34){
+    const beamH=Math.max(10,32*s), gy=y-h*1.5;
+    signPost(cx-hw*0.98,gy,y,Math.max(2,5*s));
+    signPost(cx+hw*0.98,gy,y,Math.max(2,5*s));
+    signGuide(cx,gy,hw*2.0,[o.label],{h:beamH});
+    arrowGlyph(gc,gy+beamH*0.5+10*s,Math.max(8,20*s),blink(200)?'#ffffff':'#bfeecd');
   }
 }
 
@@ -1021,7 +1064,7 @@ function drawCar(t){
   addBox(-0.72,0.72, 0.42,1.0, 0.16,0.82, {top:'#e4eaf7',rear:'#16233c',front:'#2a3a54',side:'#243651'});
   addBox(-0.28,0.28, 1.0,1.15, 0.34,0.64, {top:'#1c2440',rear:'#11172c',front:'#11172c',side:'#151c34'});
   faces.sort((a,b)=>zAvg(b.p)-zAvg(a.p));
-  faces.forEach(f=>poly(f.p,f.c,'rgba(6,9,18,.55)'));
+  faces.forEach(f=>poly(f.p,f.c,'#1c2029',Math.max(1,w*0.03)));
 
   /* ---- rear-face detailing (on the body/cabin Z≈0 plane) ---- */
   const eps=0.002;
@@ -1126,36 +1169,44 @@ function meter(x,y,w,h,pct,cols,mark,warn){
   }
 }
 function hud(t){
-  ctx.fillStyle=grad(0,0,0,HUD_H,[[0,'rgba(8,10,22,.96)'],[1,'rgba(10,13,28,.86)']]);
+  const crit=S.load>=78&&!S.mlsafe;
+  /* overhead-gantry HUD bar */
+  ctx.fillStyle=grad(0,0,0,HUD_H,[[0,'#2b303a'],[0.5,'#20242d'],[1,'#171a21']]);
   ctx.fillRect(0,0,W,HUD_H);
-  ctx.fillStyle=grad(0,0,W,0,[[0,'rgba(77,227,245,.0)'],[0.5,'rgba(139,108,255,.75)'],[1,'rgba(255,95,158,.0)']]);
-  ctx.fillRect(0,HUD_H-2,W,2);
+  ctx.fillStyle='rgba(255,255,255,.09)'; ctx.fillRect(0,0,W,2);
+  ctx.fillStyle='#1f9d4e'; ctx.fillRect(0,HUD_H-3,W,3);              // green guide accent
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(0,HUD_H,W,3);
 
-  txt('PIPELINE OVERLOAD',18,26,C.cyan,14,'left','rgba(77,227,245,.55)');
-  txt('SENSOR STACK '+(S.tier+1)+'/7 :: '+SENSORS[S.tier],18,44,C.dim,9);
+  /* title on a green guide plate */
+  panel(150,21,270,26,7,'#1f9d4e','#eafff0');
+  txt('PIPELINE OVERLOAD',150,26,'#ffffff',13,'center');
+  txt('SENSOR STACK '+(S.tier+1)+'/7 :: '+SENSORS[S.tier],18,46,'#c3ccd8',9);
   for(let i=0;i<7;i++){
     const px0=18+i*13, on=i<=S.tier;
-    ctx.fillStyle=on?C.cyan:'rgba(120,134,180,.28)';
+    ctx.fillStyle=on?'#ffcf3f':'rgba(150,160,180,.28)';
     ctx.beginPath(); ctx.moveTo(px0+4,54); ctx.lineTo(px0+8,60); ctx.lineTo(px0+4,66); ctx.lineTo(px0,60);
     ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=1; ctx.stroke();
   }
 
-  const crit=S.load>=78&&!S.mlsafe;
-  txt('PIPELINE LOAD',392,30,crit?C.red:C.dim,10);
+  txt('PIPELINE LOAD',392,30,crit?C.red:'#c3ccd8',10);
   meter(392,36,246,15,S.load/100,
-        crit?['#ff7a5e','#ff4d5e']:(S.load>55?['#ffcb4d','#ff8a4d']:['#4de3f5','#8b6cff']),
+        crit?['#ff7a5e','#ff4d5e']:(S.load>55?['#ffcb4d','#ff8a4d']:['#5ce08a','#33ad68']),
         floorLoad()/100, S.load>=92);
   if(S.mlsafe) txt('ML-SAFE MODE · DATA -'+Math.round(MLSAFE_REDUCTION*100)+'%*',515,66,C.grn,8,'center');
   else { const lab=keys.up?'ACCEL':keys.down?'BRAKE':'CRUISE';
-         txt('SPEED '+S.car.spd.toFixed(1)+'x · '+lab,515,66,keys.down?C.yel:(keys.up?C.grn:C.dim2),8,'center'); }
+         txt('SPEED '+S.car.spd.toFixed(1)+'x · '+lab,515,66,keys.down?C.yel:(keys.up?C.grn:'#8b93a4'),8,'center'); }
 
-  txt('DATA COLLECTED',W-18,24,C.dim,9,'right');
-  txt(Math.floor(S.mb)+' MB',W-18,47,C.wht,19,'right','rgba(92,224,138,.5)');
-  txt('T+'+String(Math.floor(S.t)).padStart(3,'0')+'s',W-18,63,C.dim2,10,'right');
+  /* data collected on a white sign readout */
+  const dcx=W-108;
+  panel(dcx,32,196,42,8,'#f4f7ff','#c7ccd6');
+  txt('DATA COLLECTED',dcx,22,'#5a616c',8,'center');
+  txt(Math.floor(S.mb)+' MB',dcx,45,'#1c2029',20,'center');
+  txt('T+'+String(Math.floor(S.t)).padStart(3,'0')+'s',W-18,66,'#8b93a4',9,'right');
 
   /* bottom strip */
-  ctx.fillStyle='rgba(8,10,22,.94)'; ctx.fillRect(0,STRIP_Y,W,H-STRIP_Y);
-  ctx.fillStyle='rgba(139,108,255,.5)'; ctx.fillRect(0,STRIP_Y,W,1);
+  ctx.fillStyle=grad(0,STRIP_Y,0,H,[[0,'#20242d'],[1,'#171a21']]); ctx.fillRect(0,STRIP_Y,W,H-STRIP_Y);
+  ctx.fillStyle='#1f9d4e'; ctx.fillRect(0,STRIP_Y,W,2);
   if(S.noteT>0&&S.note){
     const a=clamp(S.noteT*1.6,0,1); ctx.globalAlpha=a;
     txtC(S.note.s,STRIP_Y+34,S.note.c,15,'rgba(0,0,0,.8)'); ctx.globalAlpha=1;
@@ -1164,9 +1215,9 @@ function hud(t){
   } else if(crit){
     if(blink(230)) txtC('!!  PIPELINE CAPACITY CRITICAL  !!',STRIP_Y+34,C.red,17,'rgba(255,77,94,.8)');
   } else {
-    txt('CAPTURES '+S.grabbed,18,STRIP_Y+34,C.dim2,11);
-    txtC('COLLECT VIDEO   ·   CLEAR THE PIPELINE',STRIP_Y+34,C.dim2,11);
-    const c=S.mult>1?C.cyan:C.dim2;
+    txt('CAPTURES '+S.grabbed,18,STRIP_Y+34,'#aab2c4',11);
+    txtC('COLLECT VIDEO   ·   CLEAR THE PIPELINE',STRIP_Y+34,'#cfd5e0',11);
+    const c=S.mult>1?'#ffcf3f':'#aab2c4';
     txt('COMBO x'+S.mult,W-18,STRIP_Y+34,c,11,'right');
   }
 }
@@ -1202,7 +1253,8 @@ function scrTitle(t){
   S.dist+=0.9/60;
   sky(t); road(t); props();
   vignette();
-  ctx.fillStyle='rgba(5,6,14,.62)'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=grad(0,0,0,H,[[0,'rgba(14,10,26,.5)'],[0.5,'rgba(20,14,30,.42)'],[1,'rgba(10,8,20,.58)']]);
+  ctx.fillRect(0,0,W,H);
 
   const bob=Math.sin(t*1.6)*3;
   txtC('PIPELINE',140+bob,C.cyan,58,'rgba(77,227,245,.75)');
