@@ -1011,6 +1011,15 @@ function convexHull(pts){
   for(let i=p.length-1;i>=0;i--){ const q=p[i]; while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop(); up.push(q); }
   lo.pop(); up.pop(); return lo.concat(up);
 }
+/* a rounded-rectangle ring of points in car space (for lofting a smooth body) */
+function roundRectRing(x0,x1,y0,y1,r,n){
+  n=n||5; r=Math.min(r,(x1-x0)/2,(y1-y0)/2);
+  const pts=[], cxr=x1-r, cxl=x0+r, cyt=y1-r, cyb=y0+r;
+  const arc=(cx,cy,a0,a1)=>{ for(let i=0;i<=n;i++){ const a=a0+(a1-a0)*i/n; pts.push([cx+Math.cos(a)*r, cy+Math.sin(a)*r]); } };
+  arc(cxr,cyb,-Math.PI/2,0); arc(cxr,cyt,0,Math.PI/2);
+  arc(cxl,cyt,Math.PI/2,Math.PI); arc(cxl,cyb,Math.PI,1.5*Math.PI);
+  return pts;
+}
 /* --- the car: a clean flat-vector rear view of the AV test vehicle ------
    Two boxes (body + cabin) projected with a vertical-axis yaw so a turn
    reveals the SIDE, but rendered flat & minimal like the reference art:
@@ -1032,19 +1041,17 @@ function drawCar(t){
 
   const proj=(X,Y,Z)=>{ const Zc=Z-0.5, Xr=X*cosf+Zc*sinf, Zr=-X*sinf+Zc*cosf;
     return [Xr*SX, -Y*SY-(Zr+0.5)*SZ]; };
-  const zAvg=(p)=>{ let a=0; for(const q of p) a+=(-q[0]*sinf+(q[2]-0.5)*cosf); return a/p.length; };
   const path=(p)=>{ ctx.beginPath();
     for(let i=0;i<p.length;i++){ const P=proj(p[i][0],p[i][1],p[i][2]); i?ctx.lineTo(P[0],P[1]):ctx.moveTo(P[0],P[1]); }
     ctx.closePath(); };
   const poly=(p,fill,stroke,lw)=>{ path(p); if(fill){ctx.fillStyle=fill;ctx.fill();}
     if(stroke){ctx.lineJoin='round';ctx.strokeStyle=stroke;ctx.lineWidth=lw||ow;ctx.stroke();} };
-  const silhouette=(x0,x1,y0,y1,z0,z1)=>{                // one clean outline via hull
-    const cs=[]; for(const X of[x0,x1])for(const Y of[y0,y1])for(const Z of[z0,z1]) cs.push(proj(X,Y,Z));
-    const h=convexHull(cs); ctx.beginPath();
-    h.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath();
-    ctx.lineJoin='round'; ctx.strokeStyle=CAR_OUTLINE; ctx.lineWidth=ow; ctx.stroke();
-    ctx.fillStyle=CAR_OUTLINE; ctx.fill();
-  };
+  const projRing=(ring,z)=>ring.map(p=>proj(p[0],p[1],z));
+  const drawPts=(sp,fill,stroke,lw)=>{ ctx.beginPath();
+    sp.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.lineJoin='round';ctx.strokeStyle=stroke;ctx.lineWidth=lw||ow;ctx.stroke();} };
+  const hullDraw=(pts,fill,stroke,lw)=>drawPts(convexHull(pts),fill,stroke,lw);
 
   ctx.save(); ctx.translate(x,y);
 
@@ -1053,45 +1060,37 @@ function drawCar(t){
   const tg=ctx.createRadialGradient(0,-2,2,0,-2,bR);
   tg.addColorStop(0,'rgba(226,57,46,'+(braking?0.5:0.16)+')'); tg.addColorStop(1,'rgba(226,57,46,0)');
   ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(0,-2,bR,0,7); ctx.fill();
-  ctx.fillStyle='rgba(20,22,18,.28)'; ctx.beginPath(); ctx.ellipse(0,3,w*0.7,w*0.12,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(20,22,18,.3)'; ctx.beginPath(); ctx.ellipse(0,4,w*0.72,w*0.12,0,0,7); ctx.fill();
 
-  /* wheels — barely peek under the body */
-  ctx.fillStyle='#26262a';
-  [[-1,0.2],[1,0.2],[-1,0.82],[1,0.82]].forEach(([sx,z])=>{
-    const P=proj(sx*0.98,0.11,z); ctx.beginPath(); ctx.ellipse(P[0],P[1],w*0.11,w*0.12,0,0,7); ctx.fill();
+  /* wheels — two small tyres peeking under the rear arches */
+  ctx.fillStyle='#232327';
+  [[-0.9,0.24],[0.9,0.24]].forEach(([sx,z])=>{
+    const P=proj(sx,0.02,z); ctx.beginPath(); ctx.ellipse(P[0],P[1]+w*0.03,w*0.11,w*0.075,0,0,7); ctx.fill();
   });
 
-  const B={x0:-1,x1:1,y0:0,y1:0.46,z0:0,z1:1};           // body box
-  const K={x0:-0.82,x1:0.82,y0:0.4,y1:0.9,z0:0.12,z1:0.86}; // cabin/greenhouse box
+  /* ---- rounded body: loft two rounded-rect rings (rear + front) ---- */
+  const bRear=roundRectRing(-1,1,0.02,0.44,0.2), bFront=roundRectRing(-0.88,0.88,0.04,0.38,0.2);
+  const bRearP=projRing(bRear,0), bFrontP=projRing(bFront,1);
+  hullDraw(bRearP.concat(bFrontP), CAR_SIDE, CAR_OUTLINE, ow);            // rounded 3D shell (side tone)
+  drawPts(bRearP, CAR_BODY, 'rgba(51,50,47,.28)', Math.max(1,ow*0.5));    // rear face, a touch lighter
 
-  /* clean silhouettes (behind), then flat faces (front) */
-  silhouette(B.x0,B.x1,B.y0,B.y1,B.z0,B.z1);
-  silhouette(K.x0,K.x1,K.y0,K.y1,K.z0,K.z1);
+  /* ---- greenhouse / cabin: lower domed rounded rings ---- */
+  const kRear=roundRectRing(-0.78,0.78,0.4,0.84,0.28), kFront=roundRectRing(-0.6,0.6,0.4,0.72,0.26);
+  const kRearP=projRing(kRear,0.18), kFrontP=projRing(kFront,0.8);
+  hullDraw(kRearP.concat(kFrontP), CAR_BODY, CAR_OUTLINE, ow);
 
-  const faces=[];
-  const addBox=(b,c)=>{
-    faces.push({p:[[b.x0,b.y1,b.z0],[b.x1,b.y1,b.z0],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1]],c:c.top});
-    faces.push({p:[[b.x0,b.y0,b.z0],[b.x1,b.y0,b.z0],[b.x1,b.y1,b.z0],[b.x0,b.y1,b.z0]],c:c.rear});
-    faces.push({p:[[b.x0,b.y0,b.z1],[b.x1,b.y0,b.z1],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1]],c:c.front});
-    faces.push({p:[[b.x0,b.y0,b.z0],[b.x0,b.y0,b.z1],[b.x0,b.y1,b.z1],[b.x0,b.y1,b.z0]],c:c.side});
-    faces.push({p:[[b.x1,b.y0,b.z0],[b.x1,b.y0,b.z1],[b.x1,b.y1,b.z1],[b.x1,b.y1,b.z0]],c:c.side});
-  };
-  addBox(B,{top:CAR_BODY,rear:CAR_BODY,front:CAR_SIDE,side:CAR_SIDE});
-  addBox(K,{top:CAR_BODY,rear:CAR_BODY,front:CAR_SIDE,side:CAR_SIDE});
-  faces.sort((a,b)=>zAvg(b.p)-zAvg(a.p));
-  faces.forEach(f=>poly(f.p,f.c));
-
-  const eps=0.003, gz=K.z0+eps;                          // body-rear / glass planes
-  /* tinted rear glass inset (narrower at the top) */
-  poly([[-0.66,0.47,gz],[0.66,0.47,gz],[0.5,0.84,gz],[-0.5,0.84,gz]],CAR_GLASS,CAR_OUTLINE,Math.max(1,ow*0.7));
-  ctx.save(); path([[-0.66,0.47,gz],[0.66,0.47,gz],[0.5,0.84,gz],[-0.5,0.84,gz]]); ctx.clip();
+  const eps=0.004, gz=0.18+eps;                          // body-rear / glass planes
+  /* tinted rear glass inset (rounded, narrower at the top) */
+  const glass=roundRectRing(-0.58,0.58,0.45,0.79,0.22), glassP=projRing(glass,gz);
+  drawPts(glassP, CAR_GLASS, CAR_OUTLINE, Math.max(1,ow*0.7));
+  ctx.save(); ctx.beginPath(); glassP.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.clip();
   ctx.fillStyle='rgba(150,175,205,.18)';
-  poly([[-0.5,0.47,gz],[-0.28,0.47,gz],[0.04,0.84,gz],[-0.18,0.84,gz]]);
+  poly([[-0.46,0.45,gz],[-0.26,0.45,gz],[0.02,0.79,gz],[-0.16,0.79,gz]]);
   ctx.restore();
 
   /* full-width tail-light bar with a black centre panel */
   const on=braking||blink(150), red=braking?'#ff5646':'#d8402f';
-  const by0=0.28, by1=0.4;
+  const by0=0.23, by1=0.35;
   ctx.save(); if(on){ ctx.shadowColor='rgba(226,57,46,.85)'; ctx.shadowBlur=(braking?14:6)+5*s; }
   poly([[-0.9,by0,eps],[-0.28,by0,eps],[-0.28,by1,eps],[-0.9,by1,eps]],red);
   poly([[0.28,by0,eps],[0.9,by0,eps],[0.9,by1,eps],[0.28,by1,eps]],red);
