@@ -427,17 +427,17 @@ const DATA_LABELS=['VIDEO','FRAME','CLIP','DATA'];
 /* DATA PRESSURE — realistic factors that scale an AV video pipeline.
    Each carries a short readable tag and the load surge it adds. */
 const PRESSURE=[
-  {tag:'+4 CAMS',      load:10},
-  {tag:'12MP CAMS',    load:12},
-  {tag:'4K CAPTURE',   load:14},
-  {tag:'HIGHER FPS',   load:11},
-  {tag:'LONGER DRIVES',load:12},
-  {tag:'FLEET x10',    load:15},
-  {tag:'FLEET x100',   load:20},
-  {tag:'MORE ROAD HRS',load:12},
-  {tag:'MULTI-CAM LOG',load:13},
-  {tag:'RAW VIDEO',    load:15},
-  {tag:'NEW SENSOR RIG',load:16}
+  {tag:'+4 CAMERAS',   load:10, icon:'cam'},
+  {tag:'12MP SENSORS', load:12, icon:'cam'},
+  {tag:'4K CAPTURE',   load:14, icon:'film'},
+  {tag:'60 FPS',       load:11, icon:'fps'},
+  {tag:'LONGER DRIVES',load:12, icon:'clock'},
+  {tag:'FLEET x10',    load:15, icon:'fleet'},
+  {tag:'FLEET x100',   load:20, icon:'fleet'},
+  {tag:'MORE ROAD HRS',load:12, icon:'clock'},
+  {tag:'MULTI-CAM RIG',load:13, icon:'cam'},
+  {tag:'RAW VIDEO',    load:15, icon:'film'},
+  {tag:'NEW LIDAR',    load:16, icon:'sensor'}
 ];
 
 /* PIPELINE CONSTRAINTS — the infrastructure the data has to move through.
@@ -474,7 +474,7 @@ function newGame(mlsafe){
     t:0, tier:0, tierT:0, spawnT:0.5, neckT:2.6, dist:0, curve:0, curveT:0,
     car:{u:0,vu:0,uw:CARU[0]/2,bank:0,spd:1,pitch:0},
     obj:[], parts:[], pops:[], rings:[], props:[],
-    load: mlsafe?16:0, maxLoad:mlsafe?16:0,
+    load: mlsafe?16:0, maxLoad:mlsafe?16:0, loadShown:mlsafe?16:0, loadPulse:0, loadPulseC:'#ff5647',
     mb:0, grabbed:0, hits:0, pressureHits:0, pressureGB:0, combo:0, mult:1, bestCombo:0, nears:0,
     alertsFired:[],
     note:null, noteT:0, shake:0, flash:0, flashC:'#fff', alertT:0,
@@ -610,6 +610,10 @@ function update(dt){
   for(let i=S.pops.length-1;i>=0;i--){ const q=S.pops[i]; q.life-=dt; q.y-=52*dt; if(q.life<=0) S.pops.splice(i,1); }
   for(let i=S.rings.length-1;i>=0;i--){ const q=S.rings[i]; q.life-=dt; if(q.life<=0) S.rings.splice(i,1); }
 
+  /* the data bar eases toward its true value so surges visibly fill it */
+  S.loadShown += (S.load-S.loadShown)*Math.min(1,dt*7);
+  if(S.loadPulse>0) S.loadPulse=Math.max(0,S.loadPulse-dt*2.2);
+
   if(S.noteT>0) S.noteT-=dt;
   if(S.shake>0) S.shake=Math.max(0,S.shake-dt*34);
   if(S.flash>0) S.flash=Math.max(0,S.flash-dt*2.4);
@@ -637,6 +641,7 @@ function collect(o){
   else sfx.grab();
   S.mb+=o.mb*S.mult;
   S.load=Math.max(floorLoad(),S.load-RELIEF);
+  S.loadPulse=Math.max(S.loadPulse,0.55); S.loadPulseC='#5ce08a';
   const c=S.mlsafe?C.grn:C.cyan;
   popTxt(o.u,o.z,'+'+(o.mb*S.mult).toFixed(1)+' MB',c);
   ring(o.u,o.z,c);
@@ -647,6 +652,7 @@ function pressureHit(o){
   S.load=clamp(S.load+eff,floorLoad(),100);
   S.maxLoad=Math.max(S.maxLoad,S.load);
   S.hits++; S.pressureHits++; S.pressureGB+=o.gb; S.combo=0; S.mult=1;
+  S.loadPulse=1; S.loadPulseC=S.mlsafe?'#5ce08a':'#ff5647';
   S.shake=Math.max(S.shake,10); S.flash=0.55; S.flashC=S.mlsafe?'#8fe0b0':'#ff7ab0';
   const c=S.mlsafe?C.grn:C.mag;
   note((S.mlsafe?'ENCODED :: ':'DATA SURGE :: ')+o.tag, c, 1.8);
@@ -664,6 +670,7 @@ function bump(amount,msg,col,u,z,kind){
   S.load=clamp(S.load+amount,floorLoad(),100);
   S.maxLoad=Math.max(S.maxLoad,S.load);
   S.hits++; S.combo=0; S.mult=1;
+  S.loadPulse=1; S.loadPulseC=kind==='wall'?'#ff6070':'#ff5647';
   S.shake=Math.max(S.shake,kind==='wall'?15:11);
   S.flash=0.6; S.flashC=kind==='wall'?'#ff6070':'#ff7ab0';
   note(msg,col,1.8); popTxt(u,z,'+'+amount+'%',col);
@@ -688,7 +695,7 @@ function spawnPressure(){
   const e=PRESSURE[(Math.random()*PRESSURE.length)|0];
   const uw=e.tag.length>9?0.15:0.12;
   const gb=Math.round(e.load*rnd(2.4,3.6));   // illustrative +XX GB payload
-  S.obj.push({t:'pressure',u:freeU(uw),uw,z:ZSPAWN,tag:e.tag,load:e.load,gb,spin:0});
+  S.obj.push({t:'pressure',u:freeU(uw),uw,z:ZSPAWN,tag:e.tag,load:e.load,gb,icon:e.icon,spin:0});
 }
 function spawnConstraint(){
   const gw=S.car.uw*2+lerp(0.30,0.14,prog());
@@ -961,15 +968,51 @@ function drawData(x,y,s,o,t){
   ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,cy,w*1.15,0,7); ctx.fill();
   signGuide(x,cy,w,[o.label,'+'+o.mb+' MB']);
 }
-/* PRESSURE — an orange diamond warning: the +LOAD number is the hero, with a
-   small flavour caption below. Clean and instantly readable (green when ML-safe). */
+/* pictograms for the real pipeline stressors, drawn dark inside the diamond */
+function hazardIcon(type,x,y,r,col,bg){
+  ctx.save(); ctx.fillStyle=col; ctx.strokeStyle=col;
+  ctx.lineWidth=Math.max(1,r*0.2); ctx.lineJoin='round'; ctx.lineCap='round';
+  if(type==='cam'){
+    rr(x-r,y-r*0.5,r*2,r*1.1,r*0.24); ctx.fill();
+    ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(x,y+r*0.05,r*0.42,0,7); ctx.fill();
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,y+r*0.05,r*0.2,0,7); ctx.fill();
+    ctx.fillRect(x+r*0.35,y-r*0.8,r*0.5,r*0.32);
+  } else if(type==='film'){
+    rr(x-r,y-r*0.75,r*2,r*1.5,r*0.18); ctx.fill();
+    ctx.fillStyle=bg;
+    for(let i=-1;i<=1;i++){ const yy=y+i*r*0.56;
+      ctx.fillRect(x-r*0.92,yy-r*0.12,r*0.26,r*0.24); ctx.fillRect(x+r*0.66,yy-r*0.12,r*0.26,r*0.24); }
+    ctx.fillRect(x-r*0.42,y-r*0.5,r*0.84,r);
+  } else if(type==='clock'){
+    ctx.beginPath(); ctx.arc(x,y,r*0.9,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y-r*0.55); ctx.moveTo(x,y); ctx.lineTo(x+r*0.42,y+r*0.18); ctx.stroke();
+  } else if(type==='fleet'){
+    [[-0.55,-0.32],[0.5,-0.42],[0,0.42]].forEach(([dx,dy])=>{ rr(x+dx*r-r*0.36,y+dy*r-r*0.22,r*0.72,r*0.44,r*0.14); ctx.fill(); });
+  } else if(type==='fps'){
+    ctx.beginPath(); ctx.arc(x,y+r*0.25,r*0.85,Math.PI,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,y+r*0.25); ctx.lineTo(x+r*0.5,y-r*0.35); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x,y+r*0.25,r*0.14,0,7); ctx.fill();
+  } else if(type==='sensor'){
+    rr(x-r*0.28,y-r*0.15,r*0.56,r*0.95,r*0.1); ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y-r*0.25,r*0.5,Math.PI*1.18,Math.PI*1.82); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x,y-r*0.25,r*0.85,Math.PI*1.18,Math.PI*1.82); ctx.stroke();
+  } else {
+    ctx.fillRect(x-r*0.13,y-r*0.7,r*0.26,r*0.9); ctx.beginPath(); ctx.arc(x,y+r*0.62,r*0.16,0,7); ctx.fill();
+  }
+  ctx.restore();
+}
+/* PRESSURE — an orange hazard diamond: a pictogram of the real stressor + the
+   bold +LOAD it adds to the pipeline, with the stressor named below. */
 function drawPressure(x,y,s,o){
-  const w=Math.max(14,pxw(o.uw,s)*2.0), enc=o.reduced;
+  const w=Math.max(14,pxw(o.uw,s)*2.05), enc=o.reduced;
   shadowOval(x,y,w*0.4,w*0.12);
-  const cy=y-w*0.52;
+  const cy=y-w*0.54;
   const load=enc?Math.round(o.load*(1-MLSAFE_REDUCTION)):o.load;
-  signDiamond(x,cy,w,['+'+load],{enc});
-  if(w>40) txt(o.tag,x,cy+w*0.64,'#2a2f26',Math.max(7,w*0.12),'center','rgba(255,255,255,.6)');
+  const bg=enc?'#54c47f':'#ff9f2e', ink='#241f16';
+  signDiamond(x,cy,w,[],{enc});
+  if(w>30) hazardIcon(o.icon,x,cy-w*0.15,w*0.17,ink,bg);
+  txt('+'+load,x,cy+w*0.24,ink,Math.max(8,w*0.25),'center');
+  if(w>46) txt(o.tag,x,cy+w*0.66,'#eef2ff',Math.max(7,w*0.115),'center','rgba(20,20,20,.85)');
 }
 /* CONSTRAINT — guardrail barriers with a drivable gap, under an overhead
    green gantry guide sign naming the pipeline stage + a white gap arrow */
@@ -1026,7 +1069,7 @@ function roundRectRing(x0,x1,y0,y1,r,n){
    one silhouette outline (convex hull, no interior panel lines), off-white
    body, dark tinted glass inset, a full-width tail-light bar with a black
    centre panel, plate and exhaust. A small clean roof pod shows the stack. */
-const CAR_OUTLINE='#33322f', CAR_BODY='#f2f1ec', CAR_SIDE='#dcdbd4', CAR_GLASS='#20232b';
+const CAR_OUTLINE='#2f2e2b', CAR_BODY='#f3f2ee', CAR_SIDE='#dcdbd4', CAR_GREY='#8c9096', CAR_GLASS='#181a20';
 function drawCar(t){
   const s=sOf(CAR_Z), y=yOf(CAR_Z), x=xOf(S.car.u,CAR_Z,s);
   const w=Math.max(22,pxw(S.car.uw,s));
@@ -1089,33 +1132,47 @@ function drawCar(t){
   ctx.restore();
 
   /* full-width tail-light bar with a black centre panel */
-  const on=braking||blink(150), red=braking?'#ff5646':'#d8402f';
-  const by0=0.23, by1=0.35;
-  ctx.save(); if(on){ ctx.shadowColor='rgba(226,57,46,.85)'; ctx.shadowBlur=(braking?14:6)+5*s; }
-  poly([[-0.9,by0,eps],[-0.28,by0,eps],[-0.28,by1,eps],[-0.9,by1,eps]],red);
-  poly([[0.28,by0,eps],[0.9,by0,eps],[0.9,by1,eps],[0.28,by1,eps]],red);
-  ctx.restore();
-  poly([[-0.28,by0,eps],[0.28,by0,eps],[0.28,by1,eps],[-0.28,by1,eps]],'#1c1c1e');   // centre panel
-  /* reverse-light insets nearest the centre */
-  poly([[-0.28,by0+0.02,eps],[-0.16,by0+0.02,eps],[-0.16,by1-0.02,eps],[-0.28,by1-0.02,eps]],'#e7e4dc');
-  poly([[0.16,by0+0.02,eps],[0.28,by0+0.02,eps],[0.28,by1-0.02,eps],[0.16,by1-0.02,eps]],'#e7e4dc');
-  poly([[-0.9,by0,eps],[0.9,by0,eps],[0.9,by1,eps],[-0.9,by1,eps]],null,CAR_OUTLINE,Math.max(1,ow*0.7));
+  const pc=Math.max(0.34,cosf);
+  /* grey lower bumper — the two-tone break */
+  const bumper=roundRectRing(-0.99,0.99,0.02,0.2,0.15);
+  drawPts(projRing(bumper,eps), CAR_GREY, CAR_OUTLINE, Math.max(1,ow*0.6));
+  /* thin dark garnish strip the tail lights sit on */
+  poly([[-0.62,0.3,eps],[0.62,0.3,eps],[0.62,0.4,eps],[-0.62,0.4,eps]],'#26282d');
 
-  /* license plate — or the ML-safe decal */
-  const pc=Math.max(0.32,cosf), Pp=proj(0,0.15,eps);
+  /* round twin tail lights (FD-style), brighter under braking */
+  const on=braking, red=braking?'#ff5647':'#e0392b';
+  [-0.55,-0.34,0.34,0.55].forEach(cx=>{
+    const P=proj(cx,0.35,eps), R=w*0.07*pc;
+    ctx.fillStyle=CAR_OUTLINE; ctx.beginPath(); ctx.ellipse(P[0],P[1],R+ow*0.9,R+ow*0.9,0,0,7); ctx.fill();
+    ctx.save(); if(on){ ctx.shadowColor='rgba(226,57,46,.9)'; ctx.shadowBlur=12+5*s; }
+    ctx.fillStyle=red; ctx.beginPath(); ctx.ellipse(P[0],P[1],R,R,0,0,7); ctx.fill(); ctx.restore();
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(P[0]-R*0.32,P[1]-R*0.32,R*0.3,R*0.3,0,0,7); ctx.fill();
+  });
+
+  /* license plate on the grey bumper — or the ML-safe decal */
+  const Pp=proj(0,0.1,eps);
   if(S.mlsafe){
-    ctx.fillStyle='#12331f'; rr(Pp[0]-w*0.2*pc,Pp[1]-w*0.055,w*0.4*pc,w*0.11,3); ctx.fill();
-    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,ow*0.7); rr(Pp[0]-w*0.2*pc,Pp[1]-w*0.055,w*0.4*pc,w*0.11,3); ctx.stroke();
-    txt('ML-SAFE',Pp[0],Pp[1]+w*0.03,C.grn,Math.max(6,w*0.1*pc),'center');
+    ctx.fillStyle='#12331f'; rr(Pp[0]-w*0.19*pc,Pp[1]-w*0.05,w*0.38*pc,w*0.1,3); ctx.fill();
+    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,ow*0.7); rr(Pp[0]-w*0.19*pc,Pp[1]-w*0.05,w*0.38*pc,w*0.1,3); ctx.stroke();
+    txt('ML-SAFE',Pp[0],Pp[1]+w*0.028,C.grn,Math.max(6,w*0.095*pc),'center');
   } else {
-    ctx.fillStyle='#f2f1ec'; rr(Pp[0]-w*0.16*pc,Pp[1]-w*0.045,w*0.32*pc,w*0.09,2); ctx.fill();
+    ctx.fillStyle='#f4f3ef'; rr(Pp[0]-w*0.16*pc,Pp[1]-w*0.045,w*0.32*pc,w*0.09,2); ctx.fill();
     ctx.strokeStyle=CAR_OUTLINE; ctx.lineWidth=Math.max(1,ow*0.6); rr(Pp[0]-w*0.16*pc,Pp[1]-w*0.045,w*0.32*pc,w*0.09,2); ctx.stroke();
+    ctx.fillStyle='#c7ccd6'; ctx.fillRect(Pp[0]-w*0.1*pc,Pp[1]-w*0.004,w*0.2*pc,Math.max(1,w*0.012));
   }
 
-  /* exhaust tip, lower-left */
-  const Pe=proj(-0.6,0.03,eps);
-  ctx.fillStyle=CAR_OUTLINE; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.09*pc,w*0.05,0,0,7); ctx.fill();
-  ctx.fillStyle='#111114'; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.05*pc,w*0.028,0,0,7); ctx.fill();
+  /* chrome exhaust tip, lower-right */
+  const Pe=proj(0.52,0.02,eps);
+  ctx.fillStyle=CAR_OUTLINE; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.085*pc,w*0.05,0,0,7); ctx.fill();
+  ctx.fillStyle='#cbced4'; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.06*pc,w*0.034,0,0,7); ctx.fill();
+  ctx.fillStyle='#15161a'; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.032*pc,w*0.018,0,0,7); ctx.fill();
+
+  /* wing mirrors at the greenhouse shoulders */
+  [-1,1].forEach(sg=>{
+    const Pm=proj(sg*0.9,0.5,0.46);
+    ctx.fillStyle=CAR_OUTLINE; ctx.beginPath(); ctx.ellipse(Pm[0],Pm[1],w*0.055*pc,w*0.04,0,0,7); ctx.fill();
+    ctx.fillStyle='#2a2c31'; ctx.beginPath(); ctx.ellipse(Pm[0],Pm[1],w*0.04*pc,w*0.028,0,0,7); ctx.fill();
+  });
 
   /* ---- clean roof sensor pod (grows with the sensor stack) ---- */
   const Ppod=proj(0,0.9,0.5), podw=w*0.4*pc, podh=w*0.09;
@@ -1159,23 +1216,35 @@ function fx(){
 /* =====================================================================
    RENDER — HUD
    ===================================================================== */
-function meter(x,y,w,h,pct,cols,mark,warn){
-  ctx.fillStyle='rgba(4,6,14,.85)'; rr(x,y,w,h,h/2); ctx.fill();
-  ctx.strokeStyle='rgba(120,134,180,.35)'; ctx.lineWidth=1; rr(x,y,w,h,h/2); ctx.stroke();
+function meter(x,y,w,h,pct,cols,mark,warn,pulse,pulseC){
+  /* inset glossy track */
+  ctx.fillStyle=grad(x,y,x,y+h,[[0,'rgba(0,0,0,.6)'],[1,'rgba(46,54,74,.5)']]);
+  rr(x,y,w,h,h/2); ctx.fill();
+  ctx.strokeStyle='rgba(150,168,205,.3)'; ctx.lineWidth=1; rr(x+.5,y+.5,w-1,h-1,h/2); ctx.stroke();
   const fw=(w-4)*clamp(pct,0,1);
   if(fw>2){
     ctx.save(); rr(x+2,y+2,w-4,h-4,(h-4)/2); ctx.clip();
-    ctx.fillStyle=grad(x,y,x+w,y,cols.map((c,i)=>[i/(cols.length-1),c]));
+    ctx.fillStyle=grad(x,0,x+w,0,cols.map((c,i)=>[i/(cols.length-1),c]));
     ctx.fillRect(x+2,y+2,fw,h-4);
-    ctx.fillStyle='rgba(255,255,255,.22)'; ctx.fillRect(x+2,y+2,fw,(h-4)*0.4);
-    if(warn&&blink(120)){ ctx.fillStyle='rgba(255,255,255,.45)'; ctx.fillRect(x+2,y+2,fw,h-4); }
+    ctx.fillStyle=grad(x,y,x,y+h,[[0,'rgba(255,255,255,.5)'],[0.5,'rgba(255,255,255,0)'],[1,'rgba(0,0,0,.28)']]);
+    ctx.fillRect(x+2,y+2,fw,h-4);
+    if(warn&&blink(120)){ ctx.fillStyle='rgba(255,255,255,.5)'; ctx.fillRect(x+2,y+2,fw,h-4); }
     ctx.restore();
-    ctx.shadowColor=cols[cols.length-1]; ctx.shadowBlur=12;
-    ctx.fillStyle='rgba(0,0,0,0)'; rr(x+2,y+2,fw,h-4,(h-4)/2); ctx.fill(); ctx.shadowBlur=0;
+    /* bright leading edge where the fill ends */
+    ctx.fillStyle='rgba(255,255,255,.8)'; ctx.fillRect(x+2+fw-1.5,y+2,1.5,h-4);
   }
   if(mark>0.02){
     const mx=x+2+(w-4)*clamp(mark,0,1);
-    ctx.fillStyle='rgba(230,238,255,.65)'; ctx.fillRect(mx-1,y-2,2,h+4);
+    ctx.fillStyle='rgba(235,242,255,.8)'; ctx.fillRect(mx-1,y-2,2,h+4);
+  }
+  /* surge pulse — flashes when an obstacle loads the pipeline */
+  if(pulse>0){
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,'+(pulse*0.85).toFixed(2)+')'; ctx.lineWidth=1.5+pulse*1.5;
+    rr(x-2,y-2,w+4,h+4,(h+4)/2); ctx.stroke();
+    ctx.shadowColor=pulseC||'#ff5647'; ctx.shadowBlur=20*pulse;
+    ctx.strokeStyle=pulseC||'#ff5647'; ctx.lineWidth=2; rr(x,y,w,h,h/2); ctx.stroke();
+    ctx.restore();
   }
 }
 function hud(t){
@@ -1200,9 +1269,10 @@ function hud(t){
   }
 
   txt('PIPELINE LOAD',392,30,crit?C.red:'#c3ccd8',10);
-  meter(392,36,246,15,S.load/100,
+  txt(Math.round(S.loadShown)+'%',638,30,crit?C.red:'#e7ecf6',10,'right');
+  meter(392,36,246,15,S.loadShown/100,
         crit?['#ff7a5e','#ff4d5e']:(S.load>55?['#ffcb4d','#ff8a4d']:['#5ce08a','#33ad68']),
-        floorLoad()/100, S.load>=92);
+        floorLoad()/100, S.load>=92, S.loadPulse, S.loadPulseC);
   if(S.mlsafe) txt('ML-SAFE MODE · DATA -'+Math.round(MLSAFE_REDUCTION*100)+'%*',515,66,C.grn,8,'center');
   else { const lab=keys.up?'ACCEL':keys.down?'BRAKE':'CRUISE';
          txt('SPEED '+S.car.spd.toFixed(1)+'x · '+lab,515,66,keys.down?C.yel:(keys.up?C.grn:'#8b93a4'),8,'center'); }
