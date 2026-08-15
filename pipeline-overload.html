@@ -828,17 +828,15 @@ function propLamp(x,ybase,s,side){
   const lx=x+armW;
   ctx.fillStyle='#2c313b'; ctx.fillRect(lx-5*s,ybase-hgt,10*s,Math.max(1,4*s));
 }
-/* Beamr AV roadside signs — the brand's road-sign design line */
+/* Beamr AV roadside signs — sparse, single-word, read at a glance */
 function propSign(x,ybase,s,k,side){
-  const postH=Math.max(6,64*s), pw=Math.max(2,5*s);
+  const postH=Math.max(6,60*s), pw=Math.max(2,5*s);
   const place=(w,h,draw)=>{ const cy=ybase-postH-h/2; signPost(x,cy+h/2,ybase,pw); draw(x,cy,w); };
-  switch(k%6){
-    case 0: { const w=Math.max(14,58*s); place(w,w*1.02,(X,Y,W)=>signShield(X,Y,W,'UP TO','50')); break; }
-    case 1: { const w=Math.max(16,84*s); place(w,w*0.62,(X,Y,W)=>signInfo(X,Y,W,['KEEP','INTEGRITY'])); break; }
-    case 2: { const w=Math.max(16,90*s); place(w,w*0.42,(X,Y,W)=>signArrow(X,Y,W,'ML ACCURACY',side<0?1:-1)); break; }
-    case 3: { const w=Math.max(16,84*s); place(w,w*1.02,(X,Y,W)=>signDiamond(X,Y,W,['CONTROL','YOUR DATA'])); break; }
-    case 4: { const w=Math.max(16,92*s); place(w,w*0.66,(X,Y,W)=>signGuide(X,Y,W,['VIDEO RULES','THE WORLD'])); break; }
-    default:{ const w=Math.max(16,84*s); place(w,w*0.66,(X,Y,W)=>signGuide(X,Y,W,['REDUCE','THE DATA'])); }
+  switch(k%4){
+    case 0: { const w=Math.max(14,52*s); place(w,w*1.02,(X,Y,W)=>signShield(X,Y,W,'UP TO','50')); break; }
+    case 1: { const w=Math.max(16,70*s); place(w,w*0.5, (X,Y,W)=>signGuide(X,Y,W,['BEAMR'])); break; }
+    case 2: { const w=Math.max(16,64*s); place(w,w*1.02,(X,Y,W)=>signDiamond(X,Y,W,['DATA'])); break; }
+    default:{ const w=Math.max(16,68*s); place(w,w*0.46,(X,Y,W)=>signInfo(X,Y,W,['KEEP'])); }
   }
 }
 function props(){
@@ -849,8 +847,8 @@ function props(){
     const u=pr.side<0?-pr.u:pr.u;
     const x=xOf(u,pr.z,s);
     if(x<-200||x>W+200) return;
-    if(pr.k%9===0) propLamp(x,y,s,pr.side);
-    else if(pr.k%3===0) propSign(xOf(pr.side<0?-(pr.u+0.42):(pr.u+0.42),pr.z,s),y,s,pr.k,pr.side);
+    if(pr.k%13===0) propLamp(x,y,s,pr.side);
+    else if(pr.k%6===0) propSign(xOf(pr.side<0?-(pr.u+0.42):(pr.u+0.42),pr.z,s),y,s,pr.k,pr.side);
     else propTree(x,y,s,pr.k);
   });
 }
@@ -963,21 +961,15 @@ function drawData(x,y,s,o,t){
   ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,cy,w*1.15,0,7); ctx.fill();
   signGuide(x,cy,w,[o.label,'+'+o.mb+' MB']);
 }
-/* PRESSURE — an orange diamond warning (green once ML-encoded) + LOAD plate */
+/* PRESSURE — an orange diamond warning: the +LOAD number is the hero, with a
+   small flavour caption below. Clean and instantly readable (green when ML-safe). */
 function drawPressure(x,y,s,o){
-  const w=Math.max(14,pxw(o.uw,s)*2.3), enc=o.reduced;
+  const w=Math.max(14,pxw(o.uw,s)*2.0), enc=o.reduced;
   shadowOval(x,y,w*0.4,w*0.12);
   const cy=y-w*0.52;
-  const gl=ctx.createRadialGradient(x,cy,2,x,cy,w*1.3);
-  gl.addColorStop(0, enc?'rgba(92,224,138,.3)':'rgba(255,170,80,.32)'); gl.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(x,cy,w*1.3,0,7); ctx.fill();
-  signDiamond(x,cy,w,o.tag.split(' '),{enc});
-  if(w>44){
-    const lbl='+'+(enc?Math.round(o.load*(1-MLSAFE_REDUCTION)):o.load)+' LOAD';
-    const py=cy+w*0.52, pw=w*0.92, ph=w*0.24;
-    panel(x,py,pw,ph,Math.max(2,w*0.04), enc?'#178a4f':'#c2551a','#ffffff');
-    signText(x,py,pw,ph,[lbl],'#ffffff');
-  }
+  const load=enc?Math.round(o.load*(1-MLSAFE_REDUCTION)):o.load;
+  signDiamond(x,cy,w,['+'+load],{enc});
+  if(w>40) txt(o.tag,x,cy+w*0.64,'#2a2f26',Math.max(7,w*0.12),'center','rgba(255,255,255,.6)');
 }
 /* CONSTRAINT — guardrail barriers with a drivable gap, under an overhead
    green gantry guide sign naming the pipeline stage + a white gap arrow */
@@ -1009,118 +1001,137 @@ function drawConstraint(o,s,y,hw,t){
   }
 }
 
-/* --- the car: a lightweight pseudo-3D AV test vehicle -------------------
-   Modelled as two boxes (body + cabin) in car space (X left/right, Y up,
-   Z rear→front) and yawed about the vertical axis by the turn amount, then
-   projected to screen. So steering / road curvature reveals the SIDE of the
-   car (like an old arcade racer) instead of tilting a flat sprite. Faces are
-   painter-sorted for correct occlusion; a small sensor pod rides the roof. */
+/* convex hull (monotone chain) — used for a single clean car silhouette */
+function convexHull(pts){
+  const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  if(p.length<3) return p;
+  const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[],up=[];
+  for(const q of p){ while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop(); lo.push(q); }
+  for(let i=p.length-1;i>=0;i--){ const q=p[i]; while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop(); up.push(q); }
+  lo.pop(); up.pop(); return lo.concat(up);
+}
+/* --- the car: a clean flat-vector rear view of the AV test vehicle ------
+   Two boxes (body + cabin) projected with a vertical-axis yaw so a turn
+   reveals the SIDE, but rendered flat & minimal like the reference art:
+   one silhouette outline (convex hull, no interior panel lines), off-white
+   body, dark tinted glass inset, a full-width tail-light bar with a black
+   centre panel, plate and exhaust. A small clean roof pod shows the stack. */
+const CAR_OUTLINE='#33322f', CAR_BODY='#f2f1ec', CAR_SIDE='#dcdbd4', CAR_GLASS='#20232b';
 function drawCar(t){
   const s=sOf(CAR_Z), y=yOf(CAR_Z), x=xOf(S.car.u,CAR_Z,s);
   const w=Math.max(22,pxw(S.car.uw,s));
   const braking=!!keys.down, tier=S.tier;
 
-  /* turn / yaw: mostly steering, plus a little of the road's curvature */
   const zc0=CAR_Z, zf0=CAR_Z+0.28;
   const roadA=Math.atan2((cOf(zf0)-cOf(zc0))+S.car.u*roadW()*(sOf(zf0)-sOf(zc0))*0.5, -(yOf(zf0)-yOf(zc0)));
-  const phi=clamp(S.car.bank*0.62 + roadA*0.45, -0.72, 0.72);
+  const phi=clamp(S.car.bank*0.6 + roadA*0.42, -0.7, 0.7);
   const cosf=Math.cos(phi), sinf=Math.sin(phi);
-  const SX=w*0.5, SY=w*0.60, SZ=w*0.44;                 // width / height / length scales
+  const SX=w*0.5, SY=w*0.52, SZ=w*0.40;
+  const ow=Math.max(1.4,w*0.035);                       // outline weight
 
-  /* project car-space (X:-1..1, Y:0..1, Z:0..1) to screen, pivot at Z=0.5 */
   const proj=(X,Y,Z)=>{ const Zc=Z-0.5, Xr=X*cosf+Zc*sinf, Zr=-X*sinf+Zc*cosf;
     return [Xr*SX, -Y*SY-(Zr+0.5)*SZ]; };
   const zAvg=(p)=>{ let a=0; for(const q of p) a+=(-q[0]*sinf+(q[2]-0.5)*cosf); return a/p.length; };
-  const poly=(p,fill,stroke,lw)=>{ ctx.beginPath();
+  const path=(p)=>{ ctx.beginPath();
     for(let i=0;i<p.length;i++){ const P=proj(p[i][0],p[i][1],p[i][2]); i?ctx.lineTo(P[0],P[1]):ctx.moveTo(P[0],P[1]); }
-    ctx.closePath(); if(fill){ctx.fillStyle=fill;ctx.fill();}
-    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||Math.max(1,w*0.012);ctx.stroke();} };
+    ctx.closePath(); };
+  const poly=(p,fill,stroke,lw)=>{ path(p); if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.lineJoin='round';ctx.strokeStyle=stroke;ctx.lineWidth=lw||ow;ctx.stroke();} };
+  const silhouette=(x0,x1,y0,y1,z0,z1)=>{                // one clean outline via hull
+    const cs=[]; for(const X of[x0,x1])for(const Y of[y0,y1])for(const Z of[z0,z1]) cs.push(proj(X,Y,Z));
+    const h=convexHull(cs); ctx.beginPath();
+    h.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath();
+    ctx.lineJoin='round'; ctx.strokeStyle=CAR_OUTLINE; ctx.lineWidth=ow; ctx.stroke();
+    ctx.fillStyle=CAR_OUTLINE; ctx.fill();
+  };
 
   ctx.save(); ctx.translate(x,y);
 
-  /* brake bloom on the tarmac + ground shadow */
+  /* brake glow on the tarmac + soft ground shadow */
   const bR=w*(braking?1.0:0.72);
   const tg=ctx.createRadialGradient(0,-2,2,0,-2,bR);
-  tg.addColorStop(0,'rgba(255,60,80,'+(braking?0.5:0.22)+')'); tg.addColorStop(1,'rgba(255,60,80,0)');
+  tg.addColorStop(0,'rgba(226,57,46,'+(braking?0.5:0.16)+')'); tg.addColorStop(1,'rgba(226,57,46,0)');
   ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(0,-2,bR,0,7); ctx.fill();
-  ctx.fillStyle='rgba(2,3,8,.5)'; ctx.beginPath(); ctx.ellipse(0,2,w*0.66,w*0.12,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(20,22,18,.28)'; ctx.beginPath(); ctx.ellipse(0,3,w*0.7,w*0.12,0,0,7); ctx.fill();
 
-  /* wheels (drawn before the body so only the lower arcs peek out) */
-  ctx.fillStyle='#05070d';
-  [[-1,0.22],[1,0.22],[-1,0.80],[1,0.80]].forEach(([sx,z])=>{
-    const P=proj(sx*0.99,0.13,z); ctx.beginPath(); ctx.ellipse(P[0],P[1],w*0.12,w*0.14,0,0,7); ctx.fill();
+  /* wheels — barely peek under the body */
+  ctx.fillStyle='#26262a';
+  [[-1,0.2],[1,0.2],[-1,0.82],[1,0.82]].forEach(([sx,z])=>{
+    const P=proj(sx*0.98,0.11,z); ctx.beginPath(); ctx.ellipse(P[0],P[1],w*0.11,w*0.12,0,0,7); ctx.fill();
   });
 
-  /* ---- body + cabin + sensor-pod faces, painter-sorted ---- */
-  const faces=[];
-  const addBox=(x0,x1,y0,y1,z0,z1,c)=>{
-    faces.push({p:[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],c:c.top});
-    faces.push({p:[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0]],c:c.rear,rear:1});
-    faces.push({p:[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],c:c.front});
-    faces.push({p:[[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0]],c:c.side});
-    faces.push({p:[[x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0]],c:c.side});
-  };
-  addBox(-1,1, 0,0.5, 0,1,      {top:'#c9d1e8',rear:'#aab2d0',front:'#5e6688',side:'#767ea1'});
-  addBox(-0.72,0.72, 0.42,1.0, 0.16,0.82, {top:'#e4eaf7',rear:'#16233c',front:'#2a3a54',side:'#243651'});
-  addBox(-0.28,0.28, 1.0,1.15, 0.34,0.64, {top:'#1c2440',rear:'#11172c',front:'#11172c',side:'#151c34'});
-  faces.sort((a,b)=>zAvg(b.p)-zAvg(a.p));
-  faces.forEach(f=>poly(f.p,f.c,'#1c2029',Math.max(1,w*0.03)));
+  const B={x0:-1,x1:1,y0:0,y1:0.46,z0:0,z1:1};           // body box
+  const K={x0:-0.82,x1:0.82,y0:0.4,y1:0.9,z0:0.12,z1:0.86}; // cabin/greenhouse box
 
-  /* ---- rear-face detailing (on the body/cabin Z≈0 plane) ---- */
-  const eps=0.002;
-  /* rear window glass reflection streaks (cabin rear) */
-  ctx.save();
-  poly([[-0.62,0.5,0.16+eps],[0.62,0.5,0.16+eps],[0.52,0.96,0.16+eps],[-0.52,0.96,0.16+eps]]);
-  ctx.clip();
-  ctx.fillStyle='rgba(150,190,240,.16)';
-  poly([[-0.6,0.5,0.16+eps],[-0.4,0.5,0.16+eps],[-0.05,0.96,0.16+eps],[-0.25,0.96,0.16+eps]]);
-  poly([[0.1,0.5,0.16+eps],[0.24,0.5,0.16+eps],[0.5,0.96,0.16+eps],[0.36,0.96,0.16+eps]]);
+  /* clean silhouettes (behind), then flat faces (front) */
+  silhouette(B.x0,B.x1,B.y0,B.y1,B.z0,B.z1);
+  silhouette(K.x0,K.x1,K.y0,K.y1,K.z0,K.z1);
+
+  const faces=[];
+  const addBox=(b,c)=>{
+    faces.push({p:[[b.x0,b.y1,b.z0],[b.x1,b.y1,b.z0],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1]],c:c.top});
+    faces.push({p:[[b.x0,b.y0,b.z0],[b.x1,b.y0,b.z0],[b.x1,b.y1,b.z0],[b.x0,b.y1,b.z0]],c:c.rear});
+    faces.push({p:[[b.x0,b.y0,b.z1],[b.x1,b.y0,b.z1],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1]],c:c.front});
+    faces.push({p:[[b.x0,b.y0,b.z0],[b.x0,b.y0,b.z1],[b.x0,b.y1,b.z1],[b.x0,b.y1,b.z0]],c:c.side});
+    faces.push({p:[[b.x1,b.y0,b.z0],[b.x1,b.y0,b.z1],[b.x1,b.y1,b.z1],[b.x1,b.y1,b.z0]],c:c.side});
+  };
+  addBox(B,{top:CAR_BODY,rear:CAR_BODY,front:CAR_SIDE,side:CAR_SIDE});
+  addBox(K,{top:CAR_BODY,rear:CAR_BODY,front:CAR_SIDE,side:CAR_SIDE});
+  faces.sort((a,b)=>zAvg(b.p)-zAvg(a.p));
+  faces.forEach(f=>poly(f.p,f.c));
+
+  const eps=0.003, gz=K.z0+eps;                          // body-rear / glass planes
+  /* tinted rear glass inset (narrower at the top) */
+  poly([[-0.66,0.47,gz],[0.66,0.47,gz],[0.5,0.84,gz],[-0.5,0.84,gz]],CAR_GLASS,CAR_OUTLINE,Math.max(1,ow*0.7));
+  ctx.save(); path([[-0.66,0.47,gz],[0.66,0.47,gz],[0.5,0.84,gz],[-0.5,0.84,gz]]); ctx.clip();
+  ctx.fillStyle='rgba(150,175,205,.18)';
+  poly([[-0.5,0.47,gz],[-0.28,0.47,gz],[0.04,0.84,gz],[-0.18,0.84,gz]]);
   ctx.restore();
 
-  /* chrome / AV livery line across the tailgate */
-  const a1=proj(-0.9,0.34,eps), a2=proj(0.9,0.34,eps);
-  ctx.strokeStyle='rgba(77,227,245,.6)'; ctx.lineWidth=Math.max(1,w*0.022);
-  ctx.beginPath(); ctx.moveTo(a1[0],a1[1]); ctx.lineTo(a2[0],a2[1]); ctx.stroke();
+  /* full-width tail-light bar with a black centre panel */
+  const on=braking||blink(150), red=braking?'#ff5646':'#d8402f';
+  const by0=0.28, by1=0.4;
+  ctx.save(); if(on){ ctx.shadowColor='rgba(226,57,46,.85)'; ctx.shadowBlur=(braking?14:6)+5*s; }
+  poly([[-0.9,by0,eps],[-0.28,by0,eps],[-0.28,by1,eps],[-0.9,by1,eps]],red);
+  poly([[0.28,by0,eps],[0.9,by0,eps],[0.9,by1,eps],[0.28,by1,eps]],red);
+  ctx.restore();
+  poly([[-0.28,by0,eps],[0.28,by0,eps],[0.28,by1,eps],[-0.28,by1,eps]],'#1c1c1e');   // centre panel
+  /* reverse-light insets nearest the centre */
+  poly([[-0.28,by0+0.02,eps],[-0.16,by0+0.02,eps],[-0.16,by1-0.02,eps],[-0.28,by1-0.02,eps]],'#e7e4dc');
+  poly([[0.16,by0+0.02,eps],[0.28,by0+0.02,eps],[0.28,by1-0.02,eps],[0.16,by1-0.02,eps]],'#e7e4dc');
+  poly([[-0.9,by0,eps],[0.9,by0,eps],[0.9,by1,eps],[-0.9,by1,eps]],null,CAR_OUTLINE,Math.max(1,ow*0.7));
 
-  /* tail-light clusters */
-  const on=braking||blink(150);
-  [-1,1].forEach(sg=>{
-    const P=proj(sg*0.6,0.28,eps);
-    ctx.save(); if(on){ ctx.shadowColor='rgba(255,60,80,.9)'; ctx.shadowBlur=(braking?15:7)+6*s; }
-    ctx.fillStyle=braking?'#ff6474':'#d63b48';
-    ctx.beginPath(); ctx.ellipse(P[0],P[1],w*0.115*Math.max(0.4,cosf),w*0.07,0,0,7); ctx.fill();
-    ctx.restore();
-  });
-
-  /* license plate — or the ML-safe decal in ML-safe mode */
-  const pc=Math.max(0.35,cosf), Pp=proj(0,0.16,eps);
+  /* license plate — or the ML-safe decal */
+  const pc=Math.max(0.32,cosf), Pp=proj(0,0.15,eps);
   if(S.mlsafe){
-    ctx.fillStyle='rgba(10,44,28,.95)'; rr(Pp[0]-w*0.2*pc,Pp[1]-w*0.05,w*0.4*pc,w*0.1,3); ctx.fill();
-    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,w*0.02); rr(Pp[0]-w*0.2*pc,Pp[1]-w*0.05,w*0.4*pc,w*0.1,3); ctx.stroke();
+    ctx.fillStyle='#12331f'; rr(Pp[0]-w*0.2*pc,Pp[1]-w*0.055,w*0.4*pc,w*0.11,3); ctx.fill();
+    ctx.strokeStyle=C.grn; ctx.lineWidth=Math.max(1,ow*0.7); rr(Pp[0]-w*0.2*pc,Pp[1]-w*0.055,w*0.4*pc,w*0.11,3); ctx.stroke();
     txt('ML-SAFE',Pp[0],Pp[1]+w*0.03,C.grn,Math.max(6,w*0.1*pc),'center');
   } else {
-    ctx.fillStyle='#e8ecf5'; rr(Pp[0]-w*0.15*pc,Pp[1]-w*0.035,w*0.3*pc,w*0.07,2); ctx.fill();
+    ctx.fillStyle='#f2f1ec'; rr(Pp[0]-w*0.16*pc,Pp[1]-w*0.045,w*0.32*pc,w*0.09,2); ctx.fill();
+    ctx.strokeStyle=CAR_OUTLINE; ctx.lineWidth=Math.max(1,ow*0.6); rr(Pp[0]-w*0.16*pc,Pp[1]-w*0.045,w*0.32*pc,w*0.09,2); ctx.stroke();
   }
 
-  /* rear bumper band + exhaust */
-  poly([[-1,0,eps],[1,0,eps],[1,0.12,eps],[-1,0.12,eps]],'rgba(24,30,52,.92)');
-  const Pe=proj(0.55,0.05,eps);
-  ctx.fillStyle='#0a0d16'; ctx.beginPath(); ctx.arc(Pe[0],Pe[1],Math.max(2,w*0.04),0,7); ctx.fill();
+  /* exhaust tip, lower-left */
+  const Pe=proj(-0.6,0.03,eps);
+  ctx.fillStyle=CAR_OUTLINE; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.09*pc,w*0.05,0,0,7); ctx.fill();
+  ctx.fillStyle='#111114'; ctx.beginPath(); ctx.ellipse(Pe[0],Pe[1]+w*0.05,w*0.05*pc,w*0.028,0,0,7); ctx.fill();
 
-  /* ---- sensor pod detailing on the roof (Y≈1.15) ---- */
-  const Pf=proj(0,1.06,0.36);                       // forward camera lens on pod rear
-  ctx.fillStyle=blink(600)?C.cyan:C.cyanD;
-  rr(Pf[0]-w*0.07*pc,Pf[1]-w*0.02,w*0.14*pc,w*0.04,1); ctx.fill();
-  if(tier>=2){ const R=w*0.09, Pd=proj(0,1.28,0.49);   // spinning LiDAR dome
-    ctx.fillStyle=grad(Pd[0]-R,Pd[1]-R,Pd[0]+R,Pd[1]+R,[[0,'#f2f6ff'],[1,'#7b85a8']]);
-    ctx.beginPath(); ctx.arc(Pd[0],Pd[1],R,0,7); ctx.fill();
-    ctx.strokeStyle='#2a3350'; ctx.lineWidth=Math.max(1,w*0.016); ctx.stroke();
-    ctx.fillStyle=C.mag; ctx.beginPath(); ctx.arc(Pd[0]+Math.cos(t*4)*R*0.5,Pd[1]+Math.sin(t*4)*R*0.25,Math.max(1.2,w*0.03),0,7); ctx.fill();
+  /* ---- clean roof sensor pod (grows with the sensor stack) ---- */
+  const Ppod=proj(0,0.9,0.5), podw=w*0.4*pc, podh=w*0.09;
+  ctx.fillStyle=CAR_BODY; rr(Ppod[0]-podw/2,Ppod[1]-podh,podw,podh,podh*0.4); ctx.fill();
+  ctx.strokeStyle=CAR_OUTLINE; ctx.lineWidth=Math.max(1,ow*0.7); rr(Ppod[0]-podw/2,Ppod[1]-podh,podw,podh,podh*0.4); ctx.stroke();
+  ctx.fillStyle=blink(600)?C.cyan:C.cyanD; rr(Ppod[0]-podw*0.12,Ppod[1]-podh*0.75,podw*0.24,podh*0.5,1); ctx.fill();
+  if(tier>=2){ const R=w*0.075, Pd=[Ppod[0],Ppod[1]-podh-R*0.7];
+    ctx.fillStyle='#e8ebf2'; ctx.beginPath(); ctx.arc(Pd[0],Pd[1],R,0,7); ctx.fill();
+    ctx.strokeStyle=CAR_OUTLINE; ctx.lineWidth=Math.max(1,ow*0.7); ctx.stroke();
+    ctx.fillStyle=C.mag; ctx.beginPath(); ctx.arc(Pd[0]+Math.cos(t*4)*R*0.45,Pd[1],Math.max(1.2,w*0.026),0,7); ctx.fill();
   }
-  [[1,-0.2,C.cyan],[3,0.2,C.yel],[4,-0.1,C.cyan],[5,0.1,C.mag],[6,0,C.red]].forEach(([tr,fx,col])=>{
-    if(tier<tr) return; const Pm=proj(fx,1.18,0.5);
-    ctx.fillStyle=blink(220)?col:'rgba(120,134,180,.6)';
-    ctx.beginPath(); ctx.arc(Pm[0],Pm[1],Math.max(1.4,w*0.028),0,7); ctx.fill();
+  [[1,-0.32,C.cyan],[3,0.32,C.yel],[4,-0.16,C.cyan],[5,0.16,C.mag],[6,0,C.red]].forEach(([tr,fx,col])=>{
+    if(tier<tr) return;
+    ctx.fillStyle=blink(220)?col:'rgba(120,130,150,.6)';
+    ctx.beginPath(); ctx.arc(Ppod[0]+fx*podw,Ppod[1]-podh*0.4,Math.max(1.2,w*0.02),0,7); ctx.fill();
   });
 
   ctx.restore();
