@@ -228,6 +228,10 @@ function txt(s,x,y,col,size,align,glow){
   ctx.shadowBlur=0;
 }
 const txtC=(s,y,col,size,glow)=>txt(s,W/2,y,col,size,'center',glow);
+/* PS2P is fixed-pitch: every glyph advances exactly 1em, so a string is
+   exactly (length × fontSize) wide. This returns the largest size (<=cap)
+   that keeps `text` within maxW — used to keep every label inside its frame. */
+function fitFont(text,maxW,cap){ return Math.min(cap||1e4, maxW/Math.max(1,(''+text).length)); }
 function rr(x,y,w,h,r){
   r=Math.min(r,w/2,h/2);
   ctx.beginPath();
@@ -1066,8 +1070,10 @@ function panel(x,y,w,h,r,fill,key){
 }
 function signText(x,y,w,h,lines,col){
   const n=lines.length, longest=Math.max(1,...lines.map(l=>l.length));
-  const fs=Math.max(5, Math.min(w*0.84/(longest*1.02), h*0.74/(n*1.18)));
-  const lh=fs*1.18, y0=y-(n-1)*lh/2+fs*0.34;
+  /* fit exactly inside the panel by BOTH width and height so text never
+     spills past the frame, no matter how small/distant the sign is */
+  const fs=Math.min((w*0.82)/longest, (h*0.72)/(n*1.16));
+  const lh=fs*1.16, y0=y-(n-1)*lh/2+fs*0.34;
   for(let i=0;i<n;i++) txt(lines[i],x,y0+i*lh,col,fs,'center');
 }
 function arrowGlyph(x,y,w,col){                        // down chevron for gantries
@@ -1104,8 +1110,8 @@ function signShield(x,y,w,top,num){
     ctx.quadraticCurveTo(x-ww,y-hh,x-ww*0.92,y-hh); ctx.closePath(); };
   ctx.lineJoin='round'; ctx.fillStyle=SIGN_INK; path(o); ctx.fill();
   ctx.fillStyle='#f4f7ff'; path(0); ctx.fill();
-  txt(top||'BEAMR',x,y-h*0.2,'#1c2029',Math.max(5,w*0.15),'center');
-  txt(num||'50', x,y+h*0.28,'#1c2029',Math.max(8,w*0.46),'center');
+  txt(top||'BEAMR',x,y-h*0.2,'#1c2029',fitFont(top||'BEAMR',w*0.8,w*0.17),'center');
+  txt(num||'50', x,y+h*0.28,'#1c2029',fitFont(num||'50',w*0.82,w*0.46),'center');
 }
 /* directional arrow sign — dir:1 right, -1 left; optional fill/text colour */
 function signArrow(x,y,w,text,dir,fill,tcol){
@@ -1229,7 +1235,7 @@ function warnBanner(x,topY,w,tag,col){
   ctx.fillStyle='#141822'; rr(x-bw/2-2,topY-bh-2,bw+4,bh+4,4); ctx.fill();
   ctx.fillStyle=col||C.warn; rr(x-bw/2,topY-bh,bw,bh,3); ctx.fill();
   ctx.strokeStyle='#141822'; ctx.lineWidth=1.5; rr(x-bw/2,topY-bh,bw,bh,3); ctx.stroke();
-  txt(tag,x,topY-bh*0.28,'#141822',Math.max(7,bh*0.62),'center');
+  txt(tag,x,topY-bh*0.28,'#141822',fitFont(tag,bw*0.86,bh*0.62),'center');
 }
 function miniCar(cx,cy,mw,col,OL){
   rr(cx-mw*0.5,cy-mw*0.34,mw,mw*0.5,mw*0.16); ctx.fillStyle='#eef2f7'; ctx.fill();
@@ -1329,7 +1335,7 @@ function drawConstraint(o,s,y,hw,t){
     const gy=y-h*1.5, bw=hw*1.9, bh=Math.max(11,30*s);
     ctx.fillStyle='rgba(10,12,16,.92)'; rr(cx-bw/2,gy-bh/2,bw,bh,bh*0.28); ctx.fill();
     ctx.strokeStyle=C.warn; ctx.lineWidth=Math.max(1,2*s); rr(cx-bw/2,gy-bh/2,bw,bh,bh*0.28); ctx.stroke();
-    txt(o.label,cx,gy+bh*0.18,C.wht,Math.max(8,Math.min(bh*0.5,bw/Math.max(o.label.length,1)*1.5)),'center');
+    txt(o.label,cx,gy+bh*0.18,C.wht,fitFont(o.label,bw*0.9,bh*0.5),'center');
     arrowGlyph(gc,gy+bh*0.5+10*s,Math.max(8,18*s),blink(220)?C.grn:'rgba(87,224,138,.5)');
   }
 }
@@ -1535,9 +1541,10 @@ function hud(t){
   ctx.beginPath(); ctx.moveTo(gcx-Math.cos(na)*6,gcy-Math.sin(na)*6);
   ctx.lineTo(gcx+Math.cos(na)*(gr-6),gcy+Math.sin(na)*(gr-6)); ctx.stroke();
   ctx.fillStyle=crit?C.red:'#39435a'; ctx.beginPath(); ctx.arc(gcx,gcy,4,0,7); ctx.fill();
-  /* digital readout */
-  txt(Math.round(S.loadShown)+'%',gcx,gcy+gr*0.42,crit?C.warn:C.wht,13,'center');
-  txt('PIPELINE',gcx,gcy-gr*0.5,crit?C.warn:C.dim,7,'center');
+  /* digital readout — sits in the dial's bottom gap, clear of the needle */
+  const rd=Math.round(S.loadShown)+'%';
+  txt(rd,gcx,gcy+gr*0.72,crit?C.warn:C.wht,fitFont(rd,gr*1.35,12),'center');
+  txt('PIPELINE',gcx,gcy-gr*0.5,crit?C.warn:C.dim,fitFont('PIPELINE',gr*1.5,7),'center');
   /* surge flash ring when an obstacle loads the pipeline */
   if(S.loadPulse>0){ ctx.save(); ctx.strokeStyle=(S.loadPulseC||'#ff5647');
     ctx.globalAlpha=S.loadPulse*0.9; ctx.lineWidth=2+S.loadPulse*2;
