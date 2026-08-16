@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PIPELINE OVERLOAD — The AV Data Pressure Test</title>
-<meta name="description" content="Drive the fleet and collect video data while cameras, resolution and road hours pile pressure on the pipeline. Then decide how to reduce the data without changing model behavior.">
+<title>AV DATA SURVIVAL — How long can your pipeline last?</title>
+<meta name="description" content="Drive the fleet, collect video, and survive as cameras and resolution flood your data pipeline. Then see how Beamr ML-safe encoding cuts the data without changing model behavior.">
 <style>
   @font-face{
     font-family:'PS2P'; font-style:normal; font-weight:400; font-display:block;
@@ -24,7 +24,13 @@
     padding:14px 14px 30px; overflow:hidden; touch-action:none;
     background:radial-gradient(ellipse at 50% 0%, #0a1712 0%, #05070a 68%);
   }
-  #wrap{position:relative; width:100%; max-width:1280px; aspect-ratio:16/9;}
+  /* Always fit fully on screen: cap the 16:9 frame by BOTH width and the
+     available height, so it never overflows in portrait or on short windows. */
+  #wrap{
+    position:relative; aspect-ratio:16/9;
+    width:min(100%, calc((100vh - 56px) * 16 / 9), 1280px);
+    width:min(100%, calc((100dvh - 56px) * 16 / 9), 1280px);
+  }
   canvas{
     width:100%; height:100%; display:block; border-radius:6px;
     box-shadow:0 0 0 2px #14231b, 0 0 60px rgba(87,224,138,.14), 0 24px 60px rgba(0,0,0,.6);
@@ -67,7 +73,22 @@
   .kv b{color:var(--wht)}
   #hint{position:absolute; left:0; right:0; bottom:-22px; text-align:center;
         font-size:8px; color:#4a5375; line-height:1.6}
-  @media (max-width:640px){ .panel{font-size:9px; padding:16px} .row{flex-direction:column; gap:0} }
+  #rotate{display:none; position:absolute; left:0; right:0; top:-20px; text-align:center;
+          font-size:8px; color:#6a7599; line-height:1.6}
+  /* nudge to rotate only when in portrait on a touch device */
+  @media (max-width:900px) and (orientation:portrait) and (pointer:coarse){
+    #rotate{display:block}
+  }
+  @media (max-width:640px){
+    body{padding:8px 8px 26px}
+    .panel{font-size:9px; padding:16px; line-height:1.8}
+    .panel h2{font-size:11px}
+    .row{flex-direction:column; gap:0}
+    /* 16px inputs stop iOS Safari from zooming the page on focus */
+    .fld input,.fld select{font-size:16px; padding:10px 9px}
+    #hint{bottom:-19px; font-size:7px}
+  }
+  @media (max-width:420px){ #hint{font-size:6px} }
 </style>
 </head>
 <body>
@@ -112,11 +133,12 @@
     </div>
   </div>
   <div id="hint">A / D&nbsp; STEER &nbsp;·&nbsp; W / S&nbsp; SPEED &nbsp;·&nbsp; SPACE&nbsp; CONFIRM &nbsp;·&nbsp; M&nbsp; MUTE</div>
+  <div id="rotate">↻&nbsp; Rotate your device for the best view</div>
 </div>
 
 <script>
 /* =====================================================================
-   PIPELINE OVERLOAD — The AV Data Pressure Test
+   AV DATA SURVIVAL — How long can your pipeline last?
    A pseudo-3D arcade run about autonomous-fleet video data.
    Single file, no build step, no external assets, no storage APIs.
 
@@ -149,6 +171,29 @@ const MLSAFE_REDUCTION = 0.50;   // illustrative Beamr AV benchmark scenario
 const W = 960, H = 540;
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
+
+/* ---------- crisp, DPR-aware rendering ----------
+   Keep all drawing in logical 960x540 space, but back the canvas with a
+   higher-resolution buffer matched to the display size × device pixel ratio.
+   The browser then downsamples the buffer, so the game stays razor-sharp on
+   retina phones and big monitors while every draw call still uses W/H. */
+let RS = 1;   // render scale (backing pixels per logical pixel)
+function fit(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const rect = cv.getBoundingClientRect();
+  const dispW = rect.width || W;
+  RS = Math.max(1, (dispW * dpr) / W);
+  const bw = Math.round(W * RS), bh = Math.round(H * RS);
+  if(cv.width !== bw || cv.height !== bh){ cv.width = bw; cv.height = bh; }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+}
+window.addEventListener('resize', fit);
+if(window.visualViewport) visualViewport.addEventListener('resize', fit);
+
+/* touch vs keyboard: adapt the on-screen control prompts */
+const TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window);
+const CONFIRM = TOUCH ? 'TAP' : 'PRESS SPACE';
 
 /* ---------- palette ---------- */
 /* One cohesive system: Beamr green (positive) + one warm danger + neutral
@@ -1513,7 +1558,7 @@ function messages(){
     const a=clamp(S.noteT*1.8,0,1); ctx.globalAlpha=a;
     txtC(S.note.s,STRIP_Y-6,S.note.c,15,'rgba(0,0,0,.85)'); ctx.globalAlpha=1;
   } else if(S.mlsafe&&S.t>26&&blink(600)){
-    txtC('PRESS SPACE TO EXIT',STRIP_Y-6,C.grn,13);
+    txtC(CONFIRM+' TO EXIT',STRIP_Y-6,C.grn,13);
   }
 }
 
@@ -1579,12 +1624,12 @@ function scrTitle(t){
     ctx.fillStyle=blink(360)?(i%2?C.yel:C.warn):'#4a3a12'; ctx.beginPath(); ctx.arc(p[0],p[1],6,0,7); ctx.fill();
     ctx.strokeStyle='#0a0d12'; ctx.lineWidth=1.5; ctx.stroke();
   });
-  txtC('PIPELINE',sy+70,'#f6fff9',54);
-  /* OVERLOAD as a warning strip bending through the sign */
+  txtC('AV DATA',sy+70,'#f6fff9',54);
+  /* SURVIVAL as a warning strip bending through the sign */
   ctx.save(); ctx.translate(CX,sy+126); ctx.rotate(-0.03);
   ctx.fillStyle=C.yel; rr(-236,-28,472,52,8); ctx.fill();
   ctx.strokeStyle='#0a0d12'; ctx.lineWidth=4; rr(-236,-28,472,52,8); ctx.stroke();
-  txt('OVERLOAD',0,12,'#0a0d12',44,'center'); ctx.restore();
+  txt('SURVIVAL',0,12,'#0a0d12',44,'center'); ctx.restore();
 
   /* small orange warning diamond beside the sign */
   ctx.save(); ctx.translate(sx+sw-8,sy+8); ctx.rotate(0.12);
@@ -1592,7 +1637,7 @@ function scrTitle(t){
   ctx.strokeStyle='#0a0d12'; ctx.lineWidth=3; ctx.stroke(); ctx.restore();
   txt('DATA',0,-4,'#0a0d12',10,'center'); txt('AHEAD',0,9,'#0a0d12',9,'center'); ctx.restore();
 
-  txtC('Your fleet keeps generating video.  Can your pipeline keep up?',330,C.wht,15);
+  txtC('The video never stops. How long can your pipeline last?',330,C.wht,15);
 
   /* START RUN button */
   const bw=250,bh=56,bx=W/2-bw/2,by=356, pulse=0.5+0.5*Math.sin(t*4);
@@ -1603,8 +1648,8 @@ function scrTitle(t){
 
   /* the Beamr car drifting into frame at the bottom */
   drawCar(t);
-  txt('A / D  STEER',18,H-14,C.dim2,10);
-  txt('M  MUTE',W-18,H-14,C.dim2,10,'right');
+  txt(TOUCH?'DRAG  STEER':'A / D  STEER',18,H-14,C.dim2,10);
+  if(!TOUCH) txt('M  MUTE',W-18,H-14,C.dim2,10,'right');
 }
 
 function scrChoice(t){
@@ -1613,11 +1658,11 @@ function scrChoice(t){
   const pulse=0.5+0.5*Math.sin(t*6);
   txtC('PIPELINE OVERLOADED',104,C.red,40,'rgba(255,106,77,'+(0.4+pulse*0.4).toFixed(2)+')');
   txtC(fmtData(S.mb)+' COLLECTED',152,C.grn,26,'rgba(87,224,138,.4)');
-  txtC("The video kept coming. The pipeline couldn't keep up.",188,C.dim,13);
-  txtC('WHAT DO YOU DO?',236,C.wht,17);
-  opt(150,266,'DELETE DATA','Lose potentially useful scenes',C.red,S.choice===0);
-  opt(150,344,'COMPRESS BLINDLY','Smaller files. Unknown model impact.',C.warn,S.choice===1);
-  txtC('←  /  →   SELECT        SPACE   CONFIRM',438,C.dim2,12);
+  txtC('Too much video. Not enough pipeline.',188,C.dim,13);
+  txtC('NOW WHAT?',236,C.wht,17);
+  opt(150,266,'DELETE DATA','Lose scenes you might need',C.red,S.choice===0);
+  opt(150,344,'COMPRESS BLINDLY','Smaller files, unknown model impact',C.warn,S.choice===1);
+  txtC(TOUCH?'TAP AN OPTION':'←  /  →   SELECT        SPACE   CONFIRM',438,C.dim2,12);
   scanlines();
 }
 function opt(x,y,name,sub,col,sel){
@@ -1641,7 +1686,7 @@ function scrOver(t){
   txtC(o.head,214,o.col,44,'rgba(255,106,77,.45)');
   txtC(o.sub,262,o.head==='DATA REDUCED'?C.warn:C.wht,17);
   if(blink(520)) txtC('OR…',332,C.dim,22);
-  if(blink(460)) txtC('PRESS SPACE',474,C.dim,13);
+  if(blink(460)) txtC(CONFIRM,474,C.dim,13);
   scanlines();
 }
 
@@ -1652,11 +1697,11 @@ function scrReveal(t){
   const gg=ctx.createRadialGradient(W/2,300,20,W/2,300,340);
   gg.addColorStop(0,'rgba(87,224,138,.16)'); gg.addColorStop(1,'rgba(87,224,138,0)');
   ctx.fillStyle=gg; ctx.fillRect(0,0,W,H);
-  if(T>0.15) txtC('LESS VIDEO DATA.',186,C.wht,32);
-  if(T>0.9)  txtC('NO MEANINGFUL CHANGE TO MODEL BEHAVIOR.',228,C.wht,19);
+  if(T>0.15) txtC('HALF THE VIDEO DATA.',186,C.wht,32);
+  if(T>0.9)  txtC('SAME MODEL BEHAVIOR.',228,C.wht,19);
   if(T>1.7)  txtC("That's ML-safe.",306,C.grn,32,'rgba(87,224,138,.55)');
-  if(T>2.4)  txtC("The change from encoding stays within the model's normal real-world variance.",356,C.dim,12);
-  if(T>3.0&&blink(430)) txtC('PRESS SPACE',472,C.grn,14);
+  if(T>2.4)  txtC("Encoding stays within the model's normal variance.",356,C.dim,12);
+  if(T>3.0&&blink(430)) txtC(CONFIRM,472,C.grn,14);
   scanlines();
 }
 
@@ -1708,10 +1753,10 @@ function scrResult(t){
     ctx.restore();
   }
 
-  txtC("Less video data. Model behavior within normal variance. That's ML-safe.",458,C.wht,13);
+  txtC("Less data. Same model behavior. That's ML-safe.",458,C.wht,13);
   txtC('Want to find your actual ML-safe range?',482,C.grnL,13);
   txtC('*Illustrative '+pct+'% Beamr AV benchmark scenario. Actual ML-safe reduction depends on your video and models.',504,C.dim2,8);
-  if(T>2.6&&blink(430)) txtC('PRESS SPACE',528,C.grn,13);
+  if(T>2.6&&blink(430)) txtC(CONFIRM,528,C.grn,13);
 }
 
 function render(t){
@@ -1886,8 +1931,13 @@ function loop(now){
   let dt=(now-last)/1000; last=now;
   if(dt>0.08) dt=0.08;
   if(!ov.classList.contains('on')) update(dt);
+  ctx.setTransform(RS,0,0,RS,0,0);   // logical 960x540 space, rendered at buffer resolution
   render(now/1000);
   requestAnimationFrame(loop);
+}
+fit();
+if(TOUCH){
+  document.getElementById('hint').innerHTML='DRAG&nbsp; STEER &nbsp;·&nbsp; TAP&nbsp; CONFIRM';
 }
 if(document.fonts&&document.fonts.load){
   document.fonts.load("16px PS2P").catch(()=>{}).finally(()=>requestAnimationFrame(loop));

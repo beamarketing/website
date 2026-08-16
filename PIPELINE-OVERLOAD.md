@@ -1,17 +1,20 @@
-# Pipeline Overload — the AV data pressure test
+# AV Data Survival — how long can your pipeline last?
 
 A single-file, no-dependency HTML game used as an AV/ML lead magnet for Beamr.
 Everything lives in one file (HTML + CSS + JS + embedded font, no external
-assets). Two builds, identical gameplay / story / lead flow:
+assets). The main build renders crisp on retina phones and large monitors
+(device-pixel-ratio-aware supersampling) and is responsive + touch-friendly
+(drag to steer, tap to confirm; the frame always fits the viewport). Two
+builds, identical gameplay / story / lead flow:
 
-- [`pipeline-overload.html`](./pipeline-overload.html) — the main build. A
-  bright **golden-hour cartoon** look (Wacky-Wheels reference) built on the
-  **Beamr AV road-sign design line**: collectibles are green highway guide
-  signs (VIDEO / +MB), pressure is orange diamond warnings (green once
-  ML-encoded) with +LOAD plates, constraints are overhead green gantry guide
-  signs, the highway is lined with Beamr brand signs (UP TO 50 shields, CONTROL
-  YOUR DATA, KEEP INTEGRITY, PRESERVE ML ACCURACY), and the HUD is styled as
-  highway signage.
+- [`pipeline-overload.html`](./pipeline-overload.html) — the main build,
+  **AV DATA SURVIVAL**. A hazy **PS1-era dusk racer** look with an arcade
+  pixel font: a muted mauve/rose dusk sky, distant hazy mountains and rolling
+  hills, a winding warm-grey highway with metal guardrails and lane markings,
+  a low red sports car, and a racing-sim HUD (DATA readout + a circular
+  PIPELINE-LOAD gauge). Collectibles are glowing green video frames, pressure
+  is arcade hazards (camera booms, RAW reels, drone swarms), and the roadside
+  carries the Beamr AV sign line.
 - [`pipeline-overload-hd.html`](./pipeline-overload-hd.html) — **HD remaster**
   in a mid-2000s casual-PC-game style: 2× supersampled render, smooth bevelled
   UI, soft bloom, god-rays, a glossy halo sun, wet reflective road, and
