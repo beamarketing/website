@@ -1,0 +1,14 @@
+services:
+  abm:
+    build: .
+    container_name: beamr-abm
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    volumes:
+      # SQLite lives here, so this is the only thing worth backing up.
+      - ./data:/app/data
+    environment:
+      DB_PATH: /app/data/beamr-abm.db

@@ -1,0 +1,23 @@
+{
+  "name": "beamr-abm-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contact-based marketing engine: LinkedIn matched-audience advertising, email marketing, first-party website tracking and ad-engagement attribution against a dedicated contact list.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node --no-warnings src/index.js",
+    "dev": "node --no-warnings --watch src/index.js",
+    "migrate": "node --no-warnings src/cli.js migrate",
+    "seed": "node --no-warnings src/cli.js seed",
+    "import": "node --no-warnings src/cli.js import",
+    "score": "node --no-warnings src/cli.js score",
+    "sync:linkedin": "node --no-warnings src/cli.js sync-linkedin",
+    "pull:ads": "node --no-warnings src/cli.js pull-ads",
+    "test": "node --no-warnings --test test/*.test.js"
+  },
+  "dependencies": {}
+}
