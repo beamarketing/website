@@ -11,7 +11,7 @@ const IBC_COPY = {
     heroDateLine: "SEPTEMBER 11–14 · HALL 1 · BOOTH 1.D22 · AMSTERDAM RAI",
     yellowCardHeading: "Come Find Me at IBC",
     yellowCardBody: "See the before-and-afters on a proper screen, and tell me what's sitting in your archive — I'll show you the closest thing I've got to your content.",
-    radioIbcLabel: "At IBC — September 11–14, Booth 1.D22",
+    boothNote: "At IBC this week? Hall 1, Booth 1.D22. Walk up any time — no appointment, no badge scan required.",
 }
 
 /*
@@ -44,7 +44,8 @@ const readStoredTracking = () => {
  *
  * Story:
  * 1) Pay off the metro scan immediately in the hero
- * 2) Move straight to a low-friction 15-minute lead form
+ * 2) Move straight to a low-friction lead form, with the booth details
+ *    alongside it for anyone who would rather just walk up
  */
 
 export default function BeamrMetroWhatsNew(props) {
@@ -170,7 +171,7 @@ export default function BeamrMetroWhatsNew(props) {
         proofEnhanceTitle, proofOptimizeTitle, proofProveTitle, beyondArchiveText,
         metricResolutionLabel, metricBitrateLabel, metricSizeLabel, metricCodecLabel,
         cred1Value, cred1Label, cred2Value, cred2Label, cred3Value, cred3Label,
-        firstNameLabel, emailLabel, companyLabel, jobTitleLabel, meetingQuestion,
+        firstNameLabel, emailLabel, companyLabel, jobTitleLabel,
         beforeVideo,
         afterVideo,
         posterImage,
@@ -227,14 +228,12 @@ export default function BeamrMetroWhatsNew(props) {
         formSuccessMessage,
         formErrorMessage,
         leadDisclaimer,
-        locationIbcLabel,
-        locationCallLabel,
+        boothNote,
         archivePrompt,
         archivePlaceholder,
         formFollowupNote,
         seoTitle,
         seoDescription,
-        meetingLocationHubspotField,
         archiveHubspotField,
         industryHubspotField,
         industryHubspotValue,
@@ -278,7 +277,6 @@ export default function BeamrMetroWhatsNew(props) {
         email: "",
         company: "",
         jobtitle: "",
-        meeting_location: "",
         archive_content: "",
     }
     const [leadForm, setLeadForm] = React.useState(initialLeadForm)
@@ -303,7 +301,7 @@ export default function BeamrMetroWhatsNew(props) {
         "aboutStat1Value", "aboutStat1Label", "aboutStat2Value", "aboutStat2Label",
         "aboutStat3Value", "aboutStat3Label", "aboutStat4Value", "aboutStat4Label",
         "eventHeadline", "eventBody", "eventMeta", "eventCta", "secondaryCtaLabel",
-        "leadEyebrow", "leadHeadline", "leadBody", "formSubmitLabel", "leadDisclaimer", "locationIbcLabel", "locationCallLabel", "archivePrompt", "archivePlaceholder", "formFollowupNote", "meetingQuestion", "firstNameLabel", "emailLabel", "companyLabel", "jobTitleLabel", "guideText",
+        "leadEyebrow", "leadHeadline", "leadBody", "boothNote", "formSubmitLabel", "leadDisclaimer", "archivePrompt", "archivePlaceholder", "formFollowupNote", "firstNameLabel", "emailLabel", "companyLabel", "jobTitleLabel", "guideText",
     ]
     const textSignature = editableTextKeys.map((key) => String(props[key] ?? "")).join("␞")
     const [canvasText, setCanvasText] = React.useState(() =>
@@ -409,7 +407,6 @@ export default function BeamrMetroWhatsNew(props) {
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadForm.email.trim())) {
             errors.email = "That doesn’t look like a working email."
         }
-        if (!leadForm.meeting_location.trim()) errors.meeting_location = "IBC or a call?"
         setLeadErrors(errors)
         return Object.keys(errors).length === 0
     }
@@ -449,7 +446,6 @@ export default function BeamrMetroWhatsNew(props) {
                 { name: "email", value: leadForm.email.trim() },
                 ...(leadForm.company.trim() ? [{ name: "company", value: leadForm.company.trim() }] : []),
                 ...(leadForm.jobtitle.trim() ? [{ name: "jobtitle", value: leadForm.jobtitle.trim() }] : []),
-                ...(meetingLocationHubspotField ? [{ name: meetingLocationHubspotField, value: leadForm.meeting_location.trim() }] : []),
                 ...(archiveHubspotField && leadForm.archive_content.trim() ? [{ name: archiveHubspotField, value: leadForm.archive_content.trim() }] : []),
                 ]
             })()
@@ -655,6 +651,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-h1 { font-size:clamp(42px,6vw,${heroTitleSize}px); line-height:.84; letter-spacing:${heroTitleTracking}em; font-weight:${heroTitleWeight};  margin:0; max-width:780px; }
       .beamr-h1 .accent { color:${yellow}; font-style:italic; }
       .beamr-sub { max-width:650px; font-size:clamp(18px,1.55vw,23px); line-height:1.34; margin-top:28px; font-weight:430; }
+      .beamr-lead-copy .beamr-personal-note { max-width:500px; margin-top:26px; }
       .beamr-personal-note { max-width:650px; margin-top:24px; padding:18px 20px; border-left:3px solid ${yellow}; background:rgba(255,255,255,.08); border-radius:0 16px 16px 0; }
       .beamr-personal-note p { margin:0; font-size:16px; line-height:1.5; font-weight:500; }
       .beamr-personal-byline { display:flex; gap:7px; align-items:baseline; flex-wrap:wrap; margin-top:12px; font-size:12px; line-height:1.3; }
@@ -784,11 +781,6 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-cred + .beamr-cred { border-left:1px solid rgba(255,255,255,.18); padding-left:24px; }
       .beamr-cred-value { font-size:24px; font-weight:900; line-height:1; margin-bottom:7px; }
       .beamr-cred-label { font-size:12px; line-height:1.35; opacity:.72; }
-      .beamr-radio-group { margin-top:18px; }
-      .beamr-radio-title { font-size:13px; font-weight:800; margin-bottom:10px; }
-      .beamr-radio-options { display:grid; gap:8px; }
-      .beamr-radio-option { display:flex; gap:10px; align-items:flex-start; font-size:14px; line-height:1.35; cursor:pointer; }
-      .beamr-radio-option input { margin-top:3px; }
       .beamr-textarea { min-height:84px; resize:vertical; }
       .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
 
@@ -1067,6 +1059,11 @@ export default function BeamrMetroWhatsNew(props) {
                         <div className="beamr-lead-heroEyebrowV28">{nativeOr(leadEyebrowSlot, <span {...editableTextProps("leadEyebrow", { singleLine: true })}>{inlineValue("leadEyebrow")}</span>)}</div>
                         {nativeOr(leadHeadlineSlot, <h2 {...editableTextProps("leadHeadline")}>{inlineValue("leadHeadline")}</h2>)}
                         {nativeOr(leadBodySlot, <p {...editableTextProps("leadBody")}>{inlineValue("leadBody")}</p>)}
+                        {inlineValue("boothNote") && (
+                            <div className="beamr-personal-note">
+                                <p {...editableTextProps("boothNote")}>{inlineValue("boothNote")}</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="beamr-form-shell">
@@ -1095,16 +1092,7 @@ export default function BeamrMetroWhatsNew(props) {
                                 </div>
                             </div>
 
-                            <div className="beamr-radio-group">
-                                <div className="beamr-radio-title"><span {...editableTextProps("meetingQuestion", { singleLine: true })}>{inlineValue("meetingQuestion")}</span><span className="beamr-required">*</span></div>
-                                <div className="beamr-radio-options">
-                                    <label className="beamr-radio-option"><input type="radio" name="meeting_location" value="At IBC" checked={leadForm.meeting_location === "At IBC"} onChange={handleLeadFieldChange} /><span {...editableTextProps("locationIbcLabel")}>{inlineValue("locationIbcLabel")}</span></label>
-                                    <label className="beamr-radio-option"><input type="radio" name="meeting_location" value="Over a call" checked={leadForm.meeting_location === "Over a call"} onChange={handleLeadFieldChange} /><span {...editableTextProps("locationCallLabel")}>{inlineValue("locationCallLabel")}</span></label>
-                                </div>
-                                <div className="beamr-field-error">{leadErrors.meeting_location || ""}</div>
-                            </div>
-
-                            <div className="beamr-field full" style={{marginTop:18}}>
+                            <div className="beamr-field full">
                                 <label htmlFor="beamr-archive"><span {...editableTextProps("archivePrompt")}>{inlineValue("archivePrompt")}</span></label>
                                 <textarea id="beamr-archive" className="beamr-input beamr-textarea" name="archive_content" value={leadForm.archive_content} onChange={handleLeadFieldChange} placeholder={archivePlaceholder} />
                             </div>
@@ -1136,7 +1124,7 @@ BeamrMetroWhatsNew.defaultProps = {
     heroHeadlineAccentV28: "So Give Them 4K.",
     heroSubheadV28:
         "Beamr brings the video you already have — archive, live or VOD — up to 4K with NVIDIA Video Super Resolution, then keeps the result efficient enough to store and deliver. Beamr VISTA validates that viewers actually see the difference.",
-    heroCtaLabelV28: "Get 15 Minutes",
+    heroCtaLabelV28: "See It On Your Content",
     ctaHref: "#lead-form",
     heroImage: "",
     heroNameLine: IBC_COPY.heroNameLine,
@@ -1265,7 +1253,7 @@ BeamrMetroWhatsNew.defaultProps = {
     eventHeadline: IBC_COPY.yellowCardHeading,
     eventBody: IBC_COPY.yellowCardBody,
     eventMeta: "",
-    eventCta: "Get 15 Minutes",
+    eventCta: "Send Me Your Details",
     eventCtaHref: "#lead-form",
     secondaryCtaLabel: "Contact Us",
     secondaryCtaHref: "#lead-form",
@@ -1281,27 +1269,24 @@ BeamrMetroWhatsNew.defaultProps = {
     emailLabel: "Work email",
     companyLabel: "Company",
     jobTitleLabel: "Job title",
-    meetingQuestion: "Where should we meet?",
-    leadEyebrow: "Fifteen minutes",
+    leadEyebrow: "Tell me what you’re working with",
     leadHeadline: "Let’s Talk About Your Video.",
-    leadBody: "Two required fields. Tell me where you’d like to meet, and I’ll come back with a time and the comparisons closest to your workflow.",
+    leadBody: "Two required fields. Tell me what you’re working with and I’ll come back with the comparisons closest to your workflow.",
     showHubspotForm: true,
     hubspotPortalId: "",
     hubspotFormId: "",
     hubspotRegion: "",
     formPlaceholderText: "Add your HubSpot Portal ID and Form ID in the Framer properties to enable submission.",
-    formSubmitLabel: "Get My 15 Minutes",
-    formSuccessMessage: "Got it. I’ll be in touch with a time — and if you’re at IBC, come by 1.D22 whenever suits. Hall 1.",
+    formSubmitLabel: "Send It Over",
+    formSuccessMessage: "Got it — I’ll be in touch. At IBC this week? Come by Hall 1, Booth 1.D22 any time. No appointment needed.",
     formErrorMessage: "Something went wrong. Please try again or contact Beamr directly.",
     leadDisclaimer: "By submitting, you agree to hear from Beamr about this, plus occasional updates on our solutions, events and content. Unsubscribe any time.",
-    locationIbcLabel: IBC_COPY.radioIbcLabel,
-    locationCallLabel: "Over a call",
+    boothNote: IBC_COPY.boothNote,
     archivePrompt: "What kind of video are you working with?",
     archivePlaceholder: "Sports archive, HD masters, live channels — whatever it is",
     formFollowupNote: "I’ll reply myself — usually the same day during the show.",
     seoTitle: "Your Archive in 4K — Beamr at IBC 2026",
     seoDescription: "Haggai Barel is showing HD-to-4K Super Resolution at Booth 1.D22, Hall 1. Before and after, side by side, September 11–14.",
-    meetingLocationHubspotField: "",
     archiveHubspotField: "message",
     industryHubspotField: "industry",
     industryHubspotValue: "Media and Entertainment",
@@ -1382,9 +1367,7 @@ addPropertyControls(BeamrMetroWhatsNew, {
     emailLabel: { type: ControlType.String, title: "Email Label" },
     companyLabel: { type: ControlType.String, title: "Company Label" },
     jobTitleLabel: { type: ControlType.String, title: "Job Title Label" },
-    meetingQuestion: { type: ControlType.String, title: "Meeting Question" },
-    locationIbcLabel: { type: ControlType.String, title: "IBC Radio" },
-    locationCallLabel: { type: ControlType.String, title: "Call Radio" },
+    boothNote: { type: ControlType.String, title: "Booth Note", displayTextArea: true },
     archivePrompt: { type: ControlType.String, title: "Video Prompt" },
     archivePlaceholder: { type: ControlType.String, title: "Video Placeholder" },
     formSubmitLabel: { type: ControlType.String, title: "Submit Button" },
@@ -1406,7 +1389,6 @@ addPropertyControls(BeamrMetroWhatsNew, {
     hubspotPortalId: { type: ControlType.String, title: "Portal ID" },
     hubspotFormId: { type: ControlType.String, title: "Form ID" },
     hubspotRegion: { type: ControlType.String, title: "HubSpot Region" },
-    meetingLocationHubspotField: { type: ControlType.String, title: "Meeting Field" },
     archiveHubspotField: { type: ControlType.String, title: "Video Field" },
     industryHubspotField: { type: ControlType.String, title: "Industry Field" },
     industryHubspotValue: { type: ControlType.String, title: "Industry Value" },
