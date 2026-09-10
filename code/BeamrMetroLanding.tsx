@@ -262,7 +262,30 @@ export default function BeamrMetroWhatsNew(props) {
         illustrationRight,
 
         beamrLogo,
-        guideText,
+        footerLogoHeight,
+        footerTagline,
+        heroEyebrowSize,
+        heroNameSize,
+        heroSubheadSize,
+        heroBoothSize,
+        ctaFontSize,
+        trustedLabelSize,
+        routeEyebrowSize,
+        stepNumSize,
+        stepTitleSize,
+        stepBodySize,
+        stepTagSize,
+        credValueSize,
+        credLabelSize,
+        leadEyebrowSize,
+        leadBodySize,
+        boothNoteSize,
+        formLabelSize,
+        formInputSize,
+        submitSize,
+        followupNoteSize,
+        disclaimerSize,
+        footerTaglineSize,
         blue,
         navy,
         pink,
@@ -310,7 +333,7 @@ export default function BeamrMetroWhatsNew(props) {
         "aboutStat1Value", "aboutStat1Label", "aboutStat2Value", "aboutStat2Label",
         "aboutStat3Value", "aboutStat3Label", "aboutStat4Value", "aboutStat4Label",
         "eventHeadline", "eventBody", "eventMeta", "eventCta", "secondaryCtaLabel",
-        "leadEyebrow", "leadHeadline", "leadBody", "boothNote", "formSubmitLabel", "leadDisclaimer", "archivePrompt", "archivePlaceholder", "formFollowupNote", "firstNameLabel", "lastNameLabel", "emailLabel", "companyLabel", "jobTitleLabel", "guideText",
+        "leadEyebrow", "leadHeadline", "leadBody", "boothNote", "formSubmitLabel", "leadDisclaimer", "archivePrompt", "archivePlaceholder", "formFollowupNote", "firstNameLabel", "lastNameLabel", "emailLabel", "companyLabel", "jobTitleLabel", "footerTagline",
     ]
     const textSignature = editableTextKeys.map((key) => String(props[key] ?? "")).join("␞")
     const [canvasText, setCanvasText] = React.useState(() =>
@@ -650,23 +673,23 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-hero-brand-fallback { display:flex; align-items:center; gap:9px; font-size:22px; font-weight:850; letter-spacing:-.02em; }
       .beamr-hero-brand-fallback .beamr-icon { width:29px; height:29px; border-width:4px; }
       .beamr-hero-brand-fallback .beamr-icon:after { width:8px; height:8px; border-width:3px; }
-      .beamr-hero-name { font-size:13px; line-height:1.2; letter-spacing:.14em; font-weight:750; opacity:.92; margin-bottom:18px; }
-      .beamr-kicker { font-size:13px; letter-spacing:${heroEyebrowTracking}em; font-weight:${heroEyebrowWeight};  margin-bottom:22px; opacity:.92; }
+      .beamr-hero-name { font-size:${heroNameSize}px; line-height:1.2; letter-spacing:.14em; font-weight:750; opacity:.92; margin-bottom:18px; }
+      .beamr-kicker { font-size:${heroEyebrowSize}px; letter-spacing:${heroEyebrowTracking}em; font-weight:${heroEyebrowWeight};  margin-bottom:22px; opacity:.92; }
       .beamr-h1 { font-size:clamp(42px,6vw,${heroTitleSize}px); line-height:.84; letter-spacing:${heroTitleTracking}em; font-weight:${heroTitleWeight};  margin:0; max-width:780px; }
       .beamr-h1 .accent { color:${yellow}; font-style:italic; }
-      .beamr-sub { max-width:650px; font-size:clamp(18px,1.55vw,23px); line-height:1.34; margin-top:28px; font-weight:430; }
+      .beamr-sub { max-width:650px; font-size:clamp(16px,1.55vw,${heroSubheadSize}px); line-height:1.34; margin-top:28px; font-weight:430; }
       .beamr-lead-copy .beamr-personal-note { max-width:500px; margin-top:26px; }
       .beamr-personal-note { max-width:650px; margin-top:24px; padding:18px 20px; border-left:3px solid ${yellow}; background:rgba(255,255,255,.08); border-radius:0 16px 16px 0; }
-      .beamr-personal-note p { margin:0; font-size:16px; line-height:1.5; font-weight:500; }
+      .beamr-personal-note p { margin:0; font-size:${boothNoteSize}px; line-height:1.5; font-weight:500; }
       .beamr-personal-byline { display:flex; gap:7px; align-items:baseline; flex-wrap:wrap; margin-top:12px; font-size:12px; line-height:1.3; }
       .beamr-personal-name { font-weight:850; }
       .beamr-personal-title { opacity:.76; }
-      .beamr-hero-meta { margin-top:18px; font-size:13px; line-height:1.2; letter-spacing:.14em; font-weight:750; opacity:.92; max-width:560px; }
-      .beamr-cta { display:inline-flex; align-items:center; justify-content:center; min-height:48px; background:${white}; color:${black}; text-decoration:none; padding:16px 24px; border-radius:999px; font-weight:850; margin-top:30px; font-size:15px; transition:transform .2s ease, box-shadow .2s ease; box-shadow:0 12px 34px rgba(0,0,0,.12); }
+      .beamr-hero-meta { margin-top:18px; font-size:${heroBoothSize}px; line-height:1.2; letter-spacing:.14em; font-weight:750; opacity:.92; max-width:560px; }
+      .beamr-cta { display:inline-flex; align-items:center; justify-content:center; min-height:48px; background:${white}; color:${black}; text-decoration:none; padding:16px 24px; border-radius:999px; font-weight:850; margin-top:30px; font-size:${ctaFontSize}px; transition:transform .2s ease, box-shadow .2s ease; box-shadow:0 12px 34px rgba(0,0,0,.12); }
       .beamr-cta:hover { transform:translateY(-2px); box-shadow:0 16px 42px rgba(0,0,0,.16); }
       .beamr-hero .beamr-cta { background:${navy}; color:${white}; box-shadow:0 12px 24px rgba(47,88,165,.22); position:relative; z-index:5; }
       .beamr-trusted { margin-top:28px; display:flex; flex-direction:column; gap:14px; max-width:100%; }
-      .beamr-trusted-label { font-size:12px; line-height:1.2; letter-spacing:.16em;  font-weight:700; opacity:.8; }
+      .beamr-trusted-label { font-size:${trustedLabelSize}px; line-height:1.2; letter-spacing:.16em;  font-weight:700; opacity:.8; }
       .beamr-trusted-logos { display:flex; flex-wrap:wrap; align-items:center; gap:${trustedByGap}px; }
       .beamr-trusted-logo { display:block; width:auto; object-fit:contain; max-width:150px; filter:brightness(0) invert(1); opacity:.96; }
 
@@ -690,20 +713,20 @@ export default function BeamrMetroWhatsNew(props) {
 
       /* ROUTE */
       .beamr-route { background:${navy}; color:${white}; padding:88px 0 88px; position:relative; }
-      .beamr-route-title { font-size:14px; letter-spacing:${routeEyebrowTracking}em;  opacity:.76; margin-bottom:56px; font-weight:${routeEyebrowWeight}; }
+      .beamr-route-title { font-size:${routeEyebrowSize}px; letter-spacing:${routeEyebrowTracking}em;  opacity:.76; margin-bottom:56px; font-weight:${routeEyebrowWeight}; }
       .beamr-stops { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:42px; }
       .beamr-track { position:absolute; left:0; right:0; top:28px; height:10px; background:${pink}; border-radius:999px; }
       .beamr-stop { position:relative; padding-top:80px; }
       .beamr-dot { position:absolute; top:9px; width:48px; height:48px; border-radius:50%; background:${navy}; border:10px solid ${pink}; }
       .beamr-stop:nth-of-type(3) .beamr-dot { border-color:${mint}; }
       .beamr-stop:nth-of-type(4) .beamr-dot { border-color:${yellow}; }
-      .beamr-stop-num { opacity:.62; font-size:13px; letter-spacing:.15em; font-weight:800; margin-bottom:10px; }
-      .beamr-stop h3 { font-size:clamp(30px,3.3vw,49px); line-height:.94;  margin:0 0 15px; }
+      .beamr-stop-num { opacity:.62; font-size:${stepNumSize}px; letter-spacing:.15em; font-weight:800; margin-bottom:10px; }
+      .beamr-stop h3 { font-size:clamp(26px,3.3vw,${stepTitleSize}px); line-height:.94;  margin:0 0 15px; }
       .beamr-stop.stop-0 h3 { font-weight:${stop1TitleWeight}; letter-spacing:${stop1TitleTracking}em; }
       .beamr-stop.stop-1 h3 { font-weight:${stop2TitleWeight}; letter-spacing:${stop2TitleTracking}em; }
       .beamr-stop.stop-2 h3 { font-weight:${stop3TitleWeight}; letter-spacing:${stop3TitleTracking}em; }
-      .beamr-stop p { font-size:18px; line-height:1.42; max-width:310px; margin:0; opacity:.88; }
-      .beamr-stop-tag { display:inline-block; margin-top:18px; font-size:11px; letter-spacing:.12em;  font-weight:850; border:1px solid rgba(255,255,255,.35); padding:7px 10px; border-radius:999px; }
+      .beamr-stop p { font-size:${stepBodySize}px; line-height:1.42; max-width:310px; margin:0; opacity:.88; }
+      .beamr-stop-tag { display:inline-block; margin-top:18px; font-size:${stepTagSize}px; letter-spacing:.12em;  font-weight:850; border:1px solid rgba(255,255,255,.35); padding:7px 10px; border-radius:999px; }
 
       /* COMPARISON */
       .beamr-proof { background:${pink}; color:${navy}; padding:86px 0 92px; }
@@ -784,38 +807,38 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:3px solid ${yellow}; padding:28px 0 32px; }
       .beamr-cred { padding:0 28px 0 0; }
       .beamr-cred + .beamr-cred { border-left:1px solid rgba(255,255,255,.16); padding-left:28px; }
-      .beamr-cred-value { color:${yellow}; font-size:24px; font-weight:700; line-height:1; margin-bottom:7px; }
-      .beamr-cred-label { color:${white}; font-size:12px; line-height:1.35; opacity:.62; }
+      .beamr-cred-value { color:${yellow}; font-size:${credValueSize}px; font-weight:700; line-height:1; margin-bottom:7px; }
+      .beamr-cred-label { color:${white}; font-size:${credLabelSize}px; line-height:1.35; opacity:.62; }
       .beamr-textarea { min-height:84px; resize:vertical; }
-      .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
+      .beamr-followup-note { margin-top:12px; font-size:${followupNoteSize}px; line-height:1.45; opacity:.7; }
 
       /* LEAD FORM */
       .beamr-lead { background:${navy}; color:${white}; padding:64px 0 104px; position:relative; }
       .beamr-lead-grid { display:grid; grid-template-columns:.88fr 1.12fr; gap:72px; align-items:start; }
       .beamr-lead-copy { position:sticky; top:30px; }
-      .beamr-lead-heroEyebrowV28 { font-size:13px; letter-spacing:.17em; font-weight:800;  opacity:.75; margin-bottom:20px; }
+      .beamr-lead-heroEyebrowV28 { font-size:${leadEyebrowSize}px; letter-spacing:.17em; font-weight:800;  opacity:.75; margin-bottom:20px; }
       .beamr-lead h2 { font-size:clamp(36px,5vw,${leadTitleSize}px); line-height:.88; letter-spacing:${leadTitleTracking}em; font-weight:${leadTitleWeight};  margin:0 0 26px; }
-      .beamr-lead-copy p { font-size:clamp(19px,1.8vw,27px); line-height:1.32; margin:0; max-width:500px; opacity:.9; }
+      .beamr-lead-copy p { font-size:clamp(17px,1.8vw,${leadBodySize}px); line-height:1.32; margin:0; max-width:500px; opacity:.9; }
       .beamr-form-shell { background:${white}; color:${black}; border-radius:30px; padding:clamp(28px,4vw,48px); min-height:330px; box-shadow:0 25px 80px rgba(0,0,0,.16); position:relative; }
       .beamr-lead-form { display:flex; flex-direction:column; gap:18px; }
       .beamr-field-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
       .beamr-field { display:flex; flex-direction:column; gap:7px; }
       .beamr-field.full { grid-column:1 / -1; }
-      .beamr-field label { color:${black}; font-size:13px; line-height:1.2; font-weight:700; }
+      .beamr-field label { color:${black}; font-size:${formLabelSize}px; line-height:1.2; font-weight:700; }
       .beamr-required { color:${pink}; margin-left:4px; }
-      .beamr-input { width:100%; border:1px solid rgba(17,17,17,.18); border-radius:12px; padding:13px 15px; font-family:${fontFamily}; font-size:15px; background:${white}; color:${black}; outline:none; transition:border-color .2s ease, box-shadow .2s ease; }
+      .beamr-input { width:100%; border:1px solid rgba(17,17,17,.18); border-radius:12px; padding:13px 15px; font-family:${fontFamily}; font-size:${formInputSize}px; background:${white}; color:${black}; outline:none; transition:border-color .2s ease, box-shadow .2s ease; }
       .beamr-input:focus { border-color:${navy}; box-shadow:0 0 0 4px rgba(47,88,165,.12); }
       .beamr-input.error { border-color:#d92d20; box-shadow:0 0 0 4px rgba(217,45,32,.08); }
       .beamr-field-error { font-size:12px; line-height:1.3; color:#b42318; min-height:16px; }
       .beamr-form-actions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:2px; }
-      .beamr-form-submit { appearance:none; border:0; border-radius:999px; padding:15px 24px; background:${navy}; color:${white}; font-family:${fontFamily}; font-size:15px; font-weight:800; cursor:pointer; transition:transform .2s ease, opacity .2s ease, box-shadow .2s ease; box-shadow:0 12px 24px rgba(47,88,165,.18); }
+      .beamr-form-submit { appearance:none; border:0; border-radius:999px; padding:15px 24px; background:${navy}; color:${white}; font-family:${fontFamily}; font-size:${submitSize}px; font-weight:800; cursor:pointer; transition:transform .2s ease, opacity .2s ease, box-shadow .2s ease; box-shadow:0 12px 24px rgba(47,88,165,.18); }
       .beamr-form-submit:hover { transform:translateY(-1px); }
       .beamr-form-submit:disabled { cursor:wait; opacity:.78; transform:none; }
       .beamr-form-status { font-size:13px; line-height:1.45; font-weight:700; }
       .beamr-form-status.loading { color:${navy}; }
       .beamr-form-status.success { color:#067647; }
       .beamr-form-status.error { color:#b42318; }
-      .beamr-form-disclaimer { margin-top:4px; font-size:12px; line-height:1.5; color:rgba(17,17,17,.68); }
+      .beamr-form-disclaimer { margin-top:4px; font-size:${disclaimerSize}px; line-height:1.5; color:rgba(17,17,17,.68); }
       .beamr-success-state { min-height:250px; display:flex; align-items:center; justify-content:center; text-align:left; font-size:20px; line-height:1.45; font-weight:750; color:${navy}; padding:28px; }
 
       /* AMSTERDAM BOTTOM */
@@ -827,12 +850,13 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-amsterdam-footer { position:absolute; left:0; right:0; bottom:0; z-index:4; background:${navy}; color:${white}; }
       .beamr-amsterdam-footer .beamr-wrap { display:flex; justify-content:space-between; align-items:center; gap:24px; min-height:76px; }
 
-      .beamr-footer { display:flex; justify-content:space-between; align-items:center; gap:24px; padding-top:38px; font-weight:800; }
+      .beamr-footer-bar { background:${navy}; border-top:1px solid rgba(255,255,255,.16); }
+      .beamr-footer { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:26px 0 30px; font-weight:800; }
       .beamr-mark { display:flex; align-items:center; gap:10px; font-size:24px; }
-      .beamr-logo { display:block; width:auto; max-width:190px; max-height:44px; object-fit:contain; }
+      .beamr-logo { display:block; width:auto; max-width:190px; max-height:${footerLogoHeight}px; object-fit:contain; }
       .beamr-icon { width:34px; height:34px; border-radius:7px; border:5px solid currentColor; display:grid; place-items:center; }
       .beamr-icon:after { content:""; width:10px; height:10px; border-radius:50%; border:4px solid currentColor; }
-      .beamr-guide { font-size:14px; letter-spacing:.08em;  text-align:right; }
+      .beamr-guide { font-size:${footerTaglineSize}px; letter-spacing:.08em;  text-align:right; }
 
       @media (max-width: 900px) {
         .beamr-hero-grid { grid-template-columns:1fr; min-height:auto; }
@@ -851,24 +875,24 @@ export default function BeamrMetroWhatsNew(props) {
         .beamr-hero-brand { margin-bottom:20px; min-height:30px; }
         .beamr-hero-logo { max-width:118px; max-height:28px; }
         .beamr-hero-brand-fallback { font-size:19px; }
-        .beamr-kicker { font-size:11px; letter-spacing:.11em; margin-bottom:14px; }
+        .beamr-kicker { font-size:calc(${heroEyebrowSize}px * .85); letter-spacing:.11em; margin-bottom:14px; }
         .beamr-h1 { font-size:${mobileHeroTitleSize}px; line-height:.93; letter-spacing:-.045em; max-width:100%; }
-        .beamr-sub { font-size:17px; line-height:1.4; max-width:100%; margin-top:20px; }
+        .beamr-sub { font-size:calc(${heroSubheadSize}px * .74); line-height:1.4; max-width:100%; margin-top:20px; }
         .beamr-hero-copy > * { position:relative; }
         .beamr-hero .beamr-cta { position:relative; inset:auto; float:none; clear:both; display:flex; width:100%; box-sizing:border-box; margin:24px 0 0; }
         .beamr-personal-note { margin-top:18px; padding:15px 16px; border-radius:0 13px 13px 0; }
         .beamr-personal-note p { font-size:14px; line-height:1.48; }
-        .beamr-hero-meta { margin-top:14px; font-size:11px; letter-spacing:.08em; clear:both; }
-        .beamr-cta { width:100%; min-height:54px; justify-content:center; margin-top:18px; padding:16px 20px; font-size:15px; line-height:1.1; border-radius:14px; box-shadow:0 10px 28px rgba(0,0,0,.16); text-align:center; }
+        .beamr-hero-meta { margin-top:14px; font-size:calc(${heroBoothSize}px * .85); letter-spacing:.08em; clear:both; }
+        .beamr-cta { width:100%; min-height:54px; justify-content:center; margin-top:18px; padding:16px 20px; font-size:${ctaFontSize}px; line-height:1.1; border-radius:14px; box-shadow:0 10px 28px rgba(0,0,0,.16); text-align:center; }
         .beamr-cta:active { transform:scale(.985); box-shadow:0 6px 18px rgba(0,0,0,.14); }
         .beamr-event-actions { display:grid; grid-template-columns:1fr; gap:10px; width:100%; }
         .beamr-event .beamr-cta, .beamr-event .beamr-cta-secondary { width:100%; min-height:54px; margin-top:0; border-radius:14px; padding:16px 18px; }
         .beamr-form-actions { display:block; width:100%; margin-top:4px; }
-        .beamr-form-submit { width:100%; min-height:54px; border-radius:14px; padding:16px 18px; font-size:15px; box-shadow:0 10px 24px rgba(47,88,165,.22); }
+        .beamr-form-submit { width:100%; min-height:54px; border-radius:14px; padding:16px 18px; font-size:${submitSize}px; box-shadow:0 10px 24px rgba(47,88,165,.22); }
         .beamr-form-submit:active { transform:scale(.985); }
         .beamr-form-status { margin-top:10px; }
         .beamr-trusted { margin-top:22px; gap:10px; }
-        .beamr-trusted-label { font-size:10px; letter-spacing:.1em; }
+        .beamr-trusted-label { font-size:calc(${trustedLabelSize}px * .84); letter-spacing:.1em; }
         .beamr-trusted-logos { gap:16px; }
         .beamr-trusted-logo { max-width:105px; max-height:22px; }
         .beamr-hero-visual { min-height:330px; margin-top:0; }
@@ -1323,6 +1347,21 @@ export default function BeamrMetroWhatsNew(props) {
                 </div>
             </section>
 
+            <footer className="beamr-footer-bar">
+                <div className="beamr-wrap beamr-footer">
+                    <div className="beamr-mark">
+                        {beamrLogo ? (
+                            <img src={beamrLogo} className="beamr-logo" alt="Beamr" />
+                        ) : (
+                            <><span className="beamr-icon" /> Beamr</>
+                        )}
+                    </div>
+                    {inlineValue("footerTagline") && (
+                        <div className="beamr-guide" {...editableTextProps("footerTagline", { singleLine: true })}>{inlineValue("footerTagline")}</div>
+                    )}
+                </div>
+            </footer>
+
         </div>
     )
 }
@@ -1525,7 +1564,30 @@ BeamrMetroWhatsNew.defaultProps = {
     illustrationRight: -30,
 
     beamrLogo: "",
-    guideText: "The Video Pipeline Guide®",
+    footerLogoHeight: 26,
+    footerTagline: "Get More From Your Video",
+    heroEyebrowSize: 13,
+    heroNameSize: 13,
+    heroSubheadSize: 23,
+    heroBoothSize: 13,
+    ctaFontSize: 15,
+    trustedLabelSize: 12,
+    routeEyebrowSize: 14,
+    stepNumSize: 13,
+    stepTitleSize: 49,
+    stepBodySize: 18,
+    stepTagSize: 11,
+    credValueSize: 24,
+    credLabelSize: 12,
+    leadEyebrowSize: 13,
+    leadBodySize: 27,
+    boothNoteSize: 16,
+    formLabelSize: 13,
+    formInputSize: 15,
+    submitSize: 15,
+    followupNoteSize: 12,
+    disclaimerSize: 12,
+    footerTaglineSize: 14,
 
     blue: "#3475F5",
     navy: "#2F58A5",
@@ -1643,6 +1705,34 @@ addPropertyControls(BeamrMetroWhatsNew, {
     // SEO
     seoTitle: { type: ControlType.String, title: "SEO Title" },
     seoDescription: { type: ControlType.String, title: "SEO Description", displayTextArea: true },
+
+    // FOOTER
+    footerTagline: { type: ControlType.String, title: "Footer Tagline" },
+    footerTaglineSize: { type: ControlType.Number, title: "Tagline Size", min: 9, max: 40, step: 1 },
+    footerLogoHeight: { type: ControlType.Number, title: "Footer Logo H", min: 12, max: 80, step: 1 },
+
+    // TEXT SIZES
+    heroEyebrowSize: { type: ControlType.Number, title: "Hero Eyebrow Size", min: 8, max: 40, step: 1 },
+    heroNameSize: { type: ControlType.Number, title: "Haggai Line Size", min: 8, max: 40, step: 1 },
+    heroSubheadSize: { type: ControlType.Number, title: "Hero Body Size", min: 12, max: 48, step: 1 },
+    heroBoothSize: { type: ControlType.Number, title: "Booth Line Size", min: 8, max: 40, step: 1 },
+    ctaFontSize: { type: ControlType.Number, title: "CTA Size", min: 10, max: 36, step: 1 },
+    trustedLabelSize: { type: ControlType.Number, title: "Logo Label Size", min: 8, max: 32, step: 1 },
+    routeEyebrowSize: { type: ControlType.Number, title: "Pipeline Eyebrow Size", min: 8, max: 40, step: 1 },
+    stepNumSize: { type: ControlType.Number, title: "Step Number Size", min: 8, max: 32, step: 1 },
+    stepTitleSize: { type: ControlType.Number, title: "Step Title Size", min: 18, max: 90, step: 1 },
+    stepBodySize: { type: ControlType.Number, title: "Step Body Size", min: 11, max: 40, step: 1 },
+    stepTagSize: { type: ControlType.Number, title: "Step Tag Size", min: 8, max: 28, step: 1 },
+    credValueSize: { type: ControlType.Number, title: "Cred Value Size", min: 12, max: 60, step: 1 },
+    credLabelSize: { type: ControlType.Number, title: "Cred Label Size", min: 8, max: 30, step: 1 },
+    leadEyebrowSize: { type: ControlType.Number, title: "Form Eyebrow Size", min: 8, max: 40, step: 1 },
+    leadBodySize: { type: ControlType.Number, title: "Form Body Size", min: 12, max: 48, step: 1 },
+    boothNoteSize: { type: ControlType.Number, title: "Booth Note Size", min: 10, max: 36, step: 1 },
+    formLabelSize: { type: ControlType.Number, title: "Field Label Size", min: 9, max: 28, step: 1 },
+    formInputSize: { type: ControlType.Number, title: "Input Text Size", min: 11, max: 30, step: 1 },
+    submitSize: { type: ControlType.Number, title: "Submit Text Size", min: 10, max: 30, step: 1 },
+    followupNoteSize: { type: ControlType.Number, title: "Follow-up Size", min: 8, max: 26, step: 1 },
+    disclaimerSize: { type: ControlType.Number, title: "Consent Size", min: 8, max: 26, step: 1 },
 
     // BRAND COLORS
     blue: { type: ControlType.Color, title: "Blue" },
