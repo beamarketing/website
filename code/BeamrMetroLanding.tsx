@@ -165,6 +165,9 @@ export default function BeamrMetroWhatsNew(props) {
         stop2Body,
         stop3Title,
         stop3Body,
+        stop1Tag,
+        stop2Tag,
+        stop3Tag,
 
         proofHeadline,
         proofBody,
@@ -298,7 +301,7 @@ export default function BeamrMetroWhatsNew(props) {
         "heroEyebrowV28", "heroHeadlineTopV28", "heroHeadlineAccentV28", "heroSubheadV28",
         "heroCtaLabelV28", "heroBoothMeta", "heroNameLine", "teamMemberName", "teamMemberTitle",
         "trustedByLabelV28", "revealHeadline", "revealBody", "routeEyebrow",
-        "stop1Title", "stop1Body", "stop2Title", "stop2Body", "stop3Title", "stop3Body",
+        "stop1Title", "stop1Body", "stop1Tag", "stop2Title", "stop2Body", "stop2Tag", "stop3Title", "stop3Body", "stop3Tag",
         "proofHeadline", "proofBody", "proofEnhanceTitle", "proofEnhance", "proofOptimizeTitle", "proofOptimize", "proofProveTitle", "proofProve", "proofClosingLine", "proofVistaStat", "beyondArchiveText", "sourceLabel", "outputLabel",
         "sourceResolution", "sourceBitrate", "sourceSize", "sourceCodec",
         "outputResolution", "outputBitrate", "outputSize", "outputCodec",
@@ -714,7 +717,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-clip video { width:min(1180px, calc(100vw - 48px)); height:100%; max-width:none; object-fit:cover; }
       .beamr-video-placeholder { position:absolute; inset:0; }
       .beamr-divider { position:absolute; top:0; bottom:0; width:3px; background:${white}; transform:translateX(-1px); z-index:4; }
-      .beamr-handle { position:absolute; top:50%; width:58px; height:58px; border-radius:50%; background:${white}; transform:translate(-50%,-50%); display:grid; place-items:center; font-weight:900; color:${navy}; box-shadow:0 6px 22px rgba(0,0,0,.24); z-index:5; pointer-events:none; }
+      .beamr-handle { position:absolute; top:50%; width:58px; height:58px; border-radius:50%; background:${white}; transform:translate(-50%,-50%); display:grid; place-items:center; font-weight:700; color:${navy}; box-shadow:0 6px 22px rgba(0,0,0,.24); z-index:5; pointer-events:none; }
       .beamr-range { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:ew-resize; z-index:6; }
       .beamr-side-info { position:absolute; top:20px; z-index:7; pointer-events:none; display:flex; flex-direction:column; gap:9px; max-width:min(44%,430px); }
       .beamr-side-info.source { left:20px; align-items:flex-start; }
@@ -743,7 +746,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-vista { background:${white}; color:${black}; padding:112px 0 120px; position:relative; }
       .beamr-vista-grid { display:grid; grid-template-columns:.92fr 1.08fr; gap:72px; align-items:start; }
       .beamr-vista-card { background:${yellow}; color:${navy}; padding:42px; border-radius:30px; position:sticky; top:28px; overflow:hidden; }
-      .beamr-vista-card:after { content:"BEAMR VISTA"; position:absolute; right:-12px; bottom:-24px; font-size:110px; line-height:1; font-weight:900; letter-spacing:-.07em; opacity:.08; transform:rotate(-5deg); }
+      .beamr-vista-card:after { content:"BEAMR VISTA"; position:absolute; right:-12px; bottom:-24px; font-size:110px; line-height:1; font-weight:700; letter-spacing:-.07em; opacity:.08; transform:rotate(-5deg); }
       .beamr-vista-heroEyebrowV28 { font-size:13px; letter-spacing:${vistaEyebrowTracking}em;  font-weight:${vistaEyebrowWeight}; margin-bottom:24px; }
       .beamr-vista-card h2 { font-size:clamp(48px,5.7vw,82px); line-height:.88; letter-spacing:${vistaTitleTracking}em; font-weight:${vistaTitleWeight};  margin:0; position:relative; z-index:1; }
       .beamr-vista-content { padding-top:12px; }
@@ -763,7 +766,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-about-stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid rgba(255,255,255,.24); border-bottom:1px solid rgba(255,255,255,.24); position:relative; z-index:2; }
       .beamr-about-stat { padding:24px 26px 25px 0; min-height:122px; }
       .beamr-about-stat + .beamr-about-stat { border-left:1px solid rgba(255,255,255,.18); padding-left:26px; }
-      .beamr-about-value { color:${white}; font-size:clamp(26px,3vw,40px); line-height:1; letter-spacing:-.035em; font-weight:900;  margin-bottom:10px; white-space:nowrap; }
+      .beamr-about-value { color:${white}; font-size:clamp(26px,3vw,40px); line-height:1; letter-spacing:-.035em; font-weight:700;  margin-bottom:10px; white-space:nowrap; }
       .beamr-about-label { font-size:13px; line-height:1.4; opacity:.72; max-width:205px; }
 
       /* EVENT */
@@ -780,7 +783,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid rgba(255,255,255,.24); border-bottom:1px solid rgba(255,255,255,.24); margin-bottom:46px; }
       .beamr-cred { padding:20px 24px 20px 0; }
       .beamr-cred + .beamr-cred { border-left:1px solid rgba(255,255,255,.18); padding-left:24px; }
-      .beamr-cred-value { font-size:24px; font-weight:900; line-height:1; margin-bottom:7px; }
+      .beamr-cred-value { font-size:24px; font-weight:700; line-height:1; margin-bottom:7px; }
       .beamr-cred-label { font-size:12px; line-height:1.35; opacity:.72; }
       .beamr-textarea { min-height:84px; resize:vertical; }
       .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
@@ -926,9 +929,9 @@ export default function BeamrMetroWhatsNew(props) {
     `
 
     const stops = [
-        ["01", "stop1Title", "stop1Body", "NVIDIA VIDEO SUPER RESOLUTION"],
-        ["02", "stop2Title", "stop2Body", "BEAMR CABR"],
-        ["03", "stop3Title", "stop3Body", "BEAMR VISTA"],
+        ["01", "stop1Title", "stop1Body", "stop1Tag"],
+        ["02", "stop2Title", "stop2Body", "stop2Tag"],
+        ["03", "stop3Title", "stop3Body", "stop3Tag"],
     ]
 
     const vistaPoints = ["vistaPoint1", "vistaPoint2", "vistaPoint3"]
@@ -1063,13 +1066,15 @@ export default function BeamrMetroWhatsNew(props) {
                     <div className="beamr-route-title">{nativeOr(routeEyebrowSlot, <span {...editableTextProps("routeEyebrow", { singleLine: true })}>{inlineValue("routeEyebrow")}</span>)}</div>
                     <div className="beamr-stops">
                         <div className="beamr-track" />
-                        {stops.map(([num, titleKey, bodyKey, tag], index) => (
+                        {stops.map(([num, titleKey, bodyKey, tagKey], index) => (
                             <div className={`beamr-stop stop-${index}`} key={titleKey}>
                                 <div className="beamr-dot" />
                                 <div className="beamr-stop-num">{num}</div>
                                 <h3 {...editableTextProps(titleKey, { singleLine: true })}>{inlineValue(titleKey)}</h3>
                                 <p {...editableTextProps(bodyKey)}>{inlineValue(bodyKey)}</p>
-                                <span className="beamr-stop-tag">{tag}</span>
+                                {inlineValue(tagKey) && (
+                                    <span className="beamr-stop-tag" {...editableTextProps(tagKey, { singleLine: true })}>{inlineValue(tagKey)}</span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -1355,34 +1360,34 @@ BeamrMetroWhatsNew.defaultProps = {
 
     heroEyebrowWeight: 800,
     heroEyebrowTracking: 0.18,
-    heroTitleWeight: 900,
+    heroTitleWeight: 700,
     heroTitleTracking: -0.06,
     heroTitleSize: 72,
     mobileHeroTitleSize: 46,
     mobileProofTitleSize: 38,
     mobileEventTitleSize: 40,
     mobileLeadTitleSize: 36,
-    revealTitleWeight: 900,
+    revealTitleWeight: 700,
     revealTitleTracking: -0.055,
     routeEyebrowWeight: 800,
     routeEyebrowTracking: 0.18,
-    stop1TitleWeight: 900,
+    stop1TitleWeight: 700,
     stop1TitleTracking: -0.04,
-    stop2TitleWeight: 900,
+    stop2TitleWeight: 700,
     stop2TitleTracking: -0.04,
-    stop3TitleWeight: 900,
+    stop3TitleWeight: 700,
     stop3TitleTracking: -0.04,
-    proofTitleWeight: 900,
+    proofTitleWeight: 700,
     proofTitleTracking: -0.055,
     proofTitleSize: 62,
     vistaEyebrowWeight: 850,
     vistaEyebrowTracking: 0.17,
-    vistaTitleWeight: 900,
+    vistaTitleWeight: 700,
     vistaTitleTracking: -0.05,
-    eventTitleWeight: 900,
+    eventTitleWeight: 700,
     eventTitleTracking: -0.058,
     eventTitleSize: 64,
-    leadTitleWeight: 900,
+    leadTitleWeight: 700,
     leadTitleTracking: -0.05,
     leadTitleSize: 54,
 
@@ -1400,6 +1405,9 @@ BeamrMetroWhatsNew.defaultProps = {
     stop3Title: "Validate it",
     stop3Body:
         "Use Beamr VISTA to validate the result with real viewers and confirm the improvement is actually perceived as better.",
+    stop1Tag: "NVIDIA VIDEO SUPER RESOLUTION",
+    stop2Tag: "BEAMR CABR",
+    stop3Tag: "BEAMR VISTA",
 
     proofHeadline: "Go on. Look closer.",
     proofBody:
@@ -1443,7 +1451,7 @@ BeamrMetroWhatsNew.defaultProps = {
     aboutEyebrow: "Why Beamr",
     aboutHeadline: "Deep Video Expertise. Built for What’s Next.",
     aboutBody: "Beamr is a video technology and image science company trusted in demanding media workflows by leading streaming and media companies.",
-    aboutTitleWeight: 850,
+    aboutTitleWeight: 700,
     aboutTitleTracking: -0.045,
     aboutStat1Value: "EMMY®",
     aboutStat1Label: "Technology & Engineering Emmy® Award-winning technology",
@@ -1553,6 +1561,18 @@ addPropertyControls(BeamrMetroWhatsNew, {
     showComparison: { type: ControlType.Boolean, title: "Comparison", defaultValue: false },
     showVista: { type: ControlType.Boolean, title: "VISTA", defaultValue: false },
     showAbout: { type: ControlType.Boolean, title: "Why Beamr", defaultValue: false },
+
+    // ONE PIPELINE, THREE MOVES
+    routeEyebrow: { type: ControlType.String, title: "Pipeline Eyebrow" },
+    stop1Title: { type: ControlType.String, title: "Step 1 Title" },
+    stop1Body: { type: ControlType.String, title: "Step 1 Body", displayTextArea: true },
+    stop1Tag: { type: ControlType.String, title: "Step 1 Tag" },
+    stop2Title: { type: ControlType.String, title: "Step 2 Title" },
+    stop2Body: { type: ControlType.String, title: "Step 2 Body", displayTextArea: true },
+    stop2Tag: { type: ControlType.String, title: "Step 2 Tag" },
+    stop3Title: { type: ControlType.String, title: "Step 3 Title" },
+    stop3Body: { type: ControlType.String, title: "Step 3 Body", displayTextArea: true },
+    stop3Tag: { type: ControlType.String, title: "Step 3 Tag" },
 
     // LOGOS
     showTrustedBy: { type: ControlType.Boolean, title: "Show Logos", defaultValue: true },
