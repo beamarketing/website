@@ -20,6 +20,24 @@ Heading: Missed Me at IBC?
 Body: Same walkthrough, over a call. Tell me what you're working with and I'll show you the closest comparisons I've got.
 */
 
+// Campaign parameters captured from the landing URL. A metro scan arrives with
+// these on the QR link; they are remembered for the session so a reload or a
+// shared link further down the funnel still reports where the visit came from.
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]
+const TRACKING_STORAGE_KEY = "beamr-landing-tracking"
+
+const readStoredTracking = () => {
+    if (typeof window === "undefined") return {}
+    try {
+        const raw = window.sessionStorage.getItem(TRACKING_STORAGE_KEY)
+        const parsed = raw ? JSON.parse(raw) : {}
+        return parsed && typeof parsed === "object" ? parsed : {}
+    } catch (error) {
+        // Private browsing, a blocked storage partition, or corrupt JSON.
+        return {}
+    }
+}
+
 /**
  * Beamr Metro Landing — ultra-short QR conversion edition v29
  * Framer hybrid code component — supports native Text outlets for persistent Canvas editing
@@ -224,6 +242,11 @@ export default function BeamrMetroWhatsNew(props) {
         sourceHubspotValue,
         subSourceHubspotField,
         subSourceHubspotValue,
+        utmSourceHubspotField,
+        utmMediumHubspotField,
+        utmCampaignHubspotField,
+        utmTermHubspotField,
+        utmContentHubspotField,
 
         amsterdamIllustration,
         illustrationOpacity,
@@ -436,11 +459,47 @@ export default function BeamrMetroWhatsNew(props) {
                 const val = String(value || "").trim()
                 return name && val ? [{ name, value: val }] : []
             }
+            // Whatever this visit knows about its own origin: the parameters on
+            // the current URL win, falling back to what was captured on arrival.
+            const tracking = (() => {
+                const merged = readStoredTracking()
+                if (typeof window === "undefined") return merged
+                const params = new URLSearchParams(window.location.search)
+                UTM_KEYS.forEach((key) => {
+                    const value = params.get(key)
+                    if (value) merged[key] = value.trim().slice(0, 250)
+                })
+                return merged
+            })()
+
             const hiddenFields = [
                 ...hiddenField(industryHubspotField, industryHubspotValue),
                 ...hiddenField(sourceHubspotField, sourceHubspotValue),
                 ...hiddenField(subSourceHubspotField, subSourceHubspotValue),
+                ...hiddenField(utmSourceHubspotField, tracking.utm_source),
+                ...hiddenField(utmMediumHubspotField, tracking.utm_medium),
+                ...hiddenField(utmCampaignHubspotField, tracking.utm_campaign),
+                ...hiddenField(utmTermHubspotField, tracking.utm_term),
+                ...hiddenField(utmContentHubspotField, tracking.utm_content),
             ]
+
+            // The HubSpot tracking cookie stitches this submission onto the
+            // visitor's existing analytics session instead of creating an
+            // origin-less contact.
+            const hubspotUtk = (() => {
+                if (typeof document === "undefined") return ""
+                const match = document.cookie.match(/(?:^|;\s*)hubspotutk=([^;]*)/)
+                return match ? decodeURIComponent(match[1]) : ""
+            })()
+
+            const submissionContext =
+                typeof window !== "undefined"
+                    ? {
+                          pageUri: window.location.href,
+                          pageName: document?.title || "Beamr landing page",
+                          ...(hubspotUtk ? { hutk: hubspotUtk } : {}),
+                      }
+                    : undefined
 
             const submitTo = (fields) =>
                 fetch(
@@ -450,16 +509,7 @@ export default function BeamrMetroWhatsNew(props) {
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            fields,
-                            context:
-                                typeof window !== "undefined"
-                                    ? {
-                                          pageUri: window.location.href,
-                                          pageName: document?.title || "Beamr landing page",
-                                      }
-                                    : undefined,
-                        }),
+                        body: JSON.stringify({ fields, context: submissionContext }),
                     }
                 )
 
@@ -486,6 +536,26 @@ export default function BeamrMetroWhatsNew(props) {
             setSubmitMessage(formErrorMessage)
         }
     }
+
+    React.useEffect(() => {
+        if (typeof window === "undefined") return
+        const params = new URLSearchParams(window.location.search)
+        const captured = {}
+        UTM_KEYS.forEach((key) => {
+            const value = params.get(key)
+            if (value) captured[key] = value.trim().slice(0, 250)
+        })
+        if (Object.keys(captured).length === 0) return
+        try {
+            window.sessionStorage.setItem(
+                TRACKING_STORAGE_KEY,
+                JSON.stringify({ ...readStoredTracking(), ...captured })
+            )
+        } catch (error) {
+            // Can't remember them for later, but this page load still reports
+            // its own parameters straight off the URL at submit time.
+        }
+    }, [])
 
     React.useEffect(() => {
         if (typeof document === "undefined") return
@@ -1237,6 +1307,11 @@ BeamrMetroWhatsNew.defaultProps = {
     sourceHubspotValue: "Website",
     subSourceHubspotField: "sub_source",
     subSourceHubspotValue: "IBC26 Metro",
+    utmSourceHubspotField: "utm_source",
+    utmMediumHubspotField: "",
+    utmCampaignHubspotField: "utm_campaign",
+    utmTermHubspotField: "",
+    utmContentHubspotField: "",
 
     amsterdamIllustration: "",
     illustrationOpacity: 0.9,
@@ -1337,6 +1412,11 @@ addPropertyControls(BeamrMetroWhatsNew, {
     sourceHubspotValue: { type: ControlType.String, title: "Source Value" },
     subSourceHubspotField: { type: ControlType.String, title: "Sub Source Field" },
     subSourceHubspotValue: { type: ControlType.String, title: "Sub Source Value" },
+    utmSourceHubspotField: { type: ControlType.String, title: "UTM Source Field" },
+    utmMediumHubspotField: { type: ControlType.String, title: "UTM Medium Field" },
+    utmCampaignHubspotField: { type: ControlType.String, title: "UTM Campaign Field" },
+    utmTermHubspotField: { type: ControlType.String, title: "UTM Term Field" },
+    utmContentHubspotField: { type: ControlType.String, title: "UTM Content Field" },
 
     // SEO
     seoTitle: { type: ControlType.String, title: "SEO Title" },
