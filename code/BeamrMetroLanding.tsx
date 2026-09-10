@@ -443,7 +443,9 @@ export default function BeamrMetroWhatsNew(props) {
                 const lastName = nameParts.join(" ")
                 return [
                 { name: "firstname", value: firstName },
-                { name: "lastname", value: lastName },
+                // A single-word name leaves this empty, and HubSpot treats an
+                // empty required field as a missing one and rejects the lead.
+                ...(lastName ? [{ name: "lastname", value: lastName }] : []),
                 { name: "email", value: leadForm.email.trim() },
                 ...(leadForm.company.trim() ? [{ name: "company", value: leadForm.company.trim() }] : []),
                 ...(leadForm.jobtitle.trim() ? [{ name: "jobtitle", value: leadForm.jobtitle.trim() }] : []),
@@ -1300,7 +1302,7 @@ BeamrMetroWhatsNew.defaultProps = {
     seoTitle: "Your Archive in 4K — Beamr at IBC 2026",
     seoDescription: "Haggai Barel is showing HD-to-4K Super Resolution at Booth 1.D22, Hall 1. Before and after, side by side, September 11–14.",
     meetingLocationHubspotField: "",
-    archiveHubspotField: "",
+    archiveHubspotField: "message",
     industryHubspotField: "industry",
     industryHubspotValue: "Media and Entertainment",
     sourceHubspotField: "lead_source",
