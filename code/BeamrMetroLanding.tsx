@@ -780,17 +780,17 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-event .beamr-cta-secondary { background:transparent; color:${navy}; border:2px solid ${navy}; box-shadow:none; }
 
 
-      .beamr-creds { background:${yellow}; color:${navy}; padding:40px 0 42px; }
-      .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid ${navy}; border-bottom:1px solid ${navy}; }
-      .beamr-cred { padding:20px 24px 20px 0; }
-      .beamr-cred + .beamr-cred { border-left:1px solid ${navy}; padding-left:24px; }
-      .beamr-cred-value { color:${navy}; font-size:24px; font-weight:700; line-height:1; margin-bottom:7px; }
-      .beamr-cred-label { color:${navy}; font-size:12px; line-height:1.35; opacity:.82; }
+      .beamr-creds { background:${navy}; color:${white}; }
+      .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:3px solid ${yellow}; padding:28px 0 32px; }
+      .beamr-cred { padding:0 28px 0 0; }
+      .beamr-cred + .beamr-cred { border-left:1px solid rgba(255,255,255,.16); padding-left:28px; }
+      .beamr-cred-value { color:${yellow}; font-size:24px; font-weight:700; line-height:1; margin-bottom:7px; }
+      .beamr-cred-label { color:${white}; font-size:12px; line-height:1.35; opacity:.62; }
       .beamr-textarea { min-height:84px; resize:vertical; }
       .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
 
       /* LEAD FORM */
-      .beamr-lead { background:${navy}; color:${white}; padding:84px 0 104px; position:relative; }
+      .beamr-lead { background:${navy}; color:${white}; padding:64px 0 104px; position:relative; }
       .beamr-lead-grid { display:grid; grid-template-columns:.88fr 1.12fr; gap:72px; align-items:start; }
       .beamr-lead-copy { position:sticky; top:30px; }
       .beamr-lead-heroEyebrowV28 { font-size:13px; letter-spacing:.17em; font-weight:800;  opacity:.75; margin-bottom:20px; }
@@ -911,9 +911,9 @@ export default function BeamrMetroWhatsNew(props) {
         .beamr-beyond-archive { text-align:left; font-size:14px; margin-top:16px; }
         .beamr-proof-vista-stat { font-size:14px; margin-top:14px; }
         .beamr-proof-closing { font-size:18px; margin-top:18px; }
-        .beamr-creds { padding:26px 0 28px; }
-        .beamr-cred-strip { grid-template-columns:1fr; }
-        .beamr-cred + .beamr-cred { border-left:0; border-top:1px solid ${navy}; padding-left:0; }
+        .beamr-cred-strip { grid-template-columns:1fr; padding:22px 0 24px; }
+        .beamr-cred { padding:14px 0; }
+        .beamr-cred + .beamr-cred { border-left:0; border-top:1px solid rgba(255,255,255,.16); padding-left:0; }
         .beamr-about-stat { padding:20px 18px 20px 0; }
         .beamr-about-stat + .beamr-about-stat { padding-left:18px; }
         .beamr-about-stat:nth-child(3) { border-left:0; border-top:1px solid rgba(255,255,255,.18); }
