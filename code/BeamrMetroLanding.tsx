@@ -686,12 +686,12 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-copy strong { font-weight:850; }
 
       /* ROUTE */
-      .beamr-route { background:${blue}; color:${white}; padding:88px 0 92px; position:relative; }
+      .beamr-route { background:${navy}; color:${white}; padding:88px 0 92px; position:relative; }
       .beamr-route-title { font-size:14px; letter-spacing:${routeEyebrowTracking}em;  opacity:.76; margin-bottom:56px; font-weight:${routeEyebrowWeight}; }
       .beamr-stops { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:42px; }
       .beamr-track { position:absolute; left:0; right:0; top:28px; height:10px; background:${pink}; border-radius:999px; }
       .beamr-stop { position:relative; padding-top:80px; }
-      .beamr-dot { position:absolute; top:9px; width:48px; height:48px; border-radius:50%; background:${blue}; border:10px solid ${pink}; }
+      .beamr-dot { position:absolute; top:9px; width:48px; height:48px; border-radius:50%; background:${navy}; border:10px solid ${pink}; }
       .beamr-stop:nth-of-type(3) .beamr-dot { border-color:${mint}; }
       .beamr-stop:nth-of-type(4) .beamr-dot { border-color:${yellow}; }
       .beamr-stop-num { opacity:.62; font-size:13px; letter-spacing:.15em; font-weight:800; margin-bottom:10px; }
@@ -786,7 +786,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
 
       /* LEAD FORM */
-      .beamr-lead { background:${navy}; color:${white}; padding:84px 0 104px; position:relative; }
+      .beamr-lead { background:${blue}; color:${white}; padding:84px 0 104px; position:relative; }
       .beamr-lead-grid { display:grid; grid-template-columns:.88fr 1.12fr; gap:72px; align-items:start; }
       .beamr-lead-copy { position:sticky; top:30px; }
       .beamr-lead-heroEyebrowV28 { font-size:13px; letter-spacing:.17em; font-weight:800;  opacity:.75; margin-bottom:20px; }
