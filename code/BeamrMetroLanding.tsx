@@ -66,6 +66,11 @@ export default function BeamrMetroWhatsNew(props) {
         teamInfoMaxWidth,
         teamInfoBackground,
         showTrustedBy,
+        showReveal,
+        showRoute,
+        showComparison,
+        showVista,
+        showAbout,
         trustedByLabelV28,
         trustedLogo1,
         trustedLogo2,
@@ -681,12 +686,12 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-copy strong { font-weight:850; }
 
       /* ROUTE */
-      .beamr-route { background:${navy}; color:${white}; padding:104px 0 118px; position:relative; }
+      .beamr-route { background:${blue}; color:${white}; padding:88px 0 92px; position:relative; }
       .beamr-route-title { font-size:14px; letter-spacing:${routeEyebrowTracking}em;  opacity:.76; margin-bottom:56px; font-weight:${routeEyebrowWeight}; }
       .beamr-stops { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:42px; }
       .beamr-track { position:absolute; left:0; right:0; top:28px; height:10px; background:${pink}; border-radius:999px; }
       .beamr-stop { position:relative; padding-top:80px; }
-      .beamr-dot { position:absolute; top:9px; width:48px; height:48px; border-radius:50%; background:${navy}; border:10px solid ${pink}; }
+      .beamr-dot { position:absolute; top:9px; width:48px; height:48px; border-radius:50%; background:${blue}; border:10px solid ${pink}; }
       .beamr-stop:nth-of-type(3) .beamr-dot { border-color:${mint}; }
       .beamr-stop:nth-of-type(4) .beamr-dot { border-color:${yellow}; }
       .beamr-stop-num { opacity:.62; font-size:13px; letter-spacing:.15em; font-weight:800; margin-bottom:10px; }
@@ -772,7 +777,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-event .beamr-cta-secondary { background:transparent; color:${navy}; border:2px solid ${navy}; box-shadow:none; }
 
 
-      .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid rgba(255,255,255,.24); border-bottom:1px solid rgba(255,255,255,.24); margin-bottom:54px; }
+      .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid rgba(255,255,255,.24); border-bottom:1px solid rgba(255,255,255,.24); margin-bottom:46px; }
       .beamr-cred { padding:20px 24px 20px 0; }
       .beamr-cred + .beamr-cred { border-left:1px solid rgba(255,255,255,.18); padding-left:24px; }
       .beamr-cred-value { font-size:24px; font-weight:900; line-height:1; margin-bottom:7px; }
@@ -781,7 +786,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
 
       /* LEAD FORM */
-      .beamr-lead { background:${navy}; color:${white}; padding:108px 0 118px; position:relative; }
+      .beamr-lead { background:${navy}; color:${white}; padding:84px 0 104px; position:relative; }
       .beamr-lead-grid { display:grid; grid-template-columns:.88fr 1.12fr; gap:72px; align-items:start; }
       .beamr-lead-copy { position:sticky; top:30px; }
       .beamr-lead-heroEyebrowV28 { font-size:13px; letter-spacing:.17em; font-weight:800;  opacity:.75; margin-bottom:20px; }
@@ -1043,13 +1048,16 @@ export default function BeamrMetroWhatsNew(props) {
             </section>
 
 
+            {showReveal && (
             <section className="beamr-reveal">
                 <div className="beamr-wrap beamr-reveal-grid">
                     {nativeOr(revealHeadlineSlot, <h2 className="beamr-display" {...editableTextProps("revealHeadline")}>{inlineValue("revealHeadline")}</h2>)}
                     {nativeOr(revealBodySlot, <p className="beamr-copy" {...editableTextProps("revealBody")}>{inlineValue("revealBody")}</p>)}
                 </div>
             </section>
+            )}
 
+            {showRoute && (
             <section className="beamr-route">
                 <div className="beamr-wrap">
                     <div className="beamr-route-title">{nativeOr(routeEyebrowSlot, <span {...editableTextProps("routeEyebrow", { singleLine: true })}>{inlineValue("routeEyebrow")}</span>)}</div>
@@ -1067,8 +1075,9 @@ export default function BeamrMetroWhatsNew(props) {
                     </div>
                 </div>
             </section>
+            )}
 
-            {beforeVideo && afterVideo && (
+            {showComparison && beforeVideo && afterVideo && (
                 <section className="beamr-proof">
                     <div className="beamr-wrap">
                         <div className="beamr-proof-head">
@@ -1187,6 +1196,7 @@ export default function BeamrMetroWhatsNew(props) {
                 </section>
             )}
 
+            {showVista && (
             <section className="beamr-vista">
                 <div className="beamr-wrap beamr-vista-grid">
                     <div className="beamr-vista-card">
@@ -1206,7 +1216,9 @@ export default function BeamrMetroWhatsNew(props) {
                     </div>
                 </div>
             </section>
+            )}
 
+            {showAbout && (
             <section className="beamr-about">
                 <div className="beamr-wrap">
                     <div className="beamr-about-top">
@@ -1226,8 +1238,16 @@ export default function BeamrMetroWhatsNew(props) {
                     </div>
                 </div>
             </section>
+            )}
 
             <section className="beamr-lead" id="lead-form">
+                <div className="beamr-wrap">
+                    <div className="beamr-cred-strip">
+                        <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred1Value", { singleLine: true })}>{inlineValue("cred1Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred1Label")}>{inlineValue("cred1Label")}</div></div>
+                        <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred2Value", { singleLine: true })}>{inlineValue("cred2Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred2Label")}>{inlineValue("cred2Label")}</div></div>
+                        <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred3Value", { singleLine: true })}>{inlineValue("cred3Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred3Label")}>{inlineValue("cred3Label")}</div></div>
+                    </div>
+                </div>
                 <div className="beamr-wrap beamr-lead-grid">
                     <div className="beamr-lead-copy">
                         <div className="beamr-lead-heroEyebrowV28">{nativeOr(leadEyebrowSlot, <span {...editableTextProps("leadEyebrow", { singleLine: true })}>{inlineValue("leadEyebrow")}</span>)}</div>
@@ -1315,6 +1335,11 @@ BeamrMetroWhatsNew.defaultProps = {
     teamInfoMaxWidth: 220,
     teamInfoBackground: "rgba(18, 37, 86, 0.55)",
     showTrustedBy: true,
+    showReveal: false,
+    showRoute: true,
+    showComparison: false,
+    showVista: false,
+    showAbout: false,
     trustedByLabelV28: "Working With",
     trustedLogo1: "",
     trustedLogo2: "",
@@ -1521,6 +1546,13 @@ addPropertyControls(BeamrMetroWhatsNew, {
     heroTitleSize: { type: ControlType.Number, title: "Hero Size", min: 36, max: 120, step: 1 },
     mobileHeroTitleSize: { type: ControlType.Number, title: "Mobile Hero Size", min: 28, max: 72, step: 1 },
     heroTitleTracking: { type: ControlType.Number, title: "Hero Track", min: -0.2, max: 0.4, step: 0.005 },
+
+    // SECTIONS
+    showRoute: { type: ControlType.Boolean, title: "Three Moves", defaultValue: true },
+    showReveal: { type: ControlType.Boolean, title: "Reveal", defaultValue: false },
+    showComparison: { type: ControlType.Boolean, title: "Comparison", defaultValue: false },
+    showVista: { type: ControlType.Boolean, title: "VISTA", defaultValue: false },
+    showAbout: { type: ControlType.Boolean, title: "Why Beamr", defaultValue: false },
 
     // LOGOS
     showTrustedBy: { type: ControlType.Boolean, title: "Show Logos", defaultValue: true },
