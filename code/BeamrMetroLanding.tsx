@@ -689,7 +689,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-copy strong { font-weight:850; }
 
       /* ROUTE */
-      .beamr-route { background:${navy}; color:${white}; padding:88px 0 52px; position:relative; }
+      .beamr-route { background:${navy}; color:${white}; padding:88px 0 88px; position:relative; }
       .beamr-route-title { font-size:14px; letter-spacing:${routeEyebrowTracking}em;  opacity:.76; margin-bottom:56px; font-weight:${routeEyebrowWeight}; }
       .beamr-stops { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:42px; }
       .beamr-track { position:absolute; left:0; right:0; top:28px; height:10px; background:${pink}; border-radius:999px; }
@@ -780,16 +780,17 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-event .beamr-cta-secondary { background:transparent; color:${navy}; border:2px solid ${navy}; box-shadow:none; }
 
 
-      .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid rgba(255,255,255,.28); border-bottom:1px solid rgba(255,255,255,.28); margin-bottom:46px; }
+      .beamr-creds { background:${yellow}; color:${navy}; padding:40px 0 42px; }
+      .beamr-cred-strip { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid ${navy}; border-bottom:1px solid ${navy}; }
       .beamr-cred { padding:20px 24px 20px 0; }
-      .beamr-cred + .beamr-cred { border-left:1px solid rgba(255,255,255,.22); padding-left:24px; }
-      .beamr-cred-value { color:${yellow}; font-size:24px; font-weight:700; line-height:1; margin-bottom:7px; }
-      .beamr-cred-label { color:${white}; font-size:12px; line-height:1.35; opacity:.78; }
+      .beamr-cred + .beamr-cred { border-left:1px solid ${navy}; padding-left:24px; }
+      .beamr-cred-value { color:${navy}; font-size:24px; font-weight:700; line-height:1; margin-bottom:7px; }
+      .beamr-cred-label { color:${navy}; font-size:12px; line-height:1.35; opacity:.82; }
       .beamr-textarea { min-height:84px; resize:vertical; }
       .beamr-followup-note { margin-top:12px; font-size:12px; line-height:1.45; opacity:.7; }
 
       /* LEAD FORM */
-      .beamr-lead { background:${navy}; color:${white}; padding:56px 0 104px; position:relative; }
+      .beamr-lead { background:${navy}; color:${white}; padding:84px 0 104px; position:relative; }
       .beamr-lead-grid { display:grid; grid-template-columns:.88fr 1.12fr; gap:72px; align-items:start; }
       .beamr-lead-copy { position:sticky; top:30px; }
       .beamr-lead-heroEyebrowV28 { font-size:13px; letter-spacing:.17em; font-weight:800;  opacity:.75; margin-bottom:20px; }
@@ -910,8 +911,9 @@ export default function BeamrMetroWhatsNew(props) {
         .beamr-beyond-archive { text-align:left; font-size:14px; margin-top:16px; }
         .beamr-proof-vista-stat { font-size:14px; margin-top:14px; }
         .beamr-proof-closing { font-size:18px; margin-top:18px; }
+        .beamr-creds { padding:26px 0 28px; }
         .beamr-cred-strip { grid-template-columns:1fr; }
-        .beamr-cred + .beamr-cred { border-left:0; border-top:1px solid rgba(255,255,255,.22); padding-left:0; }
+        .beamr-cred + .beamr-cred { border-left:0; border-top:1px solid ${navy}; padding-left:0; }
         .beamr-about-stat { padding:20px 18px 20px 0; }
         .beamr-about-stat + .beamr-about-stat { padding-left:18px; }
         .beamr-about-stat:nth-child(3) { border-left:0; border-top:1px solid rgba(255,255,255,.18); }
@@ -1245,7 +1247,7 @@ export default function BeamrMetroWhatsNew(props) {
             </section>
             )}
 
-            <section className="beamr-lead" id="lead-form">
+            <section className="beamr-creds">
                 <div className="beamr-wrap">
                     <div className="beamr-cred-strip">
                         <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred1Value", { singleLine: true })}>{inlineValue("cred1Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred1Label")}>{inlineValue("cred1Label")}</div></div>
@@ -1253,6 +1255,9 @@ export default function BeamrMetroWhatsNew(props) {
                         <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred3Value", { singleLine: true })}>{inlineValue("cred3Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred3Label")}>{inlineValue("cred3Label")}</div></div>
                     </div>
                 </div>
+            </section>
+
+            <section className="beamr-lead" id="lead-form">
                 <div className="beamr-wrap beamr-lead-grid">
                     <div className="beamr-lead-copy">
                         <div className="beamr-lead-heroEyebrowV28">{nativeOr(leadEyebrowSlot, <span {...editableTextProps("leadEyebrow", { singleLine: true })}>{inlineValue("leadEyebrow")}</span>)}</div>
