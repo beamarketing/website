@@ -171,7 +171,7 @@ export default function BeamrMetroWhatsNew(props) {
         proofEnhanceTitle, proofOptimizeTitle, proofProveTitle, beyondArchiveText,
         metricResolutionLabel, metricBitrateLabel, metricSizeLabel, metricCodecLabel,
         cred1Value, cred1Label, cred2Value, cred2Label, cred3Value, cred3Label,
-        firstNameLabel, emailLabel, companyLabel, jobTitleLabel,
+        firstNameLabel, lastNameLabel, emailLabel, companyLabel, jobTitleLabel,
         beforeVideo,
         afterVideo,
         posterImage,
@@ -273,7 +273,8 @@ export default function BeamrMetroWhatsNew(props) {
     const beforeRef = React.useRef<HTMLVideoElement | null>(null)
     const afterRef = React.useRef<HTMLVideoElement | null>(null)
     const initialLeadForm = {
-        name: "",
+        firstname: "",
+        lastname: "",
         email: "",
         company: "",
         jobtitle: "",
@@ -301,7 +302,7 @@ export default function BeamrMetroWhatsNew(props) {
         "aboutStat1Value", "aboutStat1Label", "aboutStat2Value", "aboutStat2Label",
         "aboutStat3Value", "aboutStat3Label", "aboutStat4Value", "aboutStat4Label",
         "eventHeadline", "eventBody", "eventMeta", "eventCta", "secondaryCtaLabel",
-        "leadEyebrow", "leadHeadline", "leadBody", "boothNote", "formSubmitLabel", "leadDisclaimer", "archivePrompt", "archivePlaceholder", "formFollowupNote", "firstNameLabel", "emailLabel", "companyLabel", "jobTitleLabel", "guideText",
+        "leadEyebrow", "leadHeadline", "leadBody", "boothNote", "formSubmitLabel", "leadDisclaimer", "archivePrompt", "archivePlaceholder", "formFollowupNote", "firstNameLabel", "lastNameLabel", "emailLabel", "companyLabel", "jobTitleLabel", "guideText",
     ]
     const textSignature = editableTextKeys.map((key) => String(props[key] ?? "")).join("␞")
     const [canvasText, setCanvasText] = React.useState(() =>
@@ -401,7 +402,8 @@ export default function BeamrMetroWhatsNew(props) {
 
     const validateLeadForm = () => {
         const errors: any = {}
-        if (!leadForm.name.trim()) errors.name = "Name is required"
+        if (!leadForm.firstname.trim()) errors.firstname = "First name is required"
+        if (!leadForm.lastname.trim()) errors.lastname = "Last name is required"
         if (!leadForm.email.trim()) {
             errors.email = "Need an email to reply to."
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadForm.email.trim())) {
@@ -434,15 +436,9 @@ export default function BeamrMetroWhatsNew(props) {
                 : "https://api.hsforms.com"
 
             const visibleFields = (() => {
-                const fullName = leadForm.name.trim()
-                const nameParts = fullName.split(/\s+/)
-                const firstName = nameParts.shift() || fullName
-                const lastName = nameParts.join(" ")
                 return [
-                { name: "firstname", value: firstName },
-                // A single-word name leaves this empty, and HubSpot treats an
-                // empty required field as a missing one and rejects the lead.
-                ...(lastName ? [{ name: "lastname", value: lastName }] : []),
+                { name: "firstname", value: leadForm.firstname.trim() },
+                { name: "lastname", value: leadForm.lastname.trim() },
                 { name: "email", value: leadForm.email.trim() },
                 ...(leadForm.company.trim() ? [{ name: "company", value: leadForm.company.trim() }] : []),
                 ...(leadForm.jobtitle.trim() ? [{ name: "jobtitle", value: leadForm.jobtitle.trim() }] : []),
@@ -709,8 +705,8 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-compare { position:relative; aspect-ratio:16/9; width:100%; overflow:hidden; border-radius:28px; background:${navy}; box-shadow:0 25px 80px rgba(0,0,0,.18); }
       .beamr-media { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
       .beamr-poster-layer { position:absolute; inset:0; z-index:3; background-size:cover; background-position:center; pointer-events:none; }
-      .beamr-after { overflow:hidden; position:absolute; inset:0 auto 0 0; height:100%; }
-      .beamr-after video, .beamr-after .beamr-video-placeholder { width:min(1180px, calc(100vw - 48px)); height:100%; max-width:none; object-fit:cover; }
+      .beamr-clip { overflow:hidden; position:absolute; inset:0 auto 0 0; height:100%; z-index:2; }
+      .beamr-clip video { width:min(1180px, calc(100vw - 48px)); height:100%; max-width:none; object-fit:cover; }
       .beamr-video-placeholder { position:absolute; inset:0; }
       .beamr-divider { position:absolute; top:0; bottom:0; width:3px; background:${white}; transform:translateX(-1px); z-index:4; }
       .beamr-handle { position:absolute; top:50%; width:58px; height:58px; border-radius:50%; background:${white}; transform:translate(-50%,-50%); display:grid; place-items:center; font-weight:900; color:${navy}; box-shadow:0 6px 22px rgba(0,0,0,.24); z-index:5; pointer-events:none; }
@@ -886,7 +882,7 @@ export default function BeamrMetroWhatsNew(props) {
         .beamr-dot { left:-58px; top:0; width:44px; height:44px; }
 
         .beamr-compare { border-radius:18px; aspect-ratio:16/10; }
-        .beamr-after video, .beamr-after .beamr-video-placeholder { width:calc(100vw - 28px); }
+        .beamr-clip video { width:calc(100vw - 28px); }
         .beamr-side-info { top:12px; max-width:46%; gap:7px; }
         .beamr-side-info.source { left:12px; }
         .beamr-side-info.output { right:12px; }
@@ -1046,14 +1042,192 @@ export default function BeamrMetroWhatsNew(props) {
                 </div>
             </section>
 
-            <section className="beamr-lead" id="lead-form">
+
+            <section className="beamr-reveal">
+                <div className="beamr-wrap beamr-reveal-grid">
+                    {nativeOr(revealHeadlineSlot, <h2 className="beamr-display" {...editableTextProps("revealHeadline")}>{inlineValue("revealHeadline")}</h2>)}
+                    {nativeOr(revealBodySlot, <p className="beamr-copy" {...editableTextProps("revealBody")}>{inlineValue("revealBody")}</p>)}
+                </div>
+            </section>
+
+            <section className="beamr-route">
                 <div className="beamr-wrap">
-                    <div className="beamr-cred-strip">
-                        <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred1Value", { singleLine: true })}>{inlineValue("cred1Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred1Label")}>{inlineValue("cred1Label")}</div></div>
-                        <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred2Value", { singleLine: true })}>{inlineValue("cred2Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred2Label")}>{inlineValue("cred2Label")}</div></div>
-                        <div className="beamr-cred"><div className="beamr-cred-value" {...editableTextProps("cred3Value", { singleLine: true })}>{inlineValue("cred3Value")}</div><div className="beamr-cred-label" {...editableTextProps("cred3Label")}>{inlineValue("cred3Label")}</div></div>
+                    <div className="beamr-route-title">{nativeOr(routeEyebrowSlot, <span {...editableTextProps("routeEyebrow", { singleLine: true })}>{inlineValue("routeEyebrow")}</span>)}</div>
+                    <div className="beamr-stops">
+                        <div className="beamr-track" />
+                        {stops.map(([num, titleKey, bodyKey, tag], index) => (
+                            <div className={`beamr-stop stop-${index}`} key={titleKey}>
+                                <div className="beamr-dot" />
+                                <div className="beamr-stop-num">{num}</div>
+                                <h3 {...editableTextProps(titleKey, { singleLine: true })}>{inlineValue(titleKey)}</h3>
+                                <p {...editableTextProps(bodyKey)}>{inlineValue(bodyKey)}</p>
+                                <span className="beamr-stop-tag">{tag}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            </section>
+
+            {beforeVideo && afterVideo && (
+                <section className="beamr-proof">
+                    <div className="beamr-wrap">
+                        <div className="beamr-proof-head">
+                            <h2 className="beamr-display" {...editableTextProps("proofHeadline")}>{inlineValue("proofHeadline")}</h2>
+                            <p className="beamr-copy" {...editableTextProps("proofBody")}>{inlineValue("proofBody")}</p>
+                        </div>
+
+                        <div className="beamr-compare" ref={compareRef}>
+                            {/* The optimized output is the full-width base; the source is
+                                clipped over it from the left, so the labels either side of
+                                the divider always describe what is actually under them. */}
+                            <video
+                                className="beamr-media"
+                                ref={afterRef}
+                                src={afterVideo}
+                                poster={posterImage || undefined}
+                                muted
+                                loop
+                                playsInline
+                                preload="auto"
+                            />
+                            <div className="beamr-clip" style={{ width: `${split}%` }}>
+                                <video
+                                    className="beamr-media"
+                                    ref={beforeRef}
+                                    src={beforeVideo}
+                                    poster={posterImage || undefined}
+                                    muted
+                                    loop
+                                    playsInline
+                                    preload="auto"
+                                    onCanPlay={() => setComparisonReady(true)}
+                                />
+                            </div>
+
+                            {posterImage && !comparisonReady && (
+                                <div className="beamr-poster-layer" style={{ backgroundImage: `url(${posterImage})` }} />
+                            )}
+
+                            <div className="beamr-divider" style={{ left: `${split}%` }} />
+                            <div className="beamr-handle" style={{ left: `${split}%` }} aria-hidden="true">⟺</div>
+
+                            <input
+                                className="beamr-range"
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={0.1}
+                                value={split}
+                                onChange={(event) => setSplit(Number(event.target.value))}
+                                aria-label="Drag to compare the source against the enhanced output"
+                            />
+
+                            <div className="beamr-side-info source">
+                                <div className="beamr-label" {...editableTextProps("sourceLabel", { singleLine: true })}>{inlineValue("sourceLabel")}</div>
+                                <div className="beamr-metrics">
+                                    {[
+                                        [metricResolutionLabel, "sourceResolution"],
+                                        [metricBitrateLabel, "sourceBitrate"],
+                                        [metricSizeLabel, "sourceSize"],
+                                        [metricCodecLabel, "sourceCodec"],
+                                    ].map(([label, key]) => (
+                                        <div className="beamr-metric" key={key}>
+                                            <div className="beamr-metric-value" {...editableTextProps(key, { singleLine: true })}>{inlineValue(key)}</div>
+                                            <div className="beamr-metric-key">{label}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="beamr-side-info output">
+                                <div className="beamr-label" {...editableTextProps("outputLabel", { singleLine: true })}>{inlineValue("outputLabel")}</div>
+                                <div className="beamr-metrics">
+                                    {[
+                                        [metricResolutionLabel, "outputResolution"],
+                                        [metricBitrateLabel, "outputBitrate"],
+                                        [metricSizeLabel, "outputSize"],
+                                        [metricCodecLabel, "outputCodec"],
+                                    ].map(([label, key]) => (
+                                        <div className="beamr-metric" key={key}>
+                                            <div className="beamr-metric-value" {...editableTextProps(key, { singleLine: true })}>{inlineValue(key)}</div>
+                                            <div className="beamr-metric-key">{label}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="beamr-video-controls">
+                                <button className="beamr-video-btn" type="button" onClick={toggleVideo}>Play / Pause</button>
+                            </div>
+                        </div>
+
+                        <div className="beamr-proof-steps">
+                            {[
+                                ["proofEnhanceTitle", "proofEnhance"],
+                                ["proofOptimizeTitle", "proofOptimize"],
+                                ["proofProveTitle", "proofProve"],
+                            ].map(([titleKey, bodyKey]) => (
+                                <div className="beamr-proof-step" key={titleKey}>
+                                    <strong {...editableTextProps(titleKey, { singleLine: true })}>{inlineValue(titleKey)}</strong>
+                                    <span {...editableTextProps(bodyKey)}>{inlineValue(bodyKey)}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {inlineValue("proofVistaStat") && (
+                            <p className="beamr-proof-vista-stat" {...editableTextProps("proofVistaStat")}>{inlineValue("proofVistaStat")}</p>
+                        )}
+                        {inlineValue("beyondArchiveText") && (
+                            <p className="beamr-beyond-archive" {...editableTextProps("beyondArchiveText")}>{inlineValue("beyondArchiveText")}</p>
+                        )}
+                        {inlineValue("proofClosingLine") && (
+                            <p className="beamr-proof-closing" {...editableTextProps("proofClosingLine")}>{inlineValue("proofClosingLine")}</p>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            <section className="beamr-vista">
+                <div className="beamr-wrap beamr-vista-grid">
+                    <div className="beamr-vista-card">
+                        <div className="beamr-vista-heroEyebrowV28">{nativeOr(vistaEyebrowSlot, <span {...editableTextProps("vistaEyebrow", { singleLine: true })}>{inlineValue("vistaEyebrow")}</span>)}</div>
+                        {nativeOr(vistaHeadlineSlot, <h2 {...editableTextProps("vistaHeadline")}>{inlineValue("vistaHeadline")}</h2>)}
+                    </div>
+                    <div className="beamr-vista-content">
+                        {nativeOr(vistaBodySlot, <p {...editableTextProps("vistaBody")}>{inlineValue("vistaBody")}</p>)}
+                        <div className="beamr-checks">
+                            {vistaPoints.map((key, index) => (
+                                <div className="beamr-check" key={key}>
+                                    <div className="beamr-check-num">{String(index + 1).padStart(2, "0")}</div>
+                                    <p {...editableTextProps(key)}>{inlineValue(key)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="beamr-about">
+                <div className="beamr-wrap">
+                    <div className="beamr-about-top">
+                        <div>
+                            <div className="beamr-about-heroEyebrowV28">{nativeOr(aboutEyebrowSlot, <span {...editableTextProps("aboutEyebrow", { singleLine: true })}>{inlineValue("aboutEyebrow")}</span>)}</div>
+                            {nativeOr(aboutHeadlineSlot, <h2 {...editableTextProps("aboutHeadline")}>{inlineValue("aboutHeadline")}</h2>)}
+                        </div>
+                        {nativeOr(aboutBodySlot, <p className="beamr-about-body" {...editableTextProps("aboutBody")}>{inlineValue("aboutBody")}</p>)}
+                    </div>
+                    <div className="beamr-about-stats">
+                        {aboutStats.map(([valueKey, labelKey]) => (
+                            <div className="beamr-about-stat" key={valueKey}>
+                                <div className="beamr-about-value" {...editableTextProps(valueKey, { singleLine: true })}>{inlineValue(valueKey)}</div>
+                                <div className="beamr-about-label" {...editableTextProps(labelKey)}>{inlineValue(labelKey)}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className="beamr-lead" id="lead-form">
                 <div className="beamr-wrap beamr-lead-grid">
                     <div className="beamr-lead-copy">
                         <div className="beamr-lead-heroEyebrowV28">{nativeOr(leadEyebrowSlot, <span {...editableTextProps("leadEyebrow", { singleLine: true })}>{inlineValue("leadEyebrow")}</span>)}</div>
@@ -1072,10 +1246,15 @@ export default function BeamrMetroWhatsNew(props) {
                         ) : (
                         <form className="beamr-lead-form" onSubmit={handleLeadSubmit} noValidate>
                             <div className="beamr-field-grid">
-                                <div className="beamr-field full">
-                                    <label htmlFor="beamr-name"><span {...editableTextProps("firstNameLabel", { singleLine: true })}>{inlineValue("firstNameLabel")}</span><span className="beamr-required">*</span></label>
-                                    <input id="beamr-name" className={`beamr-input ${leadErrors.name ? "error" : ""}`} type="text" name="name" value={leadForm.name} onChange={handleLeadFieldChange} required />
-                                    <div className="beamr-field-error">{leadErrors.name || ""}</div>
+                                <div className="beamr-field">
+                                    <label htmlFor="beamr-firstname"><span {...editableTextProps("firstNameLabel", { singleLine: true })}>{inlineValue("firstNameLabel")}</span><span className="beamr-required">*</span></label>
+                                    <input id="beamr-firstname" className={`beamr-input ${leadErrors.firstname ? "error" : ""}`} type="text" name="firstname" autoComplete="given-name" value={leadForm.firstname} onChange={handleLeadFieldChange} required />
+                                    <div className="beamr-field-error">{leadErrors.firstname || ""}</div>
+                                </div>
+                                <div className="beamr-field">
+                                    <label htmlFor="beamr-lastname"><span {...editableTextProps("lastNameLabel", { singleLine: true })}>{inlineValue("lastNameLabel")}</span><span className="beamr-required">*</span></label>
+                                    <input id="beamr-lastname" className={`beamr-input ${leadErrors.lastname ? "error" : ""}`} type="text" name="lastname" autoComplete="family-name" value={leadForm.lastname} onChange={handleLeadFieldChange} required />
+                                    <div className="beamr-field-error">{leadErrors.lastname || ""}</div>
                                 </div>
                                 <div className="beamr-field full">
                                     <label htmlFor="beamr-email"><span {...editableTextProps("emailLabel", { singleLine: true })}>{inlineValue("emailLabel")}</span><span className="beamr-required">*</span></label>
@@ -1193,7 +1372,7 @@ BeamrMetroWhatsNew.defaultProps = {
     stop2Title: "Optimize it",
     stop2Body:
         "Beamr content-adaptive encoding keeps the enhanced output efficient, so better-looking video doesn't have to mean runaway bitrate.",
-    stop3Title: "Prove it",
+    stop3Title: "Validate it",
     stop3Body:
         "Use Beamr VISTA to validate the result with real viewers and confirm the improvement is actually perceived as better.",
 
@@ -1203,7 +1382,7 @@ BeamrMetroWhatsNew.defaultProps = {
     proofEnhance: "NVIDIA Video Super Resolution reconstructs detail and takes HD up to 4K.",
     proofOptimize: "Beamr CABR keeps a bigger picture from becoming a bigger bill.",
     proofProve: "Beamr VISTA validates that \"looks better\" holds up with real viewers.",
-    proofVistaStat: "[VISTA STAT PLACEHOLDER — Dor to supply]",
+    proofVistaStat: "",
     proofClosingLine: "This is the comparison I’ll be running at Booth 1.D22 — just on a much bigger screen.",
     proofEnhanceTitle: "Enhance",
     proofOptimizeTitle: "Optimize",
@@ -1265,13 +1444,14 @@ BeamrMetroWhatsNew.defaultProps = {
     cred2Label: "International granted patents",
     cred3Value: "NASDAQ: BMR",
     cred3Label: "Beamr Imaging Ltd.",
-    firstNameLabel: "Name",
+    firstNameLabel: "First name",
+    lastNameLabel: "Last name",
     emailLabel: "Work email",
     companyLabel: "Company",
     jobTitleLabel: "Job title",
     leadEyebrow: "Tell me what you’re working with",
     leadHeadline: "Let’s Talk About Your Video.",
-    leadBody: "Two required fields. Tell me what you’re working with and I’ll come back with the comparisons closest to your workflow.",
+    leadBody: "A few quick details. Tell me what you’re working with and I’ll come back with the comparisons closest to your workflow.",
     showHubspotForm: true,
     hubspotPortalId: "",
     hubspotFormId: "",
@@ -1363,7 +1543,8 @@ addPropertyControls(BeamrMetroWhatsNew, {
     leadBody: { type: ControlType.String, title: "Form Body", displayTextArea: true },
     mobileLeadTitleSize: { type: ControlType.Number, title: "Mobile Form Size", min: 26, max: 60, step: 1 },
     leadTitleSize: { type: ControlType.Number, title: "Form Title Size", min: 30, max: 90, step: 1 },
-    firstNameLabel: { type: ControlType.String, title: "Name Label" },
+    firstNameLabel: { type: ControlType.String, title: "First Name Label" },
+    lastNameLabel: { type: ControlType.String, title: "Last Name Label" },
     emailLabel: { type: ControlType.String, title: "Email Label" },
     companyLabel: { type: ControlType.String, title: "Company Label" },
     jobTitleLabel: { type: ControlType.String, title: "Job Title Label" },
