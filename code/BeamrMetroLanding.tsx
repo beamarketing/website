@@ -45,6 +45,7 @@ export default function BeamrMetroWhatsNew(props) {
         teamInfoBottom,
         teamInfoRight,
         teamInfoMaxWidth,
+        teamInfoBackground,
         showTrustedBy,
         trustedByLabelV28,
         trustedLogo1,
@@ -217,6 +218,12 @@ export default function BeamrMetroWhatsNew(props) {
         seoDescription,
         meetingLocationHubspotField,
         archiveHubspotField,
+        industryHubspotField,
+        industryHubspotValue,
+        sourceHubspotField,
+        sourceHubspotValue,
+        subSourceHubspotField,
+        subSourceHubspotValue,
 
         amsterdamIllustration,
         illustrationOpacity,
@@ -406,39 +413,65 @@ export default function BeamrMetroWhatsNew(props) {
                 ? `https://api-${cleanRegion}.hsforms.com`
                 : "https://api.hsforms.com"
 
-            const response = await fetch(
-                `${baseUrl}/submissions/v3/integration/submit/${encodeURIComponent(
-                    String(hubspotPortalId).trim()
-                )}/${encodeURIComponent(String(hubspotFormId).trim())}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        fields: (() => {
-                            const fullName = leadForm.name.trim()
-                            const nameParts = fullName.split(/\s+/)
-                            const firstName = nameParts.shift() || fullName
-                            const lastName = nameParts.join(" ")
-                            return [
-                            { name: "firstname", value: firstName },
-                            { name: "lastname", value: lastName },
-                            { name: "email", value: leadForm.email.trim() },
-                            ...(leadForm.company.trim() ? [{ name: "company", value: leadForm.company.trim() }] : []),
-                            ...(leadForm.jobtitle.trim() ? [{ name: "jobtitle", value: leadForm.jobtitle.trim() }] : []),
-                            ...(meetingLocationHubspotField ? [{ name: meetingLocationHubspotField, value: leadForm.meeting_location.trim() }] : []),
-                            ...(archiveHubspotField && leadForm.archive_content.trim() ? [{ name: archiveHubspotField, value: leadForm.archive_content.trim() }] : []),
-                            ]
-                        })(),
-                        context:
-                            typeof window !== "undefined"
-                                ? {
-                                      pageUri: window.location.href,
-                                      pageName: document?.title || "Beamr landing page",
-                                  }
-                                : undefined,
-                    }),
-                }
-            )
+            const visibleFields = (() => {
+                const fullName = leadForm.name.trim()
+                const nameParts = fullName.split(/\s+/)
+                const firstName = nameParts.shift() || fullName
+                const lastName = nameParts.join(" ")
+                return [
+                { name: "firstname", value: firstName },
+                { name: "lastname", value: lastName },
+                { name: "email", value: leadForm.email.trim() },
+                ...(leadForm.company.trim() ? [{ name: "company", value: leadForm.company.trim() }] : []),
+                ...(leadForm.jobtitle.trim() ? [{ name: "jobtitle", value: leadForm.jobtitle.trim() }] : []),
+                ...(meetingLocationHubspotField ? [{ name: meetingLocationHubspotField, value: leadForm.meeting_location.trim() }] : []),
+                ...(archiveHubspotField && leadForm.archive_content.trim() ? [{ name: archiveHubspotField, value: leadForm.archive_content.trim() }] : []),
+                ]
+            })()
+
+            // Hidden fields — never shown to the visitor, mapped straight onto the
+            // HubSpot contact so every lead from this page is tagged consistently.
+            const hiddenField = (field, value) => {
+                const name = String(field || "").trim()
+                const val = String(value || "").trim()
+                return name && val ? [{ name, value: val }] : []
+            }
+            const hiddenFields = [
+                ...hiddenField(industryHubspotField, industryHubspotValue),
+                ...hiddenField(sourceHubspotField, sourceHubspotValue),
+                ...hiddenField(subSourceHubspotField, subSourceHubspotValue),
+            ]
+
+            const submitTo = (fields) =>
+                fetch(
+                    `${baseUrl}/submissions/v3/integration/submit/${encodeURIComponent(
+                        String(hubspotPortalId).trim()
+                    )}/${encodeURIComponent(String(hubspotFormId).trim())}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            fields,
+                            context:
+                                typeof window !== "undefined"
+                                    ? {
+                                          pageUri: window.location.href,
+                                          pageName: document?.title || "Beamr landing page",
+                                      }
+                                    : undefined,
+                        }),
+                    }
+                )
+
+            let response = await submitTo([...visibleFields, ...hiddenFields])
+
+            // sub_source and lead_source are dropdown properties in HubSpot: a value
+            // that isn't one of their options makes HubSpot reject the whole
+            // submission. A tagging mistake must never cost us the lead, so fall
+            // back to the visitor's own answers and let the tagging be fixed later.
+            if (!response.ok && hiddenFields.length > 0) {
+                response = await submitTo(visibleFields)
+            }
 
             if (!response.ok) {
                 throw new Error("HubSpot submission failed")
@@ -568,7 +601,7 @@ export default function BeamrMetroWhatsNew(props) {
       .beamr-person-frame { position:absolute; inset:22px -8vw -56px -20px; display:flex; align-items:flex-end; justify-content:center; }
       .beamr-person { width:100%; height:100%; object-fit:contain; object-position:center bottom; display:block; filter:drop-shadow(0 34px 34px rgba(18,37,86,.22)); }
       .beamr-person-placeholder { width:86%; height:86%; align-self:flex-end; border:3px dashed rgba(255,255,255,.42); border-radius:38px 38px 0 0; background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.16)); display:flex; align-items:center; justify-content:center; text-align:center; padding:40px; font-size:15px; letter-spacing:.11em; line-height:1.5;  font-weight:800; }
-      .beamr-team-info { position:absolute; right:${teamInfoRight}px; bottom:${teamInfoBottom}px; z-index:5; max-width:${teamInfoMaxWidth}px; text-align:left; color:${white}; }
+      .beamr-team-info { position:absolute; right:${teamInfoRight}px; bottom:${teamInfoBottom}px; z-index:5; max-width:${teamInfoMaxWidth}px; text-align:left; color:${white}; padding:13px 16px; border-radius:16px; background:${teamInfoBackground}; backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px); box-shadow:0 12px 32px rgba(0,0,0,.18); }
       .beamr-team-name { font-size:13px; line-height:1.15; letter-spacing:.12em;  font-weight:800; }
       .beamr-team-title { margin-top:6px; font-size:12px; line-height:1.3; letter-spacing:.06em; font-weight:500; opacity:.88; }
 
@@ -771,7 +804,7 @@ export default function BeamrMetroWhatsNew(props) {
         .beamr-trusted-logo { max-width:105px; max-height:22px; }
         .beamr-hero-visual { min-height:330px; margin-top:0; }
         .beamr-person-frame { inset:0 -8vw -26px -8vw; }
-        .beamr-team-info { left:14px; right:auto; bottom:14px; max-width:60vw; }
+        .beamr-team-info { left:14px; right:auto; bottom:14px; max-width:60vw; padding:9px 12px; border-radius:12px; }
         .beamr-team-name, .beamr-team-title { font-size:10px; }
         .beamr-reveal-grid, .beamr-proof-head, .beamr-vista-grid, .beamr-lead-grid { grid-template-columns:1fr; gap:22px; }
         .beamr-proof-head .beamr-display { order:1; }
@@ -935,6 +968,16 @@ export default function BeamrMetroWhatsNew(props) {
                                 </div>
                             )}
                         </div>
+                        {(teamNameSlot || teamTitleSlot || inlineValue("teamMemberName") || inlineValue("teamMemberTitle")) && (
+                            <div className="beamr-team-info">
+                                {(teamNameSlot || inlineValue("teamMemberName")) && (
+                                    <div className="beamr-team-name">{nativeOr(teamNameSlot, <span {...editableTextProps("teamMemberName", { singleLine: true })}>{inlineValue("teamMemberName")}</span>)}</div>
+                                )}
+                                {(teamTitleSlot || inlineValue("teamMemberTitle")) && (
+                                    <div className="beamr-team-title">{nativeOr(teamTitleSlot, <span {...editableTextProps("teamMemberTitle", { singleLine: true })}>{inlineValue("teamMemberTitle")}</span>)}</div>
+                                )}
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             </section>
@@ -1020,17 +1063,18 @@ BeamrMetroWhatsNew.defaultProps = {
     heroHeadlineTopV28: "Your viewers expect 4K.",
     heroHeadlineAccentV28: "So Give Them 4K.",
     heroSubheadV28:
-        "Beamr brings the video you already have — archive, live or VOD — up to 4K with NVIDIA Video Super Resolution, then keeps the result efficient enough to store and deliver. Beamr VISTA measures whether viewers actually see the difference.",
+        "Beamr brings the video you already have — archive, live or VOD — up to 4K with NVIDIA Video Super Resolution, then keeps the result efficient enough to store and deliver. Beamr VISTA validates that viewers actually see the difference.",
     heroCtaLabelV28: "Get 15 Minutes",
     ctaHref: "#lead-form",
     heroImage: "",
     heroNameLine: IBC_COPY.heroNameLine,
     heroBoothMeta: IBC_COPY.heroDateLine,
-    teamMemberName: "",
-    teamMemberTitle: "",
+    teamMemberName: "Haggai Barel",
+    teamMemberTitle: "COO, Beamr",
     teamInfoBottom: 54,
     teamInfoRight: 18,
     teamInfoMaxWidth: 220,
+    teamInfoBackground: "rgba(18, 37, 86, 0.55)",
     showTrustedBy: true,
     trustedByLabelV28: "Working With",
     trustedLogo1: "",
@@ -1091,19 +1135,19 @@ BeamrMetroWhatsNew.defaultProps = {
         "Beamr content-adaptive encoding keeps the enhanced output efficient, so better-looking video doesn't have to mean runaway bitrate.",
     stop3Title: "Prove it",
     stop3Body:
-        "Use Beamr VISTA to test the result with real viewers and validate that the improvement is actually perceived as better.",
+        "Use Beamr VISTA to validate the result with real viewers and confirm the improvement is actually perceived as better.",
 
     proofHeadline: "Go on. Look closer.",
     proofBody:
-        "Most of your library was finished before 4K was the standard. It didn't get worse — the screens got better. Drag the line: same clip, same codec, and the numbers underneath are real. Then Beamr VISTA measures whether viewers actually prefer it — real people, not a quality score.",
+        "Most of your library was finished before 4K was the standard. It didn't get worse — the screens got better. Drag the line: same clip, same codec, and the numbers underneath are real. Then Beamr VISTA validates that viewers actually prefer it — real people, not a quality score.",
     proofEnhance: "NVIDIA Video Super Resolution reconstructs detail and takes HD up to 4K.",
     proofOptimize: "Beamr CABR keeps a bigger picture from becoming a bigger bill.",
-    proofProve: "Beamr VISTA turns \"looks better\" into a number.",
+    proofProve: "Beamr VISTA validates that \"looks better\" holds up with real viewers.",
     proofVistaStat: "[VISTA STAT PLACEHOLDER — Dor to supply]",
     proofClosingLine: "This is the comparison I’ll be running at Booth 1.D22 — just on a much bigger screen.",
     proofEnhanceTitle: "Enhance",
     proofOptimizeTitle: "Optimize",
-    proofProveTitle: "Prove",
+    proofProveTitle: "Validate",
     beyondArchiveText: "",
     metricResolutionLabel: "Resolution",
     metricBitrateLabel: "Bitrate",
@@ -1127,7 +1171,7 @@ BeamrMetroWhatsNew.defaultProps = {
     vistaEyebrow: "The Proof Stop",
     vistaHeadline: "Don’t Just Call It Better. Prove It With Beamr VISTA.",
     vistaBody:
-        "AI enhancement can make a video different. Beamr VISTA helps answer the question that matters: did it actually make the viewing experience better — whether you're modernizing archives, improving VOD assets or evaluating live workflows?",
+        "AI enhancement can make a video different. Beamr VISTA validates the thing that matters: did it actually make the viewing experience better — whether you're modernizing archives, improving VOD assets or evaluating live workflows?",
     vistaPoint1: "Test your own archive, live or VOD content instead of relying on generic demos.",
     vistaPoint2: "Collect subjective feedback from real viewers in a structured comparison.",
     vistaPoint3: "Turn 'looks better to us' into evidence you can use to make a production decision.",
@@ -1187,6 +1231,12 @@ BeamrMetroWhatsNew.defaultProps = {
     seoDescription: "Haggai Barel is showing HD-to-4K Super Resolution at Booth 1.D22, Hall 1. Before and after, side by side, September 11–14.",
     meetingLocationHubspotField: "",
     archiveHubspotField: "",
+    industryHubspotField: "industry",
+    industryHubspotValue: "Media and Entertainment",
+    sourceHubspotField: "lead_source",
+    sourceHubspotValue: "Website",
+    subSourceHubspotField: "sub_source",
+    subSourceHubspotValue: "IBC26 Metro",
 
     amsterdamIllustration: "",
     illustrationOpacity: 0.9,
@@ -1218,6 +1268,12 @@ addPropertyControls(BeamrMetroWhatsNew, {
     heroCtaLabelV28: { type: ControlType.String, title: "Hero CTA" },
     heroBoothMeta: { type: ControlType.String, title: "Booth Line" },
     heroImage: { type: ControlType.Image, title: "Team Hero" },
+    teamMemberName: { type: ControlType.String, title: "Team Name" },
+    teamMemberTitle: { type: ControlType.String, title: "Team Title" },
+    teamInfoBackground: { type: ControlType.Color, title: "Team Card BG" },
+    teamInfoBottom: { type: ControlType.Number, title: "Team Card Y", min: 0, max: 240, step: 1 },
+    teamInfoRight: { type: ControlType.Number, title: "Team Card X", min: 0, max: 240, step: 1 },
+    teamInfoMaxWidth: { type: ControlType.Number, title: "Team Card W", min: 120, max: 420, step: 1 },
     beamrLogo: { type: ControlType.Image, title: "Beamr Logo" },
     heroTitleWeight: { type: ControlType.Number, title: "Hero Weight", min: 100, max: 900, step: 100 },
     heroTitleSize: { type: ControlType.Number, title: "Hero Size", min: 36, max: 120, step: 1 },
@@ -1275,6 +1331,12 @@ addPropertyControls(BeamrMetroWhatsNew, {
     hubspotRegion: { type: ControlType.String, title: "HubSpot Region" },
     meetingLocationHubspotField: { type: ControlType.String, title: "Meeting Field" },
     archiveHubspotField: { type: ControlType.String, title: "Video Field" },
+    industryHubspotField: { type: ControlType.String, title: "Industry Field" },
+    industryHubspotValue: { type: ControlType.String, title: "Industry Value" },
+    sourceHubspotField: { type: ControlType.String, title: "Source Field" },
+    sourceHubspotValue: { type: ControlType.String, title: "Source Value" },
+    subSourceHubspotField: { type: ControlType.String, title: "Sub Source Field" },
+    subSourceHubspotValue: { type: ControlType.String, title: "Sub Source Value" },
 
     // SEO
     seoTitle: { type: ControlType.String, title: "SEO Title" },
