@@ -102,7 +102,7 @@ const NAV = [
   ] },
   { group: 'Channels', items: [
     { id: 'email', label: 'Email', icon: '✉' },
-    { id: 'linkedin', label: 'LinkedIn ads', icon: 'in' },
+    { id: 'ads', label: 'Advertising', icon: '◎' },
     { id: 'journeys', label: 'Journeys', icon: '⤳' },
   ] },
   { group: 'Configure', items: [
@@ -132,6 +132,8 @@ function shell() {
           Email · ${esc(status.email?.provider || '—')}</div>
         <div class="mode-pill"><span class="dot ${status.linkedin?.configured ? 'live' : ''}"></span>
           LinkedIn · ${status.linkedin?.configured ? 'live' : 'dry run'}</div>
+        <div class="mode-pill"><span class="dot ${status.meta?.configured ? 'live' : ''}"></span>
+          Meta · ${status.meta?.configured ? 'live' : 'dry run'}</div>
       </div>
     </aside>
     <main class="main">
@@ -304,11 +306,12 @@ function viewOverview() {
   const byChannel = (ch) => days.map((day) =>
     d.event_series.filter((r) => r.day === day && r.channel === ch).reduce((a, r) => a + r.n, 0));
 
-  const dryRunBanner = (!state.status?.linkedin?.configured || state.status?.email?.dry_run) ? `
+  const unconfigured = ['linkedin', 'meta'].filter((p) => !state.status?.[p]?.configured);
+  const dryRunBanner = (unconfigured.length || state.status?.email?.dry_run) ? `
     <div class="banner"><span>◔</span><div>
       <strong>Running in dry-run mode.</strong>
       ${state.status?.email?.dry_run ? 'Email writes <code>.eml</code> files to <code>data/outbox</code> instead of sending. ' : ''}
-      ${!state.status?.linkedin?.configured ? 'LinkedIn audiences sync locally and are not pushed. ' : ''}
+      ${unconfigured.length ? `${unconfigured.map((p) => p === 'meta' ? 'Meta' : 'LinkedIn').join(' and ')} audiences sync locally and are not pushed. ` : ''}
       Everything else — tracking, scoring, segmentation, journeys — is fully live.
       <a href="#setup" data-nav="setup">Add credentials in Setup →</a>
     </div></div>` : '';
@@ -323,7 +326,9 @@ function viewOverview() {
       ${kpi('Engaged contacts', num(o.engagement.engaged_contacts),
         `${num(o.engagement.events)} events · ${pct(o.engagement.identification_rate)} identified`)}
       ${kpi('Ad spend', money(o.ads.spend),
-        `${num(o.ads.impressions)} impr · ${pct(o.ads.ctr)} CTR · ${money(o.ads.cpc)} CPC`)}
+        (d.platform_comparison || []).filter((p) => p.spend > 0)
+          .map((p) => `<span class="tag ${p.platform === 'meta' ? 'info' : 'accent'}">${p.platform === 'meta' ? 'Meta' : 'LI'} ${money(p.spend)}</span>`).join(' ')
+        || `${num(o.ads.impressions)} impr · ${pct(o.ads.ctr)} CTR`)}
       ${kpi('Email', num(o.email.sent),
         `${pct(o.email.open_rate)} open · ${pct(o.email.click_rate)} click`, 'sent')}
     </div>
@@ -566,60 +571,97 @@ const campaignTag = (s) => {
   return `<span class="tag ${map[s] || ''}">${esc(s)}</span>`;
 };
 
-function viewLinkedIn() {
-  const d = state.data.linkedin;
+function viewAds() {
+  const d = state.data.ads;
   if (!d) return loadingBlock();
-  const { audiences, campaigns, influence } = d;
-  const configured = state.status?.linkedin?.configured;
+  const { audiences, campaigns, influence, comparison, platforms } = d;
+  const filter = state.adPlatform || 'all';
+  const shown = filter === 'all' ? audiences : audiences.filter((a) => a.platform === filter);
+  const shownCampaigns = filter === 'all' ? campaigns : campaigns.filter((c) => c.platform === filter);
+
+  const unconfigured = platforms.platforms.filter((p) => !p.configured);
 
   return `
-    ${!configured ? `<div class="banner"><span>⚠</span><div>
-      <strong>LinkedIn is not connected.</strong> Audiences build and diff locally but are not pushed,
-      and no campaign metrics are pulled. Add <code>LINKEDIN_ACCESS_TOKEN</code> and
-      <code>LINKEDIN_AD_ACCOUNT_ID</code> to go live.
+    ${unconfigured.length ? `<div class="banner"><span>⚠</span><div>
+      <strong>${unconfigured.map((p) => p.label).join(' and ')} not connected.</strong>
+      Audiences build, diff and cohort locally but are not pushed, and no metrics are pulled.
       <a href="#setup" data-nav="setup">Setup →</a></div></div>` : ''}
 
     <div class="banner info"><span>ℹ</span><div>
-      LinkedIn reports impressions and clicks <strong>per campaign</strong>, never per member.
-      Contact-level ad engagement below comes from the three signals that <em>are</em> person-level:
-      who is in the matched audience, who submitted a lead form, and who clicked an ad
-      onto a page this tracker watches.</div></div>
+      Neither platform reports impressions per member — both report per ad object. Contact-level
+      attribution comes from making the ad object small: each <strong>cohort</strong> is its own
+      audience with its own creative and tracking URL, so a report resolves to a handful of named
+      people instead of one campaign total. Clicks resolve to the individual either way.
+      Meta's ~100 serving floor allows roughly 3× tighter cohorts than LinkedIn's ~300.
+    </div></div>
 
-    <div style="display:flex;gap:9px;margin-bottom:16px">
-      <button class="btn primary" id="au-new">+ New matched audience</button>
-      <button class="btn" id="li-sync">↻ Sync now</button>
+    <div class="tabs">
+      ${['all', 'linkedin', 'meta'].map((k) => `
+        <button class="tab ${filter === k ? 'active' : ''}" data-platform="${k}">
+          ${k === 'all' ? 'Both platforms' : k === 'meta' ? 'Meta' : 'LinkedIn'}</button>`).join('')}
+    </div>
+
+    <div class="grid g2" style="margin-bottom:16px">
+      ${comparison.map((p) => `
+        <div class="card"><div class="card-body">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <strong style="font-size:14px">${esc(p.label)}</strong>
+            <span class="tag ${p.configured ? 'good' : 'warn'}">${p.configured ? 'live' : 'dry run'}</span>
+            <span class="tag" title="Minimum matched members the platform will serve">floor ${num(p.min_audience_size)}</span>
+          </div>
+          <div class="grid g4" style="gap:10px">
+            ${miniStat('Spend', money(p.spend), `${num(p.impressions)} impr`)}
+            ${miniStat('CPC', money(p.cpc), `${pct(p.ctr)} CTR`)}
+            ${miniStat('CPM', money(p.cpm), `${num(p.clicks)} clicks`)}
+            ${miniStat('Named', num(p.identified_engagements), p.cost_per_identified ? `${money(p.cost_per_identified)} each` : 'contacts')}
+          </div>
+        </div></div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn primary" id="au-new">+ New audience</button>
+      <button class="btn" id="au-mirror">⇄ Mirror list to both platforms</button>
+      <button class="btn ghost" id="ads-sync">↻ Sync now</button>
     </div>
 
     <div class="card" style="margin-bottom:16px">
       <div class="card-head"><h3>Matched audiences</h3>
-        <span class="hint">your lists, mirrored into LinkedIn as hashed emails</span></div>
-      <div class="card-body flush">${audiences.length ? `<table>
-        <thead><tr><th>Audience</th><th>Status</th><th class="num">Contacts</th>
-          <th class="num">Matched</th><th>Last sync</th><th></th></tr></thead>
-        <tbody>${audiences.map((a) => `
-          <tr><td><strong>${esc(a.name)}</strong>
-            ${a.last_error ? `<div style="color:var(--st-crit);font-size:11px">${esc(a.last_error)}</div>` : ''}</td>
+        <span class="hint">your lists, mirrored into each platform as hashed identities</span></div>
+      <div class="card-body flush">${shown.length ? `<table>
+        <thead><tr><th>Audience</th><th>Platform</th><th>Status</th><th class="num">Contacts</th>
+          <th class="num">Matched</th><th class="num">Cohorts</th><th>Last sync</th><th></th></tr></thead>
+        <tbody>${shown.map((a) => `
+          <tr class="clickable" data-audience="${esc(a.id)}">
+            <td><strong>${esc(a.name)}</strong>
+              ${a.last_error ? `<div style="color:var(--st-crit);font-size:11px">${esc(a.last_error)}</div>` : ''}
+              ${a.member_count && a.member_count < a.min_audience_size
+                ? `<div style="color:var(--st-warn);font-size:11px">below the ${num(a.min_audience_size)} serving floor — will not deliver</div>` : ''}</td>
+            <td>${platformTag(a.platform)}</td>
             <td>${audienceTag(a.status)}</td>
             <td class="num">${num(a.member_count)}</td>
             <td class="num">${num(a.matched_count)}</td>
+            <td class="num">${a.cohort_mode ? `<span class="tag accent">${num(a.cohorts)}</span>` : '<span style="color:var(--text-muted)">off</span>'}</td>
             <td class="nowrap" style="color:var(--text-muted)">${ago(a.last_synced_at)}</td>
-            <td class="num"><button class="btn sm ghost" data-au-sync="${esc(a.id)}">↻ Sync</button></td>
+            <td class="num nowrap">
+              <button class="btn sm ghost" data-au-cohort="${esc(a.id)}">${a.cohort_mode ? 'Cohorts' : 'Enable cohorts'}</button>
+              <button class="btn sm ghost" data-au-sync="${esc(a.id)}">↻</button></td>
           </tr>`).join('')}</tbody></table>`
-        : '<div class="empty"><div class="big">in</div>No matched audiences yet.</div>'}
+        : '<div class="empty"><div class="big">◎</div>No audiences yet.</div>'}
       </div>
     </div>
 
     <div class="card" style="margin-bottom:16px">
       <div class="card-head"><h3>Ad campaign performance</h3>
         <span class="hint">aggregate spend beside the contacts we can actually name</span></div>
-      <div class="card-body flush"><div class="table-wrap">${campaigns.length ? `<table>
-        <thead><tr><th>Campaign</th><th>Audience</th><th class="num">Impr.</th><th class="num">Clicks</th>
-          <th class="num">CTR</th><th class="num">Spend</th><th class="num">CPC</th>
+      <div class="card-body flush"><div class="table-wrap">${shownCampaigns.length ? `<table>
+        <thead><tr><th>Campaign</th><th>Platform</th><th>Audience</th><th class="num">Impr.</th>
+          <th class="num">Clicks</th><th class="num">CTR</th><th class="num">Spend</th><th class="num">CPC</th>
           <th class="num">Named contacts</th><th class="num">Lead forms</th><th class="num">Cost / contact</th></tr></thead>
-        <tbody>${campaigns.map((c) => `
+        <tbody>${shownCampaigns.map((c) => `
           <tr><td><strong>${esc(c.name)}</strong>
-              <div style="font-size:11px;color:var(--text-muted)">${esc(c.status || '')}</div></td>
-            <td style="color:var(--text-secondary)">${esc(c.audience_name || '—')}</td>
+              <div style="font-size:11px;color:var(--text-muted)">${esc(c.status || '')}${c.cohorts ? ` · ${c.cohorts} cohorts` : ''}</div></td>
+            <td>${platformTag(c.platform)}</td>
+            <td style="color:var(--text-secondary)" class="trunc">${esc(c.audience_name || '—')}</td>
             <td class="num">${num(c.impressions)}</td>
             <td class="num">${num(c.clicks)}</td>
             <td class="num">${pct(c.ctr)}</td>
@@ -629,7 +671,7 @@ function viewLinkedIn() {
             <td class="num">${num(c.lead_form_submissions)}</td>
             <td class="num">${c.cost_per_identified_contact ? money(c.cost_per_identified_contact) : '—'}</td>
           </tr>`).join('')}</tbody></table>`
-        : '<div class="empty">No ad metrics yet. Connect LinkedIn and run a sync.</div>'}
+        : '<div class="empty">No ad metrics yet. Connect a platform and run a sync.</div>'}
       </div></div>
     </div>
 
@@ -637,11 +679,12 @@ function viewLinkedIn() {
       <div class="card-head"><h3>Audience influence</h3>
         <span class="hint">of the people we targeted, who then did something</span></div>
       <div class="card-body flush">${influence.length ? `<table>
-        <thead><tr><th>Audience</th><th class="num">Targeted</th><th class="num">Engaged after</th>
+        <thead><tr><th>Audience</th><th>Platform</th><th class="num">Targeted</th><th class="num">Engaged after</th>
           <th class="num">Visited site</th><th class="num">Clicked ad</th><th class="num">Lead form</th>
           <th class="num">Rate</th></tr></thead>
         <tbody>${influence.map((i) => `
           <tr><td><strong>${esc(i.name)}</strong></td>
+            <td>${platformTag(i.platform)}</td>
             <td class="num">${num(i.targeted)}</td>
             <td class="num">${num(i.engaged_after_targeting)}</td>
             <td class="num">${num(i.visited_site)}</td>
@@ -653,6 +696,10 @@ function viewLinkedIn() {
       </div>
     </div>`;
 }
+
+const platformTag = (p) => p === 'meta'
+  ? '<span class="tag info">Meta</span>'
+  : '<span class="tag accent">LinkedIn</span>';
 
 const audienceTag = (s) => {
   const map = { ready: 'good', syncing: 'info', pending: 'warn', error: 'crit' };
@@ -796,12 +843,18 @@ function viewSetup() {
             <dt>LinkedIn</dt><dd>${st.linkedin?.configured
               ? `<span class="tag good">connected</span> account ${esc(st.linkedin.ad_account)}`
               : '<span class="tag warn">not connected</span>'}</dd>
-            <dt>API version</dt><dd>${esc(st.linkedin?.api_version || '—')}</dd>
+            <dt>Meta</dt><dd>${st.meta?.configured
+              ? `<span class="tag good">connected</span> account ${esc(st.meta.ad_account)}`
+              : '<span class="tag warn">not connected</span>'}</dd>
+            <dt>Meta pixel</dt><dd>${st.meta?.pixel_configured
+              ? `<span class="tag good">set</span> ${st.meta.capi_enabled ? 'Conversions API on' : 'Conversions API off'}`
+              : '<span class="tag warn">not set</span>'}</dd>
             <dt>Public URL</dt><dd>${esc(st.public_url || '')}</dd>
           </dl>
-          <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn sm" id="verify-email">Test email provider</button>
-            <button class="btn sm" id="verify-li">Test LinkedIn</button>
+          <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+            <button class="btn sm" id="verify-email">Test email</button>
+            <button class="btn sm" id="verify-ads">Test ad platforms</button>
+            <button class="btn sm" id="verify-capi">Meta CAPI status</button>
           </div>
           <div id="verify-out" style="margin-top:12px"></div>
         </div>
@@ -857,7 +910,7 @@ const TITLES = {
   contacts: ['Contacts', 'Everyone in the engine, scored and segmented'],
   lists: ['Lists & segments', 'Who you target'],
   email: ['Email', 'Personalised campaigns against a segment'],
-  linkedin: ['LinkedIn ads', 'Matched audiences and ad engagement'],
+  ads: ['Advertising', 'LinkedIn and Meta, driven from one contact list'],
   journeys: ['Journeys', 'Cross-channel automation'],
   activity: ['Activity', 'Every touch, newest first'],
   accounts: ['Accounts', 'Contacts rolled up by company'],
@@ -866,7 +919,7 @@ const TITLES = {
 
 const VIEWS = {
   overview: viewOverview, contacts: viewContacts, lists: viewLists, email: viewEmail,
-  linkedin: viewLinkedIn, journeys: viewJourneys, activity: viewActivity,
+  ads: viewAds, journeys: viewJourneys, activity: viewActivity,
   accounts: viewAccounts, setup: viewSetup,
 };
 
@@ -951,18 +1004,41 @@ const handlers = {
       b.addEventListener('click', () => showCampaign(b.dataset.cpView)));
   },
 
-  linkedin(root) {
+  ads(root) {
+    root.querySelectorAll('[data-platform]').forEach((t) =>
+      t.addEventListener('click', () => { state.adPlatform = t.dataset.platform; render(); }));
     $('#au-new')?.addEventListener('click', () => newAudienceModal(null));
-    $('#li-sync')?.addEventListener('click', async () => {
-      toast('Syncing…');
-      await api('/api/linkedin/sync', { method: 'POST', body: { what: 'all' } });
-      toast('Sync complete', 'ok'); load(true);
+    $('#au-mirror')?.addEventListener('click', mirrorModal);
+    $('#ads-sync')?.addEventListener('click', async () => {
+      toast('Syncing both platforms…');
+      const r = await api('/api/ads/sync', { method: 'POST', body: { what: 'all' } });
+      const added = r.audiences?.added ?? 0;
+      toast(`Sync complete — ${added} contacts pushed`, 'ok');
+      load(true);
     });
+    root.querySelectorAll('[data-audience]').forEach((el) =>
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        showAudience(el.dataset.audience);
+      }));
     root.querySelectorAll('[data-au-sync]').forEach((b) =>
-      b.addEventListener('click', async () => {
-        const r = await api(`/api/linkedin/audiences/${b.dataset.auSync}/sync`, { method: 'POST' });
+      b.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        b.innerHTML = '<span class="spinner"></span>';
+        const r = await api(`/api/ads/audiences/${b.dataset.auSync}/sync`, { method: 'POST' });
         toast(`${r.added} added, ${r.removed} removed${r.dry_run ? ' (dry run)' : ''}`, 'ok');
         if (r.warnings?.length) toast(r.warnings[0]);
+        load(true);
+      }));
+    root.querySelectorAll('[data-au-cohort]').forEach((b) =>
+      b.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        b.innerHTML = '<span class="spinner"></span>';
+        await api(`/api/ads/audiences/${b.dataset.auCohort}`, { method: 'PATCH', body: { cohort_mode: true } });
+        const r = await api(`/api/ads/audiences/${b.dataset.auCohort}/cohorts`, { method: 'POST' });
+        toast(`${r.cohorts} cohorts of ~${r.cohort_size}`, 'ok');
+        if (r.warnings?.length) toast(r.warnings[0]);
+        showAudience(b.dataset.auCohort);
         load(true);
       }));
   },
@@ -1010,8 +1086,12 @@ const handlers = {
       const r = await api('/api/email/verify', { method: 'POST', body: {} });
       $('#verify-out').innerHTML = `<div class="code">${esc(JSON.stringify(r, null, 2))}</div>`;
     });
-    $('#verify-li')?.addEventListener('click', async () => {
-      const r = await api('/api/linkedin/verify');
+    $('#verify-ads')?.addEventListener('click', async () => {
+      const r = await api('/api/ads/verify');
+      $('#verify-out').innerHTML = `<div class="code">${esc(JSON.stringify(r, null, 2))}</div>`;
+    });
+    $('#verify-capi')?.addEventListener('click', async () => {
+      const r = await api('/api/meta/capi');
       $('#verify-out').innerHTML = `<div class="code">${esc(JSON.stringify(r, null, 2))}</div>`;
     });
     $('#rescore')?.addEventListener('click', async () => {
@@ -1120,6 +1200,76 @@ async function showList(id) {
     </div>`);
   $('#drawer').querySelectorAll('[data-contact]').forEach((el) =>
     el.addEventListener('click', () => showContact(el.dataset.contact)));
+}
+
+async function showAudience(id) {
+  const a = await api(`/api/ads/audiences/${id}`);
+  const p = a.precision;
+  openDrawer(`
+    <div class="drawer-head"><div style="flex:1"><h2>${esc(a.name)}</h2>
+      <div class="sub">${esc(a.platform === 'meta' ? 'Meta' : 'LinkedIn')} ·
+        ${num(a.member_count)} contacts · ${num(a.matched_count)} matched</div></div>
+      <button class="btn ghost sm" data-close>✕</button></div>
+    <div class="drawer-body">
+      <div class="grid g3" style="gap:10px">
+        ${miniStat('Targeted', num(a.member_count), `${num(a.resolved)} currently match`)}
+        ${miniStat('Cohorts', num(a.cohorts.length), a.cohort_mode ? `~${num(a.cohort_size)} each` : 'cohorts off')}
+        ${miniStat('Precision', p.with_cohorts, `was ${p.without_cohorts}`)}
+      </div>
+
+      <div class="section-title">What this audience can prove</div>
+      <div class="banner info" style="margin:0 0 12px"><span>◈</span><div>
+        <strong>Impressions:</strong> ${esc(p.impressions_note)}<br />
+        <strong>Clicks:</strong> ${esc(p.clicks_note)}
+      </div></div>
+
+      ${a.cohorts.length ? `<div class="section-title">Cohorts</div>
+        <table><thead><tr><th>#</th><th class="num">People</th><th class="num">Impr.</th>
+          <th class="num">Clicks</th><th class="num">Spend</th><th>Resolves to</th></tr></thead>
+        <tbody>${a.cohorts.map((c) => `<tr class="clickable" data-cohort="${esc(c.id)}">
+          <td><strong>${c.seq}</strong>${c.status === 'retired' ? ' <span class="tag">retired</span>' : ''}</td>
+          <td class="num">${num(c.members)}</td>
+          <td class="num">${num(c.impressions)}</td>
+          <td class="num">${num(c.clicks)}</td>
+          <td class="num">${money(c.spend)}</td>
+          <td style="color:var(--text-secondary)">${esc(c.attribution_precision)}</td>
+        </tr>`).join('')}</tbody></table>
+        ${a.cohorts[0]?.landing_url_with_token ? `
+          <div class="section-title">Cohort landing URL</div>
+          <div class="help" style="margin-bottom:6px">Put each cohort's URL behind its own ad creative.
+            The token identifies which slice clicked; the site tracker identifies the person.</div>
+          <div class="code">${esc(a.cohorts[0].landing_url_with_token)}</div>` : ''}`
+        : `<div class="section-title">Cohorts</div>
+           <div class="empty">Cohorts are off for this audience. Turning them on splits it into
+             slices of ~${num(Math.ceil(a.min_audience_size * 1.6))} so reporting resolves to named people.</div>`}
+
+      <div class="section-title">Members</div>
+      <table><thead><tr><th>Contact</th><th>Company</th><th>Cohort</th><th class="num">Score</th></tr></thead>
+        <tbody>${a.members.slice(0, 60).map((m) => `<tr class="clickable" data-contact="${esc(m.id)}">
+          <td>${esc(name(m))}<div style="font-size:11px;color:var(--text-muted)">${esc(m.email)}</div></td>
+          <td>${esc(m.company || '—')}</td>
+          <td style="color:var(--text-muted)">${esc(m.cohort_label ? m.cohort_label.split('·').pop().trim() : '—')}</td>
+          <td class="num">${m.score}</td></tr>`).join('')}</tbody></table>
+    </div>`);
+  $('#drawer').querySelectorAll('[data-contact]').forEach((el) =>
+    el.addEventListener('click', () => showContact(el.dataset.contact)));
+  $('#drawer').querySelectorAll('[data-cohort]').forEach((el) =>
+    el.addEventListener('click', () => showCohort(el.dataset.cohort)));
+}
+
+async function showCohort(id) {
+  const members = await api(`/api/ads/cohorts/${id}/members`);
+  openModal({
+    title: 'Cohort members', confirm: 'Close', onConfirm: () => {}, wide: true,
+    subtitle: `An impression on this cohort's ad reached one of these ${members.length} named people.`,
+    body: members.length ? `<div class="table-wrap" style="max-height:420px"><table>
+      <thead><tr><th>Contact</th><th>Company</th><th>Title</th><th class="num">Score</th></tr></thead>
+      <tbody>${members.map((m) => `<tr><td>${esc(name(m))}
+        <div style="font-size:11px;color:var(--text-muted)">${esc(m.email)}</div></td>
+        <td>${esc(m.company || '—')}</td><td class="trunc">${esc(m.job_title || '—')}</td>
+        <td class="num">${m.score}</td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty">No members.</div>',
+  });
 }
 
 async function showCampaign(id) {
@@ -1332,35 +1482,89 @@ function segmentBuilder() {
 }
 
 function newAudienceModal(listId) {
-  const lists = state.data.lists || state.data.dashboard?.lists || [];
+  const lists = state.data.lists || [];
   openModal({
     title: 'New matched audience',
-    subtitle: 'Mirrors a list into LinkedIn as SHA-256 hashed emails.',
+    subtitle: 'Mirrors a list into an ad platform as hashed identities.',
     confirm: 'Create & sync',
     body: `
+      <label class="field"><span>Platform *</span>
+        <select id="a-platform">
+          <option value="linkedin">LinkedIn — work context, ~300 member floor</option>
+          <option value="meta">Meta — Facebook &amp; Instagram, ~100 member floor</option>
+        </select>
+        <div class="help" id="a-plat-note">LinkedIn matches on the hashed email only.</div></label>
       <label class="field"><span>Name *</span>
         <input type="text" id="a-name" placeholder="VP+ media — retargeting" /></label>
       <label class="field"><span>Source list</span>
         <select id="a-list"><option value="">— all contacts —</option>
-          ${lists.map((l) => `<option value="${esc(l.id)}" ${l.id === listId ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}
+          ${lists.map((l) => `<option value="${esc(l.id)}" ${l.id === listId ? 'selected' : ''}>${esc(l.name)} (${l.member_count})</option>`).join('')}
         </select></label>
       <label class="field"><span>Extra rules (JSON, optional)</span>
-        <textarea id="a-rules">{}</textarea>
-        <div class="help">Only contacts with ad consent are ever pushed. LinkedIn needs roughly
-          300 matched members before it will serve ads.</div></label>`,
+        <textarea id="a-rules">{}</textarea></label>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px">
+        <input type="checkbox" id="a-cohorts" style="width:auto" />
+        Split into cohorts for contact-level attribution</label>
+      <div class="help">Only contacts with ad consent are ever pushed. Cohorts create one platform
+        audience per slice, so reporting resolves to a handful of named people.</div>`,
     onConfirm: async (body) => {
-      const a = await api('/api/linkedin/audiences', {
+      const a = await api('/api/ads/audiences', {
         method: 'POST',
         body: {
           name: body.querySelector('#a-name').value.trim(),
+          platform: body.querySelector('#a-platform').value,
           list_id: body.querySelector('#a-list').value || null,
           rules: JSON.parse(body.querySelector('#a-rules').value || '{}'),
+          cohort_mode: body.querySelector('#a-cohorts').checked,
         },
       });
-      const r = await api(`/api/linkedin/audiences/${a.id}/sync`, { method: 'POST' });
+      const r = await api(`/api/ads/audiences/${a.id}/sync`, { method: 'POST' });
       toast(`Audience created — ${r.added} contacts${r.dry_run ? ' (dry run)' : ''}`, 'ok');
       if (r.warnings?.length) toast(r.warnings[0]);
-      go('linkedin');
+      go('ads');
+    },
+  });
+  $('#a-platform').addEventListener('change', (e) => {
+    $('#a-plat-note').textContent = e.target.value === 'meta'
+      ? 'Meta matches on up to nine keys — email, name, city, state, zip, country, phone. More keys, higher match rate.'
+      : 'LinkedIn matches on the hashed email only.';
+  });
+}
+
+function mirrorModal() {
+  const lists = state.data.lists || [];
+  openModal({
+    title: 'Mirror a list to both platforms',
+    subtitle: 'Creates one audience per platform from the same contacts, and syncs both.',
+    confirm: 'Mirror & sync',
+    body: `
+      <label class="field"><span>Name *</span>
+        <input type="text" id="m-name" placeholder="Dedicated list — VP+ media" /></label>
+      <label class="field"><span>Source list</span>
+        <select id="m-list"><option value="">— all contacts —</option>
+          ${lists.map((l) => `<option value="${esc(l.id)}">${esc(l.name)} (${l.member_count})</option>`).join('')}
+        </select></label>
+      <label class="field"><span>Extra rules (JSON, optional)</span>
+        <textarea id="m-rules">{ "field": "seniority", "operator": "in", "value": ["vp", "cxo", "director"] }</textarea></label>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px">
+        <input type="checkbox" id="m-cohorts" style="width:auto" checked />
+        Split into cohorts on both platforms</label>
+      <div class="help">The same people, reached in two contexts. Meta is typically a fraction of
+        LinkedIn's cost per click and allows roughly 3× tighter cohorts; LinkedIn reaches them
+        with work intent. The contact record is what ties the two together.</div>`,
+    onConfirm: async (body) => {
+      const r = await api('/api/ads/audiences', {
+        method: 'POST',
+        body: {
+          mirror: true,
+          name: body.querySelector('#m-name').value.trim(),
+          list_id: body.querySelector('#m-list').value || null,
+          rules: JSON.parse(body.querySelector('#m-rules').value || '{}'),
+          cohort_mode: body.querySelector('#m-cohorts').checked,
+        },
+      });
+      toast(`Mirrored to ${r.mirrored} platforms`, 'ok');
+      go('ads');
     },
   });
 }
@@ -1498,7 +1702,7 @@ async function sendCampaign(id) {
 function newJourneyModal() {
   const lists = state.data.lists || [];
   const campaigns = state.data.email?.campaigns || [];
-  const audiences = state.data.linkedin?.audiences || [];
+  const audiences = state.data.ads?.audiences || [];
   openModal({
     title: 'New journey', wide: true, confirm: 'Create',
     body: `
@@ -1580,12 +1784,14 @@ async function loadView() {
           templates: await api('/api/templates'),
         };
         break;
-      case 'linkedin':
+      case 'ads':
         state.data.lists = await api('/api/lists');
-        state.data.linkedin = {
-          audiences: await api('/api/linkedin/audiences'),
-          campaigns: await api(`/api/linkedin/campaigns?days=${d}`),
-          influence: await api(`/api/linkedin/influence?days=${d}`),
+        state.data.ads = {
+          platforms: await api('/api/ads/platforms'),
+          audiences: await api('/api/ads/audiences'),
+          campaigns: await api(`/api/ads/campaigns?days=${d}`),
+          influence: await api(`/api/ads/influence?days=${d}`),
+          comparison: await api(`/api/ads/comparison?days=${d}`),
         };
         break;
       case 'journeys':
@@ -1595,7 +1801,7 @@ async function loadView() {
           campaigns: await api('/api/campaigns'),
           templates: await api('/api/templates'),
         };
-        state.data.linkedin = { ...(state.data.linkedin || {}), audiences: await api('/api/linkedin/audiences') };
+        state.data.ads = { ...(state.data.ads || {}), audiences: await api('/api/ads/audiences') };
         break;
       case 'activity':
         state.data.activity = await api(`/api/events?limit=200${filterQuery()}`);

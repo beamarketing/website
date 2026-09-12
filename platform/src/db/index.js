@@ -3,6 +3,7 @@ import { readFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
+import { prepareSchema, runMigrations } from './migrations.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -13,7 +14,11 @@ export function db() {
   if (_db) return _db;
   mkdirSync(dirname(config.dbPath), { recursive: true });
   _db = new DatabaseSync(config.dbPath);
+  // Order matters: widen existing tables, then apply the current schema, then
+  // move data. schema.sql indexes columns that older databases do not have yet.
+  prepareSchema(_db);
   _db.exec(readFileSync(join(here, 'schema.sql'), 'utf8'));
+  runMigrations(_db);
   return _db;
 }
 

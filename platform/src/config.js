@@ -78,8 +78,40 @@ export const config = {
     apiVersion: env.LINKEDIN_API_VERSION || '202506',
     clientId: env.LINKEDIN_CLIENT_ID || '',
     clientSecret: env.LINKEDIN_CLIENT_SECRET || '',
-    // Minimum audience size LinkedIn will actually serve ads to.
+    // Minimum matched members LinkedIn will actually serve ads to. This is the
+    // floor on how narrow a cohort — and therefore how precise the
+    // attribution — can be on this platform.
     minAudienceSize: int(env.LINKEDIN_MIN_AUDIENCE, 300),
+  },
+
+  meta: {
+    accessToken: env.META_ACCESS_TOKEN || '',
+    adAccountId: String(env.META_AD_ACCOUNT_ID || '').replace(/^act_/, ''),
+    pixelId: env.META_PIXEL_ID || '',
+    pageId: env.META_PAGE_ID || '',
+    businessId: env.META_BUSINESS_ID || '',
+    apiVersion: env.META_API_VERSION || 'v21.0',
+    appId: env.META_APP_ID || '',
+    appSecret: env.META_APP_SECRET || '',
+    // Meta delivers to a much smaller custom audience than LinkedIn, which is
+    // why cohorts can be roughly 3x tighter here.
+    minAudienceSize: int(env.META_MIN_AUDIENCE, 100),
+    // Conversions API: forward first-party website events server-side.
+    capiEnabled: bool(env.META_CAPI_ENABLED, true),
+    // Hash IP and user agent out of CAPI payloads if you'd rather not send them.
+    capiSendClientContext: bool(env.META_CAPI_CLIENT_CONTEXT, true),
+    testEventCode: env.META_TEST_EVENT_CODE || '',
+  },
+
+  ads: {
+    // Cohort mode is what converts campaign-level reporting into
+    // contact-level attribution. Off by default: it multiplies the number of
+    // audiences and ad objects you have to manage on the platform.
+    cohortsEnabled: bool(env.AD_COHORTS_ENABLED, false),
+    // Extra headroom over the platform minimum, because match rates mean a
+    // cohort of exactly N contacts matches fewer than N members.
+    cohortOversizeFactor: Number(env.AD_COHORT_OVERSIZE || 1.6),
+    maxCohorts: int(env.AD_MAX_COHORTS, 50),
   },
 
   jobs: {
@@ -89,12 +121,16 @@ export const config = {
     scoreIntervalSec: int(env.JOB_SCORE_INTERVAL, 3600),
     audienceIntervalSec: int(env.JOB_AUDIENCE_INTERVAL, 21600),
     adsIntervalSec: int(env.JOB_ADS_INTERVAL, 21600),
+    capiIntervalSec: int(env.JOB_CAPI_INTERVAL, 300),
   },
 };
 
 export const isDryRun = {
   get linkedin() { return !config.linkedin.accessToken || !config.linkedin.adAccountId; },
+  get meta() { return !config.meta.accessToken || !config.meta.adAccountId; },
   get email() { return config.email.provider === 'console'; },
+  /** True when no ad platform at all is wired up. */
+  get ads() { return this.linkedin && this.meta; },
 };
 
 /** Fills in generated secrets, persisting them so restarts stay valid. */

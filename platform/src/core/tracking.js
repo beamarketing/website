@@ -1,7 +1,8 @@
 import { get, run } from '../db/index.js';
 import { recordEvent, ensureVisitor, identifyVisitor, contactIdForEmail } from './events.js';
 import { upsertContact } from './contacts.js';
-import { verifyToken, normalizeEmail, dissectUrl, now, id } from '../lib/util.js';
+import { verifyToken, normalizeEmail, dissectUrl, now, id, buildFbc } from '../lib/util.js';
+import { cohortFromToken } from '../channels/ads/cohorts.js';
 import { logger } from '../lib/logger.js';
 
 const log = logger('tracking');
@@ -72,32 +73,56 @@ export function ingestBatch(body, meta = {}) {
       title: String(raw.title || '').slice(0, 300),
       referrer: String(raw.referrer || meta.referer || '').slice(0, 500),
       value: Number.isFinite(Number(raw.value)) ? Number(raw.value) : null,
-      meta: sanitizeMeta(raw.meta),
+      meta: {
+        ...sanitizeMeta(raw.meta),
+        // Meta's own browser ids, captured so server-side conversions can be
+        // matched back to the ad click that produced them.
+        ...(raw.fbp ? { fbp: String(raw.fbp).slice(0, 128) } : {}),
+        ...(raw.fbc ? { fbc: String(raw.fbc).slice(0, 256) } : {}),
+        ...(meta.ip ? { ip: meta.ip } : {}),
+        ...(meta.userAgent ? { user_agent: String(meta.userAgent).slice(0, 300) } : {}),
+      },
       // LinkedIn stamps li_fat_id on ad clicks landing on our site — that is
       // how an ad click becomes a contact-level event rather than a stat.
       ad_campaign_id: parts.ad_campaign_id || null,
       creative_id: parts.creative_id || null,
     });
 
-    // A page arrival carrying LinkedIn ad params is itself an ad engagement.
-    if (type === 'page_view' && isLinkedInAdClick(parts)) {
+    // A page arrival carrying a network's click id is itself an ad engagement.
+    // This is how an ad click becomes a contact-level event on either platform:
+    // the network never tells us who saw the ad, but the landing URL tells us
+    // this browser arrived from it, and identity resolution does the rest.
+    if (type === 'page_view' && parts.platform) {
+      const cohort = parts.cohort_token ? cohortFromToken(parts.cohort_token) : null;
+      const platform = cohort?.platform || parts.platform;
       recordEvent({
         contact_id: visitor?.contact_id || null,
         visitor_id: vid,
-        channel: 'linkedin',
+        channel: 'ads',
         type: 'ad_click',
+        platform,
         occurred_at: safeTimestamp(raw.ts),
         url: raw.url,
         path: raw.path || parts.path,
-        ad_campaign_id: parts.ad_campaign_id || null,
-        creative_id: parts.creative_id || null,
+        ad_campaign_id: cohort?.ad_campaign_id || parts.ad_campaign_id || null,
+        creative_id: cohort?.creative_id || parts.creative_id || null,
+        cohort_id: cohort?.id || null,
         utm_source: parts.utm_source,
         utm_campaign: parts.utm_campaign,
         utm_content: parts.utm_content,
-        meta: { li_fat_id: parts.li_fat_id || null, source: 'landing_params' },
-        // One ad click per visitor per campaign per hour, however many
-        // times they reload the landing page.
-        dedupe_key: `adclick:${vid}:${parts.ad_campaign_id || parts.utm_campaign || 'na'}:${new Date().toISOString().slice(0, 13)}`,
+        meta: {
+          source: 'landing_params',
+          li_fat_id: parts.li_fat_id || null,
+          fbclid: parts.fbclid || null,
+          // Meta needs fbc back on the Conversions API call to tie the
+          // server-side event to the ad click it came from.
+          fbc: raw.fbc || (parts.fbclid ? buildFbc(parts.fbclid) : null),
+          fbp: raw.fbp || null,
+          cohort: cohort ? { id: cohort.id, label: cohort.label, seq: cohort.seq } : null,
+        },
+        // One ad click per visitor per campaign per hour, however many times
+        // they reload the landing page.
+        dedupe_key: `adclick:${vid}:${platform}:${cohort?.id || parts.ad_campaign_id || parts.utm_campaign || 'na'}:${new Date().toISOString().slice(0, 13)}`,
       });
     }
 
@@ -105,13 +130,6 @@ export function ingestBatch(body, meta = {}) {
   }
 
   return result;
-}
-
-function isLinkedInAdClick(parts) {
-  if (parts.li_fat_id) return true;
-  const source = String(parts.utm_source || '').toLowerCase();
-  const medium = String(parts.utm_medium || '').toLowerCase();
-  return source.includes('linkedin') && /cpc|paid|ads?|sponsored|display/.test(medium);
 }
 
 function pickUtm(parts) {

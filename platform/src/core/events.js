@@ -17,8 +17,8 @@ export const EVENT_TYPES = {
   identify: 'web', custom: 'web', pricing_view: 'web', demo_request: 'web', signup: 'web',
   email_sent: 'email', email_open: 'email', email_click: 'email',
   email_bounce: 'email', email_unsubscribe: 'email', email_complaint: 'email',
-  ad_click: 'linkedin', ad_lead_form: 'linkedin', ad_impression_segment: 'linkedin',
-  audience_added: 'linkedin', audience_removed: 'linkedin',
+  ad_click: 'ads', ad_lead_form: 'ads', ad_view: 'ads',
+  audience_added: 'ads', audience_removed: 'ads',
   list_added: 'system', score_change: 'system', lifecycle_change: 'system', journey_run: 'system',
 };
 
@@ -49,17 +49,19 @@ export function recordEvent(input) {
   const eventId = id('ev');
   run(
     `INSERT INTO events (id, contact_id, visitor_id, channel, type, occurred_at, url, path, title,
-       referrer, campaign_id, ad_campaign_id, creative_id, utm_source, utm_medium, utm_campaign,
-       utm_content, utm_term, value, points, meta, dedupe_key)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       referrer, campaign_id, platform, ad_campaign_id, creative_id, cohort_id, utm_source, utm_medium,
+       utm_campaign, utm_content, utm_term, value, points, meta, dedupe_key)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     eventId, contactId, input.visitor_id || null, channel, type, occurredAt,
     parts.url || input.url || null,
     input.path || parts.path || null,
     input.title || null,
     input.referrer || null,
     input.campaign_id || null,
+    input.platform || parts.platform || null,
     input.ad_campaign_id || parts.ad_campaign_id || null,
     input.creative_id || parts.creative_id || null,
+    input.cohort_id || null,
     input.utm_source || parts.utm_source || null,
     input.utm_medium || parts.utm_medium || null,
     input.utm_campaign || parts.utm_campaign || null,

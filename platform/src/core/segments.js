@@ -35,7 +35,9 @@ const DERIVED = {
   email_clicks_30d: { sql: windowCount("e.type = 'email_click'", 30), type: 'number' },
   email_clicks_all: { sql: `(SELECT COUNT(*) FROM events e WHERE e.contact_id = contacts.id AND e.type = 'email_click')`, type: 'number' },
   ad_clicks_30d: { sql: windowCount("e.type = 'ad_click'", 30), type: 'number' },
-  ad_engagements_30d: { sql: windowCount("e.channel = 'linkedin'", 30), type: 'number' },
+  ad_engagements_30d: { sql: windowCount("e.channel = 'ads'", 30), type: 'number' },
+  meta_engagements_30d: { sql: windowCount("e.platform = 'meta'", 30), type: 'number' },
+  linkedin_engagements_30d: { sql: windowCount("e.platform = 'linkedin'", 30), type: 'number' },
   form_submits_all: { sql: `(SELECT COUNT(*) FROM events e WHERE e.contact_id = contacts.id AND e.type = 'form_submit')`, type: 'number' },
   web_events_30d: { sql: windowCount("e.channel = 'web'", 30), type: 'number' },
   days_since_last_event: {
@@ -77,7 +79,7 @@ const PARAMETERISED = {
     args: [String(arg)], type: 'number',
   }),
   engaged_ad_campaign: (arg) => ({
-    sql: `(SELECT COUNT(*) FROM events e WHERE e.contact_id = contacts.id AND e.channel = 'linkedin' AND e.ad_campaign_id = ?)`,
+    sql: `(SELECT COUNT(*) FROM events e WHERE e.contact_id = contacts.id AND e.channel = 'ads' AND e.ad_campaign_id = ?)`,
     args: [String(arg)], type: 'number',
   }),
   in_list: (arg) => ({
@@ -85,7 +87,7 @@ const PARAMETERISED = {
     args: [String(arg)], type: 'number',
   }),
   in_audience: (arg) => ({
-    sql: `(SELECT COUNT(*) FROM li_audience_members am WHERE am.contact_id = contacts.id AND am.audience_id = ?)`,
+    sql: `(SELECT COUNT(*) FROM ad_audience_members am WHERE am.contact_id = contacts.id AND am.audience_id = ? AND am.state = 'pushed')`,
     args: [String(arg)], type: 'number',
   }),
 };

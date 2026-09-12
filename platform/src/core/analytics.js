@@ -1,5 +1,5 @@
 import { all, get } from '../db/index.js';
-import { adPerformance, adSeries, audienceInfluence } from '../channels/linkedin/insights.js';
+import { adPerformance, adSeries, audienceInfluence, platformComparison } from '../channels/ads/insights.js';
 import { eventSeries, topPages } from './events.js';
 
 /** Everything the console overview needs, in one query pass. */
@@ -24,7 +24,9 @@ export function overview({ days = 30 } = {}) {
            COUNT(DISTINCT CASE WHEN contact_id IS NULL THEN visitor_id END) AS anonymous_visitors,
            SUM(channel = 'web') AS web_events,
            SUM(channel = 'email') AS email_events,
-           SUM(channel = 'linkedin') AS ad_events
+           SUM(channel = 'ads') AS ad_events,
+           SUM(platform = 'linkedin') AS linkedin_events,
+           SUM(platform = 'meta') AS meta_events
     FROM events WHERE occurred_at >= datetime('now', ?)`, window) || {};
 
   const email = get(`
@@ -46,7 +48,7 @@ export function overview({ days = 30 } = {}) {
     SELECT COUNT(*) AS total,
            COALESCE(SUM(member_count),0) AS members,
            COALESCE(SUM(matched_count),0) AS matched
-    FROM li_audiences`) || {};
+    FROM ad_audiences`) || {};
 
   const sent = Number(email.sent || 0);
   const impressions = Number(ads.impressions || 0);
@@ -104,7 +106,7 @@ export function funnel({ days = 30 } = {}) {
   const row = get(
     `WITH reached AS (
         -- Everyone we deliberately put in front of: advertised to, or mailed.
-        SELECT DISTINCT contact_id AS id FROM li_audience_members WHERE state = 'pushed'
+        SELECT DISTINCT contact_id AS id FROM ad_audience_members WHERE state = 'pushed'
         UNION
         SELECT DISTINCT contact_id FROM sends WHERE status = 'sent' AND sent_at >= datetime('now', ?)
      ),
@@ -212,6 +214,7 @@ export function dashboard({ days = 30 } = {}) {
     top_pages: topPages({ days }),
     ad_performance: adPerformance({ days }),
     ad_series: adSeries({ days }),
+    platform_comparison: platformComparison({ days }),
     audience_influence: audienceInfluence({ days }),
     channel_influence: channelInfluence({ days }),
     accounts: accountRollup({ days }),

@@ -111,14 +111,44 @@ export function dissectUrl(raw) {
       utm_campaign: q.get('utm_campaign'),
       utm_content: q.get('utm_content'),
       utm_term: q.get('utm_term'),
-      // LinkedIn stamps these on ad clicks it sends to your site.
-      li_fat_id: q.get('li_fat_id'),
+      // Each network stamps its own click id on the landing URL. These are the
+      // only handles an ad platform gives us at the moment of arrival.
+      li_fat_id: q.get('li_fat_id'),          // LinkedIn
+      fbclid: q.get('fbclid'),                // Meta
+      gclid: q.get('gclid'),                  // Google, for completeness
+      cohort_token: q.get('bmr_co'),          // our own cohort token
       ad_campaign_id: q.get('li_campaign_id') || q.get('bmr_adc'),
       creative_id: q.get('li_creative_id') || q.get('bmr_crv'),
+      platform: detectAdPlatform(q),
     };
   } catch {
     return { url: String(raw || '').slice(0, 2000), path: null, host: null };
   }
+}
+
+/**
+ * Which ad network sent this visitor, from the landing URL alone.
+ * The network's own click id is authoritative; UTMs are a fallback because
+ * anyone can set them.
+ */
+export function detectAdPlatform(params) {
+  const q = typeof params?.get === 'function' ? params : new URLSearchParams(params || '');
+  if (q.get('li_fat_id')) return 'linkedin';
+  if (q.get('fbclid')) return 'meta';
+  const source = String(q.get('utm_source') || '').toLowerCase();
+  const medium = String(q.get('utm_medium') || '').toLowerCase();
+  const paid = /cpc|ppc|paid|ads?|sponsored|display|social-paid/.test(medium);
+  if (!paid) return null;
+  if (/linkedin|li\b/.test(source)) return 'linkedin';
+  if (/facebook|meta|instagram|\bfb\b|\big\b/.test(source)) return 'meta';
+  return null;
+}
+
+/** Builds the Meta `fbc` cookie value from an fbclid, per Meta's format. */
+export function buildFbc(fbclid, createdAt = Date.now()) {
+  if (!fbclid) return null;
+  // version.subdomainIndex.creationTime.fbclid
+  return `fb.1.${Math.floor(createdAt)}.${fbclid}`;
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

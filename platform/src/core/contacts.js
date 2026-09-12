@@ -175,7 +175,7 @@ export function eraseContact(contactId) {
     run('DELETE FROM events WHERE contact_id = ?', contact.id);
     run('UPDATE visitors SET contact_id = NULL, identified_at = NULL WHERE contact_id = ?', contact.id);
     run('DELETE FROM sends WHERE contact_id = ?', contact.id);
-    run('DELETE FROM li_audience_members WHERE contact_id = ?', contact.id);
+    run('DELETE FROM ad_audience_members WHERE contact_id = ?', contact.id);
     run('DELETE FROM ad_lead_responses WHERE contact_id = ?', contact.id);
     run('DELETE FROM contacts WHERE id = ?', contact.id);
     run(

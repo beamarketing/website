@@ -12,9 +12,11 @@ import * as tracking from '../../core/tracking.js';
 import * as campaigns from '../../channels/email/campaigns.js';
 import * as emailTracking from '../../channels/email/tracking.js';
 import { verifyProvider, providerNames } from '../../channels/email/provider.js';
-import * as audiences from '../../channels/linkedin/audiences.js';
-import * as insights from '../../channels/linkedin/insights.js';
-import { LinkedInClient } from '../../channels/linkedin/client.js';
+import * as audiences from '../../channels/ads/audiences.js';
+import * as insights from '../../channels/ads/insights.js';
+import * as cohorts from '../../channels/ads/cohorts.js';
+import { adapter, PLATFORMS, platformSummary, configuredPlatforms } from '../../channels/ads/adapters.js';
+import * as capi from '../../channels/meta/capi.js';
 import { runJob, jobStatus } from '../../jobs/scheduler.js';
 
 export const api = new Router();
@@ -35,12 +37,26 @@ api.get('/api/status', async (req, res) => {
       ad_account: config.linkedin.adAccountId || null,
       api_version: config.linkedin.apiVersion,
     },
+    meta: {
+      configured: !isDryRun.meta,
+      dry_run: isDryRun.meta,
+      ad_account: config.meta.adAccountId || null,
+      api_version: config.meta.apiVersion,
+      pixel_configured: Boolean(config.meta.pixelId),
+      capi_enabled: config.meta.capiEnabled,
+    },
+    ads: {
+      platforms: platformSummary(),
+      configured: configuredPlatforms(),
+      cohorts_enabled: config.ads.cohortsEnabled,
+    },
     jobs: jobStatus(),
     counts: {
       contacts: get('SELECT COUNT(*) AS n FROM contacts')?.n ?? 0,
       events: get('SELECT COUNT(*) AS n FROM events')?.n ?? 0,
       campaigns: get('SELECT COUNT(*) AS n FROM campaigns')?.n ?? 0,
-      audiences: get('SELECT COUNT(*) AS n FROM li_audiences')?.n ?? 0,
+      audiences: get('SELECT COUNT(*) AS n FROM ad_audiences')?.n ?? 0,
+      cohorts: get('SELECT COUNT(*) AS n FROM ad_cohorts')?.n ?? 0,
       journeys: get('SELECT COUNT(*) AS n FROM journeys WHERE enabled = 1')?.n ?? 0,
     },
   });
@@ -117,8 +133,11 @@ api.get('/api/contacts/:id', async (req, res, { params }) => {
       contact.id,
     ),
     audiences: all(
-      `SELECT a.id, a.name, m.state, m.pushed_at FROM li_audience_members m
-       JOIN li_audiences a ON a.id = m.audience_id WHERE m.contact_id = ?`,
+      `SELECT a.id, a.platform, a.name, m.state, m.pushed_at, m.cohort_id, co.label AS cohort_label
+       FROM ad_audience_members m
+       JOIN ad_audiences a ON a.id = m.audience_id
+       LEFT JOIN ad_cohorts co ON co.id = m.cohort_id
+       WHERE m.contact_id = ?`,
       contact.id,
     ),
     sends: all(
@@ -343,74 +362,167 @@ api.post('/api/email/webhook', async (req, res) => {
   json(res, { processed: results.length, results });
 });
 
-// ---------------------------------------------------------------- linkedin --
-api.get('/api/linkedin/audiences', async (req, res) => json(res, audiences.listAudiences()));
-api.post('/api/linkedin/audiences', async (req, res) => json(res, audiences.createAudience(await readJson(req)), 201));
-api.get('/api/linkedin/audiences/:id', async (req, res, { params }) => {
-  const audience = audiences.getAudience(params.id);
-  json(res, { ...audience, members: audiences.audienceMembers(audience.id, { limit: 200 }), resolved: audiences.resolveMembers(audience).length });
+// ------------------------------------------------------------- advertising --
+api.get('/api/ads/platforms', async (req, res) => {
+  json(res, {
+    platforms: platformSummary(),
+    cohorts_enabled: config.ads.cohortsEnabled,
+    cohort_oversize_factor: config.ads.cohortOversizeFactor,
+  });
 });
-api.post('/api/linkedin/audiences/:id/sync', async (req, res, { params }) => {
+
+api.get('/api/ads/audiences', async (req, res) => {
+  const platform = new URL(req.url, 'http://x').searchParams.get('platform');
+  json(res, audiences.listAudiences({ platform }));
+});
+
+api.post('/api/ads/audiences', async (req, res) => {
+  const body = await readJson(req);
+  // "mirror" pushes the same list to every platform at once, which is the
+  // normal way to run a contact-based programme across LinkedIn and Meta.
+  if (body.mirror === true) {
+    json(res, await audiences.mirrorToAllPlatforms(body), 201);
+    return;
+  }
+  json(res, audiences.createAudience(body), 201);
+});
+
+api.get('/api/ads/audiences/:id', async (req, res, { params }) => {
+  const audience = audiences.getAudience(params.id);
+  json(res, {
+    ...audience,
+    min_audience_size: adapter(audience.platform).minAudienceSize,
+    resolved: audiences.resolveMembers(audience).length,
+    members: audiences.audienceMembers(audience.id, { limit: 200 }),
+    cohorts: cohorts.listCohorts(audience.id),
+    precision: cohorts.precisionReport(audience.id),
+  });
+});
+
+api.patch('/api/ads/audiences/:id', async (req, res, { params }) =>
+  json(res, audiences.updateAudience(params.id, await readJson(req))));
+
+api.post('/api/ads/audiences/:id/sync', async (req, res, { params }) => {
   const body = await readJson(req).catch(() => ({}));
   json(res, await audiences.syncAudience(params.id, { force: body.force === true }));
 });
-api.delete('/api/linkedin/audiences/:id', async (req, res, { params }) => json(res, audiences.deleteAudience(params.id)));
 
-api.get('/api/linkedin/campaigns', async (req, res) => {
-  const q = new URL(req.url, 'http://x').searchParams;
-  json(res, insights.adPerformance({ days: intParam(q.get('days'), 30, 365) }));
+api.delete('/api/ads/audiences/:id', async (req, res, { params }) =>
+  json(res, await audiences.deleteAudience(params.id)));
+
+// ------------------------------------------------------------------ cohorts --
+api.get('/api/ads/audiences/:id/cohorts', async (req, res, { params }) =>
+  json(res, { cohorts: cohorts.listCohorts(params.id), precision: cohorts.precisionReport(params.id) }));
+
+api.post('/api/ads/audiences/:id/cohorts', async (req, res, { params }) =>
+  json(res, await cohorts.syncCohorts(params.id)));
+
+api.get('/api/ads/cohorts/:id/members', async (req, res, { params }) =>
+  json(res, cohorts.cohortMembers(params.id)));
+
+api.post('/api/ads/cohorts/:id/landing', async (req, res, { params }) => {
+  const body = await readJson(req);
+  if (!body.url) throw badRequest('A destination url is required');
+  json(res, { landing_url: cohorts.setCohortLanding(params.id, body.url) });
 });
 
-api.patch('/api/linkedin/campaigns/:id', async (req, res, { params }) => {
+// Binds a cohort to the ad object serving it, so per-ad metrics become
+// per-cohort — and therefore attributable to a known set of people.
+api.post('/api/ads/cohorts/:id/link', async (req, res, { params }) =>
+  json(res, cohorts.linkCohortToAd(params.id, await readJson(req))));
+
+// -------------------------------------------------------------- performance --
+api.get('/api/ads/campaigns', async (req, res) => {
+  const q = new URL(req.url, 'http://x').searchParams;
+  json(res, insights.adPerformance({
+    days: intParam(q.get('days'), 30, 365),
+    platform: q.get('platform') || null,
+  }));
+});
+
+api.patch('/api/ads/campaigns/:id', async (req, res, { params }) => {
   const body = await readJson(req);
-  // Linking a LinkedIn campaign to one of our audiences is what lets spend be
-  // reported against named contacts rather than against an anonymous segment.
   if (body.audience_id !== undefined) {
     run('UPDATE ad_campaigns SET audience_id = ?, updated_at = ? WHERE id = ?', body.audience_id || null, now(), params.id);
+  }
+  if (body.cohort_id !== undefined) {
+    run('UPDATE ad_campaigns SET cohort_id = ?, updated_at = ? WHERE id = ?', body.cohort_id || null, now(), params.id);
   }
   if (body.landing_url !== undefined) {
     run('UPDATE ad_campaigns SET landing_url = ?, updated_at = ? WHERE id = ?', body.landing_url || null, now(), params.id);
   }
-  json(res, get('SELECT * FROM ad_campaigns WHERE id = ?', params.id) || notFoundThrow(params.id));
+  const updated = get('SELECT * FROM ad_campaigns WHERE id = ?', params.id);
+  if (!updated) throw notFound(`No ad campaign ${params.id}`);
+  json(res, updated);
 });
 
-const notFoundThrow = (x) => { throw notFound(`No ad campaign ${x}`); };
-
-api.get('/api/linkedin/influence', async (req, res) => {
+api.get('/api/ads/comparison', async (req, res) => {
   const q = new URL(req.url, 'http://x').searchParams;
-  json(res, audiences.listAudiences().length ? insights.audienceInfluence({ days: intParam(q.get('days'), 30, 365) }) : []);
+  json(res, insights.platformComparison({ days: intParam(q.get('days'), 30, 365) }));
 });
 
-api.post('/api/linkedin/sync', async (req, res) => {
+api.get('/api/ads/influence', async (req, res) => {
+  const q = new URL(req.url, 'http://x').searchParams;
+  json(res, insights.audienceInfluence({
+    days: intParam(q.get('days'), 30, 365),
+    platform: q.get('platform') || null,
+  }));
+});
+
+api.get('/api/ads/series', async (req, res) => {
+  const q = new URL(req.url, 'http://x').searchParams;
+  json(res, insights.adSeries({ days: intParam(q.get('days'), 30, 365) }));
+});
+
+api.post('/api/ads/sync', async (req, res) => {
   const body = await readJson(req).catch(() => ({}));
-  const what = body.what || 'all';
   const out = {};
-  if (what === 'all' || what === 'campaigns') out.campaigns = await insights.syncCampaigns();
-  if (what === 'all' || what === 'metrics') out.metrics = await insights.syncMetrics({ days: body.days || 30 });
-  if (what === 'all' || what === 'leads') out.leads = await insights.syncLeadResponses();
-  if (what === 'all' || what === 'audiences') out.audiences = await audiences.syncAll();
+  if (!body.what || body.what === 'all' || body.what === 'audiences') {
+    out.audiences = await audiences.syncAll({ platform: body.platform || null });
+  }
+  if (!body.what || body.what === 'all' || ['campaigns', 'metrics', 'leads'].includes(body.what)) {
+    out.platforms = await insights.syncAllPlatforms({
+      days: body.days || 30,
+      what: body.what && body.what !== 'all' ? body.what : 'all',
+    });
+  }
   json(res, out);
 });
 
-api.get('/api/linkedin/verify', async (req, res) => {
-  const client = new LinkedInClient();
-  const result = await client.introspect();
-  json(res, {
-    ...result,
-    configured: !isDryRun.linkedin,
-    ad_account_id: config.linkedin.adAccountId || null,
-    api_version: config.linkedin.apiVersion,
-    note: isDryRun.linkedin
-      ? 'Running in dry-run mode: audiences sync locally and nothing is sent to LinkedIn. Set LINKEDIN_ACCESS_TOKEN and LINKEDIN_AD_ACCOUNT_ID to go live.'
-      : undefined,
-  });
+api.get('/api/ads/verify', async (req, res) => {
+  const out = {};
+  for (const platform of PLATFORMS) {
+    const plat = adapter(platform);
+    out[platform] = {
+      label: plat.label,
+      configured: plat.configured,
+      min_audience_size: plat.minAudienceSize,
+      ...(plat.configured ? await plat.verify() : {
+        ok: false,
+        note: `${plat.label} is not configured — audiences build and diff locally, nothing is pushed.`,
+      }),
+    };
+  }
+  json(res, out);
 });
 
-// A manually captured lead-gen response (CSV export, Zapier, etc.).
-api.post('/api/linkedin/leads', async (req, res) => {
+// A lead captured outside the API (CSV export, Zapier, a webhook).
+api.post('/api/ads/leads', async (req, res) => {
   const body = await readJson(req);
   const list = Array.isArray(body.leads) ? body.leads : [body];
-  json(res, { results: list.map((l) => insights.ingestLeadResponse(l)) });
+  json(res, { results: list.map((l) => insights.ingestLead(l)) });
+});
+
+// ------------------------------------------------------- meta conversions --
+api.get('/api/meta/capi', async (req, res) => json(res, capi.forwardStatus()));
+
+api.post('/api/meta/capi/forward', async (req, res) => {
+  const body = await readJson(req).catch(() => ({}));
+  json(res, await capi.forwardPending({
+    sinceHours: body.since_hours || 24,
+    limit: body.limit || 500,
+    includePageViews: body.include_page_views === true,
+  }));
 });
 
 // ---------------------------------------------------------------- journeys --

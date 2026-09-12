@@ -82,6 +82,9 @@
     if (!hasConsent() || !HOST) return;
     event.vid = visitorId();
     event.ts = new Date().toISOString();
+    var ids = metaIds();
+    if (ids.fbp) event.fbp = ids.fbp;
+    if (ids.fbc) event.fbc = ids.fbc;
     queue.push(event);
     if (queue.length >= 10) flush();
     else if (!flushTimer) flushTimer = setTimeout(flush, 1200);
@@ -164,6 +167,26 @@
     else payload.token = String(emailOrToken);
     enqueue(payload);
     flush();
+  }
+
+  /**
+   * Meta identifiers.
+   *
+   * `_fbc` encodes the ad click that brought this person here; `_fbp` is the
+   * browser id Meta's own pixel sets. Capturing both means a server-side
+   * conversion can be matched to the ad that caused it even when the pixel is
+   * blocked — which, for B2B audiences on desktop, is a large share of traffic.
+   */
+  function captureMetaIds() {
+    var params = new URLSearchParams(location.search);
+    var fbclid = params.get('fbclid');
+    if (fbclid && !readCookie('_fbc')) {
+      writeCookie('_fbc', 'fb.1.' + Date.now() + '.' + fbclid, COOKIE_DAYS);
+    }
+  }
+
+  function metaIds() {
+    return { fbp: readCookie('_fbp'), fbc: readCookie('_fbc') };
   }
 
   function identifyFromUrl() {
@@ -285,6 +308,8 @@
         if (args[0]) { trackPage(true); flush(); }
         return;
       case 'reset':
+        // Clears our own first-party id. Meta's _fbp/_fbc belong to their
+        // pixel, so we read them but never delete them.
         writeCookie(COOKIE, '', -1);
         queue.length = 0;
         return;
@@ -298,6 +323,7 @@
   window.beamr = function () { return exec.apply(null, arguments); };
   window.beamr.q = { push: function (a) { exec.apply(null, a); } };
 
+  captureMetaIds();
   identifyFromUrl();
   hookHistory();
   trackPage(true);

@@ -49,17 +49,13 @@ const COMMANDS = {
   },
 
   async 'sync-linkedin'() {
-    const { syncAll } = await import('./channels/linkedin/audiences.js');
-    console.log(JSON.stringify(await syncAll(), null, 2));
+    const { syncAll } = await import('./channels/ads/audiences.js');
+    console.log(JSON.stringify(await syncAll({ platform: flag('platform') || null }), null, 2));
   },
 
   async 'pull-ads'() {
-    const { syncCampaigns, syncMetrics, syncLeadResponses } = await import('./channels/linkedin/insights.js');
-    console.log(JSON.stringify({
-      campaigns: await syncCampaigns(),
-      metrics: await syncMetrics({ days: Number(flag('days', 30)) }),
-      leads: await syncLeadResponses(),
-    }, null, 2));
+    const { syncAllPlatforms } = await import('./channels/ads/insights.js');
+    console.log(JSON.stringify(await syncAllPlatforms({ days: Number(flag('days', 30)) }), null, 2));
   },
 
   async send() {

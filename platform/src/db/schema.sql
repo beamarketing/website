@@ -111,8 +111,10 @@ CREATE TABLE IF NOT EXISTS events (
   title          TEXT,
   referrer       TEXT,
   campaign_id    TEXT,                         -- our email campaign
-  ad_campaign_id TEXT,                         -- LinkedIn campaign id
+  platform       TEXT,                         -- linkedin | meta (when channel = 'ads')
+  ad_campaign_id TEXT,                         -- namespaced "<platform>:<native id>"
   creative_id    TEXT,
+  cohort_id      TEXT,                         -- which cohort's ad drove this
   utm_source     TEXT,
   utm_medium     TEXT,
   utm_campaign   TEXT,
@@ -129,6 +131,8 @@ CREATE INDEX IF NOT EXISTS idx_events_type     ON events(type, occurred_at DESC)
 CREATE INDEX IF NOT EXISTS idx_events_time     ON events(occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_channel  ON events(channel, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_adcamp   ON events(ad_campaign_id);
+CREATE INDEX IF NOT EXISTS idx_events_platform ON events(platform, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_events_cohort   ON events(cohort_id);
 
 -- -------------------------------------------------------------------- email --
 CREATE TABLE IF NOT EXISTS email_templates (
@@ -205,40 +209,81 @@ CREATE TABLE IF NOT EXISTS suppressions (
   created_at TEXT NOT NULL
 );
 
--- --------------------------------------------------------------- linkedin --
--- A matched audience = a Beamr list mirrored into LinkedIn as hashed emails.
-CREATE TABLE IF NOT EXISTS li_audiences (
+-- ------------------------------------------------------------ advertising --
+-- Platform-agnostic. LinkedIn and Meta differ in their minimum audience size,
+-- their hashing/normalisation rules and their reporting shape, but the model
+-- is the same: a Beamr list is mirrored into the platform as hashed identities.
+CREATE TABLE IF NOT EXISTS ad_audiences (
   id             TEXT PRIMARY KEY,
+  platform       TEXT NOT NULL DEFAULT 'linkedin',  -- linkedin | meta
   name           TEXT NOT NULL,
   list_id        TEXT REFERENCES lists(id) ON DELETE SET NULL,
-  urn            TEXT,                          -- urn:li:dmpSegment:123456
-  account_urn    TEXT,
+  rules          TEXT NOT NULL DEFAULT '{}',
+  external_id    TEXT,                          -- dmpSegment urn / custom_audience id
+  account_ref    TEXT,
   status         TEXT NOT NULL DEFAULT 'pending', -- pending|syncing|ready|error
-  member_count   INTEGER NOT NULL DEFAULT 0,
-  matched_count  INTEGER NOT NULL DEFAULT 0,
+  member_count   INTEGER NOT NULL DEFAULT 0,    -- contacts we pushed
+  matched_count  INTEGER NOT NULL DEFAULT 0,    -- identities the platform matched
+  -- Cohort mode splits the audience into the smallest slices the platform will
+  -- serve, so reporting resolves to a handful of named people instead of one
+  -- undifferentiated campaign total.
+  cohort_mode    INTEGER NOT NULL DEFAULT 0,
+  cohort_size    INTEGER,
   last_synced_at TEXT,
   last_error     TEXT,
   auto_sync      INTEGER NOT NULL DEFAULT 1,
   created_at     TEXT NOT NULL,
   updated_at     TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS li_audience_members (
-  audience_id TEXT NOT NULL REFERENCES li_audiences(id) ON DELETE CASCADE,
+CREATE INDEX IF NOT EXISTS idx_ad_audiences_platform ON ad_audiences(platform, status);
+
+CREATE TABLE IF NOT EXISTS ad_audience_members (
+  audience_id TEXT NOT NULL REFERENCES ad_audiences(id) ON DELETE CASCADE,
   contact_id  TEXT NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+  cohort_id   TEXT,
   state       TEXT NOT NULL DEFAULT 'pending',  -- pending|pushed|removed
   pushed_at   TEXT,
   PRIMARY KEY (audience_id, contact_id)
 );
-CREATE INDEX IF NOT EXISTS idx_li_members_state ON li_audience_members(audience_id, state);
+CREATE INDEX IF NOT EXISTS idx_ad_members_state  ON ad_audience_members(audience_id, state);
+CREATE INDEX IF NOT EXISTS idx_ad_members_cohort ON ad_audience_members(cohort_id);
+
+-- A cohort is one servable slice of an audience: its own platform audience,
+-- its own creative and its own tracking URL. Because the platform reports per
+-- ad object, a cohort of N people yields attribution N people wide.
+CREATE TABLE IF NOT EXISTS ad_cohorts (
+  id             TEXT PRIMARY KEY,
+  audience_id    TEXT NOT NULL REFERENCES ad_audiences(id) ON DELETE CASCADE,
+  platform       TEXT NOT NULL,
+  seq            INTEGER NOT NULL,              -- 1-based index within the audience
+  label          TEXT NOT NULL,
+  external_id    TEXT,                          -- platform audience id for this slice
+  ad_campaign_id TEXT,
+  creative_id    TEXT,
+  token          TEXT NOT NULL UNIQUE,          -- signs the cohort tracking URL
+  landing_url    TEXT,
+  member_count   INTEGER NOT NULL DEFAULT 0,
+  matched_count  INTEGER NOT NULL DEFAULT 0,
+  status         TEXT NOT NULL DEFAULT 'pending',
+  last_synced_at TEXT,
+  last_error     TEXT,
+  created_at     TEXT NOT NULL,
+  updated_at     TEXT NOT NULL,
+  UNIQUE (audience_id, seq)
+);
+CREATE INDEX IF NOT EXISTS idx_ad_cohorts_audience ON ad_cohorts(audience_id);
 
 CREATE TABLE IF NOT EXISTS ad_campaigns (
-  id              TEXT PRIMARY KEY,             -- LinkedIn campaign id (as text)
+  id              TEXT PRIMARY KEY,             -- "<platform>:<native id>"
+  platform        TEXT NOT NULL DEFAULT 'linkedin',
+  native_id       TEXT,
   account_id      TEXT,
   name            TEXT NOT NULL,
-  status          TEXT,                         -- ACTIVE|PAUSED|DRAFT|COMPLETED
+  status          TEXT,
   objective       TEXT,
   type            TEXT,
-  audience_id     TEXT REFERENCES li_audiences(id) ON DELETE SET NULL,
+  audience_id     TEXT REFERENCES ad_audiences(id) ON DELETE SET NULL,
+  cohort_id       TEXT REFERENCES ad_cohorts(id) ON DELETE SET NULL,
   daily_budget    REAL,
   total_budget    REAL,
   currency        TEXT DEFAULT 'USD',
@@ -249,13 +294,17 @@ CREATE TABLE IF NOT EXISTS ad_campaigns (
   created_at      TEXT NOT NULL,
   updated_at      TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_ad_campaigns_platform ON ad_campaigns(platform, status);
 
--- Daily rollups straight from the LinkedIn reporting API.
+-- Daily rollups. Both platforms report per ad object per day; `cohort_id` is
+-- what turns that into contact-level attribution.
 CREATE TABLE IF NOT EXISTS ad_metrics (
   id               TEXT PRIMARY KEY,
+  platform         TEXT NOT NULL DEFAULT 'linkedin',
   ad_campaign_id   TEXT NOT NULL REFERENCES ad_campaigns(id) ON DELETE CASCADE,
   creative_id      TEXT NOT NULL DEFAULT '',
-  date             TEXT NOT NULL,               -- YYYY-MM-DD
+  cohort_id        TEXT REFERENCES ad_cohorts(id) ON DELETE SET NULL,
+  date             TEXT NOT NULL,
   impressions      INTEGER NOT NULL DEFAULT 0,
   unique_reach     INTEGER NOT NULL DEFAULT 0,
   clicks           INTEGER NOT NULL DEFAULT 0,
@@ -267,18 +316,22 @@ CREATE TABLE IF NOT EXISTS ad_metrics (
   follows          INTEGER NOT NULL DEFAULT 0,
   leads            INTEGER NOT NULL DEFAULT 0,
   conversions      INTEGER NOT NULL DEFAULT 0,
+  frequency        REAL NOT NULL DEFAULT 0,
   raw              TEXT NOT NULL DEFAULT '{}',
   UNIQUE (ad_campaign_id, creative_id, date)
 );
-CREATE INDEX IF NOT EXISTS idx_ad_metrics_date ON ad_metrics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_ad_metrics_date   ON ad_metrics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_ad_metrics_cohort ON ad_metrics(cohort_id, date DESC);
 
--- LinkedIn lead-gen form submissions are the one person-level ad signal the
--- API exposes, so they get their own table before being folded into events.
+-- Lead-gen form submissions (LinkedIn Lead Gen Forms, Meta Instant Forms) are
+-- the one person-level ad signal either platform hands back directly.
 CREATE TABLE IF NOT EXISTS ad_lead_responses (
   id             TEXT PRIMARY KEY,
+  platform       TEXT NOT NULL DEFAULT 'linkedin',
   response_urn   TEXT UNIQUE,
   ad_campaign_id TEXT,
   creative_id    TEXT,
+  cohort_id      TEXT,
   form_id        TEXT,
   contact_id     TEXT REFERENCES contacts(id) ON DELETE SET NULL,
   email          TEXT,
@@ -290,6 +343,22 @@ CREATE TABLE IF NOT EXISTS ad_lead_responses (
   submitted_at   TEXT,
   created_at     TEXT NOT NULL
 );
+
+-- Every server-side conversion we forward to a platform (Meta CAPI, LinkedIn
+-- CAPI). Logged so a failed forward is visible and retryable rather than lost.
+CREATE TABLE IF NOT EXISTS ad_conversion_forwards (
+  id          TEXT PRIMARY KEY,
+  platform    TEXT NOT NULL,
+  event_id    TEXT NOT NULL,
+  event_name  TEXT NOT NULL,
+  contact_id  TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+  status      TEXT NOT NULL,                    -- sent | failed | skipped
+  error       TEXT,
+  response    TEXT,
+  created_at  TEXT NOT NULL,
+  UNIQUE (platform, event_id)
+);
+CREATE INDEX IF NOT EXISTS idx_conv_forwards ON ad_conversion_forwards(platform, created_at DESC);
 
 -- ---------------------------------------------------------------- journeys --
 CREATE TABLE IF NOT EXISTS journeys (

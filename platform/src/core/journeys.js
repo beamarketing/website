@@ -5,7 +5,7 @@ import { buildQuery, compileRules } from './segments.js';
 import { recordEvent } from './events.js';
 import { addToList } from './contacts.js';
 import { sendOne } from '../channels/email/campaigns.js';
-import { syncAudience } from '../channels/linkedin/audiences.js';
+import { syncAudience } from '../channels/ads/audiences.js';
 import { logger } from '../lib/logger.js';
 
 const log = logger('journeys');
@@ -207,7 +207,7 @@ async function performAction(action, contact, journey) {
     case 'add_to_audience': {
       if (!action.audience_id) throw new Error('add_to_audience action needs audience_id');
       run(
-        `INSERT INTO li_audience_members (audience_id, contact_id, state) VALUES (?,?,'pending')
+        `INSERT INTO ad_audience_members (audience_id, contact_id, state) VALUES (?,?,'pending')
          ON CONFLICT(audience_id, contact_id) DO UPDATE SET state = 'pending'`,
         action.audience_id, contact.id,
       );

@@ -24,7 +24,7 @@ const scoring = await import('../src/core/scoring.js');
 const tracking = await import('../src/core/tracking.js');
 const campaigns = await import('../src/channels/email/campaigns.js');
 const emailTracking = await import('../src/channels/email/tracking.js');
-const audiences = await import('../src/channels/linkedin/audiences.js');
+const audiences = await import('../src/channels/ads/audiences.js');
 const { get, run, tx } = await import('../src/db/index.js');
 
 describe('csv', () => {
@@ -328,7 +328,8 @@ describe('identity resolution', () => {
     const adClick = events.timeline(c.id).find((e) => e.type === 'ad_click');
     assert.ok(adClick, 'ad click should be recorded');
     assert.equal(adClick.ad_campaign_id, '7011');
-    assert.equal(adClick.channel, 'linkedin');
+    assert.equal(adClick.channel, 'ads');
+    assert.equal(adClick.platform, 'linkedin');
   });
 
   test('a form submit with an email creates and identifies an inbound contact', () => {
@@ -478,7 +479,7 @@ describe('email campaigns', () => {
   });
 });
 
-describe('linkedin audiences', () => {
+describe('ad audiences', () => {
   test('only ad-consented contacts are resolved into an audience', async () => {
     const list = contacts.createList({ name: 'Audience list' });
     const ids = [];
@@ -500,18 +501,18 @@ describe('linkedin audiences', () => {
   });
 
   test('a contact leaving the segment is removed on the next sync', async () => {
-    const audience = get("SELECT id FROM li_audiences WHERE name = 'Test audience'");
-    const member = get("SELECT contact_id FROM li_audience_members WHERE audience_id = ? AND state = 'pushed' LIMIT 1", audience.id);
+    const audience = get("SELECT id FROM ad_audiences WHERE name = 'Test audience'");
+    const member = get("SELECT contact_id FROM ad_audience_members WHERE audience_id = ? AND state = 'pushed' LIMIT 1", audience.id);
     run('UPDATE contacts SET consent_ads = 0 WHERE id = ?', member.contact_id);
     const result = await audiences.syncAudience(audience.id);
     assert.equal(result.removed, 1);
-    assert.equal(get('SELECT state FROM li_audience_members WHERE audience_id = ? AND contact_id = ?',
+    assert.equal(get('SELECT state FROM ad_audience_members WHERE audience_id = ? AND contact_id = ?',
       audience.id, member.contact_id).state, 'removed');
   });
 
   test('audience membership pushes a person-level event', () => {
-    const audience = get("SELECT id FROM li_audiences WHERE name = 'Test audience'");
-    const member = get("SELECT contact_id FROM li_audience_members WHERE audience_id = ? LIMIT 1", audience.id);
+    const audience = get("SELECT id FROM ad_audiences WHERE name = 'Test audience'");
+    const member = get("SELECT contact_id FROM ad_audience_members WHERE audience_id = ? LIMIT 1", audience.id);
     const ev = get("SELECT * FROM events WHERE contact_id = ? AND type = 'audience_added'", member.contact_id);
     assert.ok(ev, 'being targeted is itself a tracked event');
   });

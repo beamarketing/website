@@ -186,7 +186,7 @@ export function setAdConsent(token, allow) {
   run('UPDATE contacts SET consent_ads = ?, updated_at = ? WHERE id = ?', allow ? 1 : 0, now(), payload.c);
   if (!allow) {
     // Honouring this means pulling them out of every live matched audience.
-    run("UPDATE li_audience_members SET state = 'removed' WHERE contact_id = ?", payload.c);
+    run("UPDATE ad_audience_members SET state = 'removed' WHERE contact_id = ?", payload.c);
   }
   return { ok: true };
 }
