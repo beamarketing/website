@@ -1,0 +1,142 @@
+# ===========================================================================
+# Beamr contact-based marketing engine — Render blueprint
+#
+# Deploy:  Render dashboard → New → Blueprint → pick this repo.
+#          Render reads this file; you fill in the secrets it asks for.
+#
+# Why Render and not Vercel: this is a resident process with a persistent
+# disk, not a set of functions. The scheduler drains the email queue every
+# 15 seconds and forwards conversions every 5 minutes, and the database is a
+# SQLite file that has to survive restarts. Serverless gives you neither.
+# ===========================================================================
+
+services:
+  - type: web
+    name: beamr-abm
+    runtime: docker
+    # Frankfurt: closest region to Herzliya, and keeps EU/Israel contact data
+    # inside the EU. Change only if you have a reason to.
+    region: frankfurt
+    # A paid instance is required, not a preference: free instances sleep on
+    # idle, and a sleeping process runs no scheduled jobs. A campaign would sit
+    # in the queue until someone happened to open the console.
+    plan: starter
+    rootDir: platform
+    dockerfilePath: ./Dockerfile
+    branch: main
+    autoDeploy: true
+
+    # Public, unauthenticated, and confirms the database is readable.
+    # Do not point this at /api/* — those require a bearer token, and a 401
+    # reads as "unhealthy", so the deploy would never go live.
+    healthCheckPath: /healthz
+
+    # ---------------------------------------------------------------------
+    # Exactly one instance. This is a correctness constraint, not a cost one:
+    # SQLite is a single-writer database on a disk that attaches to a single
+    # instance. Scaling this to 2 would either fail to start or corrupt data.
+    # If you outgrow one instance, move storage to Postgres first.
+    # ---------------------------------------------------------------------
+    numInstances: 1
+
+    disk:
+      name: beamr-abm-data
+      mountPath: /app/data
+      # Holds the database, nightly backups and the dry-run outbox.
+      # ~1,200 contacts with a year of events is well under 100 MB; 10 GB is
+      # headroom for backup retention.
+      sizeGB: 10
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DB_PATH
+        value: /app/data/beamr-abm.db
+
+      # ----------------------------------------------------------------
+      # MUST match the custom domain you attach below. Every open beacon,
+      # click redirect and unsubscribe link in every inbox is built from
+      # this, so changing it later breaks links already sent.
+      # ----------------------------------------------------------------
+      - key: PUBLIC_URL
+        value: https://abm.beamr.com
+
+      # The collector accepts this domain and its subdomains, and refuses
+      # everything else. Never set this to "*" in production.
+      - key: TRACKING_ORIGINS
+        value: beamr.com
+
+      # Generated once by Render and then held constant.
+      # SECRET_KEY signs unsubscribe, click and cohort tokens — rotating it
+      # invalidates every link already sitting in someone's inbox.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_TOKEN
+        generateValue: true
+
+      # ------------------------------------------------------- email ----
+      # Ships in dry-run: campaigns render to /app/data/outbox as .eml and
+      # nothing is delivered. Flip to smtp once you have verified a send.
+      - key: EMAIL_PROVIDER
+        value: console
+      - key: EMAIL_FROM
+        value: marketing@beamr.com
+      - key: EMAIL_FROM_NAME
+        value: Beamr
+      - key: EMAIL_POSTAL_ADDRESS
+        value: Beamr Imaging Ltd., Herzliya, Israel
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+
+      # ---------------------------------------------------- linkedin ----
+      # sync: false means Render prompts for these and keeps them out of git.
+      # Leave blank to stay in dry run: audiences build and diff locally.
+      - key: LINKEDIN_ACCESS_TOKEN
+        sync: false
+      - key: LINKEDIN_AD_ACCOUNT_ID
+        sync: false
+      - key: LINKEDIN_MIN_AUDIENCE
+        value: 300
+
+      # -------------------------------------------------------- meta ----
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_AD_ACCOUNT_ID
+        sync: false
+      - key: META_PIXEL_ID
+        sync: false
+      - key: META_PAGE_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_MIN_AUDIENCE
+        value: 100
+      - key: META_CAPI_ENABLED
+        value: true
+
+      # ------------------------------------------------- advertising ----
+      # Off until your list is comfortably past a platform's serving floor —
+      # below it, cohorts add ad objects to manage and buy no precision.
+      - key: AD_COHORTS_ENABLED
+        value: false
+
+      # -------------------------------------------------------- jobs ----
+      - key: JOBS_ENABLED
+        value: true
+      # Nightly, keeping a fortnight. Backups land on the same disk, so they
+      # protect against a bad import or a bad deploy — not against losing the
+      # disk. For off-site durability, enable Render's disk snapshots too.
+      - key: JOB_BACKUP_INTERVAL
+        value: 86400
+      - key: BACKUP_KEEP
+        value: 14
+      - key: LOG_LEVEL
+        value: info

@@ -381,7 +381,8 @@ npm run pull:ads -- --days 30                # pull metrics and lead forms, both
 node src/cli.js send --campaign cp_…         # queue and flush one campaign
 node src/cli.js journeys                     # evaluate journeys once
 node src/cli.js stats                        # overview metrics as JSON
-npm test                                     # 97 unit tests
+npm run backup                               # consistent online backup
+npm test                                     # 108 unit tests
 ```
 
 ---
@@ -396,6 +397,7 @@ npm test                                     # 97 unit tests
 | `ad_audiences` | 6h | diffs and pushes matched audiences to every configured platform |
 | `ad_insights` | 6h | pulls campaigns, daily metrics and lead forms from both |
 | `meta_capi` | 5m | forwards first-party conversions to the Meta Conversions API |
+| `backup` | 24h | consistent on-disk backup via SQLite's online backup API |
 | `dynamic_lists` | 1h | re-materialises rule-driven lists |
 
 Ad jobs are skipped entirely when no platform has credentials, and the Meta CAPI job when no pixel is set. Every job is
@@ -416,19 +418,117 @@ history. Meta is additive.
 
 ## Deploying
 
-```bash
-docker compose up -d --build
+The three pieces of this repo live in three different places:
+
+| Piece | Host | Why |
+|---|---|---|
+| **beamr.com** (`code/`) | **Framer** | Unchanged. Paste the tracker snippet into Site Settings → Custom Code → head. |
+| **OKR dashboard** (`dashboard/`) | **Vercel** | Static files, already configured. |
+| **This platform** (`platform/`) | **Render** | A resident process with a persistent disk. |
+
+### Why not Vercel for the platform
+
+Not a preference — three hard blockers:
+
+- **It is a resident process.** Seven scheduled jobs run on intervals: the email
+  queue drains every 15 seconds, Meta conversions forward every 5 minutes.
+  Serverless has no process between requests, and Vercel Cron is once-a-day
+  minimum on Hobby.
+- **SQLite is a file on disk.** Vercel's filesystem is ephemeral; the database
+  would be gone between invocations.
+- **Function timeouts** (10s Hobby, 60s Pro) would cut off a campaign send.
+
+You could force it — Postgres instead of SQLite, Cron instead of the scheduler —
+but that is a rewrite of the storage layer to end up with something less capable.
+
+### Deploy to Render
+
+```
+Render dashboard → New → Blueprint → select this repo
 ```
 
-`./data` is a bind mount holding the SQLite file — the only thing worth backing up.
+Render reads `platform/render.yaml` and provisions everything. It will prompt
+for the secrets marked `sync: false`; leave the ad-platform ones blank to stay in
+dry run. `SECRET_KEY` and `ADMIN_TOKEN` are generated for you.
 
-Behind a reverse proxy, forward `X-Forwarded-For` (IPs are hashed, never stored raw)
-and terminate TLS. `PUBLIC_URL` must be the externally reachable https origin, since
-every unsubscribe and click link in every inbox is built from it.
+Then attach the domain: **Settings → Custom Domains → `abm.beamr.com`**, and add
+the `CNAME` Render shows you to your DNS. TLS is automatic.
 
-Without Docker: `NODE_ENV=production node --no-warnings src/index.js` behind systemd.
+Print the admin token to log in:
 
----
+```bash
+render ssh beamr-abm -- node src/cli.js token
+```
+
+### Put it on a subdomain of the site you track
+
+`abm.beamr.com`, not `beamr-abm.onrender.com`. Two independent reasons:
+
+1. **Safari caps script-written cookies at 7 days.** The tracker writes
+   `bmr_vid` via `document.cookie`, so the collector mirrors it as a server-set
+   cookie — but that is only first-party, and therefore only exempt, when the
+   collector shares a registrable domain with the site. On a hosting domain it
+   is third-party and blocked. The failure is quiet: tracking still works
+   (the visitor id travels in the request body, and email-link identification
+   still stitches history), but returning Safari visitors get a fresh id every
+   week, so long-run anonymous continuity fragments.
+2. **Deliverability.** Every click and unsubscribe link is built from
+   `PUBLIC_URL`. Links on a beamr.com subdomain land better than links on a
+   hosting domain.
+
+`PUBLIC_URL` must match the domain exactly, and changing it later breaks every
+link already sitting in an inbox.
+
+### One instance, always
+
+`numInstances: 1` in the blueprint is a correctness constraint, not a cost
+saving. SQLite is a single-writer database and a Render disk attaches to a single
+instance; scaling to two would fail to start or corrupt data. If you outgrow one
+instance, move storage to Postgres before scaling out.
+
+A consequence worth knowing: because a disk attaches to one instance, deploys
+stop the old container before starting the new one. Expect a few seconds of
+downtime per deploy. Queued email resumes on boot — nothing is lost, it just
+waits.
+
+### Backups
+
+A managed database would be snapshotted for you. SQLite on a disk is not, so the
+process takes its own using SQLite's online backup API — which produces a
+consistent copy of a database that is being written to, unlike `cp`, which can
+capture a torn page and yield a backup that only fails when you try to restore it.
+
+```bash
+npm run backup                         # consistent, gzipped, prunes to 14
+npm run backup -- --list               # what exists
+npm run backup -- --verify <file.db>   # prove it is restorable
+```
+
+The scheduler runs this nightly (`JOB_BACKUP_INTERVAL`, `BACKUP_KEEP`). It has to
+be in-process: a separate cron service could not mount the same disk.
+
+Backups land beside the database on the persistent disk, so they survive deploys
+and restarts. **They do not survive losing the disk** — they are protection
+against a bad import or a bad deploy, not against hardware. For off-site
+durability, enable Render's disk snapshots as well, or add an object-storage
+upload to the backup job.
+
+To restore: stop the service, `gunzip` the backup over `DB_PATH`, start it again.
+Verify first.
+
+### Other hosts
+
+Nothing here is Render-specific beyond `render.yaml`. The `Dockerfile` and
+`docker-compose.yml` run anywhere, and `docker-entrypoint.sh` fixes volume
+ownership before dropping to a non-root user — which is what stops a mounted disk
+arriving root-owned and leaving SQLite with an unexplained `SQLITE_CANTOPEN`.
+
+```bash
+docker compose up -d --build           # VPS, Fly, anywhere
+```
+
+Behind a reverse proxy, forward `X-Forwarded-For` (IPs are hashed, never stored
+raw) and terminate TLS.
 
 ## Privacy and compliance
 
@@ -463,7 +563,7 @@ platform/
     index.js              server + scheduler entrypoint
     cli.js                operational commands
     config.js             env config, dry-run detection
-    db/  schema.sql, migrations.js (forward-only, versioned), index.js, seed.js
+    db/  schema.sql, migrations.js (forward-only, versioned), backup.js, index.js, seed.js
     lib/ util, csv, template, http, logger
     core/
       contacts.js         CRUD, CSV import, lists, accounts
@@ -482,5 +582,6 @@ platform/
                 cohorts.js (contact-level attribution), insights.js (cross-platform reporting)
     jobs/scheduler.js
     web/  server.js, routes/{api,track}.js, public/{index.html,app.js,beamr.js}
-  test/  unit.test.js, ads.test.js, migration.test.js
+  render.yaml, Dockerfile, docker-entrypoint.sh, docker-compose.yml
+  test/  unit.test.js, ads.test.js, migration.test.js, deploy.test.js
 ```

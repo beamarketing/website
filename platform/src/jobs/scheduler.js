@@ -9,6 +9,7 @@ import { syncAll as syncAudiences } from '../channels/ads/audiences.js';
 import { syncAllPlatforms } from '../channels/ads/insights.js';
 import { forwardPending } from '../channels/meta/capi.js';
 import { configuredPlatforms } from '../channels/ads/adapters.js';
+import { createBackup } from '../db/backup.js';
 import { all } from '../db/index.js';
 
 const log = logger('jobs');
@@ -48,6 +49,14 @@ export const JOBS = {
     label: 'Forward first-party conversions to the Meta Conversions API',
     intervalSec: () => config.jobs.capiIntervalSec,
     run: () => forwardPending({ sinceHours: 24, limit: 500 }),
+  },
+  backup: {
+    // A managed database would have snapshots taken for us. SQLite on an
+    // attached disk does not, so the process takes its own — and it has to be
+    // in-process, because the disk attaches to exactly one service.
+    label: 'Write a consistent on-disk backup (SQLite online backup API)',
+    intervalSec: () => config.jobs.backupIntervalSec,
+    run: () => createBackup({ keep: config.jobs.backupKeep }),
   },
   dynamic_lists: {
     label: 'Re-materialise dynamic lists',

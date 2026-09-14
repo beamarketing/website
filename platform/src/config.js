@@ -122,6 +122,8 @@ export const config = {
     audienceIntervalSec: int(env.JOB_AUDIENCE_INTERVAL, 21600),
     adsIntervalSec: int(env.JOB_ADS_INTERVAL, 21600),
     capiIntervalSec: int(env.JOB_CAPI_INTERVAL, 300),
+    backupIntervalSec: int(env.JOB_BACKUP_INTERVAL, 86400),
+    backupKeep: int(env.BACKUP_KEEP, 14),
   },
 };
 

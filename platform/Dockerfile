@@ -3,14 +3,16 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Non-root, and the data directory must be writable by it.
-RUN addgroup -S beamr && adduser -S beamr -G beamr
+# su-exec lets the entrypoint drop from root to an unprivileged user after
+# fixing the volume's ownership. It is ~20 KB and nothing else is added.
+RUN apk add --no-cache su-exec \
+ && addgroup -S beamr && adduser -S beamr -G beamr
 
 COPY package.json ./
 COPY src ./src
+COPY docker-entrypoint.sh /usr/local/bin/
 
 RUN mkdir -p /app/data && chown -R beamr:beamr /app
-USER beamr
 
 ENV NODE_ENV=production \
     PORT=4000 \
@@ -20,8 +22,12 @@ ENV NODE_ENV=production \
 EXPOSE 4000
 VOLUME ["/app/data"]
 
-# The status endpoint needs auth, so probe the always-public tracker instead.
-HEALTHCHECK --interval=30s --timeout=4s --start-period=8s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:4000/t/beamr.js > /dev/null || exit 1
+# /healthz is public and also confirms the database is readable, which a
+# static asset would not. Running it as a check means a database that cannot
+# be opened marks the instance unhealthy instead of silently serving errors.
+HEALTHCHECK --interval=30s --timeout=4s --start-period=10s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT:-4000}/healthz" > /dev/null || exit 1
 
+# Starts as root only to chown the mounted volume, then drops to `beamr`.
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "--no-warnings", "src/index.js"]

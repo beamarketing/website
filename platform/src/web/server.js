@@ -22,9 +22,10 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-// Routes reachable without the admin token: the tracker, the beacons and the
-// preference centre. Everything under /api requires the bearer token.
-const PUBLIC_PREFIXES = ['/t/', '/u/'];
+// Routes reachable without the admin token: the tracker, the beacons, the
+// preference centre and the health probe. Everything under /api requires the
+// bearer token.
+const PUBLIC_PREFIXES = ['/t/', '/u/', '/healthz'];
 
 export function createServer() {
   const routers = [track, api];

@@ -83,6 +83,17 @@ const COMMANDS = {
     console.log(JSON.stringify(overview({ days: Number(flag('days', 30)) }), null, 2));
   },
 
+  async backup() {
+    const { createBackup, listBackups, verifyBackup } = await import('./db/backup.js');
+    if (flag('list') === true) { console.log(JSON.stringify(listBackups(), null, 2)); return; }
+    if (flag('verify')) { console.log(JSON.stringify(verifyBackup(String(flag('verify'))), null, 2)); return; }
+    console.log(JSON.stringify(await createBackup({
+      dir: flag('dir'),
+      compress: flag('no-compress') !== true,
+      keep: Number(flag('keep', 14)),
+    }), null, 2));
+  },
+
   async help() {
     console.log(`
 Beamr contact-based marketing engine — CLI
@@ -97,6 +108,9 @@ Beamr contact-based marketing engine — CLI
   sync-linkedin                    push matched audiences to LinkedIn
   pull-ads [--days 30]             pull campaigns, metrics and lead forms
   stats [--days 30]                print the overview metrics
+  backup [--keep 14] [--dir <path>]  consistent online backup (SQLite backup API)
+  backup --list                    list existing backups
+  backup --verify <file.db>        prove a backup is restorable
 
 Start the server with:  npm start
 `);

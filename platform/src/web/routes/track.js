@@ -22,6 +22,28 @@ const openLimit = new RateLimiter(1200, 60_000);
 
 export const track = new Router();
 
+/**
+ * Liveness + readiness probe.
+ *
+ * Public by necessity: a platform health check cannot present a bearer token,
+ * and an unauthenticated 401 reads as "unhealthy" — which would stop a deploy
+ * from ever going live. So this endpoint deliberately exposes nothing beyond
+ * whether the process is up and the database is readable. No counts, no
+ * configuration, no identifiers.
+ */
+const startedAt = Date.now();
+
+track.get('/healthz', async (req, res) => {
+  try {
+    // Cheapest possible proof that the database file is open and readable.
+    get('SELECT 1 AS ok');
+    json(res, { ok: true, uptime_s: Math.round((Date.now() - startedAt) / 1000) });
+  } catch (err) {
+    log.error(`health check failed: ${err.message}`);
+    json(res, { ok: false, error: 'database unavailable' }, 503);
+  }
+});
+
 let trackerJs = null;
 function tracker() {
   if (trackerJs === null || config.env === 'development') {
