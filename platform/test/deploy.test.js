@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 
@@ -97,6 +98,26 @@ describe('render blueprint', () => {
     }
     assert.match(blueprint, /SECRET_KEY[\s\S]{0,60}generateValue:\s*true/);
     assert.match(blueprint, /ADMIN_TOKEN[\s\S]{0,60}generateValue:\s*true/);
+  });
+
+  test('deploys from a branch that exists and carries the platform', () => {
+    // Render rejects the whole blueprint with "branch <x> could not be found"
+    // if this names a branch that is not in the repo — and this repo has no
+    // `main`, so a plausible-looking default fails the deploy outright.
+    const branch = blueprint.match(/^\s*branch:\s*(\S+)/m)?.[1];
+    assert.ok(branch, 'the blueprint must name a branch');
+
+    let refs;
+    try {
+      refs = execFileSync('git', ['for-each-ref', '--format=%(refname:short)',
+        'refs/heads', 'refs/remotes'], { encoding: 'utf8', cwd: config.root });
+    } catch {
+      return; // not a git checkout (tarball deploy, vendored copy) — nothing to check
+    }
+    const known = refs.split('\n').map((r) => r.replace(/^origin\//, '').trim());
+    assert.ok(known.includes(branch),
+      `render.yaml deploys from "${branch}", which is not a branch in this repo. ` +
+      `Known: ${[...new Set(known)].filter(Boolean).join(', ')}`);
   });
 
   test('the collector is not left open to every origin', () => {
