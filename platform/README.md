@@ -453,9 +453,8 @@ dry run. `SECRET_KEY` and `ADMIN_TOKEN` are generated for you.
 
 **The `branch:` key must name a branch that exists and contains `platform/`.**
 Render fails the whole blueprint with `branch <x> could not be found` otherwise.
-This repo has no `main`, so it currently points at the working branch. After you
-merge into a permanent branch, update `branch:` to match — `npm test` checks that
-the branch named there is real.
+It is set to `main`; if you deploy from somewhere else, change it to match —
+`npm test` checks that the branch named there is real.
 
 Then attach the domain: **Settings → Custom Domains → `abm.beamr.com`**, and add
 the `CNAME` Render shows you to your DNS. TLS is automatic.

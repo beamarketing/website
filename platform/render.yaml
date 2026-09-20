@@ -23,12 +23,10 @@ services:
     plan: starter
     rootDir: platform
     dockerfilePath: ./Dockerfile
-    # The branch Render deploys from. It must be a branch that actually exists
-    # AND that contains platform/ — this repo has no `main`, and its default
-    # branch (claude/framer-homepage-design-QyQuY) holds the Framer site only.
-    # After merging this work into a permanent branch, change this to match and
-    # Render will redeploy from there.
-    branch: claude/contact-marketing-platform-rd3dve
+    # The branch Render deploys from. It must exist AND contain platform/,
+    # or Render rejects the whole blueprint with "branch <x> could not be
+    # found". A test asserts the branch named here is real.
+    branch: main
     autoDeploy: true
 
     # Public, unauthenticated, and confirms the database is readable.
