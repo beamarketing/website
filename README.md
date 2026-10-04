@@ -19,6 +19,7 @@ A complete set of Framer code components for the Beamr homepage design. Every el
 | **CTASection** | `code/CTASection.tsx` | Call-to-action card with glow effect |
 | **Footer** | `code/Footer.tsx` | Full footer with columns, newsletter, socials |
 | **Homepage** | `code/Homepage.tsx` | Full page composition (all sections combined) |
+| **DeveloperHub** | `code/devhub/DeveloperHub.tsx` | Developer hub: resource library, HubDB feed, HubSpot registration gate ([setup](code/devhub/README.md)) |
 
 ## How to Use in Framer
 
