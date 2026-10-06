@@ -58,7 +58,7 @@ Any other JSON source works too: a plain array of resource objects, or an object
 
 ## Registration gate
 
-1. Create a HubSpot form with at least the fields listed under **Fields** (default: `firstname`, `lastname`, `email`, `company`, `jobtitle`).
+1. Create a dedicated HubSpot form (portal `144465530` is preset) with at least the fields listed under **Fields** (default: `firstname`, `lastname`, `email`, `company`, `jobtitle`).
 2. Set **HubSpot portal** and **HubSpot form** (the form GUID) in Framer, and the **Region** (`na1`/`na2`/`eu1`).
 3. Toggle **Gate → Register** on the items that need it.
 

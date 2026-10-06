@@ -988,7 +988,7 @@ export default function DeveloperHub(props: Props) {
         items = DEFAULT_ITEMS,
         source = "panel",
         feedUrl = "",
-        portalId = "",
+        portalId = "144465530",
         formId = "",
         region = "na1",
         formMode = "native",
@@ -1706,12 +1706,12 @@ addPropertyControls(DeveloperHub, {
         defaultValue: "",
         placeholder: "https://api.hubapi.com/cms/v3/hubdb/tables/…/rows?portalId=…",
         description: "JSON array, or a HubSpot HubDB rows endpoint. See README.",
-        hidden: (p: Props) => p.source === "panel",
+        hidden: (p: any) => p.source === "panel",
     },
     items: {
         type: ControlType.Array,
         title: "Resources",
-        hidden: (p: Props) => p.source === "feed",
+        hidden: (p: any) => p.source === "feed",
         control: {
             type: ControlType.Object,
             controls: {
@@ -1750,7 +1750,7 @@ addPropertyControls(DeveloperHub, {
     portalId: {
         type: ControlType.String,
         title: "HubSpot portal",
-        defaultValue: "",
+        defaultValue: "144465530",
         placeholder: "12345678",
     },
     formId: {
@@ -1777,7 +1777,7 @@ addPropertyControls(DeveloperHub, {
     formFields: {
         type: ControlType.Array,
         title: "Fields",
-        hidden: (p: Props) => p.formMode === "embed",
+        hidden: (p: any) => p.formMode === "embed",
         control: {
             type: ControlType.Object,
             controls: {
@@ -1852,12 +1852,12 @@ addPropertyControls(DeveloperHub, {
         type: ControlType.String,
         title: "Info title",
         defaultValue: "Public information",
-        hidden: (p: Props) => !p.showQuickLinks,
+        hidden: (p: any) => !p.showQuickLinks,
     },
     quickLinks: {
         type: ControlType.Array,
         title: "Info links",
-        hidden: (p: Props) => !p.showQuickLinks,
+        hidden: (p: any) => !p.showQuickLinks,
         control: {
             type: ControlType.Object,
             controls: {
@@ -1869,17 +1869,17 @@ addPropertyControls(DeveloperHub, {
         defaultValue: DEFAULT_LINKS,
     },
     showCta: { type: ControlType.Boolean, title: "Evaluation CTA", defaultValue: true },
-    ctaTitle: { type: ControlType.String, title: "CTA title", defaultValue: "Run Beamr on your own video.", hidden: (p: Props) => !p.showCta },
+    ctaTitle: { type: ControlType.String, title: "CTA title", defaultValue: "Run Beamr on your own video.", hidden: (p: any) => !p.showCta },
     ctaText: {
         type: ControlType.String,
         title: "CTA text",
         displayTextArea: true,
         defaultValue:
             "Bring a real workload. We'll measure storage reduction, throughput and model behavior on the content your pipeline actually sees.",
-        hidden: (p: Props) => !p.showCta,
+        hidden: (p: any) => !p.showCta,
     },
-    ctaLabel: { type: ControlType.String, title: "CTA button", defaultValue: "Start an evaluation", hidden: (p: Props) => !p.showCta },
-    ctaHref: { type: ControlType.Link, title: "CTA URL", hidden: (p: Props) => !p.showCta },
+    ctaLabel: { type: ControlType.String, title: "CTA button", defaultValue: "Start an evaluation", hidden: (p: any) => !p.showCta },
+    ctaHref: { type: ControlType.Link, title: "CTA URL", hidden: (p: any) => !p.showCta },
 
     // ---- style
     accent: { type: ControlType.Color, title: "Accent", defaultValue: "#6C5CE7" },
