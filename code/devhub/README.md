@@ -10,6 +10,12 @@
 2. Drag **DeveloperHub** onto the page. Set width to **Fill** and height to **Auto**.
 3. Everything is edited in the right-hand properties panel.
 
+### Recommended setup: native layers + library component
+
+On Beamr's `/dev_hub` page the header, Public information and CTA are **native Framer layers** (text styles in the *Dev Hub* folder), so text and images are edited directly on the canvas. The component runs with **Header**, **Public info** and **Evaluation CTA** turned off and only renders the interactive part: featured items, search, filters, library and the registration pop-up. With the header off, the search box moves into the library toolbar.
+
+Every remaining label is a control: section titles and notes, filter labels (**Labels**), sort options, CTA command lines. When the header is on, **Header image** replaces the generated frame visual.
+
 The layout responds to the component's own width (CSS container queries), so it works in every Framer breakpoint without separate variants.
 
 ## Content: three ways to manage it

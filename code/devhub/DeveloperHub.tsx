@@ -55,6 +55,36 @@ interface TopicColor {
     color: string
 }
 
+interface Labels {
+    topic: string
+    type: string
+    audience: string
+    access: string
+    all: string
+    open: string
+    registration: string
+    clear: string
+    empty: string
+    newest: string
+    oldest: string
+    az: string
+}
+
+const DEFAULT_LABELS: Labels = {
+    topic: "Topic",
+    type: "Type",
+    audience: "Audience",
+    access: "Access",
+    all: "All",
+    open: "Open",
+    registration: "Registration",
+    clear: "Clear filters",
+    empty: "No resources match these filters.",
+    newest: "Newest",
+    oldest: "Oldest",
+    az: "A–Z",
+}
+
 interface Props {
     // Content
     kicker: string
@@ -78,6 +108,16 @@ interface Props {
     privacyText: string
     privacyUrl: string
     // Sections
+    showHero: boolean
+    heroImage: any
+    labels: Labels
+    featuredTitle: string
+    featuredNote: string
+    libraryTitle: string
+    libraryNote: string
+    quickLinksNote: string
+    ctaCommand: string
+    ctaOutput: string
     showFeatured: boolean
     showQuickLinks: boolean
     quickLinksTitle: string
@@ -999,6 +1039,16 @@ export default function DeveloperHub(props: Props) {
         gateText = "Tell us who you are and we'll unlock the full document. One registration covers every gated resource in the hub.",
         privacyText = "We use this to share relevant technical material. Unsubscribe any time.",
         privacyUrl = "",
+        showHero = true,
+        heroImage,
+        labels: labelsProp,
+        featuredTitle = "Featured",
+        featuredNote = "Start here for current AV and AI video work.",
+        libraryTitle = "Library",
+        libraryNote = "Everything we publish for technical evaluation.",
+        quickLinksNote = "Company information for analysts, press and partners.",
+        ctaCommand = "beamr eval --input ./my_dataset",
+        ctaOutput = "→ measuring storage, throughput, model Δ…",
         showFeatured = true,
         showQuickLinks = true,
         quickLinksTitle = "Public information",
@@ -1019,6 +1069,9 @@ export default function DeveloperHub(props: Props) {
         maxWidth = 1280,
         style,
     } = props
+
+    const L: Labels = { ...DEFAULT_LABELS, ...(labelsProp || {}) }
+    const heroSrc = heroImage && typeof heroImage === "object" ? heroImage.src : heroImage
 
     // ---- data
     const feed = useFeed(feedUrl, source !== "panel")
@@ -1195,7 +1248,7 @@ export default function DeveloperHub(props: Props) {
             <div className="bdh-fgroup">
                 <div className="bdh-mono bdh-fgroup-title">{title}</div>
                 <button className={`bdh-fopt ${value === ALL ? "is-on" : ""}`} onClick={() => onChange(ALL)}>
-                    <span>All</span>
+                    <span>{L.all}</span>
                     <span className="bdh-mono bdh-count">{resources.length}</span>
                 </button>
                 {entries.map(([name, n]) => (
@@ -1215,6 +1268,7 @@ export default function DeveloperHub(props: Props) {
             <style>{CSS}</style>
 
             {/* Header */}
+            {showHero && (
             <header className="bdh-hero">
                 <div className="bdh-hero-grid-bg" />
                 <div className="bdh-wrap bdh-hero-inner">
@@ -1244,7 +1298,7 @@ export default function DeveloperHub(props: Props) {
                         </div>
                     </div>
                     <div className="bdh-hero-visual">
-                        <HeroFrame accent={accent} />
+                        {heroSrc ? <img className="bdh-hero-img" src={heroSrc} alt={heroImage?.alt || ""} /> : <HeroFrame accent={accent} />}
                     </div>
                 </div>
                 {facts.length > 0 && (
@@ -1260,12 +1314,13 @@ export default function DeveloperHub(props: Props) {
                     </div>
                 )}
             </header>
+            )}
 
             {/* Featured */}
             {showFeatured && featured.length > 0 && !filtersActive && (
                 <section className="bdh-section">
                     <div className="bdh-wrap">
-                        <SectionHead n="01" title="Featured" note="Start here for current AV and AI video work." />
+                        <SectionHead n="01" title={featuredTitle} note={featuredNote} />
                         <div className="bdh-featured">
                             {featured.map((r, i) => {
                                 const c = colorOf(r)
@@ -1310,18 +1365,18 @@ export default function DeveloperHub(props: Props) {
             {/* Library */}
             <section className="bdh-section">
                 <div className="bdh-wrap">
-                    <SectionHead n={showFeatured && featured.length > 0 && !filtersActive ? "02" : "01"} title="Library" note="Everything we publish for technical evaluation." />
+                    <SectionHead n={showFeatured && featured.length > 0 && !filtersActive ? "02" : "01"} title={libraryTitle} note={libraryNote} />
                     <div className="bdh-lib">
                         <aside className="bdh-side">
-                            {filterGroup("TOPIC", topic, setTopic, topics, true)}
-                            {filterGroup("TYPE", type, setType, types)}
-                            {filterGroup("AUDIENCE", audience, setAudience, audiences)}
+                            {filterGroup(L.topic, topic, setTopic, topics, true)}
+                            {filterGroup(L.type, type, setType, types)}
+                            {filterGroup(L.audience, audience, setAudience, audiences)}
                             <div className="bdh-fgroup">
-                                <div className="bdh-mono bdh-fgroup-title">ACCESS</div>
+                                <div className="bdh-mono bdh-fgroup-title">{L.access}</div>
                                 <div className="bdh-seg">
                                     {(["all", "open", "gated"] as const).map((a) => (
                                         <button key={a} className={access === a ? "is-on" : ""} onClick={() => setAccess(a)}>
-                                            {a === "all" ? "All" : a === "open" ? "Open" : "Registration"}
+                                            {a === "all" ? L.all : a === "open" ? L.open : L.registration}
                                         </button>
                                     ))}
                                 </div>
@@ -1329,20 +1384,33 @@ export default function DeveloperHub(props: Props) {
                         </aside>
 
                         <div className="bdh-results">
+                            {!showHero && (
+                                <label className="bdh-search bdh-search-light">
+                                    <SearchIcon />
+                                    <input
+                                        ref={searchRef}
+                                        aria-label="Search resources"
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        placeholder={searchPlaceholder}
+                                    />
+                                    <kbd className="bdh-mono">/</kbd>
+                                </label>
+                            )}
                             <div className="bdh-toolbar">
                                 <div className="bdh-mono bdh-result-count">
                                     {filtered.length} / {resources.length}
                                     {filtersActive && (
                                         <button className="bdh-reset" onClick={reset}>
-                                            Clear filters
+                                            {L.clear}
                                         </button>
                                     )}
                                 </div>
                                 <div className="bdh-tools">
                                     <select className="bdh-select" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort">
-                                        <option value="newest">Newest</option>
-                                        <option value="oldest">Oldest</option>
-                                        <option value="az">A–Z</option>
+                                        <option value="newest">{L.newest}</option>
+                                        <option value="oldest">{L.oldest}</option>
+                                        <option value="az">{L.az}</option>
                                     </select>
                                     <div className="bdh-seg bdh-view">
                                         <button className={view === "grid" ? "is-on" : ""} onClick={() => setView("grid")} aria-label="Grid view">
@@ -1395,9 +1463,9 @@ export default function DeveloperHub(props: Props) {
 
                             {filtered.length === 0 && resources.length > 0 && (
                                 <div className="bdh-empty">
-                                    No resources match these filters.{" "}
+                                    {L.empty}{" "}
                                     <button className="bdh-reset" onClick={reset}>
-                                        Clear filters
+                                        {L.clear}
                                     </button>
                                 </div>
                             )}
@@ -1410,7 +1478,7 @@ export default function DeveloperHub(props: Props) {
             {showQuickLinks && quickLinks.length > 0 && (
                 <section className="bdh-section">
                     <div className="bdh-wrap">
-                        <SectionHead n={showFeatured && featured.length > 0 && !filtersActive ? "03" : "02"} title={quickLinksTitle} note="Company information for analysts, press and partners." />
+                        <SectionHead n={showFeatured && featured.length > 0 && !filtersActive ? "03" : "02"} title={quickLinksTitle} note={quickLinksNote} />
                         <div className="bdh-links">
                             {quickLinks.map((l, i) => (
                                 <a key={i} className="bdh-link" href={l.href || "#"} target={l.href?.startsWith("http") ? "_blank" : undefined} rel="noopener">
@@ -1431,12 +1499,12 @@ export default function DeveloperHub(props: Props) {
                 <section className="bdh-section bdh-section-last">
                     <div className="bdh-wrap">
                         <div className="bdh-cta">
-                            <div className="bdh-cta-term bdh-mono" aria-hidden="true">
+                            {ctaCommand && <div className="bdh-cta-term bdh-mono" aria-hidden="true">
                                 <div>
-                                    <span className="bdh-dim">$</span> beamr eval --input ./my_dataset
+                                    <span className="bdh-dim">$</span> {ctaCommand}
                                 </div>
-                                <div className="bdh-dim">→ measuring storage, throughput, model Δ…</div>
-                            </div>
+                                {ctaOutput && <div className="bdh-dim">{ctaOutput}</div>}
+                            </div>}
                             <div className="bdh-cta-copy">
                                 <h3>{ctaTitle}</h3>
                                 <p>{ctaText}</p>
@@ -1527,6 +1595,12 @@ const CSS = `
 .bdh-hero-meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:18px;font-size:11px;color:rgba(255,255,255,.42)}
 .bdh-hero-visual{position:relative}
 .bdh-hero-svg{display:block;width:100%;height:auto}
+.bdh-hero-img{display:block;width:100%;height:auto;border-radius:6px}
+.bdh-search-light{max-width:none;margin:0 0 16px;background:var(--bdh-card);border-color:var(--bdh-line);color:var(--bdh-muted)}
+.bdh-search-light:focus-within{background:var(--bdh-card)}
+.bdh-search-light input{color:var(--bdh-ink);padding:13px 0}
+.bdh-search-light input::placeholder{color:var(--bdh-muted)}
+.bdh-search-light kbd{border-color:var(--bdh-line);color:var(--bdh-muted)}
 .bdh-facts{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:56px 0 0;border-top:1px solid rgba(255,255,255,.1)}
 .bdh-fact{padding:20px 20px 24px 0;margin:0}
 .bdh-fact+.bdh-fact{padding-left:20px;border-left:1px solid rgba(255,255,255,.1)}
@@ -1565,7 +1639,7 @@ const CSS = `
 .bdh-lib{display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start}
 .bdh-side{position:sticky;top:24px;display:flex;flex-direction:column;gap:26px}
 .bdh-fgroup{display:flex;flex-direction:column;gap:2px}
-.bdh-fgroup-title{font-size:10.5px;color:var(--bdh-muted);margin-bottom:8px}
+.bdh-fgroup-title{font-size:10.5px;color:var(--bdh-muted);margin-bottom:8px;text-transform:uppercase}
 .bdh-fopt{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:7px 10px;margin-left:-10px;width:calc(100% + 10px);font-size:14px;color:var(--bdh-ink)}
 .bdh-fopt>span:first-child{display:flex;align-items:center;min-width:0}
 .bdh-fopt:hover{background:rgba(18,20,28,.05)}
@@ -1717,6 +1791,7 @@ addPropertyControls(DeveloperHub, {
             controls: {
                 title: { type: ControlType.String, title: "Title", defaultValue: "New resource" },
                 description: { type: ControlType.String, title: "Description", displayTextArea: true, defaultValue: "" },
+                image: { type: ControlType.ResponsiveImage, title: "Cover image" },
                 type: { type: ControlType.String, title: "Type", defaultValue: "Guide", placeholder: "Benchmark, Guide, Webinar…" },
                 topic: { type: ControlType.String, title: "Topic", defaultValue: "General" },
                 audience: { type: ControlType.String, title: "Audience", defaultValue: "Developers" },
@@ -1733,7 +1808,6 @@ addPropertyControls(DeveloperHub, {
                     allowedFileTypes: ["pdf", "pptx", "zip", "mp4", "csv", "json"],
                 },
                 href: { type: ControlType.Link, title: "Or link" },
-                image: { type: ControlType.ResponsiveImage, title: "Cover" },
                 size: { type: ControlType.String, title: "Size", placeholder: "2.4 MB" },
                 featured: { type: ControlType.Boolean, title: "Featured", defaultValue: false },
                 gated: { type: ControlType.Boolean, title: "Gate", enabledTitle: "Register", disabledTitle: "Open", defaultValue: false },
@@ -1822,11 +1896,23 @@ addPropertyControls(DeveloperHub, {
     privacyUrl: { type: ControlType.Link, title: "Privacy URL" },
 
     // ---- header
-    kicker: { type: ControlType.String, title: "Kicker", defaultValue: "BEAMR / DEVELOPER HUB" },
-    heading: { type: ControlType.String, title: "Heading", defaultValue: "The technical side of Beamr." },
+    showHero: {
+        type: ControlType.Boolean,
+        title: "Header",
+        defaultValue: true,
+        description: "Turn off to build the header with native Framer layers; search moves into the library.",
+    },
+    heroImage: {
+        type: ControlType.ResponsiveImage,
+        title: "Header image",
+        hidden: (p: any) => !p.showHero,
+    },
+    kicker: { type: ControlType.String, title: "Kicker", defaultValue: "BEAMR / DEVELOPER HUB", hidden: (p: any) => !p.showHero },
+    heading: { type: ControlType.String, title: "Heading", defaultValue: "The technical side of Beamr.", hidden: (p: any) => !p.showHero },
     intro: {
         type: ControlType.String,
         title: "Intro",
+        hidden: (p: any) => !p.showHero,
         displayTextArea: true,
         defaultValue:
             "Benchmarks, reference architectures, integration guides and talks from Beamr's engineering and AI teams, for data engineers, ML teams and analysts working with video at scale.",
@@ -1835,6 +1921,7 @@ addPropertyControls(DeveloperHub, {
     facts: {
         type: ControlType.Array,
         title: "Facts",
+        hidden: (p: any) => !p.showHero,
         control: {
             type: ControlType.Object,
             controls: {
@@ -1845,6 +1932,30 @@ addPropertyControls(DeveloperHub, {
         defaultValue: DEFAULT_FACTS,
     },
 
+    // ---- section copy
+    featuredTitle: { type: ControlType.String, title: "Featured title", defaultValue: "Featured" },
+    featuredNote: { type: ControlType.String, title: "Featured note", defaultValue: "Start here for current AV and AI video work." },
+    libraryTitle: { type: ControlType.String, title: "Library title", defaultValue: "Library" },
+    libraryNote: { type: ControlType.String, title: "Library note", defaultValue: "Everything we publish for technical evaluation." },
+    labels: {
+        type: ControlType.Object,
+        title: "Labels",
+        controls: {
+            topic: { type: ControlType.String, title: "Topic", defaultValue: DEFAULT_LABELS.topic },
+            type: { type: ControlType.String, title: "Type", defaultValue: DEFAULT_LABELS.type },
+            audience: { type: ControlType.String, title: "Audience", defaultValue: DEFAULT_LABELS.audience },
+            access: { type: ControlType.String, title: "Access", defaultValue: DEFAULT_LABELS.access },
+            all: { type: ControlType.String, title: "All", defaultValue: DEFAULT_LABELS.all },
+            open: { type: ControlType.String, title: "Open", defaultValue: DEFAULT_LABELS.open },
+            registration: { type: ControlType.String, title: "Registration", defaultValue: DEFAULT_LABELS.registration },
+            clear: { type: ControlType.String, title: "Clear", defaultValue: DEFAULT_LABELS.clear },
+            empty: { type: ControlType.String, title: "No results", defaultValue: DEFAULT_LABELS.empty },
+            newest: { type: ControlType.String, title: "Newest", defaultValue: DEFAULT_LABELS.newest },
+            oldest: { type: ControlType.String, title: "Oldest", defaultValue: DEFAULT_LABELS.oldest },
+            az: { type: ControlType.String, title: "A–Z", defaultValue: DEFAULT_LABELS.az },
+        },
+    },
+
     // ---- sections
     showFeatured: { type: ControlType.Boolean, title: "Featured", defaultValue: true },
     showQuickLinks: { type: ControlType.Boolean, title: "Public info", defaultValue: true },
@@ -1852,6 +1963,12 @@ addPropertyControls(DeveloperHub, {
         type: ControlType.String,
         title: "Info title",
         defaultValue: "Public information",
+        hidden: (p: any) => !p.showQuickLinks,
+    },
+    quickLinksNote: {
+        type: ControlType.String,
+        title: "Info note",
+        defaultValue: "Company information for analysts, press and partners.",
         hidden: (p: any) => !p.showQuickLinks,
     },
     quickLinks: {
@@ -1878,6 +1995,8 @@ addPropertyControls(DeveloperHub, {
             "Bring a real workload. We'll measure storage reduction, throughput and model behavior on the content your pipeline actually sees.",
         hidden: (p: any) => !p.showCta,
     },
+    ctaCommand: { type: ControlType.String, title: "CTA command", defaultValue: "beamr eval --input ./my_dataset", hidden: (p: any) => !p.showCta },
+    ctaOutput: { type: ControlType.String, title: "CTA output", defaultValue: "→ measuring storage, throughput, model Δ…", hidden: (p: any) => !p.showCta },
     ctaLabel: { type: ControlType.String, title: "CTA button", defaultValue: "Start an evaluation", hidden: (p: any) => !p.showCta },
     ctaHref: { type: ControlType.Link, title: "CTA URL", hidden: (p: any) => !p.showCta },
 
