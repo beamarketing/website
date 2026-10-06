@@ -3,10 +3,12 @@
 // gate on top of NATIVE Framer card layers, so every card stays editable on
 // the canvas. See code/devhub/README.md ("Native cards").
 //
-// How it finds cards: any layer named "ResourceCard" (filterable) or
-// "FeaturedCard" (gate only). Inside a card it reads the layers named
-// "Title", "Description", "Type" and "Topic". A visible layer named "Gated"
-// puts the card behind registration. The card's own link is the destination.
+// How it finds cards: the children of the layer placed directly after this
+// component (the library grid) are searched and filtered. Inside a card it
+// reads the text in order: type, title (the heading), description, and on the
+// last line date, topic and action. Any linked card on the page that shows a
+// lock badge (🔒) is put behind registration; remove the badge to open it.
+// The card's own link is the destination after registration.
 
 import * as React from "react"
 import { createPortal } from "react-dom"
@@ -75,24 +77,47 @@ function slug(s: string): string {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 }
 
-function layerText(el: Element, name: string): string {
-    const n = el.querySelector(`[data-framer-name="${name}"]`)
-    return (n?.textContent || "").replace(/\s+/g, " ").trim()
+const LOCK = "🔒"
+const TEXT_TAGS = "h1,h2,h3,h4,h5,h6,p"
+
+function clean(s: string | null | undefined): string {
+    return (s || "").replace(/\s+/g, " ").trim()
+}
+
+// Text leaves of a card in document order, ignoring the lock badge.
+function leaves(el: Element): Element[] {
+    return Array.from(el.querySelectorAll(TEXT_TAGS)).filter((n) => clean(n.textContent) && !n.querySelector(TEXT_TAGS))
+}
+
+function isGatedCard(el: Element): boolean {
+    return (el.textContent || "").includes(LOCK)
 }
 
 function readCard(el: Element, i: number): Resource {
-    const title = layerText(el, "Title")
+    const all = leaves(el).filter((n) => !(n.textContent || "").includes(LOCK))
+    const texts = all.map((n) => clean(n.textContent))
+    let ti = all.findIndex((n) => /^H[1-6]$/.test(n.tagName))
+    if (ti < 0) ti = Math.min(1, texts.length - 1)
+    const title = texts[ti] || ""
+    const tail = texts.slice(ti + 2)
     const a = (el.tagName === "A" ? el : el.closest("a") || el.querySelector("a")) as HTMLAnchorElement | null
     const img = el.querySelector("img") as HTMLImageElement | null
     return {
         id: slug(title) || `card-${i}`,
         title,
-        description: layerText(el, "Description"),
-        type: layerText(el, "Type"),
-        topic: layerText(el, "Topic"),
+        description: texts[ti + 1] || "",
+        type: ti > 0 ? texts[0] : "",
+        topic: tail.length >= 2 ? tail[tail.length - 2].replace(/^·\s*/, "") : "",
         href: a?.href || "",
         image: img?.currentSrc || img?.src || "",
     }
+}
+
+// The card a click landed on: the nearest link that holds a heading.
+function cardFromTarget(t: Element | null): HTMLElement | null {
+    let a = t?.closest?.("a") as HTMLElement | null
+    while (a && !a.querySelector("h1,h2,h3,h4,h5,h6")) a = a.parentElement?.closest("a") as HTMLElement | null
+    return a
 }
 
 // ---------------------------------------------------------------------------
@@ -376,8 +401,6 @@ function GateModal({ r, cfg, onClose, onUnlocked }: { r: Resource; cfg: GateConf
 // ---------------------------------------------------------------------------
 
 interface Props {
-    cardName: string
-    featuredName: string
     labels: Partial<Labels>
     showTopics: boolean
     showType: boolean
@@ -413,8 +436,6 @@ interface Props {
  */
 export default function DevHubControls(props: Props) {
     const {
-        cardName = "ResourceCard",
-        featuredName = "FeaturedCard",
         labels: labelsProp,
         showTopics = true,
         showType = true,
@@ -453,29 +474,38 @@ export default function DevHubControls(props: Props) {
     const [unlocked, setUnlocked] = React.useState<{ all: boolean; ids: string[] }>({ all: false, ids: [] })
     const [gateFor, setGateFor] = React.useState<Resource | null>(null)
     const searchRef = React.useRef<HTMLInputElement>(null)
+    const rootRef = React.useRef<HTMLDivElement>(null)
 
-    const selector = `[data-framer-name="${cardName}"]`
-    const gateSelector = `${selector}, [data-framer-name="${featuredName}"]`
+    // Library cards: children of the first layer after this component.
+    const libraryCards = React.useCallback((): HTMLElement[] => {
+        let n: HTMLElement | null = rootRef.current
+        for (let i = 0; n && i < 5; i++) {
+            const next = n.nextElementSibling as HTMLElement | null
+            if (next) return Array.from(next.children) as HTMLElement[]
+            n = n.parentElement
+        }
+        return []
+    }, [])
 
     // Scan the page for card layers. Framer can hydrate after mount, so scan a few times.
     React.useEffect(() => {
         if (onCanvas) return
         setUnlocked(readUnlocked())
         const scan = () => {
-            document.querySelectorAll(gateSelector).forEach((el) => {
-                const h = el as HTMLElement
-                if (!h.dataset.bdhScanned) {
-                    h.dataset.bdhScanned = "1"
-                    h.dataset.bdhGated = el.querySelector('[data-framer-name="Gated"]') ? "1" : "0"
+            document.querySelectorAll("a").forEach((a) => {
+                const card = cardFromTarget(a)
+                if (card && !card.dataset.bdhScanned) {
+                    card.dataset.bdhScanned = "1"
+                    card.dataset.bdhGated = isGatedCard(card) ? "1" : "0"
                 }
             })
             const seen = new Set<string>()
             const list: Resource[] = []
-            document.querySelectorAll(selector).forEach((el, i) => {
+            libraryCards().forEach((el, i) => {
+                if (!el.dataset.bdhScanned) el.dataset.bdhGated = isGatedCard(el) ? "1" : "0"
+                el.dataset.bdhScanned = "1"
                 const r = readCard(el, i)
-                const h = el as HTMLElement
-                ;(r as any).gated = h.dataset.bdhGated === "1"
-                if (seen.has(r.id)) return
+                if (!r.title || seen.has(r.id)) return
                 seen.add(r.id)
                 list.push(r)
             })
@@ -488,12 +518,12 @@ export default function DevHubControls(props: Props) {
             window.clearTimeout(t1)
             window.clearTimeout(t2)
         }
-    }, [selector, gateSelector, onCanvas])
+    }, [libraryCards, onCanvas])
 
     const isLocked = (el: HTMLElement) => {
         if (el.dataset.bdhGated !== "1") return false
         if (unlocked.all) return false
-        return !unlocked.ids.includes(slug(layerText(el, "Title")))
+        return !unlocked.ids.includes(readCard(el, 0).id)
     }
 
     // Apply filters to the native cards.
@@ -501,41 +531,46 @@ export default function DevHubControls(props: Props) {
         if (onCanvas) return
         const q = query.trim().toLowerCase()
         const shown = new Set<string>()
-        document.querySelectorAll(selector).forEach((el) => {
-            const h = el as HTMLElement
-            const t = layerText(el, "Title")
+        libraryCards().forEach((h) => {
+            const r = readCard(h, 0)
+            if (!r.title) return
             const hay = (h.textContent || "").toLowerCase()
             const ok =
                 (!q || hay.includes(q)) &&
-                (topic === ALL || layerText(el, "Topic") === topic) &&
-                (type === ALL || layerText(el, "Type") === type) &&
+                (topic === ALL || r.topic === topic) &&
+                (type === ALL || r.type === type) &&
                 (access === "all" || (access === "gated") === (h.dataset.bdhGated === "1"))
             h.style.display = ok ? "" : "none"
-            if (ok) shown.add(t)
+            if (ok) shown.add(r.id)
         })
         setVisible(shown.size)
-    }, [query, topic, type, access, cards, selector, onCanvas])
+    }, [query, topic, type, access, cards, libraryCards, onCanvas])
 
     // Reflect unlocks on the cards: hide the Gated badge, relabel the action.
     React.useEffect(() => {
         if (onCanvas) return
-        document.querySelectorAll(gateSelector).forEach((el) => {
+        document.querySelectorAll('[data-bdh-gated="1"]').forEach((el) => {
             const h = el as HTMLElement
-            if (h.dataset.bdhGated !== "1" || isLocked(h)) return
-            const badge = el.querySelector('[data-framer-name="Gated"]') as HTMLElement | null
-            if (badge) badge.style.display = "none"
-            const action = el.querySelector('[data-framer-name="Action"]')
-            const textEl = action?.querySelector("p, span") || action
-            if (textEl && L.unlockedAction) textEl.textContent = L.unlockedAction
+            if (isLocked(h)) return
+            const ls = leaves(h)
+            ls.filter((n) => (n.textContent || "").includes(LOCK)).forEach((n) => {
+                ;(n.parentElement as HTMLElement).style.display = "none"
+            })
+            const action = ls.filter((n) => !(n.textContent || "").includes(LOCK)).pop()
+            if (action && L.unlockedAction) action.textContent = L.unlockedAction
         })
-    }, [unlocked, cards, gateSelector, onCanvas, L.unlockedAction])
+    }, [unlocked, cards, onCanvas, L.unlockedAction])
 
     // Intercept clicks on locked cards before Framer navigates.
     React.useEffect(() => {
         if (onCanvas) return
         const onClick = (e: MouseEvent) => {
-            const card = (e.target as Element | null)?.closest?.(gateSelector) as HTMLElement | null
+            const card = cardFromTarget(e.target as Element | null)
             if (!card) return
+            if (!card.dataset.bdhScanned) {
+                card.dataset.bdhScanned = "1"
+                card.dataset.bdhGated = isGatedCard(card) ? "1" : "0"
+            }
             const r = readCard(card, 0)
             if (!isLocked(card)) {
                 track("devhub_resource_open", r)
@@ -548,7 +583,7 @@ export default function DevHubControls(props: Props) {
         }
         document.addEventListener("click", onClick, true)
         return () => document.removeEventListener("click", onClick, true)
-    }, [gateSelector, unlocked, onCanvas])
+    }, [unlocked, onCanvas])
 
     // "/" focuses search.
     React.useEffect(() => {
@@ -608,7 +643,7 @@ export default function DevHubControls(props: Props) {
     } as React.CSSProperties
 
     return (
-        <div className="bdh bdc" style={{ ...vars, ...style }}>
+        <div ref={rootRef} className="bdh bdc" style={{ ...vars, ...style }}>
             <style>{CSS}</style>
             <label className="bdc-search">
                 <SearchIcon />
@@ -749,8 +784,6 @@ const CSS = `
 `
 
 addPropertyControls(DevHubControls, {
-    cardName: { type: ControlType.String, title: "Card layer", defaultValue: "ResourceCard", description: "Layers with this name are searched and filtered." },
-    featuredName: { type: ControlType.String, title: "Featured layer", defaultValue: "FeaturedCard", description: "Layers with this name are gated but not filtered." },
     showTopics: { type: ControlType.Boolean, title: "Topic chips", defaultValue: true },
     showType: { type: ControlType.Boolean, title: "Type filter", defaultValue: true },
     showAccess: { type: ControlType.Boolean, title: "Access filter", defaultValue: true },
