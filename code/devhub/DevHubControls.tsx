@@ -199,40 +199,51 @@ interface GateConfig {
     quickSendLabel: string
     notYouLabel: string
     rememberDetails: boolean
+    returningFormId: string
+    alreadyLabel: string
+    returningEmailLabel: string
+    returningNote: string
+    returningSubmitLabel: string
+    returningSuccessText: string
+    newHereLabel: string
     privacyText: string
     privacyUrl: string
 }
 
-function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; formId: string; onDone: (email: string) => void }) {
+function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; formId: string; onDone: (email: string, returning: boolean) => void }) {
     const saved = React.useMemo(() => (cfg.rememberDetails ? readProfile() : {}), [cfg.rememberDetails])
     const complete = !!saved.email && cfg.formFields.every((f) => !f.required || !!saved[f.name])
+    // A visitor remembered from an email-only request repeats it through the returning form.
+    const savedReturning = !complete && !!saved.email && saved._mode === "email" && !!cfg.returningFormId
     const [values, setValues] = React.useState<Record<string, string>>(saved)
-    const [quick, setQuick] = React.useState(complete)
+    const [mode, setMode] = React.useState<"quick" | "full" | "returning">(complete || savedReturning ? "quick" : "full")
     const [status, setStatus] = React.useState<"idle" | "sending" | "error">("idle")
     const [error, setError] = React.useState("")
     const firstRef = React.useRef<HTMLInputElement>(null)
 
     React.useEffect(() => {
-        if (!quick) firstRef.current?.focus()
-    }, [quick])
+        if (mode !== "quick") firstRef.current?.focus()
+    }, [mode])
+
+    const returning = mode === "returning" || (mode === "quick" && savedReturning)
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!cfg.portalId || !formId) {
+        const target = returning ? cfg.returningFormId : formId
+        if (!cfg.portalId || !target) {
             setStatus("error")
             setError("Form is not configured yet. Set the HubSpot portal and form IDs in Framer.")
             return
         }
         setStatus("sending")
-        const fields = cfg.formFields
-            .filter((f) => values[f.name])
-            .map((f) => ({ objectTypeId: "0-1", name: f.name, value: values[f.name] }))
+        const names = returning ? ["email"] : cfg.formFields.map((f) => f.name)
+        const fields = names.filter((n) => values[n]).map((n) => ({ objectTypeId: "0-1", name: n, value: values[n] }))
         if (cfg.resourceField) fields.push({ objectTypeId: "0-1", name: cfg.resourceField, value: r.title })
         const context: Record<string, string> = { pageUri: window.location.href, pageName: document.title }
         const hutk = cookie("hubspotutk")
         if (hutk) context.hutk = hutk
         try {
-            const res = await fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${cfg.portalId}/${formId}`, {
+            const res = await fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${cfg.portalId}/${target}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ fields, context }),
@@ -242,28 +253,40 @@ function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; 
                 const msg = body?.errors?.[0]?.message || body?.message
                 throw new Error(msg || `Submission failed (${res.status})`)
             }
-            if (cfg.rememberDetails) writeProfile(Object.fromEntries(cfg.formFields.map((f) => [f.name, values[f.name] || ""])))
-            onDone(values.email || "")
+            if (cfg.rememberDetails) {
+                if (returning) writeProfile({ email: values.email || "", _mode: "email" })
+                else writeProfile({ ...Object.fromEntries(cfg.formFields.map((f) => [f.name, values[f.name] || ""])), _mode: "full" })
+            }
+            onDone(values.email || "", returning)
         } catch (err: any) {
             setStatus("error")
             setError(err?.message || "Something went wrong. Please try again.")
         }
     }
 
-    if (quick) {
+    const sendButton = (label: string) => (
+        <button className="bdh-btn bdh-btn-primary bdh-btn-block" type="submit" disabled={status === "sending"}>
+            {status === "sending" ? "Sending…" : label}
+        </button>
+    )
+    const errorBox = status === "error" && <div className="bdh-error">{error}</div>
+    const switchTo = (m: "full" | "returning", keepEmail = true) => {
+        setStatus("idle")
+        setValues((v): Record<string, string> => (keepEmail && v.email ? { email: v.email } : {}))
+        setMode(m)
+    }
+
+    if (mode === "quick") {
         return (
             <form className="bdh-form" onSubmit={submit}>
-                {status === "error" && <div className="bdh-error">{error}</div>}
-                <button className="bdh-btn bdh-btn-primary bdh-btn-block" type="submit" disabled={status === "sending"}>
-                    {status === "sending" ? "Sending…" : fill(cfg.quickSendLabel, r, values.email)}
-                </button>
+                {errorBox}
+                {sendButton(fill(cfg.quickSendLabel, r, values.email))}
                 <button
                     type="button"
                     className="bdh-notyou"
                     onClick={() => {
                         writeProfile(null)
-                        setValues({})
-                        setQuick(false)
+                        switchTo("full", false)
                     }}
                 >
                     {cfg.notYouLabel}
@@ -272,8 +295,43 @@ function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; 
         )
     }
 
+    if (mode === "returning") {
+        return (
+            <form className="bdh-form" onSubmit={submit}>
+                <div className="bdh-form-grid">
+                    <label className="bdh-field">
+                        <span>
+                            {cfg.returningEmailLabel}
+                            <em>*</em>
+                        </span>
+                        <input
+                            ref={firstRef}
+                            type="email"
+                            name="email"
+                            required
+                            autoComplete="email"
+                            value={values.email || ""}
+                            onChange={(e) => setValues({ email: e.target.value })}
+                        />
+                    </label>
+                </div>
+                <p className="bdh-returning-note">{cfg.returningNote}</p>
+                {errorBox}
+                {sendButton(cfg.returningSubmitLabel)}
+                <button type="button" className="bdh-notyou" onClick={() => switchTo("full")}>
+                    {cfg.newHereLabel}
+                </button>
+            </form>
+        )
+    }
+
     return (
         <form className="bdh-form" onSubmit={submit} noValidate={false}>
+            {cfg.returningFormId && (
+                <button type="button" className="bdh-already" onClick={() => switchTo("returning")}>
+                    {cfg.alreadyLabel}
+                </button>
+            )}
             <div className="bdh-form-grid">
                 {cfg.formFields.map((f, i) => (
                     <label key={f.name} className={f.half ? "bdh-field bdh-half" : "bdh-field"}>
@@ -293,10 +351,8 @@ function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; 
                     </label>
                 ))}
             </div>
-            {status === "error" && <div className="bdh-error">{error}</div>}
-            <button className="bdh-btn bdh-btn-primary bdh-btn-block" type="submit" disabled={status === "sending"}>
-                {status === "sending" ? "Sending…" : cfg.submitLabel}
-            </button>
+            {errorBox}
+            {sendButton(cfg.submitLabel)}
         </form>
     )
 }
@@ -357,6 +413,7 @@ function EmbedForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; f
 
 function GateModal({ r, cfg, onClose, onSent }: { r: Resource; cfg: GateConfig; onClose: () => void; onSent: (r: Resource) => void }) {
     const [sentTo, setSentTo] = React.useState<string | null>(null)
+    const [wasReturning, setWasReturning] = React.useState(false)
 
     React.useEffect(() => {
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
@@ -369,7 +426,8 @@ function GateModal({ r, cfg, onClose, onSent }: { r: Resource; cfg: GateConfig; 
         }
     }, [onClose])
 
-    const handleDone = (email: string) => {
+    const handleDone = (email: string, returning = false) => {
+        setWasReturning(returning)
         setSentTo(email)
         onSent(r)
     }
@@ -395,7 +453,7 @@ function GateModal({ r, cfg, onClose, onSent }: { r: Resource; cfg: GateConfig; 
                         <div className="bdh-success">
                             <div className="bdh-success-mark">✓</div>
                             <h3>{fill(cfg.successTitle, r, sentTo)}</h3>
-                            <p>{fill(cfg.successText, r, sentTo)}</p>
+                            <p>{fill(wasReturning ? cfg.returningSuccessText : cfg.successText, r, sentTo)}</p>
                             <button className="bdh-btn bdh-btn-primary bdh-btn-block" onClick={onClose}>
                                 Back to the hub
                             </button>
@@ -444,6 +502,13 @@ interface Props {
     formFields: FormField[]
     resourceField: string
     rememberDetails: boolean
+    returningFormId: string
+    alreadyLabel: string
+    returningEmailLabel: string
+    returningNote: string
+    returningSubmitLabel: string
+    returningSuccessText: string
+    newHereLabel: string
     gateKicker: string
     gateTitle: string
     gateText: string
@@ -481,6 +546,13 @@ export default function DevHubControls(props: Props) {
         formFields = DEFAULT_FIELDS,
         resourceField = "devhub_resource",
         rememberDetails = true,
+        returningFormId = "",
+        alreadyLabel = "Already registered? Just enter your email →",
+        returningEmailLabel = "Work email",
+        returningNote = "If this email is registered with us, the document will arrive within a minute.",
+        returningSubmitLabel = "Send me the document",
+        returningSuccessText = "If {email} is registered with us, “{title}” is on its way. Not registered yet? Fill in your details instead.",
+        newHereLabel = "New here? Fill in your details",
         gateKicker = "GET THE DOCUMENT",
         gateTitle = "Where should we send it?",
         gateText = "Leave your details and we'll email you this document right away.",
@@ -644,6 +716,13 @@ export default function DevHubControls(props: Props) {
         quickSendLabel,
         notYouLabel,
         rememberDetails,
+        returningFormId: returningFormId.trim(),
+        alreadyLabel,
+        returningEmailLabel,
+        returningNote,
+        returningSubmitLabel,
+        returningSuccessText,
+        newHereLabel,
     }
 
     const vars = {
@@ -786,6 +865,8 @@ const CSS = `
 @keyframes bdh-rise{from{opacity:0;transform:translateY(12px)}}
 
 .bdh-success-mark{background:var(--bdh-accent)}
+.bdh-already{display:block;width:100%;margin:0 0 16px;padding:10px 12px;border:1px dashed color-mix(in srgb,var(--bdh-accent) 45%,transparent);border-radius:8px;background:color-mix(in srgb,var(--bdh-accent) 6%,transparent);color:var(--bdh-accent);font-size:13px;font-weight:600;text-align:left}
+.bdh-returning-note{margin:-4px 0 16px;color:var(--bdh-muted);font-size:13px;line-height:1.5}
 .bdh-notyou{display:block;margin:12px auto 0;background:none;border:0;padding:0;color:var(--bdh-muted);font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .bdh-modal-type{color:var(--bdh-accent)}
 @media (max-width: 720px){
@@ -850,6 +931,29 @@ addPropertyControls(DevHubControls, {
         defaultValue: "devhub_resource",
         description: "Hidden HubSpot property that receives the document title. The workflow uses it to pick which document to email.",
     },
+    returningFormId: {
+        type: ControlType.String,
+        title: "Returning form",
+        defaultValue: "",
+        placeholder: "Email-only form GUID",
+        description: "Email-only HubSpot form for \"Already registered?\". The workflow sends the document only to registered contacts. Leave empty to hide the option.",
+    },
+    alreadyLabel: { type: ControlType.String, title: "Already link", defaultValue: "Already registered? Just enter your email →" },
+    returningEmailLabel: { type: ControlType.String, title: "Email label", defaultValue: "Work email" },
+    returningNote: {
+        type: ControlType.String,
+        title: "Returning note",
+        displayTextArea: true,
+        defaultValue: "If this email is registered with us, the document will arrive within a minute.",
+    },
+    returningSubmitLabel: { type: ControlType.String, title: "Returning button", defaultValue: "Send me the document" },
+    returningSuccessText: {
+        type: ControlType.String,
+        title: "Returning success",
+        displayTextArea: true,
+        defaultValue: "If {email} is registered with us, “{title}” is on its way. Not registered yet? Fill in your details instead.",
+    },
+    newHereLabel: { type: ControlType.String, title: "New here link", defaultValue: "New here? Fill in your details" },
     rememberDetails: {
         type: ControlType.Boolean,
         title: "Remember details",

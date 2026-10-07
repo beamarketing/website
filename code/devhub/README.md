@@ -22,14 +22,16 @@ Everything on Beamr's `/dev_hub` page is native Framer layers except one small c
 
 #### HubSpot setup for email delivery
 
-1. **Contact property**: create `devhub_resource` (single-line text, label "Dev Hub resource").
-2. **Form** "Developer Hub – Document request": fields `firstname`, `lastname`, `email`, `company`, `jobtitle`, plus `devhub_resource` as a hidden field. Publish it and paste its form ID into `DevHubControls` → HubSpot form.
-3. **Workflow** (contact-based), enrolment trigger "Form submission: Developer Hub – Document request", **re-enrolment on** so every request sends again:
-   - Optional: set lifecycle stage = Lead, Lead Source = Developer Hub, notify the owner/Slack.
-   - If/then branch on `devhub_resource` (one branch per document title, exactly as written on the card):
-     - each branch sends that document's email (marketing email with the file link, e.g. a HubSpot File Manager URL).
-   - "None met" branch: internal notification, so a renamed card is noticed.
-4. When you add a gated card, add a branch and an email for its title. If you rename a gated card's title, update its branch.
+1. **Contact properties**: `devhub_resource` (single-line text, "Dev Hub resource") and `devhub_registered` (single checkbox, "Dev Hub registered").
+2. **Form A** "Developer Hub – Document request": `firstname`, `lastname`, `email`, `company`, `jobtitle`, plus hidden `devhub_resource`. Paste its ID into `DevHubControls` → HubSpot form.
+3. **Form B** "Developer Hub – Returning visitor": `email` plus hidden `devhub_resource`. Paste its ID into `DevHubControls` → Returning form (leave empty to hide "Already registered?").
+4. **Workflow** (contact-based), triggers: form submission of A **or** B, **re-enrolment on** for both.
+   - Branch 1 – submitted form A: set `devhub_registered` = Yes (optionally lifecycle stage = Lead, Lead Source = Developer Hub, notify owner/Slack), then go to "Send document".
+   - Branch 2 – submitted form B and `devhub_registered` is Yes: go to "Send document".
+   - Branch 3 – submitted form B and `devhub_registered` is not Yes: send a short "Please complete your registration" email with a link back to the hub. No document.
+   - "Send document": if/then branch on `devhub_resource` (one branch per gated title, exactly as written on the card), each sending that document's email with the file link (e.g. HubSpot File Manager URL). "None met" → internal notification.
+   The site always shows the same neutral message for form B, so it never reveals which emails exist in the CRM.
+5. When you add a gated card, add a branch and an email for its title. If you rename a gated card's title, update its branch.
 
 `DeveloperHub.tsx` (below) is the earlier all-in-one component. It is kept for reference and still works on its own.
 
