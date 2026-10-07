@@ -10,11 +10,17 @@
 2. Drag **DeveloperHub** onto the page. Set width to **Fill** and height to **Auto**.
 3. Everything is edited in the right-hand properties panel.
 
-### Recommended setup: native layers + library component
+### Native cards (current `/dev_hub` setup)
 
-On Beamr's `/dev_hub` page the header, Public information and CTA are **native Framer layers** (text styles in the *Dev Hub* folder), so text and images are edited directly on the canvas. The component runs with **Header**, **Public info** and **Evaluation CTA** turned off and only renders the interactive part: featured items, search, filters, library and the registration pop-up. With the header off, the search box moves into the library toolbar.
+Everything on Beamr's `/dev_hub` page is native Framer layers except one small code component, `DevHubControls.tsx`:
 
-Every remaining label is a control: section titles and notes, filter labels (**Labels**), sort options, CTA command lines. When the header is on, **Header image** replaces the generated frame visual.
+- **Header, Featured, Library, Public information, CTA**: regular layers styled with the *Dev Hub* text styles. Edit text, cover images and links directly on the canvas.
+- **Add a resource**: duplicate a card in the Library grid (or Featured grid) and edit it. Delete a card to remove it.
+- **Gate a resource**: a card with the "🔒 Registration" badge opens the HubSpot registration pop-up before its link. Copy the badge into a card to gate it, delete it to open the card.
+- **Search and filters**: `DevHubControls` must sit directly above the Library grid. It reads each card's text in order (type, title heading, description, then "date ·", topic, action) to build the topic chips and type filter, so keep that card layout when editing.
+- **Registration settings** (portal, form, fields, texts) are in the `DevHubControls` properties.
+
+`DeveloperHub.tsx` (below) is the earlier all-in-one component. It is kept for reference and still works on its own.
 
 The layout responds to the component's own width (CSS container queries), so it works in every Framer breakpoint without separate variants.
 
