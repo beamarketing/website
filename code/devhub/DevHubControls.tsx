@@ -6,9 +6,10 @@
 // How it finds cards: the children of the layer placed directly after this
 // component (the library grid) are searched and filtered. Inside a card it
 // reads the text in order: type, title (the heading), description, and on the
-// last line date, topic and action. Any linked card on the page that shows a
-// lock badge (🔒) is put behind registration; remove the badge to open it.
-// The card's own link is the destination after registration.
+// last line date, topic and action. Any card on the page that shows a lock
+// badge (🔒) is gated: clicking it opens a registration form, and HubSpot
+// emails the document (the file link lives in HubSpot, not on the site).
+// Cards without the badge open their own link as usual.
 
 import * as React from "react"
 import { createPortal } from "react-dom"
@@ -42,7 +43,6 @@ interface Labels {
     clear: string
     empty: string
     count: string
-    unlockedAction: string
 }
 
 const DEFAULT_LABELS: Labels = {
@@ -55,7 +55,6 @@ const DEFAULT_LABELS: Labels = {
     clear: "Clear filters",
     empty: "No resources match these filters.",
     count: "resources",
-    unlockedAction: "Open →",
 }
 
 const DEFAULT_FIELDS: FormField[] = [
@@ -66,7 +65,7 @@ const DEFAULT_FIELDS: FormField[] = [
     { name: "jobtitle", label: "Role", type: "text", required: false, half: true },
 ]
 
-const UNLOCK_KEY = "beamr-devhub-unlocked"
+const PROFILE_KEY = "beamr-devhub-profile"
 const ALL = "__all"
 
 // ---------------------------------------------------------------------------
@@ -113,29 +112,42 @@ function readCard(el: Element, i: number): Resource {
     }
 }
 
-// The card a click landed on: the nearest link that holds a heading.
+// The card a click landed on: the largest ancestor that holds exactly one heading.
 function cardFromTarget(t: Element | null): HTMLElement | null {
-    let a = t?.closest?.("a") as HTMLElement | null
-    while (a && !a.querySelector("h1,h2,h3,h4,h5,h6")) a = a.parentElement?.closest("a") as HTMLElement | null
-    return a
+    let el = t as HTMLElement | null
+    let card: HTMLElement | null = null
+    while (el && el !== document.body) {
+        const n = el.querySelectorAll("h1,h2,h3,h4,h5,h6").length
+        if (n === 1) card = el
+        else if (n > 1) break
+        el = el.parentElement
+    }
+    return card
 }
 
 // ---------------------------------------------------------------------------
-// Unlock state, cookies, analytics, HubSpot
+// Remembered details, cookies, analytics, HubSpot
 // ---------------------------------------------------------------------------
 
-function readUnlocked(): { all: boolean; ids: string[] } {
+function readProfile(): Record<string, string> {
     try {
-        const v = JSON.parse(window.localStorage.getItem(UNLOCK_KEY) || "null")
-        if (v && typeof v === "object") return { all: !!v.all, ids: Array.isArray(v.ids) ? v.ids : [] }
+        const v = JSON.parse(window.localStorage.getItem(PROFILE_KEY) || "null")
+        if (v && typeof v === "object") return v
     } catch {}
-    return { all: false, ids: [] }
+    return {}
 }
 
-function writeUnlocked(v: { all: boolean; ids: string[] }) {
+function writeProfile(v: Record<string, string> | null) {
     try {
-        window.localStorage.setItem(UNLOCK_KEY, JSON.stringify(v))
+        if (v) window.localStorage.setItem(PROFILE_KEY, JSON.stringify(v))
+        else window.localStorage.removeItem(PROFILE_KEY)
     } catch {}
+}
+
+function fill(template: string, r: Resource, email: string): string {
+    return template
+        .replace(/\{title\}/g, r.title)
+        .replace(/\{email\}/g, email || "your inbox")
 }
 
 function cookie(name: string): string {
@@ -183,21 +195,26 @@ interface GateConfig {
     gateText: string
     successTitle: string
     successText: string
-    openLabel: string
+    submitLabel: string
+    quickSendLabel: string
+    notYouLabel: string
+    rememberDetails: boolean
     privacyText: string
     privacyUrl: string
-    unlockScope: "all" | "item"
 }
 
-function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; formId: string; onDone: () => void }) {
-    const [values, setValues] = React.useState<Record<string, string>>({})
+function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; formId: string; onDone: (email: string) => void }) {
+    const saved = React.useMemo(() => (cfg.rememberDetails ? readProfile() : {}), [cfg.rememberDetails])
+    const complete = !!saved.email && cfg.formFields.every((f) => !f.required || !!saved[f.name])
+    const [values, setValues] = React.useState<Record<string, string>>(saved)
+    const [quick, setQuick] = React.useState(complete)
     const [status, setStatus] = React.useState<"idle" | "sending" | "error">("idle")
     const [error, setError] = React.useState("")
     const firstRef = React.useRef<HTMLInputElement>(null)
 
     React.useEffect(() => {
-        firstRef.current?.focus()
-    }, [])
+        if (!quick) firstRef.current?.focus()
+    }, [quick])
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -225,11 +242,34 @@ function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; 
                 const msg = body?.errors?.[0]?.message || body?.message
                 throw new Error(msg || `Submission failed (${res.status})`)
             }
-            onDone()
+            if (cfg.rememberDetails) writeProfile(Object.fromEntries(cfg.formFields.map((f) => [f.name, values[f.name] || ""])))
+            onDone(values.email || "")
         } catch (err: any) {
             setStatus("error")
             setError(err?.message || "Something went wrong. Please try again.")
         }
+    }
+
+    if (quick) {
+        return (
+            <form className="bdh-form" onSubmit={submit}>
+                {status === "error" && <div className="bdh-error">{error}</div>}
+                <button className="bdh-btn bdh-btn-primary bdh-btn-block" type="submit" disabled={status === "sending"}>
+                    {status === "sending" ? "Sending…" : fill(cfg.quickSendLabel, r, values.email)}
+                </button>
+                <button
+                    type="button"
+                    className="bdh-notyou"
+                    onClick={() => {
+                        writeProfile(null)
+                        setValues({})
+                        setQuick(false)
+                    }}
+                >
+                    {cfg.notYouLabel}
+                </button>
+            </form>
+        )
     }
 
     return (
@@ -255,13 +295,13 @@ function NativeForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; 
             </div>
             {status === "error" && <div className="bdh-error">{error}</div>}
             <button className="bdh-btn bdh-btn-primary bdh-btn-block" type="submit" disabled={status === "sending"}>
-                {status === "sending" ? "Sending…" : "Get access"}
+                {status === "sending" ? "Sending…" : cfg.submitLabel}
             </button>
         </form>
     )
 }
 
-function EmbedForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; formId: string; onDone: () => void }) {
+function EmbedForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; formId: string; onDone: (email: string) => void }) {
     const target = React.useMemo(() => `bdh-hs-${Math.random().toString(36).slice(2, 9)}`, [])
     const [failed, setFailed] = React.useState(false)
     const doneRef = React.useRef(onDone)
@@ -290,14 +330,17 @@ function EmbedForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; f
                             input.dispatchEvent(new Event("input", { bubbles: true }))
                         }
                     },
-                    onFormSubmitted: () => doneRef.current(),
+                    onFormSubmitted: (_f: any, data: any) => {
+                        const email = (data?.submissionValues?.email as string) || ""
+                        doneRef.current(email)
+                    },
                 })
             })
             .catch(() => !cancelled && setFailed(true))
         // Fallback: HubSpot also posts a global message on submission.
         const onMsg = (e: MessageEvent) => {
             const d: any = e.data
-            if (d?.type === "hsFormCallback" && d?.eventName === "onFormSubmitted" && (!d.id || d.id === formId)) doneRef.current()
+            if (d?.type === "hsFormCallback" && d?.eventName === "onFormSubmitted" && (!d.id || d.id === formId)) doneRef.current("")
         }
         window.addEventListener("message", onMsg)
         return () => {
@@ -312,8 +355,8 @@ function EmbedForm({ cfg, r, formId, onDone }: { cfg: GateConfig; r: Resource; f
     return <div id={target} className="bdh-hs-embed" />
 }
 
-function GateModal({ r, cfg, onClose, onUnlocked }: { r: Resource; cfg: GateConfig; onClose: () => void; onUnlocked: (r: Resource) => void }) {
-    const [done, setDone] = React.useState(false)
+function GateModal({ r, cfg, onClose, onSent }: { r: Resource; cfg: GateConfig; onClose: () => void; onSent: (r: Resource) => void }) {
+    const [sentTo, setSentTo] = React.useState<string | null>(null)
 
     React.useEffect(() => {
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
@@ -326,9 +369,9 @@ function GateModal({ r, cfg, onClose, onUnlocked }: { r: Resource; cfg: GateConf
         }
     }, [onClose])
 
-    const handleDone = () => {
-        setDone(true)
-        onUnlocked(r)
+    const handleDone = (email: string) => {
+        setSentTo(email)
+        onSent(r)
     }
 
     return (
@@ -348,25 +391,14 @@ function GateModal({ r, cfg, onClose, onUnlocked }: { r: Resource; cfg: GateConf
                     {r.description && <p className="bdh-modal-rdesc">{r.description}</p>}
                 </aside>
                 <div className="bdh-modal-main">
-                    {done ? (
+                    {sentTo !== null ? (
                         <div className="bdh-success">
                             <div className="bdh-success-mark">✓</div>
-                            <h3>{cfg.successTitle}</h3>
-                            <p>{cfg.successText}</p>
-                            {r.href && (
-                                <a
-                                    className="bdh-btn bdh-btn-primary bdh-btn-block"
-                                    href={r.href}
-                                    target="_blank"
-                                    rel="noopener"
-                                    onClick={() => {
-                                        track("devhub_resource_open", r)
-                                        onClose()
-                                    }}
-                                >
-                                    {cfg.openLabel}
-                                </a>
-                            )}
+                            <h3>{fill(cfg.successTitle, r, sentTo)}</h3>
+                            <p>{fill(cfg.successText, r, sentTo)}</p>
+                            <button className="bdh-btn bdh-btn-primary bdh-btn-block" onClick={onClose}>
+                                Back to the hub
+                            </button>
                         </div>
                     ) : (
                         <>
@@ -411,7 +443,7 @@ interface Props {
     formMode: "native" | "embed"
     formFields: FormField[]
     resourceField: string
-    unlockScope: "all" | "item"
+    rememberDetails: boolean
     gateKicker: string
     gateTitle: string
     gateText: string
@@ -419,7 +451,9 @@ interface Props {
     privacyUrl: string
     successTitle: string
     successText: string
-    openLabel: string
+    submitLabel: string
+    quickSendLabel: string
+    notYouLabel: string
     accent: string
     ink: string
     dark: string
@@ -445,16 +479,18 @@ export default function DevHubControls(props: Props) {
         region = "na1",
         formMode = "native",
         formFields = DEFAULT_FIELDS,
-        resourceField = "",
-        unlockScope = "all",
-        gateKicker = "REGISTRATION",
-        gateTitle = "Register to access",
-        gateText = "Tell us who you are and we'll unlock the full document. One registration covers every gated resource in the hub.",
+        resourceField = "devhub_resource",
+        rememberDetails = true,
+        gateKicker = "GET THE DOCUMENT",
+        gateTitle = "Where should we send it?",
+        gateText = "Leave your details and we'll email you this document right away.",
         privacyText = "We use this to share relevant technical material. Unsubscribe any time.",
         privacyUrl = "",
-        successTitle = "You're in.",
-        successText = "This resource is now unlocked on this browser.",
-        openLabel = "Open resource →",
+        successTitle = "Check your inbox",
+        successText = "We've sent “{title}” to {email}. It should arrive within a minute.",
+        submitLabel = "Email me the document",
+        quickSendLabel = "Send it to {email} →",
+        notYouLabel = "Not you? Use different details",
         accent = "#6C5CE7",
         ink = "#12141C",
         dark = "#0B0D14",
@@ -471,7 +507,6 @@ export default function DevHubControls(props: Props) {
     const [type, setType] = React.useState(ALL)
     const [access, setAccess] = React.useState<"all" | "open" | "gated">("all")
     const [visible, setVisible] = React.useState(0)
-    const [unlocked, setUnlocked] = React.useState<{ all: boolean; ids: string[] }>({ all: false, ids: [] })
     const [gateFor, setGateFor] = React.useState<Resource | null>(null)
     const searchRef = React.useRef<HTMLInputElement>(null)
     const rootRef = React.useRef<HTMLDivElement>(null)
@@ -490,10 +525,10 @@ export default function DevHubControls(props: Props) {
     // Scan the page for card layers. Framer can hydrate after mount, so scan a few times.
     React.useEffect(() => {
         if (onCanvas) return
-        setUnlocked(readUnlocked())
         const scan = () => {
-            document.querySelectorAll("a").forEach((a) => {
-                const card = cardFromTarget(a)
+            document.querySelectorAll(TEXT_TAGS).forEach((t) => {
+                if (!(t.textContent || "").includes(LOCK)) return
+                const card = cardFromTarget(t)
                 if (card && !card.dataset.bdhScanned) {
                     card.dataset.bdhScanned = "1"
                     card.dataset.bdhGated = isGatedCard(card) ? "1" : "0"
@@ -520,11 +555,6 @@ export default function DevHubControls(props: Props) {
         }
     }, [libraryCards, onCanvas])
 
-    const isLocked = (el: HTMLElement) => {
-        if (el.dataset.bdhGated !== "1") return false
-        if (unlocked.all) return false
-        return !unlocked.ids.includes(readCard(el, 0).id)
-    }
 
     // Apply filters to the native cards.
     React.useEffect(() => {
@@ -546,22 +576,7 @@ export default function DevHubControls(props: Props) {
         setVisible(shown.size)
     }, [query, topic, type, access, cards, libraryCards, onCanvas])
 
-    // Reflect unlocks on the cards: hide the Gated badge, relabel the action.
-    React.useEffect(() => {
-        if (onCanvas) return
-        document.querySelectorAll('[data-bdh-gated="1"]').forEach((el) => {
-            const h = el as HTMLElement
-            if (isLocked(h)) return
-            const ls = leaves(h)
-            ls.filter((n) => (n.textContent || "").includes(LOCK)).forEach((n) => {
-                ;(n.parentElement as HTMLElement).style.display = "none"
-            })
-            const action = ls.filter((n) => !(n.textContent || "").includes(LOCK)).pop()
-            if (action && L.unlockedAction) action.textContent = L.unlockedAction
-        })
-    }, [unlocked, cards, onCanvas, L.unlockedAction])
-
-    // Intercept clicks on locked cards before Framer navigates.
+    // Intercept clicks on gated cards before Framer navigates.
     React.useEffect(() => {
         if (onCanvas) return
         const onClick = (e: MouseEvent) => {
@@ -572,8 +587,8 @@ export default function DevHubControls(props: Props) {
                 card.dataset.bdhGated = isGatedCard(card) ? "1" : "0"
             }
             const r = readCard(card, 0)
-            if (!isLocked(card)) {
-                track("devhub_resource_open", r)
+            if (card.dataset.bdhGated !== "1") {
+                if ((e.target as Element).closest("a")) track("devhub_resource_open", r)
                 return
             }
             e.preventDefault()
@@ -583,7 +598,7 @@ export default function DevHubControls(props: Props) {
         }
         document.addEventListener("click", onClick, true)
         return () => document.removeEventListener("click", onClick, true)
-    }, [unlocked, onCanvas])
+    }, [onCanvas])
 
     // "/" focuses search.
     React.useEffect(() => {
@@ -597,12 +612,7 @@ export default function DevHubControls(props: Props) {
         return () => window.removeEventListener("keydown", onKey)
     }, [])
 
-    const onUnlocked = (r: Resource) => {
-        const next = unlockScope === "all" ? { all: true, ids: unlocked.ids } : { all: unlocked.all, ids: [...unlocked.ids, r.id] }
-        setUnlocked(next)
-        writeUnlocked(next)
-        track("devhub_gate_submit", r)
-    }
+    const onSent = (r: Resource) => track("devhub_gate_submit", r)
     const closeGate = React.useCallback(() => setGateFor(null), [])
 
     const uniq = (key: "topic" | "type") => Array.from(new Set(cards.map((c) => c[key]).filter(Boolean))).sort()
@@ -630,8 +640,10 @@ export default function DevHubControls(props: Props) {
         privacyUrl,
         successTitle,
         successText,
-        openLabel,
-        unlockScope,
+        submitLabel,
+        quickSendLabel,
+        notYouLabel,
+        rememberDetails,
     }
 
     const vars = {
@@ -698,7 +710,7 @@ export default function DevHubControls(props: Props) {
                 createPortal(
                     <div className="bdh" style={vars}>
                         <style>{CSS}</style>
-                        <GateModal r={gateFor} cfg={cfg} onClose={closeGate} onUnlocked={onUnlocked} />
+                        <GateModal r={gateFor} cfg={cfg} onClose={closeGate} onSent={onSent} />
                     </div>,
                     document.body
                 )}
@@ -774,6 +786,7 @@ const CSS = `
 @keyframes bdh-rise{from{opacity:0;transform:translateY(12px)}}
 
 .bdh-success-mark{background:var(--bdh-accent)}
+.bdh-notyou{display:block;margin:12px auto 0;background:none;border:0;padding:0;color:var(--bdh-muted);font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .bdh-modal-type{color:var(--bdh-accent)}
 @media (max-width: 720px){
   .bdh-modal{grid-template-columns:1fr}
@@ -800,7 +813,6 @@ addPropertyControls(DevHubControls, {
             clear: { type: ControlType.String, title: "Clear", defaultValue: DEFAULT_LABELS.clear },
             empty: { type: ControlType.String, title: "No results", defaultValue: DEFAULT_LABELS.empty },
             count: { type: ControlType.String, title: "Count suffix", defaultValue: DEFAULT_LABELS.count },
-            unlockedAction: { type: ControlType.String, title: "Unlocked action", defaultValue: DEFAULT_LABELS.unlockedAction },
         },
     },
 
@@ -832,22 +844,25 @@ addPropertyControls(DevHubControls, {
         },
         defaultValue: DEFAULT_FIELDS,
     },
-    resourceField: { type: ControlType.String, title: "Resource field", defaultValue: "", placeholder: "e.g. devhub_resource" },
-    unlockScope: {
-        type: ControlType.Enum,
-        title: "Unlocks",
-        options: ["all", "item"],
-        optionTitles: ["All gated", "That item"],
-        displaySegmentedControl: true,
-        defaultValue: "all",
+    resourceField: {
+        type: ControlType.String,
+        title: "Resource field",
+        defaultValue: "devhub_resource",
+        description: "Hidden HubSpot property that receives the document title. The workflow uses it to pick which document to email.",
     },
-    gateKicker: { type: ControlType.String, title: "Gate kicker", defaultValue: "REGISTRATION" },
-    gateTitle: { type: ControlType.String, title: "Gate title", defaultValue: "Register to access" },
+    rememberDetails: {
+        type: ControlType.Boolean,
+        title: "Remember details",
+        defaultValue: true,
+        description: "After the first request, the next document is one click (details are kept in the visitor's browser).",
+    },
+    gateKicker: { type: ControlType.String, title: "Gate kicker", defaultValue: "GET THE DOCUMENT" },
+    gateTitle: { type: ControlType.String, title: "Gate title", defaultValue: "Where should we send it?" },
     gateText: {
         type: ControlType.String,
         title: "Gate text",
         displayTextArea: true,
-        defaultValue: "Tell us who you are and we'll unlock the full document. One registration covers every gated resource in the hub.",
+        defaultValue: "Leave your details and we'll email you this document right away.",
     },
     privacyText: {
         type: ControlType.String,
@@ -856,9 +871,16 @@ addPropertyControls(DevHubControls, {
         defaultValue: "We use this to share relevant technical material. Unsubscribe any time.",
     },
     privacyUrl: { type: ControlType.Link, title: "Privacy URL" },
-    successTitle: { type: ControlType.String, title: "Success title", defaultValue: "You're in." },
-    successText: { type: ControlType.String, title: "Success text", displayTextArea: true, defaultValue: "This resource is now unlocked on this browser." },
-    openLabel: { type: ControlType.String, title: "Open button", defaultValue: "Open resource →" },
+    submitLabel: { type: ControlType.String, title: "Submit button", defaultValue: "Email me the document" },
+    quickSendLabel: { type: ControlType.String, title: "One-click button", defaultValue: "Send it to {email} →", description: "Shown to returning visitors. {email} and {title} are filled in." },
+    notYouLabel: { type: ControlType.String, title: "Not you link", defaultValue: "Not you? Use different details" },
+    successTitle: { type: ControlType.String, title: "Success title", defaultValue: "Check your inbox" },
+    successText: {
+        type: ControlType.String,
+        title: "Success text",
+        displayTextArea: true,
+        defaultValue: "We've sent “{title}” to {email}. It should arrive within a minute.",
+    },
 
     // ---- style
     accent: { type: ControlType.Color, title: "Accent", defaultValue: "#6C5CE7" },

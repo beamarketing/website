@@ -16,9 +16,20 @@ Everything on Beamr's `/dev_hub` page is native Framer layers except one small c
 
 - **Header, Featured, Library, Public information, CTA**: regular layers styled with the *Dev Hub* text styles. Edit text, cover images and links directly on the canvas.
 - **Add a resource**: duplicate a card in the Library grid (or Featured grid) and edit it. Delete a card to remove it.
-- **Gate a resource**: a card with the "🔒 Registration" badge opens the HubSpot registration pop-up before its link. Copy the badge into a card to gate it, delete it to open the card.
+- **Gate a resource**: a card with the "🔒 Registration" badge is delivered by email. Clicking it opens a short form, the submission creates or updates the HubSpot contact, and a HubSpot workflow emails that document. The file link lives only in HubSpot, so it is never exposed on the site. Copy the badge into a card to gate it, delete it to make the card open its own link. Returning visitors get a one-click "Send it to you@…" button (their details are remembered in their browser; "Not you?" clears them).
 - **Search and filters**: `DevHubControls` must sit directly above the Library grid. It reads each card's text in order (type, title heading, description, then "date ·", topic, action) to build the topic chips and type filter, so keep that card layout when editing.
 - **Registration settings** (portal, form, fields, texts) are in the `DevHubControls` properties.
+
+#### HubSpot setup for email delivery
+
+1. **Contact property**: create `devhub_resource` (single-line text, label "Dev Hub resource").
+2. **Form** "Developer Hub – Document request": fields `firstname`, `lastname`, `email`, `company`, `jobtitle`, plus `devhub_resource` as a hidden field. Publish it and paste its form ID into `DevHubControls` → HubSpot form.
+3. **Workflow** (contact-based), enrolment trigger "Form submission: Developer Hub – Document request", **re-enrolment on** so every request sends again:
+   - Optional: set lifecycle stage = Lead, Lead Source = Developer Hub, notify the owner/Slack.
+   - If/then branch on `devhub_resource` (one branch per document title, exactly as written on the card):
+     - each branch sends that document's email (marketing email with the file link, e.g. a HubSpot File Manager URL).
+   - "None met" branch: internal notification, so a renamed card is noticed.
+4. When you add a gated card, add a branch and an email for its title. If you rename a gated card's title, update its branch.
 
 `DeveloperHub.tsx` (below) is the earlier all-in-one component. It is kept for reference and still works on its own.
 
